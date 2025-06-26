@@ -21,7 +21,7 @@ export function Button({
       "bg-transparent border border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white",
   };
   return (
-    <button className={\`\${base} \${styles[variant]} \${className}\`} {...props}>
+    <button className={`${base} ${styles[variant]} ${className}`} {...props}>
       {children}
     </button>
   );
