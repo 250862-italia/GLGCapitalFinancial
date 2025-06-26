@@ -137,7 +137,7 @@ export default function HomePage() {
             </div>
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
               Unisciti a + di 500 clienti istituzionali:{" "}
-              <span className="text-teal-400">scarica l'app</span>
+              <span className="text-teal-400">scarica the app</span>
             </h2>
           </div>
         </div>
