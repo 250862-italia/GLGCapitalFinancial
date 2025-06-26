@@ -15,9 +15,6 @@ export default function LandingPage() {
           </button>
         </div>
       </section>
-    </div>
-  )
-}
 
       {/* Stats Section */}
       <section className="py-16 bg-slate-800/50">
