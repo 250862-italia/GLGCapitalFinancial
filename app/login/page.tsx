@@ -1,14 +1,9 @@
-export default function LoginPage() {
+export default function ReservedAreaPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full p-8 bg-white rounded-lg shadow-md">
-        <h1 className="text-2xl font-bold mb-6 text-center">Login GLG Capital</h1>
-        <div className="space-y-4">
-          <input type="email" placeholder="Email" className="w-full px-3 py-2 border rounded-md" />
-          <input type="password" placeholder="Password" className="w-full px-3 py-2 border rounded-md" />
-          <button className="w-full bg-blue-600 text-white py-2 rounded-md">Accedi</button>
-        </div>
-      </div>
-    </div>
-  )
+    <main style={{ maxWidth: 500, margin: '2rem auto', padding: '2rem', background: '#fff', borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.07)' }}>
+      <h1>Reserved Area</h1>
+      <p>This area is reserved for authorized users only. Please log in to access exclusive content and services.</p>
+      {/* Placeholder for future login form or authentication */}
+    </main>
+  );
 }

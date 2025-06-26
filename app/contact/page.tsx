@@ -5,68 +5,19 @@ import { ArrowLeft, MapPin, Phone, Mail, Clock } from 'lucide-react'
 
 export default function ContactPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
-      <nav className="bg-white/10 backdrop-blur-md border-b border-white/20">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center space-x-2 text-white/80 hover:text-white transition-colors">
-              <ArrowLeft className="h-5 w-5" />
-              <span>Back to Home</span>
-            </Link>
-            <div className="text-2xl font-bold text-white">GLG Capital Group LLC</div>
-          </div>
-        </div>
-      </nav>
-
-      <div className="max-w-7xl mx-auto px-6 py-16">
-        <div className="text-center mb-20">
-          <h1 className="text-6xl md:text-8xl font-bold text-white mb-8 leading-tight">
-            Contact{" "}
-            <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-              GLG Capital
-            </span>
-          </h1>
-          <p className="text-2xl text-white/80 max-w-4xl mx-auto leading-relaxed">
-            Ready to discuss your investment goals? Our team of experts is here to help.
-          </p>
-        </div>
-
-        <div className="text-center">
-          <div className="bg-white/10 backdrop-blur-md rounded-3xl p-16 border border-white/20">
-            <h2 className="text-4xl font-bold text-white mb-8">Get in Touch</h2>
-            <div className="space-y-8">
-              <div className="flex items-center justify-center space-x-4">
-                <Phone className="h-8 w-8 text-blue-400" />
-                <div>
-                  <p className="text-xl font-semibold text-white">+1 (212) 555-0123</p>
-                  <p className="text-white/60">Main Office</p>
-                </div>
-              </div>
-              <div className="flex items-center justify-center space-x-4">
-                <Mail className="h-8 w-8 text-green-400" />
-                <div>
-                  <p className="text-xl font-semibold text-white">info@glgcapital.com</p>
-                  <p className="text-white/60">General Inquiries</p>
-                </div>
-              </div>
-              <div className="flex items-center justify-center space-x-4">
-                <Clock className="h-8 w-8 text-purple-400" />
-                <div>
-                  <p className="text-xl font-semibold text-white">Mon - Fri: 9:00 - 18:00</p>
-                  <p className="text-white/60">EST Business Hours</p>
-                </div>
-              </div>
-              <div className="flex items-center justify-center space-x-4">
-                <MapPin className="h-8 w-8 text-yellow-400" />
-                <div>
-                  <p className="text-xl font-semibold text-white">New York, London, Singapore</p>
-                  <p className="text-white/60">Global Offices</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+    <main style={{ maxWidth: 600, margin: '2rem auto', padding: '2rem', background: '#fff', borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.07)' }}>
+      <h1>Contact Us</h1>
+      <form style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <input type="text" placeholder="Your Name" required style={{ padding: '0.5rem', borderRadius: 4, border: '1px solid #ccc' }} />
+        <input type="email" placeholder="Your Email" required style={{ padding: '0.5rem', borderRadius: 4, border: '1px solid #ccc' }} />
+        <textarea placeholder="Your Message" required style={{ padding: '0.5rem', borderRadius: 4, border: '1px solid #ccc', minHeight: 100 }} />
+        <button type="submit" style={{ background: '#0a2540', color: '#fff', padding: '0.75rem', border: 'none', borderRadius: 4, fontWeight: 600 }}>Send</button>
+      </form>
+      <div style={{ marginTop: '2rem', color: '#555' }}>
+        <p>Email: info@glgcapitalgroupllc.com</p>
+        <p>Phone: +1 (555) 123-4567</p>
+        <p>Address: 123 Wall Street, New York, NY</p>
       </div>
-    </div>
+    </main>
   )
 }

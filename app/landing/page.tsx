@@ -1,65 +1,30 @@
-export default function LandingPage() {
+export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white">
-      {/* Hero Section */}
-      <section className="py-20 px-4">
-        <div className="max-w-6xl mx-auto text-center">
-          <h1 className="text-5xl font-bold mb-6">
-            Welcome to <span className="text-amber-500">GLG Capital Financial</span>
-          </h1>
-          <p className="text-xl mb-8 max-w-3xl mx-auto">
-            Your trusted partner for investment management and financial growth
-          </p>
-          <button className="bg-amber-500 text-black px-8 py-3 rounded-lg font-semibold hover:bg-amber-600">
-            Get Started
-          </button>
-        </div>
+    <main style={{ maxWidth: 900, margin: '2rem auto', padding: '2rem', background: '#fff', borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.07)' }}>
+      <h1>GLG Capital Group LLC</h1>
+      <h2 style={{ color: '#0a2540', marginTop: '1rem' }}>Empowering Your Financial Future</h2>
+      <p style={{ marginTop: '1.5rem' }}>
+        GLG Capital Group LLC is a premier investment banking firm based in the United States, offering a full spectrum of financial services to individuals, corporations, and institutions. Our mission is to deliver innovative solutions, strategic advice, and exceptional results for our clients worldwide.
+      </p>
+      <section style={{ marginTop: '2rem' }}>
+        <h3>Our Services</h3>
+        <ul style={{ lineHeight: 2 }}>
+          <li>Investment Banking & Advisory</li>
+          <li>Asset Management</li>
+          <li>Capital Markets</li>
+          <li>Corporate Finance</li>
+          <li>Strategic Consulting</li>
+        </ul>
       </section>
-
-      {/* Stats Section */}
-      <section className="py-16 bg-slate-800/50">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
-            <div>
-              <h3 className="text-3xl font-bold text-amber-500">€2.5B+</h3>
-              <p>Assets Under Management</p>
-            </div>
-            <div>
-              <h3 className="text-3xl font-bold text-amber-500">500+</h3>
-              <p>Institutional Clients</p>
-            </div>
-            <div>
-              <h3 className="text-3xl font-bold text-amber-500">15+</h3>
-              <p>Years Experience</p>
-            </div>
-            <div>
-              <h3 className="text-3xl font-bold text-amber-500">98%</h3>
-              <p>Client Satisfaction</p>
-            </div>
-          </div>
-        </div>
+      <section style={{ marginTop: '2rem' }}>
+        <h3>Why Choose GLG Capital Group?</h3>
+        <ul style={{ lineHeight: 2 }}>
+          <li>Experienced and dedicated professionals</li>
+          <li>Client-centric approach</li>
+          <li>Global reach, local expertise</li>
+          <li>Integrity and transparency</li>
+        </ul>
       </section>
-
-      {/* Services Section */}
-      <section className="py-20 px-4">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-4xl font-bold text-center mb-16">Our Investment Services</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-slate-800 p-8 rounded-lg">
-              <h3 className="text-2xl font-bold mb-4 text-amber-500">Private Wealth Management</h3>
-              <p>Tailored investment strategies for high-net-worth individuals and families.</p>
-            </div>
-            <div className="bg-slate-800 p-8 rounded-lg">
-              <h3 className="text-2xl font-bold mb-4 text-amber-500">Corporate Finance</h3>
-              <p>M&A advisory, IPO services, and strategic financial consulting.</p>
-            </div>
-            <div className="bg-slate-800 p-8 rounded-lg">
-              <h3 className="text-2xl font-bold mb-4 text-amber-500">Asset Management</h3>
-              <p>Diversified portfolio management across global markets and asset classes.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-    </div>
-  )
+    </main>
+  );
 }

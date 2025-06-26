@@ -27,7 +27,10 @@ export default function AboutPage() {
             </span>
           </h1>
           <p className="text-2xl text-white/80 max-w-4xl mx-auto leading-relaxed">
-            Founded in 2009, GLG Capital Group LLC has established itself as a premier investment management firm.
+            GLG Capital Group LLC is a leading American investment banking firm, dedicated to providing innovative financial solutions and strategic advisory services to clients worldwide. Our team of experienced professionals is committed to delivering excellence, integrity, and value in every transaction.
+          </p>
+          <p className="text-2xl text-white/80 max-w-4xl mx-auto leading-relaxed">
+            With a strong focus on client success, we offer a comprehensive suite of services including asset management, capital markets, and corporate finance. Our mission is to empower our clients to achieve their financial goals through tailored strategies and expert guidance.
           </p>
         </div>
 
