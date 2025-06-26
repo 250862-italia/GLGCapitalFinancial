@@ -1,7 +1,6 @@
 "use client";
 import { useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import { useRouter } from 'next/navigation';
 
 const mockInvestments = [
   {
@@ -46,10 +45,9 @@ export default function ReservedAreaPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<any>(null);
   const [role, setRole] = useState('');
   const [kycCompleted, setKycCompleted] = useState(false);
-  const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

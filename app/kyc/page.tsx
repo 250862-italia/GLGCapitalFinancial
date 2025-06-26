@@ -2,8 +2,6 @@
 import { useState } from 'react';
 
 export default function KYCPage() {
-  const [idFile, setIdFile] = useState<File | null>(null);
-  const [residenceFile, setResidenceFile] = useState<File | null>(null);
   const [status, setStatus] = useState<'pending' | 'verified' | 'rejected'>('pending');
   const [submitted, setSubmitted] = useState(false);
 
@@ -23,11 +21,11 @@ export default function KYCPage() {
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: 24 }}>
         <label>
           Identity Document (ID Card or Passport):
-          <input type="file" accept="image/*,application/pdf" required onChange={e => setIdFile(e.target.files?.[0] || null)} style={{ display: 'block', marginTop: 8 }} />
+          <input type="file" accept="image/*,application/pdf" required style={{ display: 'block', marginTop: 8 }} />
         </label>
         <label>
           Proof of Residence:
-          <input type="file" accept="image/*,application/pdf" required onChange={e => setResidenceFile(e.target.files?.[0] || null)} style={{ display: 'block', marginTop: 8 }} />
+          <input type="file" accept="image/*,application/pdf" required style={{ display: 'block', marginTop: 8 }} />
         </label>
         <button type="submit" style={{ background: '#0a2540', color: '#fff', padding: '0.75rem', border: 'none', borderRadius: 4, fontWeight: 600 }}>
           Submit Documents
