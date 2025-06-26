@@ -1,7 +1,5 @@
 "use client";
-
 import { useState } from 'react';
-
 export default function KYCPage() {
   const [idFile, setIdFile] = useState<File | null>(null);
   const [residenceFile, setResidenceFile] = useState<File | null>(null);
