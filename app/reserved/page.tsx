@@ -1,6 +1,7 @@
 "use client";
 import { useState } from 'react';
 import { supabase } from '../../lib/supabase';
+import Chatbot from '../../components/ui/Chatbot';
 
 const mockInvestments = [
   {
@@ -136,6 +137,7 @@ export default function ReservedAreaPage() {
         </button>
         {error && <p style={{ color: 'red' }}>{error}</p>}
       </form>
+      <Chatbot />
     </main>
   );
 }

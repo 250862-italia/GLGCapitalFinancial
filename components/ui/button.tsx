@@ -14,15 +14,11 @@ export function Button({
   className = "",
   ...props
 }: ButtonProps) {
-  const base = "px-4 py-2 rounded font-medium transition";
+  const base = "px-4 py-2 rounded font-medium transition focus:outline-none focus:ring-2 focus:ring-accent";
   const styles = {
-    default: "bg-blue-600 text-white hover:bg-blue-700",
+    default: "bg-[var(--primary)] text-[var(--secondary)] hover:bg-[var(--accent)] hover:text-[var(--primary)]",
     outline:
-      "bg-transparent border border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white",
+      "bg-transparent border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--accent)] hover:text-[var(--primary)] hover:border-[var(--accent)]",
   };
   return (
-    <button className={`${base} ${styles[variant]} ${className}`} {...props}>
-      {children}
-    </button>
-  );
-}
+    <button className={`
