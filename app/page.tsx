@@ -1,30 +1,85 @@
-https://github.com/250862-italia/v0-financial-dashboard/blob/main/app/page.tsx
-          <div className="bg-gradient-to-br from-green-600/20 to-blue-600/20 backdrop-blur-md rounded-3xl p-10 border border-white/20">
-            <Shield className="h-16 w-16 text-green-400 mb-6" />
-            <h3 className="text-2xl font-bold text-white mb-4">Sicurezza Garantita</h3>
-            <p className="text-white/80">Protezione avanzata dei dati e conformità alle normative finanziarie internazionali</p>
-          </div>
-          <div className="bg-gradient-to-br from-purple-600/20 to-pink-600/20 backdrop-blur-md rounded-3xl p-10 border border-white/20">
-            <Users className="h-16 w-16 text-purple-400 mb-6" />
-            <h3 className="text-2xl font-bold text-white mb-4">Consulenza Personalizzata</h3>
-            <p className="text-white/80">Team di esperti dedicati per strategie di investimento su misura</p>
-          </div>
-        </div>
+"use client"
 
-        {/* CTA Section */}
-        <div className="text-center bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl p-16">
-          <h2 className="text-5xl font-bold text-white mb-6">Inizia il tuo Percorso di Investimento</h2>
-          <p className="text-xl text-white/90 mb-8 max-w-3xl mx-auto">
-            Unisciti a centinaia di investitori che hanno scelto GLG Capital per far crescere il loro patrimonio
-          </p>
-          <Link
-            href="/login"
-            className="inline-block bg-white text-blue-600 px-12 py-4 rounded-xl text-xl font-bold hover:bg-gray-100 transition-colors shadow-2xl"
-          >
-            Inizia Ora
-          </Link>
-        </div>
-      </div>
-    </div>
-  )
-}
+import { useState } from "react"
+import Link from "next/link"
+import Image from "next/image"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { TrendingUp, Shield, Users, DollarSign, ArrowRight, Globe, Award, BarChart3, Lock, Zap } from 'lucide-react'
+
+export default function HomePage() {
+  const [hoveredPackage, setHoveredPackage] = useState<number | null>(null)
+
+  const investmentPackages = [
+    {
+      id: 1,
+      name: "Conservative Growth",
+      category: "Low Risk",
+      expectedROI: 8.5,
+      minInvestment: 10000,
+      duration: 12,
+      totalRaised: 2500000,
+      targetAmount: 5000000,
+      investors: 156,
+      status: "Active",
+      riskLevel: "Low",
+      description: "Balanced portfolio focused on capital preservation with moderate growth potential",
+    },
+    {
+      id: 2,
+      name: "Aggressive Growth",
+      category: "High Risk",
+      expectedROI: 18.2,
+      minInvestment: 25000,
+      duration: 24,
+      totalRaised: 8750000,
+      targetAmount: 10000000,
+      investors: 89,
+      status: "Active",
+      riskLevel: "High",
+      description: "High-growth portfolio focused on emerging markets and innovative technologies",
+    },
+    {
+      id: 3,
+      name: "ESG Sustainable",
+      category: "ESG",
+      expectedROI: 12.8,
+      minInvestment: 15000,
+      duration: 18,
+      totalRaised: 1200000,
+      targetAmount: 3000000,
+      investors: 67,
+      status: "Fundraising",
+      riskLevel: "Medium",
+      description: "Sustainable investments with ESG criteria and positive environmental impact",
+    },
+  ]
+
+  const stats = [
+    { label: "Assets Under Management", value: "$3.2B", icon: DollarSign },
+    { label: "Active Investors", value: "2,847", icon: Users },
+    { label: "Average Annual Return", value: "15.4%", icon: TrendingUp },
+    { label: "Years of Excellence", value: "12+", icon: Award },
+  ]
+
+  const features = [
+    {
+      icon: Shield,
+      title: "Bank-Level Security",
+      description: "Your investments are protected with institutional-grade security measures",
+    },
+    {
+      icon: BarChart3,
+      title: "Real-Time Analytics",
+      description: "Track your portfolio performance with advanced analytics and reporting",
+    },
+    {
+      icon: Globe,
+      title: "Global Diversification",
+      description: "Access to international markets and diversified investment opportunities",
+    },
+    {
+      icon: Zap,
+      title: "Instant Execution",
+      description: "Fast and efficient trade execution with minimal slippage",
