@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowLeft, Users, Target, Award, TrendingUp, Building, Globe, Shield } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 
 export default function AboutPage() {
   return (
