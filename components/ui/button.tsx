@@ -21,4 +21,8 @@ export function Button({
       "bg-transparent border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--accent)] hover:text-[var(--primary)] hover:border-[var(--accent)]",
   };
   return (
-    <button className={`
+    <button className={`${base} ${styles[variant]} ${className}`} {...props}>
+      {children}
+    </button>
+  );
+}
