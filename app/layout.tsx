@@ -31,7 +31,7 @@ export default function RootLayout({
           <Link href="/" style={{ color: 'var(--primary)', textDecoration: 'none' }}>Home</Link>
           <Link href="/about" style={{ color: 'var(--primary)' }}>About Us</Link>
           <Link href="/contact" style={{ color: 'var(--primary)' }}>Contact</Link>
-          <Link href="/reserved" style={{ color: 'var(--primary)' }}>Reserved Area</Link>
+          <Link href="/reserved" style={{ color: 'var(--primary)' }}>Portfolio Dashboard</Link>
           <Link href="/contact" style={{ marginLeft: '2rem', background: 'var(--accent)', color: 'var(--primary)', padding: '0.5rem 1.25rem', borderRadius: 6, fontWeight: 700, textDecoration: 'none', boxShadow: '0 2px 8px rgba(34,40,49,0.07)' }}>Contact</Link>
         </nav>
         <StockTicker />

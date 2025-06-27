@@ -178,7 +178,7 @@ export default function AboutPage() {
             fontSize: 16,
             border: '2px solid var(--accent)'
           }}>
-            Reserved Area
+            Portfolio Dashboard
           </a>
         </div>
       </section>

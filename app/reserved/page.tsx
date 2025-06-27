@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { TrendingUp, DollarSign, Users, BarChart3, Shield, Globe, Calendar, Target, Award, Activity } from 'lucide-react';
 import Image from 'next/image';
 
-const mockInvestments = [
+const mockPositions = [
   {
     name: 'GLG Equity Position A',
     startDate: '2024-01-15',
@@ -47,20 +47,20 @@ function calculateDays(startDate: string) {
   return Math.floor(diff / (1000 * 60 * 60 * 24));
 }
 
-function calculateEarnings(amount: number, yieldRate: number, startDate: string) {
+function calculateReturns(amount: number, yieldRate: number, startDate: string) {
   const days = calculateDays(startDate);
   const dailyRate = Math.pow(1 + yieldRate, 1 / 365) - 1;
   return amount * (Math.pow(1 + dailyRate, days) - 1);
 }
 
-export default function ReservedAreaPage() {
+export default function PortfolioDashboardPage() {
   const [activeTab, setActiveTab] = useState('dashboard');
 
   // Calcoli
-  const totalInvested = mockInvestments.reduce((sum, inv) => sum + inv.amount, 0);
-  const totalEarnings = mockInvestments.reduce((sum, inv) => sum + calculateEarnings(inv.amount, inv.yield, inv.startDate), 0);
-  const totalValue = totalInvested + totalEarnings;
-  const averageYield = mockInvestments.reduce((sum, inv) => sum + inv.yield, 0) / mockInvestments.length;
+  const totalCommitted = mockPositions.reduce((sum, pos) => sum + pos.amount, 0);
+  const totalReturns = mockPositions.reduce((sum, pos) => sum + calculateReturns(pos.amount, pos.yield, pos.startDate), 0);
+  const totalValue = totalCommitted + totalReturns;
+  const averageYield = mockPositions.reduce((sum, pos) => sum + pos.yield, 0) / mockPositions.length;
 
   const stats = [
     { 
@@ -70,14 +70,14 @@ export default function ReservedAreaPage() {
       color: 'var(--accent)'
     },
     { 
-      label: "Total Earnings", 
-      value: `$${totalEarnings.toLocaleString(undefined, { maximumFractionDigits: 2 })}`, 
+      label: "Total Returns", 
+      value: `$${totalReturns.toLocaleString(undefined, { maximumFractionDigits: 2 })}`, 
       icon: TrendingUp,
       color: '#10b981'
     },
     { 
       label: "Active Positions", 
-      value: mockInvestments.length.toString(), 
+      value: mockPositions.length.toString(), 
       icon: Target,
       color: 'var(--primary)'
     },
@@ -95,8 +95,8 @@ export default function ReservedAreaPage() {
       {/* HEADER */}
       <section style={{ textAlign: 'center', marginBottom: '3rem' }}>
         <Image src="/glg capital group llcbianco.png" alt="GLG Capital Group LLC" width={80} height={80} style={{ margin: '0 auto 1rem auto', borderRadius: 12, background: '#fff', boxShadow: '0 2px 12px rgba(34,40,49,0.10)' }} />
-        <h1 style={{ color: 'var(--primary)', fontSize: 36, fontWeight: 900, marginBottom: 8 }}>GLG Reserved Area</h1>
-        <p style={{ color: 'var(--foreground)', fontSize: 18, opacity: 0.8 }}>Your exclusive access to GLG Capital Group investment platform</p>
+        <h1 style={{ color: 'var(--primary)', fontSize: 36, fontWeight: 900, marginBottom: 8 }}>GLG Portfolio Dashboard</h1>
+        <p style={{ color: 'var(--foreground)', fontSize: 18, opacity: 0.8 }}>Your exclusive access to GLG Capital Group position management platform</p>
       </section>
 
       {/* STATS CARDS */}
@@ -149,7 +149,7 @@ export default function ReservedAreaPage() {
         </div>
       </section>
 
-      {/* INVESTMENTS TABLE */}
+      {/* POSITIONS TABLE */}
       <section style={{ marginBottom: '3rem' }}>
         <h2 style={{ color: 'var(--primary)', fontSize: 24, fontWeight: 700, marginBottom: '1.5rem' }}>Your GLG Equity Positions</h2>
         <div style={{ background: 'var(--secondary)', borderRadius: 12, overflow: 'hidden', boxShadow: '0 2px 8px rgba(10,37,64,0.06)' }}>
@@ -160,20 +160,20 @@ export default function ReservedAreaPage() {
                 <th style={{ padding: '1rem', textAlign: 'center', fontSize: 14, fontWeight: 600 }}>Start Date</th>
                 <th style={{ padding: '1rem', textAlign: 'center', fontSize: 14, fontWeight: 600 }}>Amount</th>
                 <th style={{ padding: '1rem', textAlign: 'center', fontSize: 14, fontWeight: 600 }}>Yield (Annual)</th>
-                <th style={{ padding: '1rem', textAlign: 'center', fontSize: 14, fontWeight: 600 }}>Earnings</th>
+                <th style={{ padding: '1rem', textAlign: 'center', fontSize: 14, fontWeight: 600 }}>Returns</th>
                 <th style={{ padding: '1rem', textAlign: 'center', fontSize: 14, fontWeight: 600 }}>Maturity</th>
                 <th style={{ padding: '1rem', textAlign: 'center', fontSize: 14, fontWeight: 600 }}>Status</th>
               </tr>
             </thead>
             <tbody>
-              {mockInvestments.map((inv, idx) => (
+              {mockPositions.map((pos, idx) => (
                 <tr key={idx} style={{ borderBottom: '1px solid #e0e3eb' }}>
-                  <td style={{ padding: '1rem', fontWeight: 600, color: 'var(--primary)' }}>{inv.name}</td>
-                  <td style={{ padding: '1rem', textAlign: 'center', color: 'var(--foreground)' }}>{inv.startDate}</td>
-                  <td style={{ padding: '1rem', textAlign: 'center', fontWeight: 600, color: 'var(--foreground)' }}>${inv.amount.toLocaleString()}</td>
-                  <td style={{ padding: '1rem', textAlign: 'center', color: '#10b981', fontWeight: 600 }}>{(inv.yield * 100).toFixed(2)}%</td>
-                  <td style={{ padding: '1rem', textAlign: 'center', color: '#10b981', fontWeight: 600 }}>${calculateEarnings(inv.amount, inv.yield, inv.startDate).toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
-                  <td style={{ padding: '1rem', textAlign: 'center', color: 'var(--foreground)' }}>{inv.maturity}</td>
+                  <td style={{ padding: '1rem', fontWeight: 600, color: 'var(--primary)' }}>{pos.name}</td>
+                  <td style={{ padding: '1rem', textAlign: 'center', color: 'var(--foreground)' }}>{pos.startDate}</td>
+                  <td style={{ padding: '1rem', textAlign: 'center', fontWeight: 600, color: 'var(--foreground)' }}>${pos.amount.toLocaleString()}</td>
+                  <td style={{ padding: '1rem', textAlign: 'center', color: '#10b981', fontWeight: 600 }}>{(pos.yield * 100).toFixed(2)}%</td>
+                  <td style={{ padding: '1rem', textAlign: 'center', color: '#10b981', fontWeight: 600 }}>${calculateReturns(pos.amount, pos.yield, pos.startDate).toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+                  <td style={{ padding: '1rem', textAlign: 'center', color: 'var(--foreground)' }}>{pos.maturity}</td>
                   <td style={{ padding: '1rem', textAlign: 'center' }}>
                     <span style={{ 
                       background: '#10b981', 
@@ -183,7 +183,7 @@ export default function ReservedAreaPage() {
                       fontSize: 12, 
                       fontWeight: 600 
                     }}>
-                      {inv.status}
+                      {pos.status}
                     </span>
                   </td>
                 </tr>
@@ -216,7 +216,7 @@ export default function ReservedAreaPage() {
               <Activity size={16} style={{ color: 'var(--accent)' }} />
               <span style={{ fontWeight: 600 }}>Real-time Updates</span>
             </div>
-            <p style={{ fontSize: 14, opacity: 0.9, margin: 0 }}>Portfolio values and earnings are updated in real-time throughout the trading day.</p>
+            <p style={{ fontSize: 14, opacity: 0.9, margin: 0 }}>Portfolio values and returns are updated in real-time throughout the trading day.</p>
           </div>
         </div>
       </section>
