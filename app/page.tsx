@@ -86,11 +86,11 @@ export default function HomePage() {
     <main style={{ maxWidth: 1100, margin: '2rem auto', padding: '2.5rem', background: '#fff', borderRadius: 16, boxShadow: '0 4px 24px rgba(10,37,64,0.10)' }}>
       {/* HERO SECTION GLG EQUITY PLEDGE */}
       <section style={{ textAlign: 'center', marginBottom: '3.5rem', paddingTop: '1.5rem' }}>
-        <Image src="/glg-logo.png" alt="GLG Capital Group LLC Logo" width={120} height={120} style={{ margin: '0 auto 1.5rem auto', borderRadius: 16, background: '#fff', boxShadow: '0 2px 12px rgba(34,40,49,0.10)' }} />
+        <Image src="/glg capital group llcbianco.png" alt="GLG Capital Group LLC Logo" width={120} height={120} style={{ margin: '0 auto 1.5rem auto', borderRadius: 16, background: '#fff', boxShadow: '0 2px 12px rgba(34,40,49,0.10)' }} />
         <h1 style={{ color: 'var(--primary)', fontSize: 48, fontWeight: 900, marginBottom: 12, letterSpacing: 1.5, textTransform: 'uppercase' }}>GLG EQUITY PLEDGE</h1>
         <div style={{ color: 'var(--accent)', fontSize: 26, fontWeight: 700, marginBottom: 8 }}>A contract. A pledge. A future.</div>
         <div style={{ color: 'var(--foreground)', fontSize: 22, fontWeight: 600, marginBottom: 8 }}>🔐 It is not an investment. It is a position.</div>
-        <div style={{ color: 'var(--foreground)', fontSize: 20, fontStyle: 'italic', marginBottom: 0 }}>“True power cannot be bought. It is subscribed.”</div>
+        <div style={{ color: 'var(--foreground)', fontSize: 20, fontStyle: 'italic', marginBottom: 0 }}>"True power cannot be bought. It is subscribed."</div>
       </section>
       {/* SERVIZI PRIVATE BANKING */}
       <section style={{ margin: '0 auto 3rem auto', maxWidth: 950 }}>

@@ -21,7 +21,7 @@ export default function RootLayout({
       <body style={{ background: 'var(--background)', minHeight: '100vh', fontFamily: 'Inter, Open Sans, Roboto, sans-serif' }}>
         <header style={{ background: 'var(--primary)', padding: '2rem 0', textAlign: 'center', borderBottom: '1px solid #e0e3eb' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
-            <Image src="/glg-logo.png" alt="GLG Capital Group LLC" width={60} height={60} style={{ borderRadius: 8, background: '#fff' }} />
+            <Image src="/glg capital group llcbianco.png" alt="GLG Capital Group LLC" width={60} height={60} style={{ borderRadius: 8, background: '#fff' }} />
             <h1 style={{ color: 'var(--primary)', fontSize: 32, fontWeight: 700, margin: 0, background: 'var(--secondary)', padding: '0.5rem 1.5rem', borderRadius: 8 }}>GLG Capital Group LLC</h1>
           </div>
           <p style={{ color: 'var(--foreground)', fontSize: 18, marginTop: 8 }}>Empowering Your Financial Future</p>
@@ -36,7 +36,7 @@ export default function RootLayout({
         <main style={{ minHeight: '70vh' }}>{children}</main>
         <footer style={{ background: 'var(--primary)', color: 'var(--secondary)', padding: '2rem 0', textAlign: 'center', borderTop: '1px solid #e0e3eb', marginTop: 40 }}>
           <div style={{ marginBottom: 8 }}>
-            <Image src="/glg-logo.png" alt="GLG Capital Group LLC" width={40} height={40} style={{ verticalAlign: 'middle', background: '#fff', borderRadius: 6 }} />
+            <Image src="/glg capital group llcbianco.png" alt="GLG Capital Group LLC" width={40} height={40} style={{ verticalAlign: 'middle', background: '#fff', borderRadius: 6 }} />
           </div>
           <div style={{ fontWeight: 600, fontSize: 18 }}>GLG Capital Group LLC</div>
           <div style={{ margin: '0.5rem 0', color: 'var(--accent)' }}>Empowering Your Financial Future</div>

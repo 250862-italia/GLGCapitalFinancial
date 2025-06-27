@@ -1,68 +1,177 @@
 "use client"
-
-import Link from "next/link"
-import { ArrowLeft } from 'lucide-react'
+import Image from "next/image"
+import { Award, Shield, Users, Globe, TrendingUp, Building, Target, Heart } from 'lucide-react'
 
 export default function AboutPage() {
+  const values = [
+    {
+      icon: Shield,
+      title: "Integrity & Trust",
+      description: "Building lasting relationships through transparency and ethical practices"
+    },
+    {
+      icon: Target,
+      title: "Excellence",
+      description: "Delivering exceptional service and superior investment performance"
+    },
+    {
+      icon: Users,
+      title: "Client-Centric",
+      description: "Your success is our priority in every decision we make"
+    },
+    {
+      icon: Globe,
+      title: "Global Perspective",
+      description: "Access to worldwide opportunities and diversified strategies"
+    }
+  ]
+
+  const milestones = [
+    { year: "2012", title: "Foundation", description: "GLG Capital Group LLC established in Wyoming" },
+    { year: "2015", title: "Expansion", description: "First international office opened" },
+    { year: "2018", title: "Innovation", description: "Launch of digital wealth management platform" },
+    { year: "2021", title: "Growth", description: "Assets under management reach $2B milestone" },
+    { year: "2024", title: "Leadership", description: "Recognized as top-tier private banking institution" }
+  ]
+
+  const team = [
+    {
+      name: "Executive Leadership",
+      role: "Strategic Vision",
+      description: "Experienced professionals with decades of combined expertise in private banking and wealth management"
+    },
+    {
+      name: "Investment Team",
+      role: "Portfolio Management",
+      description: "Specialized analysts and portfolio managers focused on delivering superior returns"
+    },
+    {
+      name: "Client Relations",
+      role: "Personal Service",
+      description: "Dedicated relationship managers providing personalized attention to every client"
+    }
+  ]
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
-      <nav className="bg-white/10 backdrop-blur-md border-b border-white/20">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center space-x-2 text-white/80 hover:text-white transition-colors">
-              <ArrowLeft className="h-5 w-5" />
-              <span>Back to Home</span>
-            </Link>
-            <div className="text-2xl font-bold text-white">GLG Capital Group LLC</div>
+    <main style={{ maxWidth: 1200, margin: '2rem auto', padding: '2rem', background: '#fff', borderRadius: 16, boxShadow: '0 4px 24px rgba(10,37,64,0.10)' }}>
+      
+      {/* HERO SECTION */}
+      <section style={{ textAlign: 'center', marginBottom: '4rem', paddingTop: '1rem' }}>
+        <Image src="/glg capital group llcbianco.png" alt="GLG Capital Group LLC" width={100} height={100} style={{ margin: '0 auto 2rem auto', borderRadius: 12, background: '#fff', boxShadow: '0 2px 12px rgba(34,40,49,0.10)' }} />
+        <h1 style={{ color: 'var(--primary)', fontSize: 42, fontWeight: 900, marginBottom: 16, letterSpacing: 1.2 }}>About GLG Capital Group</h1>
+        <p style={{ color: 'var(--foreground)', fontSize: 20, lineHeight: 1.6, maxWidth: 800, margin: '0 auto 2rem auto' }}>
+          A premier private banking institution dedicated to empowering high-net-worth individuals and families 
+          with sophisticated wealth management solutions and exclusive investment opportunities.
+        </p>
+        <div style={{ background: 'var(--secondary)', padding: '1.5rem', borderRadius: 12, maxWidth: 600, margin: '0 auto' }}>
+          <div style={{ color: 'var(--accent)', fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Our Mission</div>
+          <div style={{ color: 'var(--foreground)', fontSize: 16, fontStyle: 'italic' }}>
+            "To preserve and grow our clients' wealth through innovative strategies, personalized service, and unwavering commitment to excellence."
           </div>
         </div>
-      </nav>
+      </section>
 
-      <div className="max-w-7xl mx-auto px-6 py-16">
-        <div className="text-center mb-20">
-          <h1 className="text-6xl md:text-8xl font-bold text-white mb-8 leading-tight">
-            About{" "}
-            <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-              GLG Capital
-            </span>
-          </h1>
-          <p className="text-2xl text-white/80 max-w-4xl mx-auto leading-relaxed">
-            GLG Capital Group LLC is a leading American investment banking firm, dedicated to providing innovative financial solutions and strategic advisory services to clients worldwide. Our team of experienced professionals is committed to delivering excellence, integrity, and value in every transaction.
-          </p>
-          <p className="text-2xl text-white/80 max-w-4xl mx-auto leading-relaxed">
-            With a strong focus on client success, we offer a comprehensive suite of services including asset management, capital markets, and corporate finance. Our mission is to empower our clients to achieve their financial goals through tailored strategies and expert guidance.
-          </p>
+      {/* VALUES SECTION */}
+      <section style={{ marginBottom: '4rem' }}>
+        <h2 style={{ color: 'var(--primary)', fontSize: 32, fontWeight: 800, textAlign: 'center', marginBottom: '3rem' }}>Our Core Values</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '2rem' }}>
+          {values.map((value, index) => (
+            <div key={index} style={{ background: '#f8f9fa', padding: '2rem', borderRadius: 12, textAlign: 'center', border: '2px solid var(--accent)' }}>
+              <value.icon size={48} style={{ color: 'var(--accent)', margin: '0 auto 1rem auto', display: 'block' }} />
+              <h3 style={{ color: 'var(--primary)', fontSize: 20, fontWeight: 700, marginBottom: 12 }}>{value.title}</h3>
+              <p style={{ color: 'var(--foreground)', fontSize: 15, lineHeight: 1.5 }}>{value.description}</p>
+            </div>
+          ))}
         </div>
+      </section>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-20">
-          <div className="text-center">
-            <div className="text-5xl font-bold text-blue-400 mb-2">€2.5B+</div>
-            <div className="text-white/80">Assets Under Management</div>
-          </div>
-          <div className="text-center">
-            <div className="text-5xl font-bold text-green-400 mb-2">500+</div>
-            <div className="text-white/80">Global Clients</div>
-          </div>
-          <div className="text-center">
-            <div className="text-5xl font-bold text-purple-400 mb-2">15+</div>
-            <div className="text-white/80">Years Experience</div>
-          </div>
-          <div className="text-center">
-            <div className="text-5xl font-bold text-yellow-400 mb-2">98%</div>
-            <div className="text-white/80">Client Satisfaction</div>
-          </div>
+      {/* TIMELINE SECTION */}
+      <section style={{ marginBottom: '4rem' }}>
+        <h2 style={{ color: 'var(--primary)', fontSize: 32, fontWeight: 800, textAlign: 'center', marginBottom: '3rem' }}>Our Journey</h2>
+        <div style={{ position: 'relative' }}>
+          <div style={{ position: 'absolute', left: '50%', top: 0, bottom: 0, width: '2px', background: 'var(--accent)', transform: 'translateX(-50%)' }}></div>
+          {milestones.map((milestone, index) => (
+            <div key={index} style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              marginBottom: '3rem',
+              flexDirection: index % 2 === 0 ? 'row' : 'row-reverse'
+            }}>
+              <div style={{ 
+                flex: 1, 
+                textAlign: index % 2 === 0 ? 'right' : 'left',
+                padding: index % 2 === 0 ? '0 2rem 0 0' : '0 0 0 2rem'
+              }}>
+                <div style={{ background: 'var(--secondary)', padding: '1.5rem', borderRadius: 12, border: '2px solid var(--accent)' }}>
+                  <div style={{ color: 'var(--accent)', fontSize: 24, fontWeight: 900, marginBottom: 8 }}>{milestone.year}</div>
+                  <div style={{ color: 'var(--primary)', fontSize: 18, fontWeight: 700, marginBottom: 8 }}>{milestone.title}</div>
+                  <div style={{ color: 'var(--foreground)', fontSize: 15 }}>{milestone.description}</div>
+                </div>
+              </div>
+              <div style={{ 
+                width: '20px', 
+                height: '20px', 
+                background: 'var(--accent)', 
+                borderRadius: '50%', 
+                border: '4px solid #fff',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                zIndex: 1
+              }}></div>
+              <div style={{ flex: 1 }}></div>
+            </div>
+          ))}
         </div>
+      </section>
 
-        <div className="text-center bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl p-16">
-          <h2 className="text-5xl font-bold text-white mb-6">Ready to Partner with GLG Capital?</h2>
-          <Link
-            href="/contact"
-            className="inline-block bg-white text-blue-600 px-12 py-4 rounded-xl text-xl font-bold hover:bg-gray-100 transition-colors shadow-2xl"
-          >
-            Contact Us Today
-          </Link>
+      {/* TEAM SECTION */}
+      <section style={{ marginBottom: '3rem' }}>
+        <h2 style={{ color: 'var(--primary)', fontSize: 32, fontWeight: 800, textAlign: 'center', marginBottom: '3rem' }}>Our Expertise</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
+          {team.map((member, index) => (
+            <div key={index} style={{ background: 'var(--secondary)', padding: '2rem', borderRadius: 12, textAlign: 'center' }}>
+              <Building size={48} style={{ color: 'var(--accent)', margin: '0 auto 1rem auto', display: 'block' }} />
+              <h3 style={{ color: 'var(--primary)', fontSize: 20, fontWeight: 700, marginBottom: 8 }}>{member.name}</h3>
+              <div style={{ color: 'var(--accent)', fontSize: 16, fontWeight: 600, marginBottom: 12 }}>{member.role}</div>
+              <p style={{ color: 'var(--foreground)', fontSize: 15, lineHeight: 1.5 }}>{member.description}</p>
+            </div>
+          ))}
         </div>
-      </div>
-    </div>
+      </section>
+
+      {/* CONTACT CTA */}
+      <section style={{ background: 'var(--primary)', borderRadius: 12, padding: '3rem 2rem', textAlign: 'center', marginTop: '3rem' }}>
+        <h3 style={{ color: 'var(--secondary)', fontSize: 28, fontWeight: 700, marginBottom: 16 }}>Ready to Start Your Journey?</h3>
+        <p style={{ color: 'var(--secondary)', fontSize: 18, marginBottom: '2rem', maxWidth: 600, margin: '0 auto 2rem auto' }}>
+          Discover how GLG Capital Group can help you achieve your financial goals with our personalized private banking services.
+        </p>
+        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <a href="/contact" style={{ 
+            background: 'var(--accent)', 
+            color: 'var(--primary)', 
+            padding: '1rem 2rem', 
+            borderRadius: 8, 
+            textDecoration: 'none', 
+            fontWeight: 700,
+            fontSize: 16,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+          }}>
+            Contact Us
+          </a>
+          <a href="/reserved" style={{ 
+            background: 'transparent', 
+            color: 'var(--accent)', 
+            padding: '1rem 2rem', 
+            borderRadius: 8, 
+            textDecoration: 'none', 
+            fontWeight: 700,
+            fontSize: 16,
+            border: '2px solid var(--accent)'
+          }}>
+            Reserved Area
+          </a>
+        </div>
+      </section>
+
+    </main>
   )
 }
