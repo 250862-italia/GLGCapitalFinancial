@@ -137,6 +137,9 @@ export default function ReservedAreaPage() {
         </button>
         {error && <p style={{ color: 'red' }}>{error}</p>}
       </form>
+      <p style={{ textAlign: 'center', marginTop: 16 }}>
+        Don't have an account? <a href="/reserved/register" style={{ color: 'var(--primary)', textDecoration: 'underline' }}>Register</a>
+      </p>
       <Chatbot />
     </main>
   );
