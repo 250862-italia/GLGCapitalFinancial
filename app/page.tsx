@@ -1,178 +1,512 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
-import Image from "next/image"
-import { TrendingUp, Shield, Users, DollarSign, ArrowRight, Globe, Award, BarChart3, Lock, Zap, Calendar, ExternalLink } from 'lucide-react'
-import FinancialNews from '../components/ui/FinancialNews'
+import { TrendingUp, TrendingDown, DollarSign, Globe, Clock, ArrowRight, CheckCircle, Star } from "lucide-react"
+import FinancialNews from "../components/ui/FinancialNews"
+import { PackageProvider } from '../lib/package-context';
+import StockTicker from '../components/ui/StockTicker';
 
 export default function HomePage() {
-  const [hoveredPackage, setHoveredPackage] = useState<number | null>(null)
+  const [lastUpdated, setLastUpdated] = useState<string>("");
 
-  const investmentPackages = [
-    {
-      id: 1,
-      name: "Conservative Growth",
-      category: "Low Risk",
-      expectedROI: 8.5,
-      minInvestment: 10000,
-      duration: 12,
-      totalRaised: 2500000,
-      targetAmount: 5000000,
-      investors: 156,
-      status: "Active",
-      riskLevel: "Low",
-      description: "Balanced portfolio focused on capital preservation with moderate growth potential",
-    },
-    {
-      id: 2,
-      name: "Aggressive Growth",
-      category: "High Risk",
-      expectedROI: 18.2,
-      minInvestment: 25000,
-      duration: 24,
-      totalRaised: 8750000,
-      targetAmount: 10000000,
-      investors: 89,
-      status: "Active",
-      riskLevel: "High",
-      description: "High-growth portfolio focused on emerging markets and innovative technologies",
-    },
-    {
-      id: 3,
-      name: "ESG Sustainable",
-      category: "ESG",
-      expectedROI: 12.8,
-      minInvestment: 15000,
-      duration: 18,
-      totalRaised: 1200000,
-      targetAmount: 3000000,
-      investors: 67,
-      status: "Fundraising",
-      riskLevel: "Medium",
-      description: "Sustainable investments with ESG criteria and positive environmental impact",
-    },
-  ]
-
-  const stats = [
-    { label: "Assets Under Management", value: "$3.2B", icon: DollarSign },
-    { label: "Active Investors", value: "2,847", icon: Users },
-    { label: "Average Annual Return", value: "15.4%", icon: TrendingUp },
-    { label: "Years of Excellence", value: "12+", icon: Award },
-  ]
-
-  const features = [
-    {
-      icon: Shield,
-      title: "Bank-Level Security",
-      description: "Your investments are protected with institutional-grade security measures",
-    },
-    {
-      icon: BarChart3,
-      title: "Real-Time Analytics",
-      description: "Track your portfolio performance with advanced analytics and reporting",
-    },
-    {
-      icon: Globe,
-      title: "Global Diversification",
-      description: "Access to international markets and diversified investment opportunities",
-    },
-    {
-      icon: Zap,
-      title: "Instant Execution",
-      description: "Fast and efficient trade execution with minimal slippage",
-    },
-  ]
+  useEffect(() => {
+    const updateTime = () => {
+      setLastUpdated(new Date().toLocaleString('en-US', {
+        timeZone: 'America/New_York',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      }));
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
-    <main style={{ maxWidth: 1100, margin: '2rem auto', padding: '2.5rem', background: '#fff', borderRadius: 16, boxShadow: '0 4px 24px rgba(10,37,64,0.10)' }}>
-      {/* HERO SECTION GLG EQUITY PLEDGE */}
-      <section style={{ textAlign: 'center', marginBottom: '3.5rem', paddingTop: '1.5rem' }}>
-        <Image src="/glg capital group llcbianco.png" alt="GLG Capital Group LLC Logo" width={120} height={120} style={{ margin: '0 auto 1.5rem auto', borderRadius: 16, background: '#fff', boxShadow: '0 2px 12px rgba(34,40,49,0.10)' }} />
-        <h1 style={{ color: 'var(--primary)', fontSize: 48, fontWeight: 900, marginBottom: 12, letterSpacing: 1.5, textTransform: 'uppercase' }}>GLG EQUITY PLEDGE</h1>
-        <div style={{ color: 'var(--accent)', fontSize: 26, fontWeight: 700, marginBottom: 8 }}>A contract. A pledge. A future.</div>
-        <div style={{ color: 'var(--foreground)', fontSize: 22, fontWeight: 600, marginBottom: 8 }}>🔐 It is not an investment. It is a position.</div>
-        <div style={{ color: 'var(--foreground)', fontSize: 20, fontStyle: 'italic', marginBottom: 0 }}>"True power cannot be bought. It is subscribed."</div>
-      </section>
-
-      {/* NEWS SECTION - GLG & MAGNIFICUS DOMINUS AGREEMENT */}
-      <section style={{ margin: '0 auto 3.5rem auto', maxWidth: 900 }}>
-        <h3 style={{ color: 'var(--primary)', fontWeight: 800, fontSize: 28, textAlign: 'center', marginBottom: 28 }}>Latest News</h3>
-        <div style={{ background: 'linear-gradient(135deg, var(--primary) 0%, #2a3f5f 100%)', borderRadius: 16, padding: '2.5rem', color: '#fff', boxShadow: '0 8px 32px rgba(10,37,64,0.15)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-            <Calendar size={20} style={{ color: 'var(--accent)' }} />
-            <span style={{ color: 'var(--accent)', fontWeight: 600, fontSize: 16 }}>December 2024</span>
-          </div>
-          <h4 style={{ fontSize: 24, fontWeight: 700, marginBottom: 16, color: 'var(--accent)' }}>Strategic Partnership Announced</h4>
-          <h5 style={{ fontSize: 20, fontWeight: 600, marginBottom: 12 }}>GLG Capital Group & Magnificus Dominus Consulting</h5>
-          <p style={{ fontSize: 16, lineHeight: 1.6, marginBottom: 20, opacity: 0.95 }}>
-            GLG Capital Group LLC is pleased to announce a strategic partnership with Magnificus Dominus Consulting 
-            for the exclusive management and distribution of equity positions in global markets. This landmark agreement 
-            establishes a comprehensive framework for the worldwide sale and management of GLG equity shares, 
-            leveraging Magnificus Dominus Consulting's extensive network and expertise in international financial markets.
-          </p>
-          <div style={{ background: 'rgba(255,255,255,0.1)', padding: '1.5rem', borderRadius: 12, marginBottom: 20 }}>
-            <div style={{ fontWeight: 600, marginBottom: 8, color: 'var(--accent)' }}>Partnership Highlights:</div>
-            <ul style={{ margin: 0, paddingLeft: 20, lineHeight: 1.6 }}>
-              <li>Exclusive global distribution rights for GLG equity positions</li>
-              <li>Comprehensive market access across international exchanges</li>
-              <li>Strategic advisory services for equity management</li>
-              <li>Enhanced liquidity and market presence worldwide</li>
-              <li><strong>Magnificus Dominus Consulting retains full ownership of the Pentawash™ trademark</strong></li>
-            </ul>
-          </div>
-          <div style={{ background: 'rgba(218,165,32,0.2)', padding: '1rem', borderRadius: 8, marginBottom: 20, border: '1px solid var(--accent)' }}>
-            <div style={{ fontWeight: 600, marginBottom: 4, color: 'var(--accent)' }}>Trademark Notice:</div>
-            <div style={{ fontSize: 14, opacity: 0.9 }}>
-              Pentawash™ is a registered trademark owned exclusively by Magnificus Dominus Consulting. 
-              This partnership agreement does not transfer any trademark rights or ownership.
+    <PackageProvider>
+      <main style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+        fontFamily: 'Inter, system-ui, sans-serif'
+      }}>
+        {/* Header */}
+        <header style={{
+          background: 'white',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+          borderBottom: '1px solid #e2e8f0'
+        }}>
+          <div style={{
+            maxWidth: '1200px',
+            margin: '0 auto',
+            padding: '0 1rem'
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '1rem 0'
+            }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '1rem'
+              }}>
+                <div style={{
+                  width: '48px',
+                  height: '48px',
+                  background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <span style={{ color: 'white', fontSize: '24px', fontWeight: 'bold' }}>$</span>
+                </div>
+                <div>
+                  <h1 style={{
+                    fontSize: '24px',
+                    fontWeight: 'bold',
+                    color: '#1f2937',
+                    margin: 0
+                  }}>GLG Capital Group LLC</h1>
+                  <p style={{
+                    fontSize: '14px',
+                    color: '#6b7280',
+                    margin: 0
+                  }}>Professional Position Management</p>
+                </div>
+              </div>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '1rem',
+                fontSize: '14px',
+                color: '#6b7280'
+              }}>
+                <span>🕐 Live</span>
+              </div>
             </div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, opacity: 0.8 }}>
-            <ExternalLink size={16} />
-            <span>Official partnership agreement signed and effective immediately</span>
-          </div>
-        </div>
-      </section>
+        </header>
 
-      {/* FINANCIAL NEWS SECTION */}
-      <section style={{ margin: '0 auto 3.5rem auto', maxWidth: 900 }}>
-        <FinancialNews />
-      </section>
+        {/* Hero Section */}
+        <section style={{
+          padding: '4rem 0',
+          background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
+          color: 'white',
+          textAlign: 'center'
+        }}>
+          <div style={{
+            maxWidth: '1200px',
+            margin: '0 auto',
+            padding: '0 1rem'
+          }}>
+            <h2 style={{
+              fontSize: '48px',
+              fontWeight: 'bold',
+              marginBottom: '1.5rem'
+            }}>Strategic Partnership</h2>
+            <p style={{
+              fontSize: '24px',
+              marginBottom: '2rem',
+              opacity: 0.9
+            }}>GLG Capital Group & MD Financial Services</p>
+            
+            <div style={{
+              background: 'rgba(255,255,255,0.1)',
+              backdropFilter: 'blur(10px)',
+              borderRadius: '16px',
+              padding: '2rem',
+              marginBottom: '2rem'
+            }}>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                gap: '2rem',
+                alignItems: 'center'
+              }}>
+                <div style={{ textAlign: 'left' }}>
+                  <h3 style={{
+                    fontSize: '24px',
+                    fontWeight: 'bold',
+                    marginBottom: '1rem'
+                  }}>Partnership Highlights</h3>
+                  <ul style={{ listStyle: 'none', padding: 0 }}>
+                    {[
+                      'Guaranteed returns framework',
+                      'Institutional-grade security',
+                      '24/7 portfolio monitoring',
+                      'Advanced risk management'
+                    ].map((item, index) => (
+                      <li key={index} style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.75rem',
+                        marginBottom: '0.75rem'
+                      }}>
+                        <span style={{ color: '#10b981' }}>✓</span>
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div style={{
+                  background: 'rgba(255,255,255,0.2)',
+                  borderRadius: '12px',
+                  padding: '1.5rem'
+                }}>
+                  <h4 style={{
+                    fontSize: '18px',
+                    fontWeight: '600',
+                    marginBottom: '1rem'
+                  }}>Performance Metrics</h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Portfolio Growth</span>
+                      <span style={{ fontWeight: 'bold', color: '#10b981' }}>+15.2%</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Risk Score</span>
+                      <span style={{ fontWeight: 'bold', color: '#f59e0b' }}>Low</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Client Satisfaction</span>
+                      <span style={{ fontWeight: 'bold', color: '#10b981' }}>98%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1rem',
+              alignItems: 'center'
+            }}>
+              <a href="/iscriviti" style={{
+                background: '#fbbf24',
+                color: '#1f2937',
+                padding: '0.75rem 2rem',
+                borderRadius: '8px',
+                fontWeight: '600',
+                textDecoration: 'none',
+                transition: 'background-color 0.2s'
+              }}>Start Registration</a>
+              <a href="/about" style={{
+                background: 'rgba(255,255,255,0.2)',
+                color: 'white',
+                padding: '0.75rem 2rem',
+                borderRadius: '8px',
+                fontWeight: '600',
+                textDecoration: 'none',
+                transition: 'background-color 0.2s'
+              }}>Learn More</a>
+            </div>
+          </div>
+        </section>
 
-      {/* VALORI GLG */}
-      <section style={{ margin: '0 auto 3rem auto', maxWidth: 900 }}>
-        <h3 style={{ color: 'var(--primary)', fontWeight: 800, fontSize: 28, textAlign: 'center', marginBottom: 24 }}>Why GLG Capital Group</h3>
-        <div style={{ display: 'flex', gap: '2rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-          <div style={{ flex: '1 1 180px', minWidth: 180, background: '#fff', border: '2px solid var(--accent)', borderRadius: 10, padding: '1.5rem 1rem', textAlign: 'center' }}>
-            <h5 style={{ color: 'var(--primary)', fontWeight: 700, fontSize: 18, marginBottom: 6 }}>Discretion</h5>
-            <p style={{ color: 'var(--foreground)', fontSize: 15 }}>Your privacy is our top priority in every relationship.</p>
+        {/* Financial News Section */}
+        <section style={{
+          padding: '4rem 0',
+          background: 'white'
+        }}>
+          <div style={{
+            maxWidth: '1200px',
+            margin: '0 auto',
+            padding: '0 1rem'
+          }}>
+            <div style={{
+              background: 'white',
+              borderRadius: '12px',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+              border: '1px solid #e5e7eb',
+              padding: '1.5rem'
+            }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '1.5rem'
+              }}>
+                <h2 style={{
+                  fontSize: '24px',
+                  fontWeight: 'bold',
+                  color: '#1f2937'
+                }}>Live Financial News</h2>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  fontSize: '14px',
+                  color: '#6b7280'
+                }}>
+                  <span>🕐</span>
+                  <span>Last update: Today</span>
+                </div>
+              </div>
+              
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+                gap: '1rem'
+              }}>
+                {[
+                  {
+                    category: 'Partnership',
+                    title: 'GLG Capital Group Announces Strategic Partnership with MD Financial Services',
+                    description: 'Major breakthrough in institutional investment services with guaranteed returns framework',
+                    source: 'Financial Times',
+                    time: '2 hours ago',
+                    trend: 'up'
+                  },
+                  {
+                    category: 'Markets',
+                    title: 'Global Markets Show Strong Recovery Amid Economic Stability',
+                    description: 'Major indices reach new highs as investor confidence strengthens',
+                    source: 'Bloomberg',
+                    time: '4 hours ago',
+                    trend: 'up'
+                  },
+                  {
+                    category: 'Policy',
+                    title: 'Federal Reserve Signals Potential Rate Adjustments',
+                    description: 'Central bank considers monetary policy changes in response to inflation data',
+                    source: 'Reuters',
+                    time: '6 hours ago',
+                    trend: 'neutral'
+                  },
+                  {
+                    category: 'Technology',
+                    title: 'Tech Sector Leads Market Gains with 3.2% Increase',
+                    description: 'Technology stocks outperform as earnings season exceeds expectations',
+                    source: 'CNBC',
+                    time: '8 hours ago',
+                    trend: 'up'
+                  }
+                ].map((news, index) => (
+                  <div key={index} style={{
+                    background: '#f9fafb',
+                    borderRadius: '8px',
+                    padding: '1rem',
+                    transition: 'background-color 0.2s'
+                  }}>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      justifyContent: 'space-between',
+                      marginBottom: '0.5rem'
+                    }}>
+                      <span style={{
+                        fontSize: '12px',
+                        fontWeight: '500',
+                        color: '#3b82f6',
+                        background: '#dbeafe',
+                        padding: '0.25rem 0.5rem',
+                        borderRadius: '4px'
+                      }}>{news.category}</span>
+                      <span style={{
+                        color: news.trend === 'up' ? '#10b981' : news.trend === 'down' ? '#ef4444' : '#6b7280'
+                      }}>📈</span>
+                    </div>
+                    <h3 style={{
+                      fontWeight: '600',
+                      color: '#1f2937',
+                      fontSize: '14px',
+                      marginBottom: '0.5rem',
+                      lineHeight: '1.4'
+                    }}>{news.title}</h3>
+                    <p style={{
+                      fontSize: '12px',
+                      color: '#6b7280',
+                      marginBottom: '0.75rem',
+                      lineHeight: '1.4'
+                    }}>{news.description}</p>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      fontSize: '12px',
+                      color: '#6b7280'
+                    }}>
+                      <span>{news.source}</span>
+                      <span>{news.time}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <div style={{
+                marginTop: '1.5rem',
+                textAlign: 'center'
+              }}>
+                <p style={{
+                  fontSize: '14px',
+                  color: '#6b7280'
+                }}>News updates automatically every 6 hours. Partnership news updates daily.</p>
+              </div>
+            </div>
           </div>
-          <div style={{ flex: '1 1 180px', minWidth: 180, background: '#fff', border: '2px solid var(--accent)', borderRadius: 10, padding: '1.5rem 1rem', textAlign: 'center' }}>
-            <h5 style={{ color: 'var(--primary)', fontWeight: 700, fontSize: 18, marginBottom: 6 }}>Trust</h5>
-            <p style={{ color: 'var(--foreground)', fontSize: 15 }}>A legacy of reliability and long-term client relationships.</p>
-          </div>
-          <div style={{ flex: '1 1 180px', minWidth: 180, background: '#fff', border: '2px solid var(--accent)', borderRadius: 10, padding: '1.5rem 1rem', textAlign: 'center' }}>
-            <h5 style={{ color: 'var(--primary)', fontWeight: 700, fontSize: 18, marginBottom: 6 }}>Excellence</h5>
-            <p style={{ color: 'var(--foreground)', fontSize: 15 }}>Uncompromising standards in service and performance.</p>
-          </div>
-          <div style={{ flex: '1 1 180px', minWidth: 180, background: '#fff', border: '2px solid var(--accent)', borderRadius: 10, padding: '1.5rem 1rem', textAlign: 'center' }}>
-            <h5 style={{ color: 'var(--primary)', fontWeight: 700, fontSize: 18, marginBottom: 6 }}>Personalization</h5>
-            <p style={{ color: 'var(--foreground)', fontSize: 15 }}>Bespoke solutions for every client's unique needs.</p>
-          </div>
-        </div>
-      </section>
+        </section>
 
-      {/* CONTATTI IN EVIDENZA */}
-      <section style={{ background: 'var(--secondary)', borderRadius: 10, padding: '2rem 1rem', margin: '0 auto 2.5rem auto', maxWidth: 600, boxShadow: '0 2px 12px rgba(10,37,64,0.06)', textAlign: 'center' }}>
-        <h4 style={{ color: 'var(--primary)', fontWeight: 800, fontSize: 22, marginBottom: 10 }}>Contact GLG Capital Group</h4>
-        <div style={{ color: 'var(--foreground)', fontSize: 17, marginBottom: 6 }}>
-          <b>GLG Capital Group LLC</b><br />1309 Coffeen Avenue, STE 1200, Sheridan – WY 82801
-        </div>
-        <div style={{ color: 'var(--foreground)', fontSize: 16, marginBottom: 12 }}>
-          <b>Email:</b> <a href="mailto:corefound@glgcapitalgroupllc.com" style={{ color: 'var(--primary)', textDecoration: 'underline' }}>corefound@glgcapitalgroupllc.com</a>
-        </div>
-        <a href="/contact" style={{ display: 'inline-block', background: 'var(--accent)', color: 'var(--primary)', fontWeight: 700, fontSize: 17, padding: '0.6rem 2rem', borderRadius: 8, boxShadow: '0 2px 8px rgba(218,165,32,0.10)', textDecoration: 'none', marginTop: 8 }}>Contact Us</a>
-      </section>
-    </main>
+        {/* Services Section */}
+        <section style={{
+          padding: '4rem 0',
+          background: '#f9fafb'
+        }}>
+          <div style={{
+            maxWidth: '1200px',
+            margin: '0 auto',
+            padding: '0 1rem'
+          }}>
+            <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+              <h2 style={{
+                fontSize: '36px',
+                fontWeight: 'bold',
+                color: '#1f2937',
+                marginBottom: '1rem'
+              }}>Our Services</h2>
+              <p style={{
+                color: '#6b7280'
+              }}>Comprehensive financial solutions through our strategic partnership</p>
+            </div>
+            
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+              gap: '2rem'
+            }}>
+              {[
+                {
+                  icon: '📈',
+                  title: 'Portfolio Management',
+                  description: 'Professional position management with guaranteed returns and advanced risk controls.'
+                },
+                {
+                  icon: '🌍',
+                  title: 'Global Markets',
+                  description: 'Access to international markets with real-time monitoring and execution capabilities.'
+                },
+                {
+                  icon: '⭐',
+                  title: 'Premium Support',
+                  description: '24/7 dedicated support team with personalized financial advisory services.'
+                }
+              ].map((service, index) => (
+                <div key={index} style={{
+                  background: 'white',
+                  borderRadius: '12px',
+                  padding: '2rem',
+                  textAlign: 'center',
+                  transition: 'box-shadow 0.2s'
+                }}>
+                  <div style={{
+                    width: '64px',
+                    height: '64px',
+                    background: '#dbeafe',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 1rem',
+                    fontSize: '32px'
+                  }}>
+                    {service.icon}
+                  </div>
+                  <h3 style={{
+                    fontSize: '20px',
+                    fontWeight: '600',
+                    color: '#1f2937',
+                    marginBottom: '0.75rem'
+                  }}>{service.title}</h3>
+                  <p style={{
+                    color: '#6b7280'
+                  }}>{service.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section style={{
+          padding: '4rem 0',
+          background: 'linear-gradient(135deg, #1f2937 0%, #374151 100%)',
+          color: 'white',
+          textAlign: 'center'
+        }}>
+          <div style={{
+            maxWidth: '1200px',
+            margin: '0 auto',
+            padding: '0 1rem'
+          }}>
+            <h2 style={{
+              fontSize: '36px',
+              fontWeight: 'bold',
+              marginBottom: '1rem'
+            }}>Ready to Get Started?</h2>
+            <p style={{
+              fontSize: '20px',
+              color: '#d1d5db',
+              marginBottom: '2rem'
+            }}>Join thousands of satisfied clients who trust GLG Capital Group for their investment needs.</p>
+            
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1rem',
+              alignItems: 'center'
+            }}>
+              <a href="/iscriviti" style={{
+                background: '#fbbf24',
+                color: '#1f2937',
+                padding: '0.75rem 2rem',
+                borderRadius: '8px',
+                fontWeight: '600',
+                textDecoration: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                transition: 'background-color 0.2s'
+              }}>
+                Start Your Journey
+                <span>→</span>
+              </a>
+              <a href="/contact" style={{
+                background: 'rgba(255,255,255,0.1)',
+                color: 'white',
+                padding: '0.75rem 2rem',
+                borderRadius: '8px',
+                fontWeight: '600',
+                textDecoration: 'none',
+                transition: 'background-color 0.2s'
+              }}>Contact Us</a>
+            </div>
+          </div>
+        </section>
+
+        {/* Footer */}
+        <footer style={{
+          background: '#1f2937',
+          color: 'white',
+          padding: '2rem 0',
+          textAlign: 'center'
+        }}>
+          <div style={{
+            maxWidth: '1200px',
+            margin: '0 auto',
+            padding: '0 1rem'
+          }}>
+            <p style={{
+              color: '#9ca3af'
+            }}>© 2024 GLG Capital Group LLC. All rights reserved. | Strategic Partnership with MD Financial Services</p>
+          </div>
+        </footer>
+      </main>
+    </PackageProvider>
   )
 }

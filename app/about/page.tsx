@@ -87,6 +87,81 @@ export default function AboutPage() {
         </div>
       </section>
 
+      {/* OFFICIAL WEBSITE BANNER */}
+      <section style={{ marginBottom: '4rem' }}>
+        <div style={{ 
+          background: 'linear-gradient(135deg, var(--primary) 0%, #2a3f5f 100%)', 
+          borderRadius: 16, 
+          padding: '2.5rem', 
+          color: '#fff', 
+          textAlign: 'center',
+          boxShadow: '0 8px 32px rgba(10,37,64,0.15)',
+          position: 'relative',
+          overflow: 'hidden'
+        }}>
+          <div style={{ 
+            position: 'absolute', 
+            top: 0, 
+            left: 0, 
+            right: 0, 
+            bottom: 0, 
+            background: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.05\'%3E%3Ccircle cx=\'30\' cy=\'30\' r=\'2\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")',
+            opacity: 0.3
+          }}></div>
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', marginBottom: '1rem' }}>
+              <Globe size={32} style={{ color: 'var(--accent)' }} />
+              <span style={{ color: 'var(--accent)', fontSize: 20, fontWeight: 700 }}>Official Website</span>
+            </div>
+            <h3 style={{ fontSize: 24, fontWeight: 700, marginBottom: '1rem', color: 'var(--accent)' }}>
+              Visit Our Official Corporate Website
+            </h3>
+            <p style={{ fontSize: 16, lineHeight: 1.6, marginBottom: '2rem', maxWidth: 600, margin: '0 auto 2rem auto', opacity: 0.95 }}>
+              For comprehensive corporate information, official documentation, and detailed company profiles, 
+              visit our official GLG Capital Group LLC website.
+            </p>
+            <a 
+              href="https://www.glgcapitalgroupllc.com" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              style={{ 
+                display: 'inline-flex', 
+                alignItems: 'center', 
+                gap: '0.5rem',
+                background: 'var(--accent)', 
+                color: 'var(--primary)', 
+                padding: '1rem 2rem', 
+                borderRadius: 8, 
+                textDecoration: 'none', 
+                fontWeight: 700,
+                fontSize: 16,
+                boxShadow: '0 4px 16px rgba(218,165,32,0.3)',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 6px 20px rgba(218,165,32,0.4)';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 16px rgba(218,165,32,0.3)';
+              }}
+            >
+              <Globe size={20} />
+              Visit Official Website
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                <polyline points="15,3 21,3 21,9"></polyline>
+                <line x1="10" y1="14" x2="21" y2="3"></line>
+              </svg>
+            </a>
+            <div style={{ marginTop: '1rem', fontSize: 14, opacity: 0.8 }}>
+              Opens in new window • External link
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* VALUES SECTION */}
       <section style={{ marginBottom: '4rem' }}>
         <h2 style={{ color: 'var(--primary)', fontSize: 32, fontWeight: 800, textAlign: 'center', marginBottom: '3rem' }}>Our Core Values</h2>

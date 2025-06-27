@@ -1,37 +1,9 @@
 "use client";
 import { useState } from 'react';
-import { TrendingUp, DollarSign, Users, BarChart3, Shield, Globe, Calendar, Target, Award, Activity } from 'lucide-react';
+import { TrendingUp, DollarSign, Users, BarChart3, Shield, Globe, Calendar, Target, Award, Activity, Settings } from 'lucide-react';
 import Image from 'next/image';
-
-const mockPositions = [
-  {
-    name: 'GLG Equity Position A',
-    startDate: '2024-01-15',
-    amount: 25000,
-    yield: 0.085, // 8.5% annual
-    status: 'Active',
-    type: 'Equity Position',
-    maturity: '2025-01-15'
-  },
-  {
-    name: 'GLG Equity Position B',
-    startDate: '2024-03-01',
-    amount: 15000,
-    yield: 0.092, // 9.2% annual
-    status: 'Active',
-    type: 'Equity Position',
-    maturity: '2025-03-01'
-  },
-  {
-    name: 'GLG Equity Position C',
-    startDate: '2024-06-10',
-    amount: 35000,
-    yield: 0.078, // 7.8% annual
-    status: 'Active',
-    type: 'Equity Position',
-    maturity: '2025-06-10'
-  },
-];
+import Link from 'next/link';
+import { usePackages } from '../../lib/package-context';
 
 const marketData = [
   { name: 'S&P 500', value: '4,567.89', change: '+1.2%', trend: 'up' },
@@ -54,30 +26,31 @@ function calculateReturns(amount: number, yieldRate: number, startDate: string) 
 }
 
 export default function PortfolioDashboardPage() {
+  const { packages } = usePackages();
   const [activeTab, setActiveTab] = useState('dashboard');
 
   // Calcoli
-  const totalCommitted = mockPositions.reduce((sum, pos) => sum + pos.amount, 0);
-  const totalReturns = mockPositions.reduce((sum, pos) => sum + calculateReturns(pos.amount, pos.yield, pos.startDate), 0);
+  const totalCommitted = packages.reduce((sum, pos) => sum + pos.minInvestment, 0);
+  const totalReturns = packages.reduce((sum, pos) => sum + calculateReturns(pos.minInvestment, pos.expectedROI / 100, pos.createdAt), 0);
   const totalValue = totalCommitted + totalReturns;
-  const averageYield = mockPositions.reduce((sum, pos) => sum + pos.yield, 0) / mockPositions.length;
+  const averageYield = packages.length > 0 ? packages.reduce((sum, pos) => sum + (pos.expectedROI / 100), 0) / packages.length : 0;
 
   const stats = [
     { 
       label: "Total Portfolio Value", 
-      value: `$${totalValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}`, 
+      value: `$${totalValue.toLocaleString('en-US', { maximumFractionDigits: 2 })}`, 
       icon: DollarSign,
       color: 'var(--accent)'
     },
     { 
       label: "Total Returns", 
-      value: `$${totalReturns.toLocaleString(undefined, { maximumFractionDigits: 2 })}`, 
+      value: `$${totalReturns.toLocaleString('en-US', { maximumFractionDigits: 2 })}`, 
       icon: TrendingUp,
       color: '#10b981'
     },
     { 
       label: "Active Positions", 
-      value: mockPositions.length.toString(), 
+      value: packages.length.toString(), 
       icon: Target,
       color: 'var(--primary)'
     },
@@ -94,9 +67,33 @@ export default function PortfolioDashboardPage() {
       
       {/* HEADER */}
       <section style={{ textAlign: 'center', marginBottom: '3rem' }}>
-        <Image src="/glg capital group llcbianco.png" alt="GLG Capital Group LLC" width={80} height={80} style={{ margin: '0 auto 1rem auto', borderRadius: 12, background: '#fff', boxShadow: '0 2px 12px rgba(34,40,49,0.10)' }} />
-        <h1 style={{ color: 'var(--primary)', fontSize: 36, fontWeight: 900, marginBottom: 8 }}>GLG Portfolio Dashboard</h1>
-        <p style={{ color: 'var(--foreground)', fontSize: 18, opacity: 0.8 }}>Your exclusive access to GLG Capital Group position management platform</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+          <div style={{ flex: 1 }}></div>
+          <div style={{ flex: 2 }}>
+            <h1 style={{ color: 'var(--primary)', fontSize: 36, fontWeight: 900, marginBottom: 8 }}>GLG Portfolio Dashboard</h1>
+            <p style={{ color: 'var(--foreground)', fontSize: 18, opacity: 0.8 }}>Your exclusive access to GLG Capital Group position management platform</p>
+          </div>
+          <div style={{ flex: 1, textAlign: 'right' }}>
+            <Link href="/admin/packages" style={{ textDecoration: 'none' }}>
+              <button style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 8, 
+                background: 'var(--primary)', 
+                color: '#fff', 
+                padding: '0.75rem 1.5rem', 
+                borderRadius: 8, 
+                border: 'none', 
+                fontWeight: 600, 
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                marginLeft: 'auto'
+              }}>
+                <Settings size={18} /> Manage Packages
+              </button>
+            </Link>
+          </div>
+        </div>
       </section>
 
       {/* STATS CARDS */}
@@ -151,7 +148,27 @@ export default function PortfolioDashboardPage() {
 
       {/* POSITIONS TABLE */}
       <section style={{ marginBottom: '3rem' }}>
-        <h2 style={{ color: 'var(--primary)', fontSize: 24, fontWeight: 700, marginBottom: '1.5rem' }}>Your GLG Equity Positions</h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <h2 style={{ color: 'var(--primary)', fontSize: 24, fontWeight: 700, margin: 0 }}>Your GLG Equity Positions</h2>
+          <Link href="/admin/packages" style={{ textDecoration: 'none' }}>
+            <button style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: 8, 
+              background: 'var(--accent)', 
+              color: 'var(--primary)', 
+              padding: '0.5rem 1rem', 
+              borderRadius: 6, 
+              border: 'none', 
+              fontWeight: 600, 
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              fontSize: 14
+            }}>
+              <Settings size={16} /> Package Management
+            </button>
+          </Link>
+        </div>
         <div style={{ background: 'var(--secondary)', borderRadius: 12, overflow: 'hidden', boxShadow: '0 2px 8px rgba(10,37,64,0.06)' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
@@ -166,14 +183,14 @@ export default function PortfolioDashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {mockPositions.map((pos, idx) => (
+              {packages.map((pos, idx) => (
                 <tr key={idx} style={{ borderBottom: '1px solid #e0e3eb' }}>
                   <td style={{ padding: '1rem', fontWeight: 600, color: 'var(--primary)' }}>{pos.name}</td>
-                  <td style={{ padding: '1rem', textAlign: 'center', color: 'var(--foreground)' }}>{pos.startDate}</td>
-                  <td style={{ padding: '1rem', textAlign: 'center', fontWeight: 600, color: 'var(--foreground)' }}>${pos.amount.toLocaleString()}</td>
-                  <td style={{ padding: '1rem', textAlign: 'center', color: '#10b981', fontWeight: 600 }}>{(pos.yield * 100).toFixed(2)}%</td>
-                  <td style={{ padding: '1rem', textAlign: 'center', color: '#10b981', fontWeight: 600 }}>${calculateReturns(pos.amount, pos.yield, pos.startDate).toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
-                  <td style={{ padding: '1rem', textAlign: 'center', color: 'var(--foreground)' }}>{pos.maturity}</td>
+                  <td style={{ padding: '1rem', textAlign: 'center', color: 'var(--foreground)' }}>{pos.createdAt}</td>
+                  <td style={{ padding: '1rem', textAlign: 'center', fontWeight: 600, color: 'var(--foreground)' }}>${pos.minInvestment.toLocaleString('en-US')}</td>
+                  <td style={{ padding: '1rem', textAlign: 'center', color: '#10b981', fontWeight: 600 }}>{(pos.expectedROI / 100).toFixed(2)}%</td>
+                  <td style={{ padding: '1rem', textAlign: 'center', color: '#10b981', fontWeight: 600 }}>${calculateReturns(pos.minInvestment, pos.expectedROI / 100, pos.createdAt).toLocaleString('en-US', { maximumFractionDigits: 2 })}</td>
+                  <td style={{ padding: '1rem', textAlign: 'center', color: 'var(--foreground)' }}>{pos.duration} months</td>
                   <td style={{ padding: '1rem', textAlign: 'center' }}>
                     <span style={{ 
                       background: '#10b981', 

@@ -84,14 +84,7 @@ export default function ContactPage() {
               boxShadow: '0 2px 8px rgba(218,165,32,0.20)',
               transition: 'all 0.2s ease'
             }}
-            onMouseOver={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 4px 12px rgba(218,165,32,0.30)';
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 2px 8px rgba(218,165,32,0.20)';
-            }}
+            className="hover:transform hover:-translate-y-0.5 hover:shadow-lg"
           >
             Send Message
           </button>
