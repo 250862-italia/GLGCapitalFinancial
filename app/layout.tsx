@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import Link from 'next/link'
 import Image from 'next/image'
+import StockTicker from '../components/ui/StockTicker'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -33,6 +34,7 @@ export default function RootLayout({
           <Link href="/reserved" style={{ color: 'var(--primary)' }}>Reserved Area</Link>
           <Link href="/contact" style={{ marginLeft: '2rem', background: 'var(--accent)', color: 'var(--primary)', padding: '0.5rem 1.25rem', borderRadius: 6, fontWeight: 700, textDecoration: 'none', boxShadow: '0 2px 8px rgba(34,40,49,0.07)' }}>Contact</Link>
         </nav>
+        <StockTicker />
         <main style={{ minHeight: '70vh' }}>{children}</main>
         <footer style={{ background: 'var(--primary)', color: 'var(--secondary)', padding: '2rem 0', textAlign: 'center', borderTop: '1px solid #e0e3eb', marginTop: 40 }}>
           <div style={{ marginBottom: 8 }}>

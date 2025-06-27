@@ -3,6 +3,7 @@ import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { TrendingUp, Shield, Users, DollarSign, ArrowRight, Globe, Award, BarChart3, Lock, Zap, Calendar, ExternalLink } from 'lucide-react'
+import FinancialNews from '../components/ui/FinancialNews'
 
 export default function HomePage() {
   const [hoveredPackage, setHoveredPackage] = useState<number | null>(null)
@@ -123,6 +124,11 @@ export default function HomePage() {
             <span>Official partnership agreement signed and effective immediately</span>
           </div>
         </div>
+      </section>
+
+      {/* FINANCIAL NEWS SECTION */}
+      <section style={{ margin: '0 auto 3.5rem auto', maxWidth: 900 }}>
+        <FinancialNews />
       </section>
 
       {/* VALORI GLG */}
