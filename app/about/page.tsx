@@ -29,16 +29,16 @@ export default function AboutPage() {
   const milestones = [
     { year: "2012", title: "Foundation", description: "GLG Capital Group LLC established in Wyoming" },
     { year: "2015", title: "Expansion", description: "First international office opened" },
-    { year: "2018", title: "Innovation", description: "Launch of digital wealth management platform" },
+    { year: "2018", title: "Innovation", description: "Launch of digital investment platform" },
     { year: "2021", title: "Growth", description: "Assets under management reach $2B milestone" },
-    { year: "2024", title: "Leadership", description: "Recognized as top-tier private banking institution" }
+    { year: "2024", title: "Leadership", description: "Recognized as top-tier investment institution" }
   ]
 
   const team = [
     {
       name: "Executive Leadership",
       role: "Strategic Vision",
-      description: "Experienced professionals with decades of combined expertise in private banking and wealth management"
+      description: "Experienced professionals with decades of combined expertise in investment management and financial services"
     },
     {
       name: "Investment Team",
@@ -60,8 +60,8 @@ export default function AboutPage() {
         <Image src="/glg capital group llcbianco.png" alt="GLG Capital Group LLC" width={100} height={100} style={{ margin: '0 auto 2rem auto', borderRadius: 12, background: '#fff', boxShadow: '0 2px 12px rgba(34,40,49,0.10)' }} />
         <h1 style={{ color: 'var(--primary)', fontSize: 42, fontWeight: 900, marginBottom: 16, letterSpacing: 1.2 }}>About GLG Capital Group</h1>
         <p style={{ color: 'var(--foreground)', fontSize: 20, lineHeight: 1.6, maxWidth: 800, margin: '0 auto 2rem auto' }}>
-          A premier private banking institution dedicated to empowering high-net-worth individuals and families 
-          with sophisticated wealth management solutions and exclusive investment opportunities.
+          A premier investment institution dedicated to empowering high-net-worth individuals and families 
+          with sophisticated investment solutions and exclusive opportunities.
         </p>
         <div style={{ background: 'var(--secondary)', padding: '1.5rem', borderRadius: 12, maxWidth: 600, margin: '0 auto' }}>
           <div style={{ color: 'var(--accent)', fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Our Mission</div>
@@ -142,7 +142,7 @@ export default function AboutPage() {
       <section style={{ background: 'var(--primary)', borderRadius: 12, padding: '3rem 2rem', textAlign: 'center', marginTop: '3rem' }}>
         <h3 style={{ color: 'var(--secondary)', fontSize: 28, fontWeight: 700, marginBottom: 16 }}>Ready to Start Your Journey?</h3>
         <p style={{ color: 'var(--secondary)', fontSize: 18, marginBottom: '2rem', maxWidth: 600, margin: '0 auto 2rem auto' }}>
-          Discover how GLG Capital Group can help you achieve your financial goals with our personalized private banking services.
+          Discover how GLG Capital Group can help you achieve your financial goals with our personalized investment services.
         </p>
         <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
           <a href="/contact" style={{ 

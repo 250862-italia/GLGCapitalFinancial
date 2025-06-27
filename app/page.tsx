@@ -92,31 +92,10 @@ export default function HomePage() {
         <div style={{ color: 'var(--foreground)', fontSize: 22, fontWeight: 600, marginBottom: 8 }}>🔐 It is not an investment. It is a position.</div>
         <div style={{ color: 'var(--foreground)', fontSize: 20, fontStyle: 'italic', marginBottom: 0 }}>"True power cannot be bought. It is subscribed."</div>
       </section>
-      {/* SERVIZI PRIVATE BANKING */}
-      <section style={{ margin: '0 auto 3rem auto', maxWidth: 950 }}>
-        <h3 style={{ color: 'var(--primary)', fontWeight: 800, fontSize: 28, textAlign: 'center', marginBottom: 28 }}>Our Private Banking Services</h3>
-        <div style={{ display: 'flex', gap: '2rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-          <div style={{ flex: '1 1 200px', minWidth: 220, background: '#f5f6fa', borderRadius: 12, padding: '2rem 1.5rem', boxShadow: '0 2px 8px rgba(10,37,64,0.04)', textAlign: 'center' }}>
-            <h4 style={{ color: 'var(--primary)', fontWeight: 700, fontSize: 20, marginBottom: 8 }}>Wealth Management</h4>
-            <p style={{ color: 'var(--foreground)', fontSize: 16 }}>Personalized strategies to grow, protect, and transfer your wealth.</p>
-          </div>
-          <div style={{ flex: '1 1 200px', minWidth: 220, background: '#f5f6fa', borderRadius: 12, padding: '2rem 1.5rem', boxShadow: '0 2px 8px rgba(10,37,64,0.04)', textAlign: 'center' }}>
-            <h4 style={{ color: 'var(--primary)', fontWeight: 700, fontSize: 20, marginBottom: 8 }}>Investment Advisory</h4>
-            <p style={{ color: 'var(--foreground)', fontSize: 16 }}>Expert advice and access to exclusive investment opportunities.</p>
-          </div>
-          <div style={{ flex: '1 1 200px', minWidth: 220, background: '#f5f6fa', borderRadius: 12, padding: '2rem 1.5rem', boxShadow: '0 2px 8px rgba(10,37,64,0.04)', textAlign: 'center' }}>
-            <h4 style={{ color: 'var(--primary)', fontWeight: 700, fontSize: 20, marginBottom: 8 }}>Asset Protection</h4>
-            <p style={{ color: 'var(--foreground)', fontSize: 16 }}>Comprehensive solutions to safeguard your assets and legacy.</p>
-          </div>
-          <div style={{ flex: '1 1 200px', minWidth: 220, background: '#f5f6fa', borderRadius: 12, padding: '2rem 1.5rem', boxShadow: '0 2px 8px rgba(10,37,64,0.04)', textAlign: 'center' }}>
-            <h4 style={{ color: 'var(--primary)', fontWeight: 700, fontSize: 20, marginBottom: 8 }}>Succession Planning</h4>
-            <p style={{ color: 'var(--foreground)', fontSize: 16 }}>Tailored plans to ensure a smooth transition for future generations.</p>
-          </div>
-        </div>
-      </section>
-      {/* VALORI PRIVATE BANK */}
+
+      {/* VALORI GLG */}
       <section style={{ margin: '0 auto 3rem auto', maxWidth: 900 }}>
-        <h3 style={{ color: 'var(--primary)', fontWeight: 800, fontSize: 28, textAlign: 'center', marginBottom: 24 }}>Why GLG Private Bank</h3>
+        <h3 style={{ color: 'var(--primary)', fontWeight: 800, fontSize: 28, textAlign: 'center', marginBottom: 24 }}>Why GLG Capital Group</h3>
         <div style={{ display: 'flex', gap: '2rem', justifyContent: 'center', flexWrap: 'wrap' }}>
           <div style={{ flex: '1 1 180px', minWidth: 180, background: '#fff', border: '2px solid var(--accent)', borderRadius: 10, padding: '1.5rem 1rem', textAlign: 'center' }}>
             <h5 style={{ color: 'var(--primary)', fontWeight: 700, fontSize: 18, marginBottom: 6 }}>Discretion</h5>
@@ -136,17 +115,15 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
       {/* CONTATTI IN EVIDENZA */}
       <section style={{ background: 'var(--secondary)', borderRadius: 10, padding: '2rem 1rem', margin: '0 auto 2.5rem auto', maxWidth: 600, boxShadow: '0 2px 12px rgba(10,37,64,0.06)', textAlign: 'center' }}>
-        <h4 style={{ color: 'var(--primary)', fontWeight: 800, fontSize: 22, marginBottom: 10 }}>Contact Your Private Banker</h4>
+        <h4 style={{ color: 'var(--primary)', fontWeight: 800, fontSize: 22, marginBottom: 10 }}>Contact GLG Capital Group</h4>
         <div style={{ color: 'var(--foreground)', fontSize: 17, marginBottom: 6 }}>
           <b>GLG Capital Consulting LLC</b><br />1309 Coffeen Avenue, STE 1200, Sheridan – WY 82801
         </div>
-        <div style={{ color: 'var(--foreground)', fontSize: 16, marginBottom: 6 }}>
-          <b>Email:</b> <a href="mailto:corefound@glgcapitalgroupllc.com" style={{ color: 'var(--primary)', textDecoration: 'underline' }}>corefound@glgcapitalgroupllc.com</a>
-        </div>
         <div style={{ color: 'var(--foreground)', fontSize: 16, marginBottom: 12 }}>
-          <b>Phone:</b> <a href="tel:+13072630876" style={{ color: 'var(--primary)', textDecoration: 'underline' }}>+1 307 2630876</a>
+          <b>Email:</b> <a href="mailto:corefound@glgcapitalgroupllc.com" style={{ color: 'var(--primary)', textDecoration: 'underline' }}>corefound@glgcapitalgroupllc.com</a>
         </div>
         <a href="/contact" style={{ display: 'inline-block', background: 'var(--accent)', color: 'var(--primary)', fontWeight: 700, fontSize: 17, padding: '0.6rem 2rem', borderRadius: 8, boxShadow: '0 2px 8px rgba(218,165,32,0.10)', textDecoration: 'none', marginTop: 8 }}>Contact Us</a>
       </section>
