@@ -1,8 +1,8 @@
 "use client";
 import { useState } from 'react';
 import { DollarSign, CreditCard, Building2, CheckCircle, XCircle, Clock, TrendingUp, Download, Eye, AlertCircle, Calendar, Edit, Plus, Trash2, Search, Users } from 'lucide-react';
-import { usePackages } from '../../../lib/package-context';
-import { emailNotificationService } from '../../../lib/email-service';
+import { usePackages } from '@/lib/package-context';
+import { emailNotificationService } from '@/lib/email-service';
 
 interface Payment {
   id: string;

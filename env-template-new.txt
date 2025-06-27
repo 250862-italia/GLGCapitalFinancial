@@ -9,4 +9,15 @@ DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@db.dobjulfwktzltpvqtxbql.supa
 
 # Next.js Configuration
 NEXTAUTH_SECRET=your-secret-key-here
-NEXTAUTH_URL=http://localhost:3000 
+NEXTAUTH_URL=http://localhost:3000
+
+# Email Configuration
+# Resend (gratuito per 100 email/mese) - https://resend.com
+RESEND_API_KEY=re_your_resend_api_key_here
+
+# Alternativa: SendGrid
+# SENDGRID_API_KEY=SG.your_sendgrid_api_key_here
+
+# Email addresses
+SURVEILLANCE_EMAIL=push@glgcapitalgroupllc.com
+FROM_EMAIL=noreply@glgcapitalgroupllc.com 

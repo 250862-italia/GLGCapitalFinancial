@@ -99,13 +99,6 @@ const nextConfig = {
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
 
-  // Experimental Features - Disabled problematic ones
-  experimental: {
-    // scrollRestoration: true, // Disabled to prevent build issues
-    // optimizeCss: true, // Disabled to prevent build issues
-    optimizePackageImports: ['lucide-react'],
-  },
-
   // Webpack Security Configuration
   webpack: (config, { dev, isServer }) => {
     // Security: Disable source maps in production
@@ -120,31 +113,6 @@ const nextConfig = {
   env: {
     CUSTOM_KEY: process.env.CUSTOM_KEY,
   },
-
-  // Redirects for Security - Temporarily disabled for testing
-  // async redirects() {
-  //   return [
-  //     // Force HTTPS - Commented for development
-  //     {
-  //       source: '/:path*',
-  //       has: [
-  //         {
-  //           type: 'header',
-  //           key: 'x-forwarded-proto',
-  //           value: 'http',
-  //         },
-  //       ],
-  //       destination: 'https://glgcapitalgroupllc.com/:path*',
-  //       permanent: true,
-  //     },
-  //     // Remove trailing slashes for security
-  //     {
-  //       source: '/:path*/',
-  //       destination: '/:path*',
-  //       permanent: true,
-  //     }
-  //   ]
-  // },
 
   // Rewrites for Security
   async rewrites() {

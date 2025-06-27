@@ -11,9 +11,9 @@ interface Package {
   description: string;
   minInvestment: number;
   maxInvestment: number;
-  expectedROI: number;
+  expectedReturn: number;
   duration: number;
-  riskLevel: 'Low' | 'Medium' | 'High';
+  riskLevel: 'low' | 'medium' | 'high';
   category: string;
   status: 'Active' | 'Fundraising' | 'Closed';
   createdAt: string;
@@ -26,9 +26,9 @@ const initialPackages: Package[] = [
     description: 'Balanced portfolio focused on capital preservation with moderate growth potential',
     minInvestment: 10000,
     maxInvestment: 100000,
-    expectedROI: 8.5,
+    expectedReturn: 8.5,
     duration: 12,
-    riskLevel: 'Low',
+    riskLevel: 'low',
     category: 'Conservative',
     status: 'Active',
     createdAt: '2024-01-15'
@@ -39,9 +39,9 @@ const initialPackages: Package[] = [
     description: 'High-growth portfolio focused on emerging markets and innovative technologies',
     minInvestment: 25000,
     maxInvestment: 500000,
-    expectedROI: 18.2,
+    expectedReturn: 18.2,
     duration: 24,
-    riskLevel: 'High',
+    riskLevel: 'high',
     category: 'Growth',
     status: 'Active',
     createdAt: '2024-01-20'
@@ -52,9 +52,9 @@ const initialPackages: Package[] = [
     description: 'Sustainable investments with ESG criteria and positive environmental impact',
     minInvestment: 15000,
     maxInvestment: 200000,
-    expectedROI: 12.8,
+    expectedReturn: 12.8,
     duration: 18,
-    riskLevel: 'Medium',
+    riskLevel: 'medium',
     category: 'ESG',
     status: 'Active',
     createdAt: '2024-02-01'
@@ -71,9 +71,9 @@ export default function PackagesManagementPage() {
     description: '',
     minInvestment: 0,
     maxInvestment: 0,
-    expectedROI: 0,
+    expectedReturn: 0,
     duration: 0,
-    riskLevel: 'Low',
+    riskLevel: 'low',
     category: '',
     status: 'Active',
     createdAt: ''
@@ -91,9 +91,9 @@ export default function PackagesManagementPage() {
       description: '',
       minInvestment: 0,
       maxInvestment: 0,
-      expectedROI: 0,
+      expectedReturn: 0,
       duration: 0,
-      riskLevel: 'Low',
+      riskLevel: 'low',
       category: '',
       status: 'Active',
       createdAt: ''
@@ -129,8 +129,13 @@ export default function PackagesManagementPage() {
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    const newValue = name === 'minInvestment' || name === 'maxInvestment' || name === 'expectedROI' || name === 'duration' ? Number(value) : value;
-    console.log('Form field changed:', { name, value, newValue });
+    let newValue: any = value;
+    if (name === 'minInvestment' || name === 'maxInvestment' || name === 'expectedReturn' || name === 'duration') {
+      newValue = Number(value);
+    }
+    if (name === 'riskLevel') {
+      newValue = value.toLowerCase();
+    }
     setFormData(prev => ({ ...prev, [name]: newValue }));
   };
 
@@ -140,7 +145,14 @@ export default function PackagesManagementPage() {
     
     if (isEdit && formData.id) {
       const updatedPackages = packages.map(p => 
-        p.id === formData.id ? { ...p, ...formData } : p
+        p.id === formData.id ? { 
+          ...p, 
+          ...formData,
+          expectedReturn: formData.expectedReturn ?? p.expectedReturn ?? 0,
+          isActive: p.isActive ?? true,
+          features: p.features ?? [],
+          terms: p.terms ?? ''
+        } : p
       );
       console.log('Updating packages:', updatedPackages);
       setPackages(updatedPackages);
@@ -152,10 +164,14 @@ export default function PackagesManagementPage() {
         { package: formData, action: 'edit' }
       );
     } else {
-      const newPackage: Package = {
-        ...formData as Package,
+      const newPackage: any = {
+        ...formData,
         id: Date.now().toString(),
-        createdAt: new Date().toISOString().slice(0, 10)
+        createdAt: new Date().toISOString().slice(0, 10),
+        expectedReturn: formData.expectedReturn ?? 0,
+        isActive: true,
+        features: [],
+        terms: ''
       };
       console.log('Adding new package:', newPackage);
       setPackages([...packages, newPackage]);
@@ -266,7 +282,7 @@ export default function PackagesManagementPage() {
                 <td style={{ padding: 12, maxWidth: 250, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{pkg.description}</td>
                 <td style={{ padding: 12 }}>${pkg.minInvestment.toLocaleString('en-US')}</td>
                 <td style={{ padding: 12 }}>${pkg.maxInvestment.toLocaleString('en-US')}</td>
-                <td style={{ padding: 12 }}>{pkg.expectedROI}%</td>
+                <td style={{ padding: 12 }}>{pkg.expectedReturn}%</td>
                 <td style={{ padding: 12 }}>{pkg.duration} months</td>
                 <td style={{ padding: 12 }}>
                   <span style={{ 
@@ -274,8 +290,8 @@ export default function PackagesManagementPage() {
                     borderRadius: 12, 
                     fontSize: 12, 
                     fontWeight: 600,
-                    ...(pkg.riskLevel === 'Low' ? { background: '#dcfce7', color: '#166534' } :
-                        pkg.riskLevel === 'Medium' ? { background: '#fef3c7', color: '#92400e' } :
+                    ...(pkg.riskLevel === 'low' ? { background: '#dcfce7', color: '#166534' } :
+                        pkg.riskLevel === 'medium' ? { background: '#fef3c7', color: '#92400e' } :
                         { background: '#fee2e2', color: '#991b1b' })
                   }}>
                     {pkg.riskLevel}
@@ -373,12 +389,12 @@ export default function PackagesManagementPage() {
               <input name="description" value={formData.description || ''} onChange={handleFormChange} placeholder="Description" required style={{ padding: 8, borderRadius: 6, border: '1px solid #e0e3eb' }} />
               <input name="minInvestment" value={formData.minInvestment || 0} onChange={handleFormChange} placeholder="Min Investment" type="number" min={0} required style={{ padding: 8, borderRadius: 6, border: '1px solid #e0e3eb' }} />
               <input name="maxInvestment" value={formData.maxInvestment || 0} onChange={handleFormChange} placeholder="Max Investment" type="number" min={0} required style={{ padding: 8, borderRadius: 6, border: '1px solid #e0e3eb' }} />
-              <input name="expectedROI" value={formData.expectedROI || 0} onChange={handleFormChange} placeholder="Expected ROI (%)" type="number" min={0} required style={{ padding: 8, borderRadius: 6, border: '1px solid #e0e3eb' }} />
+              <input name="expectedReturn" value={formData.expectedReturn || 0} onChange={handleFormChange} placeholder="Expected ROI (%)" type="number" min={0} required style={{ padding: 8, borderRadius: 6, border: '1px solid #e0e3eb' }} />
               <input name="duration" value={formData.duration || 0} onChange={handleFormChange} placeholder="Duration" type="number" min={0} required style={{ padding: 8, borderRadius: 6, border: '1px solid #e0e3eb' }} />
-              <select name="riskLevel" value={formData.riskLevel || 'Low'} onChange={handleFormChange} style={{ padding: 8, borderRadius: 6, border: '1px solid #e0e3eb' }}>
-                <option value="Low">Low</option>
-                <option value="Medium">Medium</option>
-                <option value="High">High</option>
+              <select name="riskLevel" value={formData.riskLevel || 'low'} onChange={handleFormChange} style={{ padding: 8, borderRadius: 6, border: '1px solid #e0e3eb' }}>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
               </select>
               <select name="status" value={formData.status || 'Active'} onChange={handleFormChange} style={{ padding: 8, borderRadius: 6, border: '1px solid #e0e3eb' }}>
                 <option value="Active">Active</option>

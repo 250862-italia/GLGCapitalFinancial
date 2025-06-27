@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "setup-db": "node setup-database.js",
+    "create-admin": "node create-superadmin.js"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.14",
@@ -17,17 +19,20 @@
     "@radix-ui/react-toast": "^1.2.14",
     "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/supabase-js": "^2.50.2",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.10",
     "bcryptjs": "^3.0.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "critters": "^0.0.23",
+    "dotenv": "^17.0.0",
+    "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.523.0",
     "next": "14.2.30",
     "postcss": "^8.5.6",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "recharts": "^3.0.0",
-    "tailwind-merge": "^3.3.1"
+    "recharts": "^3.0.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

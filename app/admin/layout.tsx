@@ -9,7 +9,8 @@ import {
   Users, 
   CreditCard, 
   Home,
-  Shield
+  Shield,
+  Mail
 } from 'lucide-react';
 import PackageProviderWrapper from '../package-provider';
 
@@ -21,6 +22,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: 'Clients', href: '/admin/clients', icon: Users },
     { name: 'Payments', href: '/admin/payments', icon: CreditCard },
     { name: 'Surveillance', href: '/admin/analytics/surveillance', icon: Shield },
+    { name: 'Email Config', href: '/admin/settings/email', icon: Mail },
   ];
 
   return (

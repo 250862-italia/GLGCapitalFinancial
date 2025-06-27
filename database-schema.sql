@@ -6,9 +6,29 @@ ALTER DATABASE postgres SET "app.jwt_secret" TO 'your-jwt-secret';
 
 -- Create tables for GLG Dashboard
 
+-- 0. USERS TABLE (NEW - for authentication)
+CREATE TABLE users (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  first_name VARCHAR(100),
+  last_name VARCHAR(100),
+  role VARCHAR(20) DEFAULT 'user' CHECK (role IN ('user', 'admin', 'super_admin')),
+  is_active BOOLEAN DEFAULT true,
+  email_verified BOOLEAN DEFAULT false,
+  last_login TIMESTAMP WITH TIME ZONE,
+  login_attempts INTEGER DEFAULT 0,
+  locked_until TIMESTAMP WITH TIME ZONE,
+  two_factor_enabled BOOLEAN DEFAULT false,
+  two_factor_secret VARCHAR(255),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- 1. CLIENTS TABLE
 CREATE TABLE clients (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   email VARCHAR(255) UNIQUE NOT NULL,
   first_name VARCHAR(100) NOT NULL,
   last_name VARCHAR(100) NOT NULL,
@@ -126,6 +146,9 @@ CREATE TABLE client_packages (
 );
 
 -- Create indexes for better performance
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_role ON users(role);
+CREATE INDEX idx_users_is_active ON users(is_active);
 CREATE INDEX idx_clients_email ON clients(email);
 CREATE INDEX idx_clients_status ON clients(status);
 CREATE INDEX idx_packages_status ON packages(status);
@@ -140,6 +163,7 @@ CREATE INDEX idx_client_packages_client_id ON client_packages(client_id);
 CREATE INDEX idx_client_packages_status ON client_packages(status);
 
 -- Enable Row Level Security (RLS)
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE clients ENABLE ROW LEVEL SECURITY;
 ALTER TABLE packages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE kyc_records ENABLE ROW LEVEL SECURITY;
@@ -150,6 +174,7 @@ ALTER TABLE partnerships ENABLE ROW LEVEL SECURITY;
 ALTER TABLE client_packages ENABLE ROW LEVEL SECURITY;
 
 -- Create RLS policies (basic - allow all for now, customize later)
+CREATE POLICY "Allow all operations on users" ON users FOR ALL USING (true);
 CREATE POLICY "Allow all operations on clients" ON clients FOR ALL USING (true);
 CREATE POLICY "Allow all operations on packages" ON packages FOR ALL USING (true);
 CREATE POLICY "Allow all operations on kyc_records" ON kyc_records FOR ALL USING (true);
@@ -158,6 +183,10 @@ CREATE POLICY "Allow all operations on news_articles" ON news_articles FOR ALL U
 CREATE POLICY "Allow all operations on team_members" ON team_members FOR ALL USING (true);
 CREATE POLICY "Allow all operations on partnerships" ON partnerships FOR ALL USING (true);
 CREATE POLICY "Allow all operations on client_packages" ON client_packages FOR ALL USING (true);
+
+-- Insert default super admin user (password: SuperAdmin123!)
+INSERT INTO users (email, password_hash, first_name, last_name, role, is_active, email_verified) VALUES
+('admin@glgcapitalgroupllc.com', '$2b$10$rQZ8K9mN2pL4vX7wY1sT3uI6oP8qR9sT2uI4oP6qR8sT1uI3oP5qR7sT9uI', 'Super', 'Admin', 'super_admin', true, true);
 
 -- Insert sample data
 INSERT INTO packages (name, description, price, daily_return, duration_days, min_investment, max_investment, currency) VALUES

@@ -3,11 +3,16 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import Link from 'next/link'
 import Image from 'next/image'
-import StockTicker from '../components/ui/StockTicker'
-import Chatbot from '../components/ui/Chatbot'
+import dynamic from 'next/dynamic'
 import { PackageProvider } from '../lib/package-context'
 
 const inter = Inter({ subsets: ['latin'] })
+
+// Dynamically import Chatbot to avoid server-side rendering issues
+const Chatbot = dynamic(() => import('../components/ui/Chatbot'), {
+  ssr: false,
+  loading: () => null
+})
 
 export const metadata: Metadata = {
   title: 'GLG Capital Group',
@@ -44,7 +49,6 @@ export default function RootLayout({
             </div>
           </nav>
           
-          <StockTicker />
           <main style={{ minHeight: '70vh' }}>{children}</main>
           
           {/* Chatbot - Available on all pages */}

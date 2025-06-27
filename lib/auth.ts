@@ -1,328 +1,170 @@
-import { jwtVerify, SignJWT } from 'jose'
-import { cookies } from 'next/headers'
-import { NextRequest } from 'next/server'
+import bcrypt from 'bcryptjs';
+import { createClient } from '@supabase/supabase-js';
 
-// Security Configuration
-const SECURITY_CONFIG = {
-  JWT_SECRET: process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production',
-  JWT_ALGORITHM: 'HS256',
-  JWT_EXPIRES_IN: '24h',
-  SESSION_EXPIRES_IN: 24 * 60 * 60 * 1000, // 24 hours in milliseconds
-  MAX_LOGIN_ATTEMPTS: 5,
-  LOCKOUT_DURATION: 15 * 60 * 1000, // 15 minutes
-  PASSWORD_MIN_LENGTH: 12,
-  REQUIRE_SPECIAL_CHARS: true,
-  REQUIRE_NUMBERS: true,
-  REQUIRE_UPPERCASE: true,
-  REQUIRE_LOWERCASE: true,
-}
-
-// User Roles and Permissions
-export enum UserRole {
-  GUEST = 'guest',
-  USER = 'user',
-  ADMIN = 'admin',
-  SUPER_ADMIN = 'super_admin',
-}
-
-export interface UserPermissions {
-  canViewDashboard: boolean
-  canManagePackages: boolean
-  canManageUsers: boolean
-  canManagePayments: boolean
-  canViewAnalytics: boolean
-  canManageSystem: boolean
-}
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 export interface User {
-  id: string
-  email: string
-  role: UserRole
-  permissions: UserPermissions
-  isActive: boolean
-  lastLogin: Date
-  loginAttempts: number
-  lockedUntil?: Date
-  twoFactorEnabled: boolean
-  ipWhitelist?: string[]
+  id: string;
+  email: string;
+  name: string;
+  first_name?: string;
+  last_name?: string;
+  role: 'user' | 'admin' | 'superadmin';
+  kyc_completed: boolean;
+  created_at: string;
 }
 
-// Login attempts tracking (in production, use Redis)
-const loginAttempts = new Map<string, { count: number; lockedUntil?: Date }>()
+export interface RegisterData {
+  email: string;
+  password: string;
+  name: string;
+  first_name?: string;
+  last_name?: string;
+  terms_accepted: boolean;
+  marketing_consent: boolean;
+}
 
-// JWT Token Management
-export class TokenManager {
-  private static secret = new TextEncoder().encode(SECURITY_CONFIG.JWT_SECRET)
+export interface LoginData {
+  email: string;
+  password: string;
+}
 
-  static async createToken(user: User): Promise<string> {
-    const token = await new SignJWT({
-      id: user.id,
-      email: user.email,
-      role: user.role,
-      permissions: user.permissions,
-    })
-      .setProtectedHeader({ alg: SECURITY_CONFIG.JWT_ALGORITHM })
-      .setIssuedAt()
-      .setExpirationTime(SECURITY_CONFIG.JWT_EXPIRES_IN)
-      .sign(this.secret)
-
-    return token
-  }
-
-  static async verifyToken(token: string): Promise<any> {
+export class AuthService {
+  static async register(data: RegisterData): Promise<{ success: boolean; message: string; user?: User }> {
     try {
-      const { payload } = await jwtVerify(token, this.secret)
-      return payload
+      // Check if user already exists
+      const { data: existingUser } = await supabase
+        .from('users')
+        .select('id')
+        .eq('email', data.email.toLowerCase())
+        .single();
+
+      if (existingUser) {
+        return { success: false, message: 'User already exists with this email' };
+      }
+
+      // Hash password
+      const hashedPassword = await bcrypt.hash(data.password, 12);
+
+      // Create user
+      const { data: newUser, error } = await supabase
+        .from('users')
+        .insert({
+          email: data.email.toLowerCase(),
+          password_hash: hashedPassword,
+          name: data.name,
+          first_name: data.first_name || data.name.split(' ')[0],
+          last_name: data.last_name || data.name.split(' ').slice(1).join(' '),
+          role: 'user',
+          kyc_completed: false,
+          created_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Database error:', error);
+        return { success: false, message: 'Failed to create user' };
+      }
+
+      return { 
+        success: true, 
+        message: 'User registered successfully',
+        user: newUser
+      };
     } catch (error) {
-      throw new Error('Invalid token')
+      console.error('Registration error:', error);
+      return { success: false, message: 'Registration failed' };
     }
   }
 
-  static async refreshToken(token: string): Promise<string> {
-    const payload = await this.verifyToken(token)
-    return this.createToken(payload as User)
-  }
-}
+  static async login(data: LoginData): Promise<{ success: boolean; message: string; user?: User }> {
+    try {
+      // Get user from database
+      const { data: user, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', data.email.toLowerCase())
+        .single();
 
-// Session Management
-export class SessionManager {
-  static async createSession(user: User, request: NextRequest): Promise<void> {
-    const token = await TokenManager.createToken(user)
-    const sessionData = {
-      token,
-      user: {
+      if (error || !user) {
+        return { success: false, message: 'Invalid credentials' };
+      }
+
+      // Verify password
+      const isValidPassword = await bcrypt.compare(data.password, user.password_hash);
+      if (!isValidPassword) {
+        return { success: false, message: 'Invalid credentials' };
+      }
+
+      return { 
+        success: true, 
+        message: 'Login successful',
+        user: user
+      };
+    } catch (error) {
+      console.error('Login error:', error);
+      return { success: false, message: 'Login failed' };
+    }
+  }
+
+  static async getUserById(id: string): Promise<User | null> {
+    try {
+      const { data: user, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error || !user) {
+        return null;
+      }
+
+      return {
         id: user.id,
         email: user.email,
+        name: user.name,
         role: user.role,
-        permissions: user.permissions,
-      },
-      createdAt: new Date(),
-      expiresAt: new Date(Date.now() + SECURITY_CONFIG.SESSION_EXPIRES_IN),
-      ip: request.ip || request.headers.get('x-forwarded-for') || 'unknown',
-      userAgent: request.headers.get('user-agent') || 'unknown',
-    }
-
-    // Set secure cookie
-    const cookieStore = await cookies()
-    cookieStore.set('session', JSON.stringify(sessionData), {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: SECURITY_CONFIG.SESSION_EXPIRES_IN / 1000,
-      path: '/',
-    })
-  }
-
-  static async getSession(): Promise<any> {
-    try {
-      const cookieStore = await cookies()
-      const sessionCookie = cookieStore.get('session')
-      
-      if (!sessionCookie?.value) {
-        return null
-      }
-
-      const sessionData = JSON.parse(sessionCookie.value)
-      
-      // Check if session is expired
-      if (new Date(sessionData.expiresAt) < new Date()) {
-        await this.destroySession()
-        return null
-      }
-
-      // Verify token
-      const payload = await TokenManager.verifyToken(sessionData.token)
-      return { ...sessionData, user: payload }
+        kyc_completed: user.kyc_completed,
+        created_at: user.created_at
+      };
     } catch (error) {
-      await this.destroySession()
-      return null
+      console.error('Get user error:', error);
+      return null;
     }
   }
 
-  static async destroySession(): Promise<void> {
-    const cookieStore = await cookies()
-    cookieStore.delete('session')
-  }
-
-  static async refreshSession(): Promise<boolean> {
-    const session = await this.getSession()
-    if (!session) return false
-
+  static async updateKycStatus(userId: string, kycData: any): Promise<{ success: boolean; message: string }> {
     try {
-      const newToken = await TokenManager.refreshToken(session.token)
-      const cookieStore = await cookies()
-      
-      cookieStore.set('session', JSON.stringify({
-        ...session,
-        token: newToken,
-        expiresAt: new Date(Date.now() + SECURITY_CONFIG.SESSION_EXPIRES_IN),
-      }), {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: SECURITY_CONFIG.SESSION_EXPIRES_IN / 1000,
-        path: '/',
-      })
-      
-      return true
+      const { error } = await supabase
+        .from('users')
+        .update({ 
+          kyc_completed: true,
+          kyc_data: kycData
+        })
+        .eq('id', userId);
+
+      if (error) {
+        return { success: false, message: 'Failed to update KYC status' };
+      }
+
+      return { success: true, message: 'KYC status updated successfully' };
     } catch (error) {
-      await this.destroySession()
-      return false
+      console.error('KYC update error:', error);
+      return { success: false, message: 'KYC update failed' };
     }
-  }
-}
-
-// Authentication Service
-export class AuthService {
-  static async authenticate(email: string, password: string, request: NextRequest): Promise<User> {
-    // Check login attempts
-    const attempts = loginAttempts.get(email)
-    if (attempts?.lockedUntil && attempts.lockedUntil > new Date()) {
-      throw new Error(`Account locked. Try again after ${attempts.lockedUntil.toLocaleString()}`)
-    }
-
-    // Validate credentials (in production, check against database)
-    const user = await this.validateCredentials(email, password)
-    
-    if (!user) {
-      // Increment login attempts
-      const currentAttempts = attempts?.count || 0
-      const newAttempts = currentAttempts + 1
-      
-      if (newAttempts >= SECURITY_CONFIG.MAX_LOGIN_ATTEMPTS) {
-        const lockedUntil = new Date(Date.now() + SECURITY_CONFIG.LOCKOUT_DURATION)
-        loginAttempts.set(email, { count: newAttempts, lockedUntil })
-        throw new Error(`Too many failed attempts. Account locked until ${lockedUntil.toLocaleString()}`)
-      }
-      
-      loginAttempts.set(email, { count: newAttempts })
-      throw new Error('Invalid credentials')
-    }
-
-    // Reset login attempts on successful login
-    loginAttempts.delete(email)
-    
-    // Update user last login
-    user.lastLogin = new Date()
-    
-    // Create session
-    await SessionManager.createSession(user, request)
-    
-    return user
-  }
-
-  static async validateCredentials(email: string, password: string): Promise<User | null> {
-    // In production, validate against database with proper password hashing
-    // This is a simplified example
-    
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email)) {
-      return null
-    }
-
-    // Validate password strength
-    if (!this.isPasswordStrong(password)) {
-      return null
-    }
-
-    // Mock user validation (replace with database lookup)
-    if (email === 'admin@glgcapitalgroupllc.com' && password === 'SecurePassword123!') {
-      return {
-        id: '1',
-        email,
-        role: UserRole.SUPER_ADMIN,
-        permissions: {
-          canViewDashboard: true,
-          canManagePackages: true,
-          canManageUsers: true,
-          canManagePayments: true,
-          canViewAnalytics: true,
-          canManageSystem: true,
-        },
-        isActive: true,
-        lastLogin: new Date(),
-        loginAttempts: 0,
-        twoFactorEnabled: false,
-      }
-    }
-
-    return null
   }
 
   static isPasswordStrong(password: string): boolean {
-    if (password.length < SECURITY_CONFIG.PASSWORD_MIN_LENGTH) return false
-    if (SECURITY_CONFIG.REQUIRE_SPECIAL_CHARS && !/[!@#$%^&*(),.?":{}|<>]/.test(password)) return false
-    if (SECURITY_CONFIG.REQUIRE_NUMBERS && !/\d/.test(password)) return false
-    if (SECURITY_CONFIG.REQUIRE_UPPERCASE && !/[A-Z]/.test(password)) return false
-    if (SECURITY_CONFIG.REQUIRE_LOWERCASE && !/[a-z]/.test(password)) return false
-    
-    return true
-  }
+    const minLength = 8;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumbers = /\d/.test(password);
+    const hasSpecialChars = /[!@#$%^&*(),.?":{}|<>]/.test(password);
 
-  static async logout(): Promise<void> {
-    await SessionManager.destroySession()
+    return password.length >= minLength && hasUpperCase && hasLowerCase && hasNumbers && hasSpecialChars;
   }
-
-  static async getCurrentUser(): Promise<User | null> {
-    const session = await SessionManager.getSession()
-    return session?.user || null
-  }
-
-  static async requireAuth(): Promise<User> {
-    const user = await this.getCurrentUser()
-    if (!user) {
-      throw new Error('Authentication required')
-    }
-    return user
-  }
-
-  static async requireRole(requiredRole: UserRole): Promise<User> {
-    const user = await this.requireAuth()
-    if (user.role !== requiredRole && user.role !== UserRole.SUPER_ADMIN) {
-      throw new Error('Insufficient permissions')
-    }
-    return user
-  }
-
-  static async requirePermission(permission: keyof UserPermissions): Promise<User> {
-    const user = await this.requireAuth()
-    if (!user.permissions[permission] && user.role !== UserRole.SUPER_ADMIN) {
-      throw new Error('Insufficient permissions')
-    }
-    return user
-  }
-}
-
-// Security Utilities
-export class SecurityUtils {
-  static sanitizeInput(input: string): string {
-    return input
-      .replace(/[<>]/g, '') // Remove potential HTML tags
-      .replace(/javascript:/gi, '') // Remove javascript: protocol
-      .replace(/on\w+=/gi, '') // Remove event handlers
-      .trim()
-  }
-
-  static validateEmail(email: string): boolean {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    return emailRegex.test(email)
-  }
-
-  static generateSecureToken(): string {
-    return crypto.randomUUID()
-  }
-
-  static hashPassword(password: string): Promise<string> {
-    // In production, use bcrypt or similar
-    return Promise.resolve(password) // Simplified for demo
-  }
-
-  static comparePassword(password: string, hash: string): Promise<boolean> {
-    // In production, use bcrypt.compare
-    return Promise.resolve(password === hash) // Simplified for demo
-  }
-}
-
-// Export default auth service
-export default AuthService 
+} 

@@ -1,9 +1,21 @@
-import PackageProviderWrapper from '../package-provider';
+"use client";
 
-export default function ReservedLayout({ children }: { children: React.ReactNode }) {
+import { PackageProvider } from '../../lib/package-context';
+import { AuthProvider } from '../../hooks/use-auth';
+import ProtectedRoute from '../../components/auth/ProtectedRoute';
+
+export default function ReservedLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <PackageProviderWrapper>
-      {children}
-    </PackageProviderWrapper>
+    <AuthProvider>
+      <ProtectedRoute>
+        <PackageProvider>
+          {children}
+        </PackageProvider>
+      </ProtectedRoute>
+    </AuthProvider>
   );
 } 
