@@ -117,7 +117,15 @@ export default function HomePage() {
               <li>Comprehensive market access across international exchanges</li>
               <li>Strategic advisory services for equity management</li>
               <li>Enhanced liquidity and market presence worldwide</li>
+              <li><strong>Magnificus Dominus Consulting retains full ownership of the Pentawash™ trademark</strong></li>
             </ul>
+          </div>
+          <div style={{ background: 'rgba(218,165,32,0.2)', padding: '1rem', borderRadius: 8, marginBottom: 20, border: '1px solid var(--accent)' }}>
+            <div style={{ fontWeight: 600, marginBottom: 4, color: 'var(--accent)' }}>Trademark Notice:</div>
+            <div style={{ fontSize: 14, opacity: 0.9 }}>
+              Pentawash™ is a registered trademark owned exclusively by Magnificus Dominus Consulting. 
+              This partnership agreement does not transfer any trademark rights or ownership.
+            </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, opacity: 0.8 }}>
             <ExternalLink size={16} />
@@ -158,7 +166,7 @@ export default function HomePage() {
       <section style={{ background: 'var(--secondary)', borderRadius: 10, padding: '2rem 1rem', margin: '0 auto 2.5rem auto', maxWidth: 600, boxShadow: '0 2px 12px rgba(10,37,64,0.06)', textAlign: 'center' }}>
         <h4 style={{ color: 'var(--primary)', fontWeight: 800, fontSize: 22, marginBottom: 10 }}>Contact GLG Capital Group</h4>
         <div style={{ color: 'var(--foreground)', fontSize: 17, marginBottom: 6 }}>
-          <b>GLG Capital Consulting LLC</b><br />1309 Coffeen Avenue, STE 1200, Sheridan – WY 82801
+          <b>GLG Capital Group LLC</b><br />1309 Coffeen Avenue, STE 1200, Sheridan – WY 82801
         </div>
         <div style={{ color: 'var(--foreground)', fontSize: 16, marginBottom: 12 }}>
           <b>Email:</b> <a href="mailto:corefound@glgcapitalgroupllc.com" style={{ color: 'var(--primary)', textDecoration: 'underline' }}>corefound@glgcapitalgroupllc.com</a>

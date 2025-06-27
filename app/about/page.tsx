@@ -49,25 +49,22 @@ export default function AboutPage() {
       name: "Michael Anderson",
       role: "Senior Investment Advisor",
       image: "/consultant1.jpg",
-      description: "15+ years experience in global markets and portfolio management"
+      description: "15+ years experience in global markets and portfolio management. Former VP at Goldman Sachs.",
+      photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face"
     },
     {
       name: "Sarah Johnson",
       role: "Financial Strategist",
       image: "/consultant2.jpg", 
-      description: "Expert in wealth preservation and strategic financial planning"
+      description: "Expert in wealth preservation and strategic financial planning. MBA from Harvard Business School.",
+      photo: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=200&h=200&fit=crop&crop=face"
     },
     {
       name: "David Chen",
       role: "Market Analyst",
       image: "/consultant3.jpg",
-      description: "Specialized in emerging markets and alternative investments"
-    },
-    {
-      name: "Emily Rodriguez",
-      role: "Client Relations Director",
-      image: "/consultant4.jpg",
-      description: "Dedicated to providing exceptional client service and support"
+      description: "Specialized in emerging markets and alternative investments. CFA charterholder with 12+ years experience.",
+      photo: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=face"
     }
   ]
 
@@ -107,23 +104,27 @@ export default function AboutPage() {
       {/* CONSULTANTS SECTION */}
       <section style={{ marginBottom: '4rem' }}>
         <h2 style={{ color: 'var(--primary)', fontSize: 32, fontWeight: 800, textAlign: 'center', marginBottom: '3rem' }}>Our Professional Team</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
           {consultants.map((consultant, index) => (
             <div key={index} style={{ background: 'var(--secondary)', padding: '2rem', borderRadius: 12, textAlign: 'center', boxShadow: '0 2px 12px rgba(10,37,64,0.08)' }}>
               <div style={{ 
                 width: '120px', 
                 height: '120px', 
-                background: '#e0e3eb', 
                 borderRadius: '50%', 
                 margin: '0 auto 1.5rem auto',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '48px',
-                color: 'var(--accent)',
-                fontWeight: 'bold'
+                overflow: 'hidden',
+                border: '3px solid var(--accent)',
+                boxShadow: '0 4px 16px rgba(0,0,0,0.1)'
               }}>
-                {consultant.name.split(' ').map(n => n[0]).join('')}
+                <img 
+                  src={consultant.photo} 
+                  alt={consultant.name}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover'
+                  }}
+                />
               </div>
               <h3 style={{ color: 'var(--primary)', fontSize: 20, fontWeight: 700, marginBottom: 8 }}>{consultant.name}</h3>
               <div style={{ color: 'var(--accent)', fontSize: 16, fontWeight: 600, marginBottom: 12 }}>{consultant.role}</div>

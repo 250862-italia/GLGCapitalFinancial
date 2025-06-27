@@ -121,7 +121,7 @@ export default function ContactPage() {
             <MapPin size={32} style={{ color: 'var(--accent)', margin: '0 auto 1rem auto', display: 'block' }} />
             <h3 style={{ color: 'var(--primary)', fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Address</h3>
             <div style={{ color: 'var(--foreground)', fontSize: 16, lineHeight: 1.5 }}>
-              GLG Capital Consulting LLC<br />
+              GLG Capital Group LLC<br />
               1309 Coffeen Avenue, STE 1200<br />
               Sheridan – WY 82801
             </div>
