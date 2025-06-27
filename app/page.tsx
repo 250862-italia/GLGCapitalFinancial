@@ -2,7 +2,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { TrendingUp, Shield, Users, DollarSign, ArrowRight, Globe, Award, BarChart3, Lock, Zap } from 'lucide-react'
+import { TrendingUp, Shield, Users, DollarSign, ArrowRight, Globe, Award, BarChart3, Lock, Zap, Calendar, ExternalLink } from 'lucide-react'
 
 export default function HomePage() {
   const [hoveredPackage, setHoveredPackage] = useState<number | null>(null)
@@ -91,6 +91,38 @@ export default function HomePage() {
         <div style={{ color: 'var(--accent)', fontSize: 26, fontWeight: 700, marginBottom: 8 }}>A contract. A pledge. A future.</div>
         <div style={{ color: 'var(--foreground)', fontSize: 22, fontWeight: 600, marginBottom: 8 }}>🔐 It is not an investment. It is a position.</div>
         <div style={{ color: 'var(--foreground)', fontSize: 20, fontStyle: 'italic', marginBottom: 0 }}>"True power cannot be bought. It is subscribed."</div>
+      </section>
+
+      {/* NEWS SECTION - GLG & MAGNIFICUS DOMINUS AGREEMENT */}
+      <section style={{ margin: '0 auto 3.5rem auto', maxWidth: 900 }}>
+        <h3 style={{ color: 'var(--primary)', fontWeight: 800, fontSize: 28, textAlign: 'center', marginBottom: 28 }}>Latest News</h3>
+        <div style={{ background: 'linear-gradient(135deg, var(--primary) 0%, #2a3f5f 100%)', borderRadius: 16, padding: '2.5rem', color: '#fff', boxShadow: '0 8px 32px rgba(10,37,64,0.15)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+            <Calendar size={20} style={{ color: 'var(--accent)' }} />
+            <span style={{ color: 'var(--accent)', fontWeight: 600, fontSize: 16 }}>December 2024</span>
+          </div>
+          <h4 style={{ fontSize: 24, fontWeight: 700, marginBottom: 16, color: 'var(--accent)' }}>Strategic Partnership Announced</h4>
+          <h5 style={{ fontSize: 20, fontWeight: 600, marginBottom: 12 }}>GLG Capital Group & Magnificus Dominus Consulting</h5>
+          <p style={{ fontSize: 16, lineHeight: 1.6, marginBottom: 20, opacity: 0.95 }}>
+            GLG Capital Group LLC is pleased to announce a strategic partnership with Magnificus Dominus Consulting 
+            for the exclusive management and distribution of equity positions in global markets. This landmark agreement 
+            establishes a comprehensive framework for the worldwide sale and management of GLG equity shares, 
+            leveraging Magnificus Dominus Consulting's extensive network and expertise in international financial markets.
+          </p>
+          <div style={{ background: 'rgba(255,255,255,0.1)', padding: '1.5rem', borderRadius: 12, marginBottom: 20 }}>
+            <div style={{ fontWeight: 600, marginBottom: 8, color: 'var(--accent)' }}>Partnership Highlights:</div>
+            <ul style={{ margin: 0, paddingLeft: 20, lineHeight: 1.6 }}>
+              <li>Exclusive global distribution rights for GLG equity positions</li>
+              <li>Comprehensive market access across international exchanges</li>
+              <li>Strategic advisory services for equity management</li>
+              <li>Enhanced liquidity and market presence worldwide</li>
+            </ul>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, opacity: 0.8 }}>
+            <ExternalLink size={16} />
+            <span>Official partnership agreement signed and effective immediately</span>
+          </div>
+        </div>
       </section>
 
       {/* VALORI GLG */}

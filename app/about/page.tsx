@@ -26,14 +26,6 @@ export default function AboutPage() {
     }
   ]
 
-  const milestones = [
-    { year: "2012", title: "Foundation", description: "GLG Capital Group LLC established in Wyoming" },
-    { year: "2015", title: "Expansion", description: "First international office opened" },
-    { year: "2018", title: "Innovation", description: "Launch of digital investment platform" },
-    { year: "2021", title: "Growth", description: "Assets under management reach $2B milestone" },
-    { year: "2024", title: "Leadership", description: "Recognized as top-tier investment institution" }
-  ]
-
   const team = [
     {
       name: "Executive Leadership",
@@ -49,6 +41,33 @@ export default function AboutPage() {
       name: "Client Relations",
       role: "Personal Service",
       description: "Dedicated relationship managers providing personalized attention to every client"
+    }
+  ]
+
+  const consultants = [
+    {
+      name: "Michael Anderson",
+      role: "Senior Investment Advisor",
+      image: "/consultant1.jpg",
+      description: "15+ years experience in global markets and portfolio management"
+    },
+    {
+      name: "Sarah Johnson",
+      role: "Financial Strategist",
+      image: "/consultant2.jpg", 
+      description: "Expert in wealth preservation and strategic financial planning"
+    },
+    {
+      name: "David Chen",
+      role: "Market Analyst",
+      image: "/consultant3.jpg",
+      description: "Specialized in emerging markets and alternative investments"
+    },
+    {
+      name: "Emily Rodriguez",
+      role: "Client Relations Director",
+      image: "/consultant4.jpg",
+      description: "Dedicated to providing exceptional client service and support"
     }
   ]
 
@@ -85,39 +104,30 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* TIMELINE SECTION */}
+      {/* CONSULTANTS SECTION */}
       <section style={{ marginBottom: '4rem' }}>
-        <h2 style={{ color: 'var(--primary)', fontSize: 32, fontWeight: 800, textAlign: 'center', marginBottom: '3rem' }}>Our Journey</h2>
-        <div style={{ position: 'relative' }}>
-          <div style={{ position: 'absolute', left: '50%', top: 0, bottom: 0, width: '2px', background: 'var(--accent)', transform: 'translateX(-50%)' }}></div>
-          {milestones.map((milestone, index) => (
-            <div key={index} style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              marginBottom: '3rem',
-              flexDirection: index % 2 === 0 ? 'row' : 'row-reverse'
-            }}>
+        <h2 style={{ color: 'var(--primary)', fontSize: 32, fontWeight: 800, textAlign: 'center', marginBottom: '3rem' }}>Our Professional Team</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem' }}>
+          {consultants.map((consultant, index) => (
+            <div key={index} style={{ background: 'var(--secondary)', padding: '2rem', borderRadius: 12, textAlign: 'center', boxShadow: '0 2px 12px rgba(10,37,64,0.08)' }}>
               <div style={{ 
-                flex: 1, 
-                textAlign: index % 2 === 0 ? 'right' : 'left',
-                padding: index % 2 === 0 ? '0 2rem 0 0' : '0 0 0 2rem'
-              }}>
-                <div style={{ background: 'var(--secondary)', padding: '1.5rem', borderRadius: 12, border: '2px solid var(--accent)' }}>
-                  <div style={{ color: 'var(--accent)', fontSize: 24, fontWeight: 900, marginBottom: 8 }}>{milestone.year}</div>
-                  <div style={{ color: 'var(--primary)', fontSize: 18, fontWeight: 700, marginBottom: 8 }}>{milestone.title}</div>
-                  <div style={{ color: 'var(--foreground)', fontSize: 15 }}>{milestone.description}</div>
-                </div>
-              </div>
-              <div style={{ 
-                width: '20px', 
-                height: '20px', 
-                background: 'var(--accent)', 
+                width: '120px', 
+                height: '120px', 
+                background: '#e0e3eb', 
                 borderRadius: '50%', 
-                border: '4px solid #fff',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-                zIndex: 1
-              }}></div>
-              <div style={{ flex: 1 }}></div>
+                margin: '0 auto 1.5rem auto',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '48px',
+                color: 'var(--accent)',
+                fontWeight: 'bold'
+              }}>
+                {consultant.name.split(' ').map(n => n[0]).join('')}
+              </div>
+              <h3 style={{ color: 'var(--primary)', fontSize: 20, fontWeight: 700, marginBottom: 8 }}>{consultant.name}</h3>
+              <div style={{ color: 'var(--accent)', fontSize: 16, fontWeight: 600, marginBottom: 12 }}>{consultant.role}</div>
+              <p style={{ color: 'var(--foreground)', fontSize: 15, lineHeight: 1.5 }}>{consultant.description}</p>
             </div>
           ))}
         </div>
