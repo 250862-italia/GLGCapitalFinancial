@@ -1,4 +1,5 @@
-import type { Metadata } from 'next'
+"use client"
+
 import { Inter } from 'next/font/google'
 import './globals.css'
 import Link from 'next/link'
@@ -7,11 +8,6 @@ import { PackageProvider } from '../lib/package-context'
 import ChatbotWrapper from '../components/ui/ChatbotWrapper'
 
 const inter = Inter({ subsets: ['latin'] })
-
-export const metadata: Metadata = {
-  title: 'GLG Capital Group',
-  description: 'Professional position management services',
-}
 
 export default function RootLayout({
   children,
