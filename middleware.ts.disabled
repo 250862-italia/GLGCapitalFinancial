@@ -1,179 +1,58 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
-// Security Configuration
-const SECURITY_CONFIG = {
-  // Rate limiting
-  RATE_LIMIT: {
-    WINDOW_MS: 15 * 60 * 1000, // 15 minutes
-    MAX_REQUESTS: 100, // requests per window
-    ADMIN_MAX_REQUESTS: 50,
-  },
-  
-  // Blocked IPs (example)
-  BLOCKED_IPS: [
-    '192.168.1.100', // Example blocked IP
-  ],
-  
-  // Suspicious User Agents
-  BLOCKED_USER_AGENTS: [
-    'bot', 'crawler', 'spider', 'scraper', 'curl', 'wget', 'python', 'java',
-    'sqlmap', 'nikto', 'nmap', 'masscan', 'dirbuster', 'gobuster'
-  ],
-  
-  // Admin paths that need special protection
-  ADMIN_PATHS: ['/admin', '/api/admin'],
-  
-  // Sensitive paths that need extra protection
-  SENSITIVE_PATHS: ['/api', '/internal', '/admin'],
-}
-
-// In-memory store for rate limiting (in production, use Redis)
-const rateLimitStore = new Map<string, { count: number; resetTime: number }>()
-
-// Security Functions
-function isBlockedIP(ip: string): boolean {
-  return SECURITY_CONFIG.BLOCKED_IPS.includes(ip)
-}
-
-function isBlockedUserAgent(userAgent: string): boolean {
-  const lowerUA = userAgent.toLowerCase()
-  return SECURITY_CONFIG.BLOCKED_USER_AGENTS.some(blocked => 
-    lowerUA.includes(blocked.toLowerCase())
-  )
-}
-
-function isRateLimited(ip: string, path: string): boolean {
-  const now = Date.now()
-  const key = `${ip}:${path}`
-  const limit = path.startsWith('/admin') ? 
-    SECURITY_CONFIG.RATE_LIMIT.ADMIN_MAX_REQUESTS : 
-    SECURITY_CONFIG.RATE_LIMIT.MAX_REQUESTS
-  
-  const record = rateLimitStore.get(key)
-  
-  if (!record || now > record.resetTime) {
-    rateLimitStore.set(key, {
-      count: 1,
-      resetTime: now + SECURITY_CONFIG.RATE_LIMIT.WINDOW_MS
-    })
-    return false
-  }
-  
-  if (record.count >= limit) {
-    return true
-  }
-  
-  record.count++
-  return false
-}
-
-function validateRequest(request: NextRequest): boolean {
-  const url = request.nextUrl
-  const method = request.method
-  
-  // Block suspicious requests
-  if (method === 'POST' && url.pathname.includes('..')) {
-    return false
-  }
-  
-  // Block requests with suspicious headers
-  const suspiciousHeaders = ['x-forwarded-for', 'x-real-ip', 'x-forwarded-host']
-  for (const header of suspiciousHeaders) {
-    const value = request.headers.get(header)
-    if (value && value.includes('127.0.0.1')) {
-      return false
-    }
-  }
-  
-  return true
-}
-
-function addSecurityHeaders(response: NextResponse): NextResponse {
-  // Additional security headers
-  response.headers.set('X-DNS-Prefetch-Control', 'off')
-  response.headers.set('X-Download-Options', 'noopen')
-  response.headers.set('X-Permitted-Cross-Domain-Policies', 'none')
-  response.headers.set('X-Datadog-Trace-Id', '')
-  response.headers.set('X-Datadog-Parent-Id', '')
-  response.headers.set('X-Datadog-Sampling-Priority', '')
-  
-  // Remove server information
-  response.headers.delete('server')
-  response.headers.delete('x-powered-by')
-  
-  return response
-}
-
-// Main Middleware Function
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
-  const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown'
-  const userAgent = request.headers.get('user-agent') || ''
+  const { pathname } = request.nextUrl;
   
-  // Security Checks
-  if (isBlockedIP(ip)) {
-    return new NextResponse('Access Denied', { status: 403 })
+  // Skip middleware for admin login page to avoid redirect loops
+  if (pathname === '/admin/login') {
+    return NextResponse.next();
   }
   
-  if (isBlockedUserAgent(userAgent)) {
-    return new NextResponse('Access Denied', { status: 403 })
-  }
+  // Get token from cookies or headers
+  const token = request.cookies.get('auth-token')?.value || 
+                request.headers.get('authorization')?.replace('Bearer ', '');
   
-  if (!validateRequest(request)) {
-    return new NextResponse('Invalid Request', { status: 400 })
-  }
+  // Protected routes that require authentication
+  const protectedRoutes = ['/reserved', '/admin'];
+  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
   
-  if (isRateLimited(ip, pathname)) {
-    return new NextResponse('Too Many Requests', { status: 429 })
-  }
+  // Public routes that don't need authentication
+  const publicRoutes = ['/login', '/iscriviti', '/', '/about', '/contact'];
+  const isPublicRoute = publicRoutes.some(route => pathname === route || pathname.startsWith(route));
   
-  // Create response
-  let response = NextResponse.next()
-  
-  // Add security headers
-  response = addSecurityHeaders(response)
-  
-  // Special handling for admin routes
-  if (pathname.startsWith('/admin')) {
-    // Add extra security for admin routes
-    response.headers.set('X-Admin-Access', 'restricted')
-    
-    // Block admin access from non-secure origins
-    const origin = request.headers.get('origin')
-    if (origin && !origin.startsWith('https://')) {
-      return new NextResponse('HTTPS Required', { status: 403 })
+  // If accessing protected route without token, redirect to appropriate login
+  if (isProtectedRoute && !token) {
+    // If trying to access admin routes, redirect to admin login
+    if (pathname.startsWith('/admin')) {
+      const adminLoginUrl = new URL('/admin/login', request.url);
+      adminLoginUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(adminLoginUrl);
+    } else {
+      // For other protected routes, redirect to regular login
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(loginUrl);
     }
   }
   
-  // Block access to sensitive files
-  if (pathname.match(/\.(env|config|ini|log|sql|bak|backup)$/i)) {
-    return new NextResponse('Access Denied', { status: 403 })
+  // If accessing login page with valid token, redirect to reserved area
+  if (pathname === '/login' && token) {
+    return NextResponse.redirect(new URL('/reserved', request.url));
   }
   
-  // Block access to hidden files
-  if (pathname.includes('/.') || pathname.includes('/_')) {
-    return new NextResponse('Access Denied', { status: 403 })
-  }
-  
-  // Security logging (in production, send to security monitoring service)
-  if (process.env.NODE_ENV === 'production') {
-    console.log(`[SECURITY] ${new Date().toISOString()} - ${ip} - ${request.method} ${pathname} - ${userAgent}`)
-  }
-  
-  return response
+  return NextResponse.next();
 }
 
-// Configure which paths the middleware runs on
 export const config = {
   matcher: [
     /*
      * Match all request paths except for the ones starting with:
+     * - api (API routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - public folder
      */
-    '/((?!_next/static|_next/image|favicon.ico|public/).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ],
-} 
+}; 
