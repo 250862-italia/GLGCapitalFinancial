@@ -53,14 +53,18 @@ interface AnalyticsData {
 }
 
 export default function AdminAnalyticsPage() {
+  console.log('AdminAnalyticsPage: Component rendering');
+  
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    console.log('AdminAnalyticsPage: useEffect triggered');
     loadAnalyticsData();
   }, []);
 
   const loadAnalyticsData = async () => {
+    console.log('AdminAnalyticsPage: Loading analytics data');
     setIsLoading(true);
     
     try {
@@ -97,6 +101,7 @@ export default function AdminAnalyticsPage() {
         }
       };
 
+      console.log('AdminAnalyticsPage: Setting analytics data', mockData);
       setAnalyticsData(mockData);
     } catch (error) {
       console.error('Error loading analytics data:', error);
@@ -105,7 +110,10 @@ export default function AdminAnalyticsPage() {
     }
   };
 
+  console.log('AdminAnalyticsPage: Current state', { isLoading, analyticsData });
+
   if (isLoading) {
+    console.log('AdminAnalyticsPage: Showing loading state');
     return (
       <div style={{
         display: 'flex',
@@ -136,6 +144,7 @@ export default function AdminAnalyticsPage() {
     );
   }
 
+  console.log('AdminAnalyticsPage: Rendering main content');
   return (
     <div style={{ padding: '2rem', background: '#f9fafb', minHeight: '100vh' }}>
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
