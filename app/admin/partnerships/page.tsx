@@ -16,583 +16,885 @@ import {
   CheckCircle,
   Clock,
   AlertTriangle,
-  DollarSign
+  DollarSign,
+  TrendingUp
 } from 'lucide-react';
 
 interface Partnership {
   id: string;
   name: string;
-  type: 'exclusive' | 'strategic' | 'technology' | 'financial';
+  type: 'strategic' | 'financial' | 'technology' | 'distribution' | 'research';
   status: 'active' | 'pending' | 'expired' | 'terminated';
-  partnerCompany: string;
-  startDate: Date;
-  endDate?: Date;
+  startDate: string;
+  endDate: string;
   value: number;
   description: string;
   contactPerson: string;
   contactEmail: string;
+  contactPhone: string;
+  country: string;
+  industry: string;
+  benefits: string[];
+  lastUpdated: string;
 }
 
 export default function AdminPartnershipsPage() {
   const [partnerships, setPartnerships] = useState<Partnership[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [filteredPartnerships, setFilteredPartnerships] = useState<Partnership[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState<string>('all');
-  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [selectedType, setSelectedType] = useState('all');
+  const [selectedStatus, setSelectedStatus] = useState('all');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<Partnership | null>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    type: 'strategic' as const,
+    status: 'pending' as const,
+    startDate: '',
+    endDate: '',
+    value: 0,
+    description: '',
+    contactPerson: '',
+    contactEmail: '',
+    contactPhone: '',
+    country: '',
+    industry: '',
+    benefits: [] as string[]
+  });
 
   useEffect(() => {
-    loadPartnershipsData();
+    loadPartnerships();
   }, []);
 
-  const loadPartnershipsData = async () => {
-    setIsLoading(true);
-    
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock data
-      const mockData: Partnership[] = [
-        {
-          id: '1',
-          name: 'Magnificus Dominus Consulting Europe Srl',
-          type: 'exclusive',
-          status: 'active',
-          partnerCompany: 'Magnificus Dominus Consulting Europe Srl',
-          startDate: new Date('2024-01-01'),
-          endDate: new Date('2026-12-31'),
-          value: 500000,
-          description: 'Exclusive partner for Italy - Strategic development and consultancy services',
-          contactPerson: 'Marco Rossi',
-          contactEmail: 'marco.rossi@magnificusdominusconsulting.com'
-        },
-        {
-          id: '2',
-          name: 'Wash The World Initiative',
-          type: 'strategic',
-          status: 'active',
-          partnerCompany: 'Wash The World Association',
-          startDate: new Date('2024-02-15'),
-          endDate: new Date('2025-12-31'),
-          value: 250000,
-          description: 'Environmental sustainability partnership for plastic waste reduction',
-          contactPerson: 'Elena Green',
-          contactEmail: 'elena.green@washtheworld.it'
-        },
-        {
-          id: '3',
-          name: 'Pentawash Product Launch',
-          type: 'technology',
-          status: 'active',
-          partnerCompany: 'Pentawash Solutions',
-          startDate: new Date('2024-03-01'),
-          endDate: new Date('2025-06-30'),
-          value: 150000,
-          description: 'First Wash The World approved product - Eco-friendly laundry care',
-          contactPerson: 'Giuseppe Bianchi',
-          contactEmail: 'giuseppe.bianchi@pentawash.com'
-        },
-        {
-          id: '4',
-          name: 'Financial Technology Integration',
-          type: 'technology',
-          status: 'pending',
-          partnerCompany: 'FinTech Solutions Inc.',
-          startDate: new Date('2024-04-01'),
-          endDate: new Date('2025-03-31'),
-          value: 750000,
-          description: 'Advanced financial technology platform integration',
-          contactPerson: 'Sarah Johnson',
-          contactEmail: 'sarah.johnson@fintechsolutions.com'
-        },
-        {
-          id: '5',
-          name: 'Market Data Partnership',
-          type: 'strategic',
-          status: 'expired',
-          partnerCompany: 'MarketData Pro',
-          startDate: new Date('2023-06-01'),
-          endDate: new Date('2024-05-31'),
-          value: 300000,
-          description: 'Real-time market data and analytics services',
-          contactPerson: 'Michael Chen',
-          contactEmail: 'michael.chen@marketdatapro.com'
-        },
-        {
-          id: '6',
-          name: 'Investment Platform Integration',
-          type: 'financial',
-          status: 'active',
-          partnerCompany: 'InvestTech Global',
-          startDate: new Date('2024-01-15'),
-          endDate: new Date('2026-01-14'),
-          value: 1000000,
-          description: 'Comprehensive investment platform and portfolio management',
-          contactPerson: 'David Wilson',
-          contactEmail: 'david.wilson@investtechglobal.com'
-        }
-      ];
+  useEffect(() => {
+    filterPartnerships();
+  }, [partnerships, searchTerm, selectedType, selectedStatus]);
 
-      setPartnerships(mockData);
-    } catch (error) {
-      console.error('Error loading partnerships data:', error);
-    } finally {
-      setIsLoading(false);
-    }
+  const loadPartnerships = () => {
+    // Mock data - in real app this would come from API
+    const mockData: Partnership[] = [
+      {
+        id: '1',
+        name: 'European Investment Bank',
+        type: 'financial',
+        status: 'active',
+        startDate: '2024-01-15',
+        endDate: '2027-01-15',
+        value: 5000000,
+        description: 'Strategic financial partnership for European market expansion and investment opportunities.',
+        contactPerson: 'Marco Rossi',
+        contactEmail: 'marco.rossi@eib.eu',
+        contactPhone: '+39 02 1234567',
+        country: 'Italy',
+        industry: 'Financial Services',
+        benefits: ['Market Access', 'Capital Investment', 'Regulatory Support'],
+        lastUpdated: '2024-01-15'
+      },
+      {
+        id: '2',
+        name: 'Tech Innovation Hub',
+        type: 'technology',
+        status: 'active',
+        startDate: '2023-11-20',
+        endDate: '2026-11-20',
+        value: 2500000,
+        description: 'Technology partnership for digital transformation and fintech solutions development.',
+        contactPerson: 'Sarah Chen',
+        contactEmail: 'sarah.chen@techhub.com',
+        contactPhone: '+1 415 9876543',
+        country: 'United States',
+        industry: 'Technology',
+        benefits: ['Technology Transfer', 'R&D Collaboration', 'Innovation Support'],
+        lastUpdated: '2023-11-20'
+      },
+      {
+        id: '3',
+        name: 'Global Distribution Network',
+        type: 'distribution',
+        status: 'pending',
+        startDate: '',
+        endDate: '',
+        value: 1500000,
+        description: 'Distribution partnership for expanding market reach across multiple regions.',
+        contactPerson: 'Carlos Rodriguez',
+        contactEmail: 'carlos.rodriguez@globaldist.com',
+        contactPhone: '+34 91 4567890',
+        country: 'Spain',
+        industry: 'Distribution',
+        benefits: ['Market Expansion', 'Logistics Support', 'Local Expertise'],
+        lastUpdated: '2024-01-10'
+      },
+      {
+        id: '4',
+        name: 'Research Institute Partnership',
+        type: 'research',
+        status: 'expired',
+        startDate: '2022-06-01',
+        endDate: '2023-12-31',
+        value: 800000,
+        description: 'Research collaboration for market analysis and investment strategy development.',
+        contactPerson: 'Dr. Anna Schmidt',
+        contactEmail: 'anna.schmidt@research.org',
+        contactPhone: '+49 30 1234567',
+        country: 'Germany',
+        industry: 'Research',
+        benefits: ['Market Research', 'Data Analytics', 'Expert Consultation'],
+        lastUpdated: '2023-12-31'
+      }
+    ];
+    setPartnerships(mockData);
   };
 
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'exclusive':
-        return <Handshake size={16} />;
-      case 'strategic':
-        return <Building size={16} />;
-      case 'technology':
-        return <Globe size={16} />;
-      case 'financial':
-        return <DollarSign size={16} />;
-      default:
-        return <Handshake size={16} />;
+  const filterPartnerships = () => {
+    let filtered = partnerships;
+
+    if (searchTerm) {
+      filtered = filtered.filter(partnership =>
+        partnership.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        partnership.contactPerson.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        partnership.country.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        partnership.industry.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    if (selectedType !== 'all') {
+      filtered = filtered.filter(partnership => partnership.type === selectedType);
+    }
+
+    if (selectedStatus !== 'all') {
+      filtered = filtered.filter(partnership => partnership.status === selectedStatus);
+    }
+
+    setFilteredPartnerships(filtered);
+  };
+
+  const handleAdd = () => {
+    setFormData({
+      name: '',
+      type: 'strategic',
+      status: 'pending',
+      startDate: '',
+      endDate: '',
+      value: 0,
+      description: '',
+      contactPerson: '',
+      contactEmail: '',
+      contactPhone: '',
+      country: '',
+      industry: '',
+      benefits: []
+    });
+    setShowAddModal(true);
+  };
+
+  const handleEdit = (partnership: Partnership) => {
+    setSelectedItem(partnership);
+    setFormData({
+      name: partnership.name,
+      type: partnership.type,
+      status: partnership.status,
+      startDate: partnership.startDate,
+      endDate: partnership.endDate,
+      value: partnership.value,
+      description: partnership.description,
+      contactPerson: partnership.contactPerson,
+      contactEmail: partnership.contactEmail,
+      contactPhone: partnership.contactPhone,
+      country: partnership.country,
+      industry: partnership.industry,
+      benefits: partnership.benefits
+    });
+    setShowEditModal(true);
+  };
+
+  const handleDelete = (partnership: Partnership) => {
+    setSelectedItem(partnership);
+    setShowDeleteModal(true);
+  };
+
+  const handleView = (partnership: Partnership) => {
+    setSelectedItem(partnership);
+    setShowViewModal(true);
+  };
+
+  const savePartnership = () => {
+    if (showEditModal && selectedItem) {
+      // Update existing partnership
+      const updated = partnerships.map(partnership =>
+        partnership.id === selectedItem.id
+          ? { 
+              ...partnership, 
+              ...formData, 
+              lastUpdated: new Date().toISOString().split('T')[0]
+            }
+          : partnership
+      );
+      setPartnerships(updated);
+    } else {
+      // Add new partnership
+      const newPartnership: Partnership = {
+        id: Date.now().toString(),
+        ...formData,
+        lastUpdated: new Date().toISOString().split('T')[0]
+      };
+      setPartnerships([newPartnership, ...partnerships]);
+    }
+    
+    setShowAddModal(false);
+    setShowEditModal(false);
+    setSelectedItem(null);
+  };
+
+  const confirmDelete = () => {
+    if (selectedItem) {
+      setPartnerships(partnerships.filter(partnership => partnership.id !== selectedItem.id));
+      setShowDeleteModal(false);
+      setSelectedItem(null);
     }
   };
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'exclusive':
-        return '#dc2626';
-      case 'strategic':
-        return '#1d4ed8';
-      case 'technology':
-        return '#059669';
-      case 'financial':
-        return '#d97706';
-      default:
-        return '#6b7280';
+      case 'strategic': return { bg: '#dc2626', color: 'white' };
+      case 'financial': return { bg: '#059669', color: 'white' };
+      case 'technology': return { bg: '#3b82f6', color: 'white' };
+      case 'distribution': return { bg: '#d97706', color: 'white' };
+      case 'research': return { bg: '#7c3aed', color: 'white' };
+      default: return { bg: '#6b7280', color: 'white' };
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active':
-        return '#059669';
-      case 'pending':
-        return '#d97706';
-      case 'expired':
-        return '#6b7280';
-      case 'terminated':
-        return '#dc2626';
-      default:
-        return '#6b7280';
+      case 'active': return { bg: '#dcfce7', color: '#166534' };
+      case 'pending': return { bg: '#fef3c7', color: '#92400e' };
+      case 'expired': return { bg: '#fef2f2', color: '#dc2626' };
+      case 'terminated': return { bg: '#f3f4f6', color: '#374151' };
+      default: return { bg: '#f3f4f6', color: '#374151' };
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'active':
-        return <CheckCircle size={16} />;
-      case 'pending':
-        return <Clock size={16} />;
-      case 'expired':
-        return <AlertTriangle size={16} />;
-      case 'terminated':
-        return <Trash2 size={16} />;
-      default:
-        return <Clock size={16} />;
-    }
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount);
-  };
-
-  const filteredPartnerships = partnerships.filter(partnership => {
-    const matchesSearch = partnership.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         partnership.partnerCompany.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = filterType === 'all' || partnership.type === filterType;
-    const matchesStatus = filterStatus === 'all' || partnership.status === filterStatus;
-    return matchesSearch && matchesType && matchesStatus;
-  });
-
-  if (isLoading) {
-    return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '60vh',
-        background: '#f9fafb'
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{
-            width: 40,
-            height: 40,
-            border: '4px solid #e2e8f0',
-            borderTop: '4px solid #1a2238',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-            margin: '0 auto 1rem'
-          }} />
-          <p style={{ color: '#64748b' }}>Loading Partnerships...</p>
-          <style jsx>{`
-            @keyframes spin {
-              0% { transform: rotate(0deg); }
-              100% { transform: rotate(360deg); }
-            }
-          `}</style>
-        </div>
-      </div>
-    );
-  }
+  const types = ['strategic', 'financial', 'technology', 'distribution', 'research'];
+  const statusOptions = ['active', 'pending', 'expired', 'terminated'];
+  const benefitOptions = [
+    'Market Access',
+    'Capital Investment', 
+    'Technology Transfer',
+    'R&D Collaboration',
+    'Market Expansion',
+    'Logistics Support',
+    'Regulatory Support',
+    'Expert Consultation',
+    'Data Analytics',
+    'Innovation Support'
+  ];
 
   return (
-    <div style={{ padding: '2rem', background: '#f9fafb', minHeight: '100vh' }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-        
-        {/* Header */}
-        <div style={{ marginBottom: '2rem' }}>
-          <h1 style={{ 
-            color: '#1a2238', 
-            fontSize: '2.5rem', 
-            fontWeight: 800, 
-            marginBottom: '0.5rem' 
-          }}>
-            Partnerships Management
-          </h1>
-          <p style={{ color: '#64748b', fontSize: '1.1rem' }}>
-            Manage strategic partnerships and business relationships
-          </p>
-        </div>
-
-        {/* Quick Navigation */}
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
-          gap: '1rem',
-          marginBottom: '2rem'
-        }}>
-          <a href="/admin/partnerships/add" style={{
-            display: 'flex',
-            alignItems: 'center',
-            padding: '1rem',
-            background: '#fff',
-            borderRadius: 8,
-            textDecoration: 'none',
-            color: '#1a2238',
-            border: '1px solid #e2e8f0',
-            transition: 'all 0.2s'
-          }}>
-            <Plus size={20} style={{ marginRight: '0.5rem' }} />
-            <span>Add Partnership</span>
-            <ExternalLink size={16} style={{ marginLeft: 'auto', color: '#64748b' }} />
-          </a>
-          
-          <a href="/admin/partnerships/agreement" style={{
-            display: 'flex',
-            alignItems: 'center',
-            padding: '1rem',
-            background: '#fff',
-            borderRadius: 8,
-            textDecoration: 'none',
-            color: '#1a2238',
-            border: '1px solid #e2e8f0',
-            transition: 'all 0.2s'
-          }}>
-            <Handshake size={20} style={{ marginRight: '0.5rem' }} />
-            <span>Agreement Templates</span>
-            <ExternalLink size={16} style={{ marginLeft: 'auto', color: '#64748b' }} />
-          </a>
-          
-          <a href="/admin/partnerships/status" style={{
-            display: 'flex',
-            alignItems: 'center',
-            padding: '1rem',
-            background: '#fff',
-            borderRadius: 8,
-            textDecoration: 'none',
-            color: '#1a2238',
-            border: '1px solid #e2e8f0',
-            transition: 'all 0.2s'
-          }}>
-            <CheckCircle size={20} style={{ marginRight: '0.5rem' }} />
-            <span>Status Overview</span>
-            <ExternalLink size={16} style={{ marginLeft: 'auto', color: '#64748b' }} />
-          </a>
-        </div>
-
-        {/* Search and Filters */}
-        <div style={{ 
-          display: 'flex', 
-          gap: '1rem', 
-          marginBottom: '2rem',
-          flexWrap: 'wrap'
-        }}>
-          <div style={{ flex: 1, minWidth: 300 }}>
-            <div style={{ position: 'relative' }}>
-              <Search size={20} style={{ 
-                position: 'absolute', 
-                left: '12px', 
-                top: '50%', 
-                transform: 'translateY(-50%)', 
-                color: '#64748b' 
-              }} />
-              <input
-                type="text"
-                placeholder="Search partnerships..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem 1rem 0.75rem 2.5rem',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: 8,
-                  fontSize: '1rem',
-                  background: '#fff'
-                }}
-              />
-            </div>
-          </div>
-          
-          <select
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-            style={{
-              padding: '0.75rem 1rem',
-              border: '1px solid #e2e8f0',
-              borderRadius: 8,
-              fontSize: '1rem',
-              background: '#fff',
-              minWidth: 150
-            }}
-          >
-            <option value="all">All Types</option>
-            <option value="exclusive">Exclusive</option>
-            <option value="strategic">Strategic</option>
-            <option value="technology">Technology</option>
-            <option value="financial">Financial</option>
-          </select>
-          
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            style={{
-              padding: '0.75rem 1rem',
-              border: '1px solid #e2e8f0',
-              borderRadius: 8,
-              fontSize: '1rem',
-              background: '#fff',
-              minWidth: 150
-            }}
-          >
-            <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="pending">Pending</option>
-            <option value="expired">Expired</option>
-            <option value="terminated">Terminated</option>
-          </select>
-          
-          <button style={{
-            display: 'flex',
-            alignItems: 'center',
-            padding: '0.75rem 1.5rem',
-            background: '#1a2238',
-            color: '#fff',
+    <div style={{ padding: '2rem', maxWidth: 1400, margin: '0 auto' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+        <h1 style={{ fontSize: '2rem', fontWeight: 700, color: '#1f2937' }}>
+          Partnership Management
+        </h1>
+        <button
+          onClick={handleAdd}
+          style={{
+            background: '#3b82f6',
+            color: 'white',
             border: 'none',
-            borderRadius: 8,
-            fontSize: '1rem',
-            fontWeight: 600,
+            padding: '0.75rem 1.5rem',
+            borderRadius: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
             cursor: 'pointer',
-            transition: 'background 0.2s'
-          }}>
-            <Plus size={16} style={{ marginRight: '0.5rem' }} />
-            New Partnership
-          </button>
+            fontWeight: 600
+          }}
+        >
+          <Plus size={16} />
+          Add Partnership
+        </button>
+      </div>
+
+      {/* Filters */}
+      <div style={{ 
+        display: 'flex', 
+        gap: '1rem', 
+        marginBottom: '2rem',
+        flexWrap: 'wrap',
+        alignItems: 'center'
+      }}>
+        <div style={{ position: 'relative', flex: 1, minWidth: 300 }}>
+          <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#6b7280' }} />
+          <input
+            type="text"
+            placeholder="Search partnerships..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '0.75rem 1rem 0.75rem 2.5rem',
+              border: '1px solid #d1d5db',
+              borderRadius: '8px',
+              fontSize: '0.875rem'
+            }}
+          />
         </div>
+        
+        <select
+          value={selectedType}
+          onChange={(e) => setSelectedType(e.target.value)}
+          style={{
+            padding: '0.75rem 1rem',
+            border: '1px solid #d1d5db',
+            borderRadius: '8px',
+            fontSize: '0.875rem',
+            minWidth: 120
+          }}
+        >
+          <option value="all">All Types</option>
+          {types.map(type => (
+            <option key={type} value={type}>{type.charAt(0).toUpperCase() + type.slice(1)}</option>
+          ))}
+        </select>
 
-        {/* Partnerships List */}
-        <div style={{ 
-          background: '#fff', 
-          borderRadius: 12, 
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          border: '1px solid #e2e8f0',
-          overflow: 'hidden'
-        }}>
-          
-          {/* Table Header */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr',
-            gap: '1rem',
-            padding: '1rem 1.5rem',
-            background: '#f8fafc',
-            borderBottom: '1px solid #e2e8f0',
-            fontWeight: 600,
-            color: '#374151'
+        <select
+          value={selectedStatus}
+          onChange={(e) => setSelectedStatus(e.target.value)}
+          style={{
+            padding: '0.75rem 1rem',
+            border: '1px solid #d1d5db',
+            borderRadius: '8px',
+            fontSize: '0.875rem',
+            minWidth: 120
+          }}
+        >
+          <option value="all">All Status</option>
+          {statusOptions.map(status => (
+            <option key={status} value={status}>{status.charAt(0).toUpperCase() + status.slice(1)}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Partnerships Grid */}
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', 
+        gap: '1.5rem',
+        marginBottom: '2rem'
+      }}>
+        {filteredPartnerships.map(partnership => (
+          <div key={partnership.id} style={{
+            background: 'white',
+            border: '1px solid #e5e7eb',
+            borderRadius: '12px',
+            padding: '1.5rem',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
           }}>
-            <div>Partnership</div>
-            <div>Type</div>
-            <div>Status</div>
-            <div>Value</div>
-            <div>Duration</div>
-            <div>Actions</div>
-          </div>
-
-          {/* Table Rows */}
-          {filteredPartnerships.map((partnership) => (
-            <div key={partnership.id} style={{
-              display: 'grid',
-              gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr',
-              gap: '1rem',
-              padding: '1rem 1.5rem',
-              borderBottom: '1px solid #f1f5f9',
-              alignItems: 'center'
-            }}>
-              <div>
-                <div style={{ fontWeight: 600, color: '#1a2238', marginBottom: '0.25rem' }}>
-                  {partnership.name}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                  <Handshake size={20} color="#6b7280" />
+                  <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#1f2937' }}>
+                    {partnership.name}
+                  </h3>
                 </div>
-                <div style={{ fontSize: '0.875rem', color: '#64748b' }}>
-                  {partnership.partnerCompany}
-                </div>
+                <p style={{ color: '#6b7280', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
+                  <Globe size={14} style={{ marginRight: '0.25rem' }} />
+                  {partnership.country} • {partnership.industry}
+                </p>
+                <p style={{ color: '#6b7280', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
+                  <DollarSign size={14} style={{ marginRight: '0.25rem' }} />
+                  ${partnership.value.toLocaleString()}
+                </p>
+                <p style={{ color: '#374151', fontSize: '0.875rem', lineHeight: 1.5 }}>
+                  {partnership.description.substring(0, 100)}...
+                </p>
               </div>
               
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                {getTypeIcon(partnership.type)}
-                <span style={{ 
-                  marginLeft: '0.5rem', 
-                  textTransform: 'capitalize',
-                  color: getTypeColor(partnership.type),
-                  fontWeight: 600
-                }}>
-                  {partnership.type}
-                </span>
-              </div>
-              
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                {getStatusIcon(partnership.status)}
-                <span style={{
-                  marginLeft: '0.5rem',
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
+                <div style={{
                   padding: '0.25rem 0.75rem',
-                  borderRadius: 20,
+                  borderRadius: '20px',
                   fontSize: '0.75rem',
                   fontWeight: 600,
-                  textTransform: 'uppercase',
-                  background: `${getStatusColor(partnership.status)}20`,
-                  color: getStatusColor(partnership.status)
+                  ...getTypeColor(partnership.type)
+                }}>
+                  {partnership.type}
+                </div>
+                
+                <div style={{
+                  padding: '0.25rem 0.75rem',
+                  borderRadius: '20px',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  ...getStatusColor(partnership.status)
                 }}>
                   {partnership.status}
-                </span>
-              </div>
-              
-              <div style={{ fontWeight: 600, color: '#1a2238' }}>
-                {formatCurrency(partnership.value)}
-              </div>
-              
-              <div style={{ color: '#64748b', fontSize: '0.875rem' }}>
-                {partnership.startDate.toLocaleDateString()} - {partnership.endDate?.toLocaleDateString() || 'Ongoing'}
-              </div>
-              
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button style={{
-                  padding: '0.5rem',
-                  background: '#f1f5f9',
-                  border: 'none',
-                  borderRadius: 6,
-                  cursor: 'pointer',
-                  color: '#64748b'
-                }}>
-                  <Eye size={16} />
-                </button>
-                <button style={{
-                  padding: '0.5rem',
-                  background: '#f1f5f9',
-                  border: 'none',
-                  borderRadius: 6,
-                  cursor: 'pointer',
-                  color: '#64748b'
-                }}>
-                  <Edit size={16} />
-                </button>
-                <button style={{
-                  padding: '0.5rem',
-                  background: '#fef2f2',
-                  border: 'none',
-                  borderRadius: 6,
-                  cursor: 'pointer',
-                  color: '#dc2626'
-                }}>
-                  <Trash2 size={16} />
-                </button>
+                </div>
               </div>
             </div>
-          ))}
-        </div>
+            
+            <div style={{ marginBottom: '1rem' }}>
+              <p style={{ color: '#6b7280', fontSize: '0.75rem' }}>
+                <Calendar size={12} style={{ marginRight: '0.25rem' }} />
+                {partnership.startDate && partnership.endDate 
+                  ? `${partnership.startDate} - ${partnership.endDate}`
+                  : 'Dates TBD'
+                }
+              </p>
+            </div>
 
-        {/* Summary Stats */}
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-          gap: '1rem',
-          marginTop: '2rem'
-        }}>
-          <div style={{ 
-            background: '#fff', 
-            padding: '1rem', 
-            borderRadius: 8, 
-            textAlign: 'center',
-            border: '1px solid #e2e8f0'
-          }}>
-            <div style={{ fontSize: '2rem', fontWeight: 700, color: '#1a2238' }}>
-              {partnerships.length}
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button
+                onClick={() => handleView(partnership)}
+                style={{
+                  background: '#3b82f6',
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.5rem',
+                  borderRadius: '6px',
+                  cursor: 'pointer'
+                }}
+              >
+                <Eye size={14} />
+              </button>
+              <button
+                onClick={() => handleEdit(partnership)}
+                style={{
+                  background: '#f59e0b',
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.5rem',
+                  borderRadius: '6px',
+                  cursor: 'pointer'
+                }}
+              >
+                <Edit size={14} />
+              </button>
+              <button
+                onClick={() => handleDelete(partnership)}
+                style={{
+                  background: '#ef4444',
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.5rem',
+                  borderRadius: '6px',
+                  cursor: 'pointer'
+                }}
+              >
+                <Trash2 size={14} />
+              </button>
             </div>
-            <div style={{ color: '#64748b' }}>Total Partnerships</div>
           </div>
-          
-          <div style={{ 
-            background: '#fff', 
-            padding: '1rem', 
-            borderRadius: 8, 
-            textAlign: 'center',
-            border: '1px solid #e2e8f0'
-          }}>
-            <div style={{ fontSize: '2rem', fontWeight: 700, color: '#059669' }}>
-              {partnerships.filter(p => p.status === 'active').length}
-            </div>
-            <div style={{ color: '#64748b' }}>Active</div>
-          </div>
-          
-          <div style={{ 
-            background: '#fff', 
-            padding: '1rem', 
-            borderRadius: 8, 
-            textAlign: 'center',
-            border: '1px solid #e2e8f0'
-          }}>
-            <div style={{ fontSize: '2rem', fontWeight: 700, color: '#d97706' }}>
-              {partnerships.filter(p => p.status === 'pending').length}
-            </div>
-            <div style={{ color: '#64748b' }}>Pending</div>
-          </div>
-          
-          <div style={{ 
-            background: '#fff', 
-            padding: '1rem', 
-            borderRadius: 8, 
-            textAlign: 'center',
-            border: '1px solid #e2e8f0'
-          }}>
-            <div style={{ fontSize: '2rem', fontWeight: 700, color: '#1a2238' }}>
-              {formatCurrency(partnerships.reduce((sum, p) => sum + p.value, 0))}
-            </div>
-            <div style={{ color: '#64748b' }}>Total Value</div>
-          </div>
-        </div>
-
+        ))}
       </div>
+
+      {/* Add/Edit Modal */}
+      {(showAddModal || showEditModal) && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: 'white',
+            padding: '2rem',
+            borderRadius: '12px',
+            width: '90%',
+            maxWidth: 600,
+            maxHeight: '90vh',
+            overflow: 'auto'
+          }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '1.5rem' }}>
+              {showAddModal ? 'Add Partnership' : 'Edit Partnership'}
+            </h2>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <input
+                type="text"
+                placeholder="Partnership name"
+                value={formData.name}
+                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                style={{ padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+              />
+              
+              <select
+                value={formData.type}
+                onChange={(e) => setFormData({...formData, type: e.target.value as any})}
+                style={{ padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+              >
+                {types.map(type => (
+                  <option key={type} value={type}>{type.charAt(0).toUpperCase() + type.slice(1)}</option>
+                ))}
+              </select>
+              
+              <select
+                value={formData.status}
+                onChange={(e) => setFormData({...formData, status: e.target.value as any})}
+                style={{ padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+              >
+                {statusOptions.map(status => (
+                  <option key={status} value={status}>{status.charAt(0).toUpperCase() + status.slice(1)}</option>
+                ))}
+              </select>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <input
+                  type="date"
+                  placeholder="Start date"
+                  value={formData.startDate}
+                  onChange={(e) => setFormData({...formData, startDate: e.target.value})}
+                  style={{ padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                />
+                
+                <input
+                  type="date"
+                  placeholder="End date"
+                  value={formData.endDate}
+                  onChange={(e) => setFormData({...formData, endDate: e.target.value})}
+                  style={{ padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+                />
+              </div>
+              
+              <input
+                type="number"
+                placeholder="Partnership value ($)"
+                value={formData.value}
+                onChange={(e) => setFormData({...formData, value: parseFloat(e.target.value) || 0})}
+                style={{ padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+              />
+              
+              <textarea
+                placeholder="Partnership description"
+                value={formData.description}
+                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                style={{ 
+                  padding: '0.75rem', 
+                  border: '1px solid #d1d5db', 
+                  borderRadius: '6px',
+                  minHeight: '100px',
+                  resize: 'vertical'
+                }}
+              />
+              
+              <input
+                type="text"
+                placeholder="Contact person"
+                value={formData.contactPerson}
+                onChange={(e) => setFormData({...formData, contactPerson: e.target.value})}
+                style={{ padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+              />
+              
+              <input
+                type="email"
+                placeholder="Contact email"
+                value={formData.contactEmail}
+                onChange={(e) => setFormData({...formData, contactEmail: e.target.value})}
+                style={{ padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+              />
+              
+              <input
+                type="tel"
+                placeholder="Contact phone"
+                value={formData.contactPhone}
+                onChange={(e) => setFormData({...formData, contactPhone: e.target.value})}
+                style={{ padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+              />
+              
+              <input
+                type="text"
+                placeholder="Country"
+                value={formData.country}
+                onChange={(e) => setFormData({...formData, country: e.target.value})}
+                style={{ padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+              />
+              
+              <input
+                type="text"
+                placeholder="Industry"
+                value={formData.industry}
+                onChange={(e) => setFormData({...formData, industry: e.target.value})}
+                style={{ padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+              />
+              
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>
+                  Benefits:
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem' }}>
+                  {benefitOptions.map(benefit => (
+                    <label key={benefit} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <input
+                        type="checkbox"
+                        checked={formData.benefits.includes(benefit)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setFormData({
+                              ...formData,
+                              benefits: [...formData.benefits, benefit]
+                            });
+                          } else {
+                            setFormData({
+                              ...formData,
+                              benefits: formData.benefits.filter(b => b !== benefit)
+                            });
+                          }
+                        }}
+                      />
+                      <span style={{ fontSize: '0.875rem' }}>
+                        {benefit}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+            
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+              <button
+                onClick={savePartnership}
+                style={{
+                  background: '#3b82f6',
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: 600
+                }}
+              >
+                {showAddModal ? 'Add' : 'Save'}
+              </button>
+              <button
+                onClick={() => {
+                  setShowAddModal(false);
+                  setShowEditModal(false);
+                  setSelectedItem(null);
+                }}
+                style={{
+                  background: '#6b7280',
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '6px',
+                  cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Modal */}
+      {showViewModal && selectedItem && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: 'white',
+            padding: '2rem',
+            borderRadius: '12px',
+            width: '90%',
+            maxWidth: 700,
+            maxHeight: '90vh',
+            overflow: 'auto'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 600 }}>
+                {selectedItem.name}
+              </h2>
+              <button
+                onClick={() => {
+                  setShowViewModal(false);
+                  setSelectedItem(null);
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '1.5rem',
+                  cursor: 'pointer',
+                  color: '#6b7280'
+                }}
+              >
+                ×
+              </button>
+            </div>
+            
+            <div style={{ display: 'grid', gap: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
+                <div>
+                  <strong>Type:</strong>
+                  <span style={{
+                    padding: '0.25rem 0.5rem',
+                    borderRadius: '4px',
+                    fontSize: '0.75rem',
+                    marginLeft: '0.5rem',
+                    ...getTypeColor(selectedItem.type)
+                  }}>
+                    {selectedItem.type}
+                  </span>
+                </div>
+                <div>
+                  <strong>Status:</strong>
+                  <span style={{
+                    padding: '0.25rem 0.5rem',
+                    borderRadius: '4px',
+                    fontSize: '0.75rem',
+                    marginLeft: '0.5rem',
+                    ...getStatusColor(selectedItem.status)
+                  }}>
+                    {selectedItem.status}
+                  </span>
+                </div>
+              </div>
+              
+              <div>
+                <strong>Value:</strong> ${selectedItem.value.toLocaleString()}
+              </div>
+              
+              <div>
+                <strong>Country:</strong> {selectedItem.country}
+              </div>
+              
+              <div>
+                <strong>Industry:</strong> {selectedItem.industry}
+              </div>
+              
+              <div>
+                <strong>Contact Person:</strong> {selectedItem.contactPerson}
+              </div>
+              
+              <div>
+                <strong>Contact Email:</strong> {selectedItem.contactEmail}
+              </div>
+              
+              <div>
+                <strong>Contact Phone:</strong> {selectedItem.contactPhone}
+              </div>
+              
+              <div>
+                <strong>Duration:</strong> {selectedItem.startDate && selectedItem.endDate 
+                  ? `${selectedItem.startDate} - ${selectedItem.endDate}`
+                  : 'Dates TBD'
+                }
+              </div>
+              
+              <div>
+                <strong>Description:</strong>
+                <p style={{ marginTop: '0.5rem', lineHeight: 1.6, color: '#374151' }}>
+                  {selectedItem.description}
+                </p>
+              </div>
+              
+              <div>
+                <strong>Benefits:</strong>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.5rem' }}>
+                  {selectedItem.benefits.map(benefit => (
+                    <span key={benefit} style={{
+                      padding: '0.25rem 0.5rem',
+                      background: '#f3f4f6',
+                      borderRadius: '4px',
+                      fontSize: '0.75rem',
+                      color: '#374151'
+                    }}>
+                      {benefit}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              
+              <div>
+                <strong>Last Updated:</strong> {selectedItem.lastUpdated}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && selectedItem && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: 'white',
+            padding: '2rem',
+            borderRadius: '12px',
+            width: '90%',
+            maxWidth: 400
+          }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '1rem' }}>
+              Confirm Delete
+            </h2>
+            <p style={{ marginBottom: '1.5rem', color: '#6b7280' }}>
+              Are you sure you want to delete the partnership with "{selectedItem.name}"? This action cannot be undone.
+            </p>
+            
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button
+                onClick={confirmDelete}
+                style={{
+                  background: '#ef4444',
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: 600
+                }}
+              >
+                Delete
+              </button>
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setSelectedItem(null);
+                }}
+                style={{
+                  background: '#6b7280',
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '6px',
+                  cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 

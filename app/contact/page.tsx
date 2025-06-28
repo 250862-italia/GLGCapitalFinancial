@@ -138,13 +138,8 @@ export default function ContactPage() {
             }}>
               Phone
             </h3>
-            <p style={{ 
-              color: '#1a3556', 
-              fontSize: '1.2rem',
-              fontWeight: 600,
-              lineHeight: 1.6
-            }}>
-              +1 307 263 0876
+            <p style={{ fontSize: '1.1rem' }}>
+              Phone: +1 786 798 8311
             </p>
           </div>
 

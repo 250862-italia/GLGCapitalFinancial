@@ -461,7 +461,7 @@ export default function HomePage() {
               </a>
             </p>
             <p style={{ fontSize: '1.1rem' }}>
-              Phone: +1 307 263 0876
+              Phone: +1 786 798 8311
             </p>
           </div>
         </div>

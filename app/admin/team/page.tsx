@@ -1,564 +1,750 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { 
-  Users, 
-  UserPlus, 
-  UserCheck, 
-  UserX, 
-  Mail, 
-  Phone, 
-  Calendar,
-  Edit,
-  Trash2,
-  Plus,
-  Search,
-  Filter,
-  ExternalLink,
-  Shield,
-  Crown
-} from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Eye, User, Mail, Phone, Shield, Calendar } from 'lucide-react';
 
 interface TeamMember {
   id: string;
   name: string;
   email: string;
-  role: 'admin' | 'superadmin' | 'moderator' | 'analyst' | 'support';
+  phone: string;
+  role: 'admin' | 'manager' | 'analyst' | 'support';
+  department: string;
   status: 'active' | 'inactive' | 'pending';
-  joinDate: Date;
-  lastLogin: Date;
+  joinDate: string;
+  lastActive: string;
   permissions: string[];
   avatar?: string;
 }
 
-export default function AdminTeamPage() {
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+export default function TeamPage() {
+  const [team, setTeam] = useState<TeamMember[]>([]);
+  const [filteredTeam, setFilteredTeam] = useState<TeamMember[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterRole, setFilterRole] = useState<string>('all');
-  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [selectedRole, setSelectedRole] = useState('all');
+  const [selectedStatus, setSelectedStatus] = useState('all');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<TeamMember | null>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    role: 'analyst' as const,
+    department: '',
+    status: 'pending' as const,
+    permissions: [] as string[]
+  });
 
   useEffect(() => {
-    loadTeamData();
+    loadTeam();
   }, []);
 
-  const loadTeamData = async () => {
-    setIsLoading(true);
-    
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock data
-      const mockData: TeamMember[] = [
-        {
-          id: '1',
-          name: 'John Smith',
-          email: 'admin@glgcapitalgroupllc.com',
-          role: 'superadmin',
-          status: 'active',
-          joinDate: new Date('2024-01-15'),
-          lastLogin: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-          permissions: ['all']
-        },
-        {
-          id: '2',
-          name: 'Sarah Johnson',
-          email: 'sarah.johnson@glgcapitalgroupllc.com',
-          role: 'admin',
-          status: 'active',
-          joinDate: new Date('2024-02-01'),
-          lastLogin: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-          permissions: ['users', 'content', 'analytics']
-        },
-        {
-          id: '3',
-          name: 'Michael Chen',
-          email: 'michael.chen@glgcapitalgroupllc.com',
-          role: 'analyst',
-          status: 'active',
-          joinDate: new Date('2024-02-15'),
-          lastLogin: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-          permissions: ['analytics', 'reports']
-        },
-        {
-          id: '4',
-          name: 'Emily Davis',
-          email: 'emily.davis@glgcapitalgroupllc.com',
-          role: 'moderator',
-          status: 'active',
-          joinDate: new Date('2024-03-01'),
-          lastLogin: new Date(Date.now() - 1000 * 60 * 60 * 12), // 12 hours ago
-          permissions: ['users', 'content']
-        },
-        {
-          id: '5',
-          name: 'David Wilson',
-          email: 'david.wilson@glgcapitalgroupllc.com',
-          role: 'support',
-          status: 'pending',
-          joinDate: new Date('2024-03-15'),
-          lastLogin: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7), // 1 week ago
-          permissions: ['support']
-        },
-        {
-          id: '6',
-          name: 'Lisa Brown',
-          email: 'lisa.brown@glgcapitalgroupllc.com',
-          role: 'analyst',
-          status: 'inactive',
-          joinDate: new Date('2024-01-20'),
-          lastLogin: new Date(Date.now() - 1000 * 60 * 60 * 24 * 30), // 30 days ago
-          permissions: ['analytics']
-        }
-      ];
+  useEffect(() => {
+    filterTeam();
+  }, [team, searchTerm, selectedRole, selectedStatus]);
 
-      setTeamMembers(mockData);
-    } catch (error) {
-      console.error('Error loading team data:', error);
-    } finally {
-      setIsLoading(false);
-    }
+  const loadTeam = () => {
+    // Mock data - in real app this would come from API
+    const mockData: TeamMember[] = [
+      {
+        id: '1',
+        name: 'John Smith',
+        email: 'john.smith@glgcapitalgroupllc.com',
+        phone: '+1 786 798 8311',
+        role: 'admin',
+        department: 'Management',
+        status: 'active',
+        joinDate: '2023-01-15',
+        lastActive: '2024-01-15',
+        permissions: ['full_access', 'user_management', 'analytics', 'content']
+      },
+      {
+        id: '2',
+        name: 'Maria Garcia',
+        email: 'maria.garcia@glgcapitalgroupllc.com',
+        phone: '+1 786 798 8312',
+        role: 'manager',
+        department: 'Operations',
+        status: 'active',
+        joinDate: '2023-03-20',
+        lastActive: '2024-01-14',
+        permissions: ['analytics', 'content', 'team_view']
+      },
+      {
+        id: '3',
+        name: 'David Chen',
+        email: 'david.chen@glgcapitalgroupllc.com',
+        phone: '+1 786 798 8313',
+        role: 'analyst',
+        department: 'Analytics',
+        status: 'active',
+        joinDate: '2023-06-10',
+        lastActive: '2024-01-13',
+        permissions: ['analytics', 'reports']
+      },
+      {
+        id: '4',
+        name: 'Sarah Johnson',
+        email: 'sarah.johnson@glgcapitalgroupllc.com',
+        phone: '+1 786 798 8314',
+        role: 'support',
+        department: 'Customer Service',
+        status: 'inactive',
+        joinDate: '2023-02-28',
+        lastActive: '2023-12-15',
+        permissions: ['support', 'user_view']
+      }
+    ];
+    setTeam(mockData);
   };
 
-  const getRoleIcon = (role: string) => {
-    switch (role) {
-      case 'superadmin':
-        return <Crown size={16} />;
-      case 'admin':
-        return <Shield size={16} />;
-      case 'moderator':
-        return <UserCheck size={16} />;
-      case 'analyst':
-        return <Users size={16} />;
-      case 'support':
-        return <Phone size={16} />;
-      default:
-        return <Users size={16} />;
+  const filterTeam = () => {
+    let filtered = team;
+
+    if (searchTerm) {
+      filtered = filtered.filter(member =>
+        member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        member.department.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    if (selectedRole !== 'all') {
+      filtered = filtered.filter(member => member.role === selectedRole);
+    }
+
+    if (selectedStatus !== 'all') {
+      filtered = filtered.filter(member => member.status === selectedStatus);
+    }
+
+    setFilteredTeam(filtered);
+  };
+
+  const handleAdd = () => {
+    setFormData({
+      name: '',
+      email: '',
+      phone: '',
+      role: 'analyst',
+      department: '',
+      status: 'pending',
+      permissions: []
+    });
+    setShowAddModal(true);
+  };
+
+  const handleEdit = (member: TeamMember) => {
+    setSelectedItem(member);
+    setFormData({
+      name: member.name,
+      email: member.email,
+      phone: member.phone,
+      role: member.role,
+      department: member.department,
+      status: member.status,
+      permissions: member.permissions
+    });
+    setShowEditModal(true);
+  };
+
+  const handleDelete = (member: TeamMember) => {
+    setSelectedItem(member);
+    setShowDeleteModal(true);
+  };
+
+  const handleView = (member: TeamMember) => {
+    setSelectedItem(member);
+    setShowViewModal(true);
+  };
+
+  const saveTeamMember = () => {
+    if (showEditModal && selectedItem) {
+      // Update existing member
+      const updated = team.map(member =>
+        member.id === selectedItem.id
+          ? { 
+              ...member, 
+              ...formData, 
+              lastActive: new Date().toISOString().split('T')[0]
+            }
+          : member
+      );
+      setTeam(updated);
+    } else {
+      // Add new member
+      const newMember: TeamMember = {
+        id: Date.now().toString(),
+        ...formData,
+        joinDate: new Date().toISOString().split('T')[0],
+        lastActive: new Date().toISOString().split('T')[0]
+      };
+      setTeam([newMember, ...team]);
+    }
+    
+    setShowAddModal(false);
+    setShowEditModal(false);
+    setSelectedItem(null);
+  };
+
+  const confirmDelete = () => {
+    if (selectedItem) {
+      setTeam(team.filter(member => member.id !== selectedItem.id));
+      setShowDeleteModal(false);
+      setSelectedItem(null);
     }
   };
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case 'superadmin':
-        return '#dc2626';
-      case 'admin':
-        return '#1d4ed8';
-      case 'moderator':
-        return '#059669';
-      case 'analyst':
-        return '#d97706';
-      case 'support':
-        return '#7c3aed';
-      default:
-        return '#6b7280';
+      case 'admin': return { bg: '#dc2626', color: 'white' };
+      case 'manager': return { bg: '#d97706', color: 'white' };
+      case 'analyst': return { bg: '#059669', color: 'white' };
+      case 'support': return { bg: '#3b82f6', color: 'white' };
+      default: return { bg: '#6b7280', color: 'white' };
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active':
-        return '#059669';
-      case 'inactive':
-        return '#6b7280';
-      case 'pending':
-        return '#d97706';
-      default:
-        return '#6b7280';
+      case 'active': return { bg: '#dcfce7', color: '#166534' };
+      case 'inactive': return { bg: '#fef2f2', color: '#dc2626' };
+      case 'pending': return { bg: '#fef3c7', color: '#92400e' };
+      default: return { bg: '#f3f4f6', color: '#374151' };
     }
   };
 
-  const formatTimeAgo = (date: Date) => {
-    const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
-    if (diffInHours < 1) return 'Just now';
-    if (diffInHours < 24) return `${diffInHours}h ago`;
-    if (diffInHours < 168) return `${Math.floor(diffInHours / 24)}d ago`;
-    return `${Math.floor(diffInHours / 168)}w ago`;
-  };
-
-  const filteredMembers = teamMembers.filter(member => {
-    const matchesSearch = member.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         member.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = filterRole === 'all' || member.role === filterRole;
-    const matchesStatus = filterStatus === 'all' || member.status === filterStatus;
-    return matchesSearch && matchesRole && matchesStatus;
-  });
-
-  if (isLoading) {
-    return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '60vh',
-        background: '#f9fafb'
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{
-            width: 40,
-            height: 40,
-            border: '4px solid #e2e8f0',
-            borderTop: '4px solid #1a2238',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-            margin: '0 auto 1rem'
-          }} />
-          <p style={{ color: '#64748b' }}>Loading Team Data...</p>
-          <style jsx>{`
-            @keyframes spin {
-              0% { transform: rotate(0deg); }
-              100% { transform: rotate(360deg); }
-            }
-          `}</style>
-        </div>
-      </div>
-    );
-  }
+  const roles = ['admin', 'manager', 'analyst', 'support'];
+  const statusOptions = ['active', 'inactive', 'pending'];
+  const permissionOptions = [
+    'full_access',
+    'user_management', 
+    'analytics',
+    'content',
+    'team_view',
+    'reports',
+    'support',
+    'user_view'
+  ];
 
   return (
-    <div style={{ padding: '2rem', background: '#f9fafb', minHeight: '100vh' }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-        
-        {/* Header */}
-        <div style={{ marginBottom: '2rem' }}>
-          <h1 style={{ 
-            color: '#1a2238', 
-            fontSize: '2.5rem', 
-            fontWeight: 800, 
-            marginBottom: '0.5rem' 
-          }}>
-            Team Management
-          </h1>
-          <p style={{ color: '#64748b', fontSize: '1.1rem' }}>
-            Manage team members, roles, and permissions
-          </p>
-        </div>
-
-        {/* Quick Navigation */}
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
-          gap: '1rem',
-          marginBottom: '2rem'
-        }}>
-          <a href="/admin/team/overview" style={{
-            display: 'flex',
-            alignItems: 'center',
-            padding: '1rem',
-            background: '#fff',
-            borderRadius: 8,
-            textDecoration: 'none',
-            color: '#1a2238',
-            border: '1px solid #e2e8f0',
-            transition: 'all 0.2s'
-          }}>
-            <Users size={20} style={{ marginRight: '0.5rem' }} />
-            <span>Team Overview</span>
-            <ExternalLink size={16} style={{ marginLeft: 'auto', color: '#64748b' }} />
-          </a>
-          
-          <a href="/admin/team/add" style={{
-            display: 'flex',
-            alignItems: 'center',
-            padding: '1rem',
-            background: '#fff',
-            borderRadius: 8,
-            textDecoration: 'none',
-            color: '#1a2238',
-            border: '1px solid #e2e8f0',
-            transition: 'all 0.2s'
-          }}>
-            <UserPlus size={20} style={{ marginRight: '0.5rem' }} />
-            <span>Add Team Member</span>
-            <ExternalLink size={16} style={{ marginLeft: 'auto', color: '#64748b' }} />
-          </a>
-          
-          <a href="/admin/team/edit" style={{
-            display: 'flex',
-            alignItems: 'center',
-            padding: '1rem',
-            background: '#fff',
-            borderRadius: 8,
-            textDecoration: 'none',
-            color: '#1a2238',
-            border: '1px solid #e2e8f0',
-            transition: 'all 0.2s'
-          }}>
-            <Edit size={20} style={{ marginRight: '0.5rem' }} />
-            <span>Edit Permissions</span>
-            <ExternalLink size={16} style={{ marginLeft: 'auto', color: '#64748b' }} />
-          </a>
-        </div>
-
-        {/* Search and Filters */}
-        <div style={{ 
-          display: 'flex', 
-          gap: '1rem', 
-          marginBottom: '2rem',
-          flexWrap: 'wrap'
-        }}>
-          <div style={{ flex: 1, minWidth: 300 }}>
-            <div style={{ position: 'relative' }}>
-              <Search size={20} style={{ 
-                position: 'absolute', 
-                left: '12px', 
-                top: '50%', 
-                transform: 'translateY(-50%)', 
-                color: '#64748b' 
-              }} />
-              <input
-                type="text"
-                placeholder="Search team members..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem 1rem 0.75rem 2.5rem',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: 8,
-                  fontSize: '1rem',
-                  background: '#fff'
-                }}
-              />
-            </div>
-          </div>
-          
-          <select
-            value={filterRole}
-            onChange={(e) => setFilterRole(e.target.value)}
-            style={{
-              padding: '0.75rem 1rem',
-              border: '1px solid #e2e8f0',
-              borderRadius: 8,
-              fontSize: '1rem',
-              background: '#fff',
-              minWidth: 150
-            }}
-          >
-            <option value="all">All Roles</option>
-            <option value="superadmin">Super Admin</option>
-            <option value="admin">Admin</option>
-            <option value="moderator">Moderator</option>
-            <option value="analyst">Analyst</option>
-            <option value="support">Support</option>
-          </select>
-          
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            style={{
-              padding: '0.75rem 1rem',
-              border: '1px solid #e2e8f0',
-              borderRadius: 8,
-              fontSize: '1rem',
-              background: '#fff',
-              minWidth: 150
-            }}
-          >
-            <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-            <option value="pending">Pending</option>
-          </select>
-          
-          <button style={{
-            display: 'flex',
-            alignItems: 'center',
-            padding: '0.75rem 1.5rem',
-            background: '#1a2238',
-            color: '#fff',
+    <div style={{ padding: '2rem', maxWidth: 1400, margin: '0 auto' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+        <h1 style={{ fontSize: '2rem', fontWeight: 700, color: '#1f2937' }}>
+          Team Management
+        </h1>
+        <button
+          onClick={handleAdd}
+          style={{
+            background: '#3b82f6',
+            color: 'white',
             border: 'none',
-            borderRadius: 8,
-            fontSize: '1rem',
-            fontWeight: 600,
+            padding: '0.75rem 1.5rem',
+            borderRadius: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
             cursor: 'pointer',
-            transition: 'background 0.2s'
-          }}>
-            <Plus size={16} style={{ marginRight: '0.5rem' }} />
-            Add Member
-          </button>
+            fontWeight: 600
+          }}
+        >
+          <Plus size={16} />
+          Add Team Member
+        </button>
+      </div>
+
+      {/* Filters */}
+      <div style={{ 
+        display: 'flex', 
+        gap: '1rem', 
+        marginBottom: '2rem',
+        flexWrap: 'wrap',
+        alignItems: 'center'
+      }}>
+        <div style={{ position: 'relative', flex: 1, minWidth: 300 }}>
+          <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#6b7280' }} />
+          <input
+            type="text"
+            placeholder="Search team members..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '0.75rem 1rem 0.75rem 2.5rem',
+              border: '1px solid #d1d5db',
+              borderRadius: '8px',
+              fontSize: '0.875rem'
+            }}
+          />
         </div>
+        
+        <select
+          value={selectedRole}
+          onChange={(e) => setSelectedRole(e.target.value)}
+          style={{
+            padding: '0.75rem 1rem',
+            border: '1px solid #d1d5db',
+            borderRadius: '8px',
+            fontSize: '0.875rem',
+            minWidth: 120
+          }}
+        >
+          <option value="all">All Roles</option>
+          {roles.map(role => (
+            <option key={role} value={role}>{role.charAt(0).toUpperCase() + role.slice(1)}</option>
+          ))}
+        </select>
 
-        {/* Team Members List */}
-        <div style={{ 
-          background: '#fff', 
-          borderRadius: 12, 
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          border: '1px solid #e2e8f0',
-          overflow: 'hidden'
-        }}>
-          
-          {/* Table Header */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr',
-            gap: '1rem',
-            padding: '1rem 1.5rem',
-            background: '#f8fafc',
-            borderBottom: '1px solid #e2e8f0',
-            fontWeight: 600,
-            color: '#374151'
+        <select
+          value={selectedStatus}
+          onChange={(e) => setSelectedStatus(e.target.value)}
+          style={{
+            padding: '0.75rem 1rem',
+            border: '1px solid #d1d5db',
+            borderRadius: '8px',
+            fontSize: '0.875rem',
+            minWidth: 120
+          }}
+        >
+          <option value="all">All Status</option>
+          {statusOptions.map(status => (
+            <option key={status} value={status}>{status.charAt(0).toUpperCase() + status.slice(1)}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Team Grid */}
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', 
+        gap: '1.5rem',
+        marginBottom: '2rem'
+      }}>
+        {filteredTeam.map(member => (
+          <div key={member.id} style={{
+            background: 'white',
+            border: '1px solid #e5e7eb',
+            borderRadius: '12px',
+            padding: '1.5rem',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
           }}>
-            <div>Member</div>
-            <div>Role</div>
-            <div>Status</div>
-            <div>Join Date</div>
-            <div>Last Login</div>
-            <div>Actions</div>
-          </div>
-
-          {/* Table Rows */}
-          {filteredMembers.map((member) => (
-            <div key={member.id} style={{
-              display: 'grid',
-              gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr',
-              gap: '1rem',
-              padding: '1rem 1.5rem',
-              borderBottom: '1px solid #f1f5f9',
-              alignItems: 'center'
-            }}>
-              <div>
-                <div style={{ fontWeight: 600, color: '#1a2238', marginBottom: '0.25rem' }}>
-                  {member.name}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                  <User size={20} color="#6b7280" />
+                  <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#1f2937' }}>
+                    {member.name}
+                  </h3>
                 </div>
-                <div style={{ fontSize: '0.875rem', color: '#64748b' }}>
+                <p style={{ color: '#6b7280', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
+                  <Mail size={14} style={{ marginRight: '0.25rem' }} />
                   {member.email}
-                </div>
+                </p>
+                <p style={{ color: '#6b7280', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
+                  <Phone size={14} style={{ marginRight: '0.25rem' }} />
+                  {member.phone}
+                </p>
+                <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>
+                  <Shield size={14} style={{ marginRight: '0.25rem' }} />
+                  {member.department}
+                </p>
               </div>
               
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                {getRoleIcon(member.role)}
-                <span style={{ 
-                  marginLeft: '0.5rem', 
-                  textTransform: 'capitalize',
-                  color: getRoleColor(member.role),
-                  fontWeight: 600
-                }}>
-                  {member.role}
-                </span>
-              </div>
-              
-              <div>
-                <span style={{
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
+                <div style={{
                   padding: '0.25rem 0.75rem',
-                  borderRadius: 20,
+                  borderRadius: '20px',
                   fontSize: '0.75rem',
                   fontWeight: 600,
-                  textTransform: 'uppercase',
-                  background: `${getStatusColor(member.status)}20`,
-                  color: getStatusColor(member.status)
+                  ...getRoleColor(member.role)
+                }}>
+                  {member.role}
+                </div>
+                
+                <div style={{
+                  padding: '0.25rem 0.75rem',
+                  borderRadius: '20px',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  ...getStatusColor(member.status)
                 }}>
                   {member.status}
+                </div>
+              </div>
+            </div>
+            
+            <div style={{ marginBottom: '1rem' }}>
+              <p style={{ color: '#6b7280', fontSize: '0.75rem' }}>
+                <Calendar size={12} style={{ marginRight: '0.25rem' }} />
+                Joined: {member.joinDate} • Last active: {member.lastActive}
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button
+                onClick={() => handleView(member)}
+                style={{
+                  background: '#3b82f6',
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.5rem',
+                  borderRadius: '6px',
+                  cursor: 'pointer'
+                }}
+              >
+                <Eye size={14} />
+              </button>
+              <button
+                onClick={() => handleEdit(member)}
+                style={{
+                  background: '#f59e0b',
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.5rem',
+                  borderRadius: '6px',
+                  cursor: 'pointer'
+                }}
+              >
+                <Edit size={14} />
+              </button>
+              <button
+                onClick={() => handleDelete(member)}
+                style={{
+                  background: '#ef4444',
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.5rem',
+                  borderRadius: '6px',
+                  cursor: 'pointer'
+                }}
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Add/Edit Modal */}
+      {(showAddModal || showEditModal) && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: 'white',
+            padding: '2rem',
+            borderRadius: '12px',
+            width: '90%',
+            maxWidth: 500,
+            maxHeight: '90vh',
+            overflow: 'auto'
+          }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '1.5rem' }}>
+              {showAddModal ? 'Add Team Member' : 'Edit Team Member'}
+            </h2>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <input
+                type="text"
+                placeholder="Full name"
+                value={formData.name}
+                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                style={{ padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+              />
+              
+              <input
+                type="email"
+                placeholder="Email address"
+                value={formData.email}
+                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                style={{ padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+              />
+              
+              <input
+                type="tel"
+                placeholder="Phone number"
+                value={formData.phone}
+                onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                style={{ padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+              />
+              
+              <select
+                value={formData.role}
+                onChange={(e) => setFormData({...formData, role: e.target.value as any})}
+                style={{ padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+              >
+                {roles.map(role => (
+                  <option key={role} value={role}>{role.charAt(0).toUpperCase() + role.slice(1)}</option>
+                ))}
+              </select>
+              
+              <input
+                type="text"
+                placeholder="Department"
+                value={formData.department}
+                onChange={(e) => setFormData({...formData, department: e.target.value})}
+                style={{ padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+              />
+              
+              <select
+                value={formData.status}
+                onChange={(e) => setFormData({...formData, status: e.target.value as any})}
+                style={{ padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+              >
+                {statusOptions.map(status => (
+                  <option key={status} value={status}>{status.charAt(0).toUpperCase() + status.slice(1)}</option>
+                ))}
+              </select>
+              
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>
+                  Permissions:
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem' }}>
+                  {permissionOptions.map(permission => (
+                    <label key={permission} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <input
+                        type="checkbox"
+                        checked={formData.permissions.includes(permission)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setFormData({
+                              ...formData,
+                              permissions: [...formData.permissions, permission]
+                            });
+                          } else {
+                            setFormData({
+                              ...formData,
+                              permissions: formData.permissions.filter(p => p !== permission)
+                            });
+                          }
+                        }}
+                      />
+                      <span style={{ fontSize: '0.875rem' }}>
+                        {permission.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+            
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+              <button
+                onClick={saveTeamMember}
+                style={{
+                  background: '#3b82f6',
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: 600
+                }}
+              >
+                {showAddModal ? 'Add' : 'Save'}
+              </button>
+              <button
+                onClick={() => {
+                  setShowAddModal(false);
+                  setShowEditModal(false);
+                  setSelectedItem(null);
+                }}
+                style={{
+                  background: '#6b7280',
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '6px',
+                  cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Modal */}
+      {showViewModal && selectedItem && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: 'white',
+            padding: '2rem',
+            borderRadius: '12px',
+            width: '90%',
+            maxWidth: 600,
+            maxHeight: '90vh',
+            overflow: 'auto'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 600 }}>
+                {selectedItem.name}
+              </h2>
+              <button
+                onClick={() => {
+                  setShowViewModal(false);
+                  setSelectedItem(null);
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '1.5rem',
+                  cursor: 'pointer',
+                  color: '#6b7280'
+                }}
+              >
+                ×
+              </button>
+            </div>
+            
+            <div style={{ display: 'grid', gap: '1rem' }}>
+              <div>
+                <strong>Email:</strong> {selectedItem.email}
+              </div>
+              <div>
+                <strong>Phone:</strong> {selectedItem.phone}
+              </div>
+              <div>
+                <strong>Role:</strong> 
+                <span style={{
+                  padding: '0.25rem 0.5rem',
+                  borderRadius: '4px',
+                  fontSize: '0.75rem',
+                  marginLeft: '0.5rem',
+                  ...getRoleColor(selectedItem.role)
+                }}>
+                  {selectedItem.role}
                 </span>
               </div>
-              
-              <div style={{ color: '#64748b', fontSize: '0.875rem' }}>
-                {member.joinDate.toLocaleDateString()}
+              <div>
+                <strong>Department:</strong> {selectedItem.department}
               </div>
-              
-              <div style={{ color: '#64748b', fontSize: '0.875rem' }}>
-                {formatTimeAgo(member.lastLogin)}
+              <div>
+                <strong>Status:</strong>
+                <span style={{
+                  padding: '0.25rem 0.5rem',
+                  borderRadius: '4px',
+                  fontSize: '0.75rem',
+                  marginLeft: '0.5rem',
+                  ...getStatusColor(selectedItem.status)
+                }}>
+                  {selectedItem.status}
+                </span>
               </div>
-              
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button style={{
-                  padding: '0.5rem',
-                  background: '#f1f5f9',
-                  border: 'none',
-                  borderRadius: 6,
-                  cursor: 'pointer',
-                  color: '#64748b'
-                }}>
-                  <Mail size={16} />
-                </button>
-                <button style={{
-                  padding: '0.5rem',
-                  background: '#f1f5f9',
-                  border: 'none',
-                  borderRadius: 6,
-                  cursor: 'pointer',
-                  color: '#64748b'
-                }}>
-                  <Edit size={16} />
-                </button>
-                <button style={{
-                  padding: '0.5rem',
-                  background: '#fef2f2',
-                  border: 'none',
-                  borderRadius: 6,
-                  cursor: 'pointer',
-                  color: '#dc2626'
-                }}>
-                  <Trash2 size={16} />
-                </button>
+              <div>
+                <strong>Join Date:</strong> {selectedItem.joinDate}
+              </div>
+              <div>
+                <strong>Last Active:</strong> {selectedItem.lastActive}
+              </div>
+              <div>
+                <strong>Permissions:</strong>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.5rem' }}>
+                  {selectedItem.permissions.map(permission => (
+                    <span key={permission} style={{
+                      padding: '0.25rem 0.5rem',
+                      background: '#f3f4f6',
+                      borderRadius: '4px',
+                      fontSize: '0.75rem',
+                      color: '#374151'
+                    }}>
+                      {permission.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
-          ))}
+          </div>
         </div>
+      )}
 
-        {/* Summary Stats */}
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-          gap: '1rem',
-          marginTop: '2rem'
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && selectedItem && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
         }}>
-          <div style={{ 
-            background: '#fff', 
-            padding: '1rem', 
-            borderRadius: 8, 
-            textAlign: 'center',
-            border: '1px solid #e2e8f0'
+          <div style={{
+            background: 'white',
+            padding: '2rem',
+            borderRadius: '12px',
+            width: '90%',
+            maxWidth: 400
           }}>
-            <div style={{ fontSize: '2rem', fontWeight: 700, color: '#1a2238' }}>
-              {teamMembers.length}
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '1rem' }}>
+              Confirm Delete
+            </h2>
+            <p style={{ marginBottom: '1.5rem', color: '#6b7280' }}>
+              Are you sure you want to remove "{selectedItem.name}" from the team? This action cannot be undone.
+            </p>
+            
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button
+                onClick={confirmDelete}
+                style={{
+                  background: '#ef4444',
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: 600
+                }}
+              >
+                Remove
+              </button>
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setSelectedItem(null);
+                }}
+                style={{
+                  background: '#6b7280',
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '6px',
+                  cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
             </div>
-            <div style={{ color: '#64748b' }}>Total Members</div>
-          </div>
-          
-          <div style={{ 
-            background: '#fff', 
-            padding: '1rem', 
-            borderRadius: 8, 
-            textAlign: 'center',
-            border: '1px solid #e2e8f0'
-          }}>
-            <div style={{ fontSize: '2rem', fontWeight: 700, color: '#059669' }}>
-              {teamMembers.filter(member => member.status === 'active').length}
-            </div>
-            <div style={{ color: '#64748b' }}>Active Members</div>
-          </div>
-          
-          <div style={{ 
-            background: '#fff', 
-            padding: '1rem', 
-            borderRadius: 8, 
-            textAlign: 'center',
-            border: '1px solid #e2e8f0'
-          }}>
-            <div style={{ fontSize: '2rem', fontWeight: 700, color: '#d97706' }}>
-              {teamMembers.filter(member => member.status === 'pending').length}
-            </div>
-            <div style={{ color: '#64748b' }}>Pending</div>
-          </div>
-          
-          <div style={{ 
-            background: '#fff', 
-            padding: '1rem', 
-            borderRadius: 8, 
-            textAlign: 'center',
-            border: '1px solid #e2e8f0'
-          }}>
-            <div style={{ fontSize: '2rem', fontWeight: 700, color: '#1d4ed8' }}>
-              {teamMembers.filter(member => member.role === 'admin' || member.role === 'superadmin').length}
-            </div>
-            <div style={{ color: '#64748b' }}>Administrators</div>
           </div>
         </div>
-
-      </div>
+      )}
     </div>
   );
 } 
