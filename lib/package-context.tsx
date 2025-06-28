@@ -30,6 +30,7 @@ interface PackageContextType {
   createPackage: (pkg: Omit<InvestmentPackage, 'id'>) => Promise<void>;
   updatePackage: (id: string, pkg: Partial<InvestmentPackage>) => Promise<void>;
   deletePackage: (id: string) => Promise<void>;
+  saveToStorage: () => void;
 }
 
 const PackageContext = createContext<PackageContextType | null>(null);
@@ -86,21 +87,51 @@ const mockPackages: InvestmentPackage[] = [
   }
 ];
 
+const STORAGE_KEY = 'glg-investment-packages';
+
 export function PackageProvider({ children }: { children: ReactNode }) {
   const [packages, setPackages] = useState<InvestmentPackage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedPackage, setSelectedPackage] = useState<InvestmentPackage | null>(null);
 
+  // Load packages from localStorage
+  const loadFromStorage = (): InvestmentPackage[] => {
+    if (typeof window === 'undefined') return mockPackages;
+    
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        return Array.isArray(parsed) ? parsed : mockPackages;
+      }
+    } catch (err) {
+      console.error('Error loading packages from storage:', err);
+    }
+    return mockPackages;
+  };
+
+  // Save packages to localStorage
+  const saveToStorage = () => {
+    if (typeof window === 'undefined') return;
+    
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(packages));
+      console.log('Packages saved to localStorage:', packages);
+    } catch (err) {
+      console.error('Error saving packages to storage:', err);
+      setError('Failed to save packages to storage');
+    }
+  };
+
   const fetchPackages = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      // For now, use mock data
-      // In production, this would fetch from your API
-      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API delay
-      setPackages(mockPackages);
+      // Load from localStorage or use mock data
+      const loadedPackages = loadFromStorage();
+      setPackages(loadedPackages);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch packages');
     } finally {
@@ -112,29 +143,64 @@ export function PackageProvider({ children }: { children: ReactNode }) {
     try {
       const newPackage: InvestmentPackage = {
         ...pkg,
-        id: Date.now().toString()
+        id: Date.now().toString(),
+        createdAt: new Date().toISOString().slice(0, 10)
       };
-      setPackages(prev => [...prev, newPackage]);
+      const updatedPackages = [...packages, newPackage];
+      setPackages(updatedPackages);
+      
+      // Save to localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedPackages));
+      }
+      
+      console.log('Package created and saved:', newPackage);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create package');
+      throw err;
     }
   };
 
   const updatePackage = async (id: string, pkg: Partial<InvestmentPackage>) => {
     try {
-      setPackages(prev => prev.map(p => p.id === id ? { ...p, ...pkg } : p));
+      const updatedPackages = packages.map(p => p.id === id ? { ...p, ...pkg } : p);
+      setPackages(updatedPackages);
+      
+      // Save to localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedPackages));
+      }
+      
+      console.log('Package updated and saved:', pkg);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update package');
+      throw err;
     }
   };
 
   const deletePackage = async (id: string) => {
     try {
-      setPackages(prev => prev.filter(p => p.id !== id));
+      const updatedPackages = packages.filter(p => p.id !== id);
+      setPackages(updatedPackages);
+      
+      // Save to localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedPackages));
+      }
+      
+      console.log('Package deleted and saved');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete package');
+      throw err;
     }
   };
+
+  // Auto-save when packages change
+  useEffect(() => {
+    if (packages.length > 0) {
+      saveToStorage();
+    }
+  }, [packages]);
 
   useEffect(() => {
     fetchPackages();
@@ -150,7 +216,8 @@ export function PackageProvider({ children }: { children: ReactNode }) {
     fetchPackages,
     createPackage,
     updatePackage,
-    deletePackage
+    deletePackage,
+    saveToStorage
   };
 
   return (

@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from 'react';
-import { Package, DollarSign, TrendingUp, Calendar, Eye, Edit, Plus, Trash2, Search, Filter, ExternalLink } from 'lucide-react';
+import { Package, DollarSign, TrendingUp, Calendar, Eye, Edit, Plus, Trash2, Search, Filter, ExternalLink, CheckCircle, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { usePackages } from '../../../lib/package-context';
 import { emailNotificationService } from '../../../lib/email-service';
@@ -62,9 +62,11 @@ const initialPackages: Package[] = [
 ];
 
 export default function PackagesManagementPage() {
-  const { packages, setPackages } = usePackages();
+  const { packages, loading, error, createPackage, updatePackage, deletePackage } = usePackages();
   const [showForm, setShowForm] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
   const [formData, setFormData] = useState<Partial<Package>>({
     id: undefined,
     name: '',
@@ -99,6 +101,7 @@ export default function PackagesManagementPage() {
       createdAt: ''
     });
     setIsEdit(false);
+    setSuccessMessage('');
   };
 
   const openAddForm = () => {
@@ -113,17 +116,26 @@ export default function PackagesManagementPage() {
     setShowForm(true);
   };
 
-  const handleDelete = (id: string) => {
-    const packageToDelete = packages.find(p => p.id === id);
-    setPackages(packages.filter(p => p.id !== id));
-    
-    // Send surveillance notification for package deletion
-    if (packageToDelete) {
-      emailNotificationService.notifyAdminAction(
-        { id: 'admin', name: 'Admin User' },
-        'Package Deleted',
-        { package: packageToDelete, action: 'delete' }
-      );
+  const handleDelete = async (id: string) => {
+    if (confirm('Are you sure you want to delete this package?')) {
+      try {
+        await deletePackage(id);
+        setSuccessMessage('Package deleted successfully!');
+        
+        // Send surveillance notification for package deletion
+        const packageToDelete = packages.find(p => p.id === id);
+        if (packageToDelete) {
+          emailNotificationService.notifyAdminAction(
+            { id: 'admin', name: 'Admin User' },
+            'Package Deleted',
+            { package: packageToDelete, action: 'delete' }
+          );
+        }
+        
+        setTimeout(() => setSuccessMessage(''), 3000);
+      } catch (err) {
+        console.error('Error deleting package:', err);
+      }
     }
   };
 
@@ -139,52 +151,57 @@ export default function PackagesManagementPage() {
     setFormData(prev => ({ ...prev, [name]: newValue }));
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted:', { isEdit, formData });
+    setIsSubmitting(true);
+    setSuccessMessage('');
     
-    if (isEdit && formData.id) {
-      const updatedPackages = packages.map(p => 
-        p.id === formData.id ? { 
-          ...p, 
+    try {
+      console.log('Form submitted:', { isEdit, formData });
+      
+      if (isEdit && formData.id) {
+        await updatePackage(formData.id, {
           ...formData,
-          expectedReturn: formData.expectedReturn ?? p.expectedReturn ?? 0,
-          isActive: p.isActive ?? true,
-          features: p.features ?? [],
-          terms: p.terms ?? ''
-        } : p
-      );
-      console.log('Updating packages:', updatedPackages);
-      setPackages(updatedPackages);
+          expectedReturn: formData.expectedReturn ?? 0,
+          isActive: true,
+          features: [],
+          terms: ''
+        });
+        setSuccessMessage('Package updated successfully!');
+        
+        // Send surveillance notification for package edit
+        emailNotificationService.notifyAdminAction(
+          { id: 'admin', name: 'Admin User' },
+          'Package Edited',
+          { package: formData, action: 'edit' }
+        );
+      } else {
+        await createPackage({
+          ...formData,
+          expectedReturn: formData.expectedReturn ?? 0,
+          isActive: true,
+          features: [],
+          terms: ''
+        } as any);
+        setSuccessMessage('Package created successfully!');
+        
+        // Send surveillance notification for package creation
+        emailNotificationService.notifyAdminAction(
+          { id: 'admin', name: 'Admin User' },
+          'Package Created',
+          { package: formData, action: 'create' }
+        );
+      }
       
-      // Send surveillance notification for package edit
-      emailNotificationService.notifyAdminAction(
-        { id: 'admin', name: 'Admin User' },
-        'Package Edited',
-        { package: formData, action: 'edit' }
-      );
-    } else {
-      const newPackage: any = {
-        ...formData,
-        id: Date.now().toString(),
-        createdAt: new Date().toISOString().slice(0, 10),
-        expectedReturn: formData.expectedReturn ?? 0,
-        isActive: true,
-        features: [],
-        terms: ''
-      };
-      console.log('Adding new package:', newPackage);
-      setPackages([...packages, newPackage]);
-      
-      // Send surveillance notification for package creation
-      emailNotificationService.notifyAdminAction(
-        { id: 'admin', name: 'Admin User' },
-        'Package Created',
-        { package: newPackage, action: 'create' }
-      );
+      setShowForm(false);
+      resetForm();
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (err) {
+      console.error('Error saving package:', err);
+      setSuccessMessage('Error saving package. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
-    setShowForm(false);
-    resetForm();
   };
 
   const getRiskColor = (risk: string) => {
@@ -200,213 +217,339 @@ export default function PackagesManagementPage() {
     return status === 'Active' ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100';
   };
 
-  return (
-    <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 4px 24px rgba(10,37,64,0.10)', padding: '2rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <div>
-          <h1 style={{ color: 'var(--primary)', fontSize: 32, fontWeight: 900, marginBottom: 8 }}>Package Management</h1>
-          <p style={{ color: 'var(--foreground)', fontSize: 18, opacity: 0.8 }}>Manage investment packages and positions</p>
-        </div>
-        <Link href="/reserved" style={{ textDecoration: 'none' }}>
-          <button style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: 8, 
-            background: 'var(--primary)', 
-            color: '#fff', 
-            padding: '0.75rem 1.5rem', 
-            borderRadius: 8, 
-            border: 'none', 
-            fontWeight: 600, 
-            cursor: 'pointer',
-            transition: 'all 0.2s ease'
-          }}>
-            <Eye size={18} /> View Portfolio Dashboard
-          </button>
-        </Link>
-      </div>
-      
-      <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
-        <button onClick={openAddForm} style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: 8, 
-          background: 'var(--accent)', 
-          color: 'var(--primary)', 
-          padding: '0.75rem 1.5rem', 
-          borderRadius: 8, 
-          border: 'none', 
-          fontWeight: 600, 
-          cursor: 'pointer' 
-        }}>
-          <Plus size={18} /> Add Package
-        </button>
-        
-        <div style={{ 
-          background: '#f8f9fa', 
-          padding: '0.75rem 1rem', 
-          borderRadius: 8, 
-          border: '1px solid #e0e3eb',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8
-        }}>
-          <Package size={16} style={{ color: 'var(--primary)' }} />
-          <span style={{ color: 'var(--foreground)', fontWeight: 600 }}>
-            {packages.filter(p => p.status === 'Active').length} Active Packages
-          </span>
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="bg-white rounded-lg shadow p-6">
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+                  <div className="h-3 bg-gray-200 rounded w-1/2 mb-2"></div>
+                  <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
+    );
+  }
 
-      {/* Packages Table */}
-      <div style={{ overflowX: 'auto', marginBottom: 32 }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 900 }}>
-          <thead>
-            <tr style={{ background: 'var(--secondary)' }}>
-              <th style={{ padding: 12, textAlign: 'left' }}>Name</th>
-              <th style={{ padding: 12, textAlign: 'left' }}>Description</th>
-              <th style={{ padding: 12, textAlign: 'left' }}>Min Investment</th>
-              <th style={{ padding: 12, textAlign: 'left' }}>Max Investment</th>
-              <th style={{ padding: 12, textAlign: 'left' }}>Expected ROI (%)</th>
-              <th style={{ padding: 12, textAlign: 'left' }}>Duration</th>
-              <th style={{ padding: 12, textAlign: 'left' }}>Risk</th>
-              <th style={{ padding: 12, textAlign: 'left' }}>Status</th>
-              <th style={{ padding: 12, textAlign: 'left' }}>Created</th>
-              <th style={{ padding: 12, textAlign: 'left' }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {packages.map(pkg => (
-              <tr key={pkg.id} style={{ borderBottom: '1px solid #e0e3eb' }}>
-                <td style={{ padding: 12, fontWeight: 600 }}>{pkg.name}</td>
-                <td style={{ padding: 12, maxWidth: 250, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{pkg.description}</td>
-                <td style={{ padding: 12 }}>${pkg.minInvestment.toLocaleString('en-US')}</td>
-                <td style={{ padding: 12 }}>${pkg.maxInvestment.toLocaleString('en-US')}</td>
-                <td style={{ padding: 12 }}>{pkg.expectedReturn}%</td>
-                <td style={{ padding: 12 }}>{pkg.duration} months</td>
-                <td style={{ padding: 12 }}>
-                  <span style={{ 
-                    padding: '0.25rem 0.5rem', 
-                    borderRadius: 12, 
-                    fontSize: 12, 
-                    fontWeight: 600,
-                    ...(pkg.riskLevel === 'low' ? { background: '#dcfce7', color: '#166534' } :
-                        pkg.riskLevel === 'medium' ? { background: '#fef3c7', color: '#92400e' } :
-                        { background: '#fee2e2', color: '#991b1b' })
-                  }}>
+  return (
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Investment Packages</h1>
+            <p className="text-gray-600 mt-2">Manage your investment packages and offerings</p>
+          </div>
+          <button
+            onClick={openAddForm}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
+          >
+            <Plus size={20} />
+            Add Package
+          </button>
+        </div>
+
+        {/* Success/Error Messages */}
+        {successMessage && (
+          <div className={`mb-6 p-4 rounded-lg flex items-center gap-2 ${
+            successMessage.includes('Error') 
+              ? 'bg-red-100 text-red-700 border border-red-200' 
+              : 'bg-green-100 text-green-700 border border-green-200'
+          }`}>
+            {successMessage.includes('Error') ? <AlertCircle size={20} /> : <CheckCircle size={20} />}
+            {successMessage}
+          </div>
+        )}
+
+        {error && (
+          <div className="mb-6 p-4 bg-red-100 text-red-700 rounded-lg border border-red-200 flex items-center gap-2">
+            <AlertCircle size={20} />
+            {error}
+          </div>
+        )}
+
+        {/* Packages Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {packages.map((pkg) => (
+            <div key={pkg.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">{pkg.name}</h3>
+                  <p className="text-gray-600 text-sm mb-3">{pkg.description}</p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => openEditForm(pkg)}
+                    className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                    title="Edit package"
+                  >
+                    <Edit size={16} />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(pkg.id)}
+                    className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Delete package"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500">Investment Range:</span>
+                  <span className="text-sm font-medium">
+                    ${pkg.minInvestment.toLocaleString()} - ${pkg.maxInvestment.toLocaleString()}
+                  </span>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500">Expected Return:</span>
+                  <span className="text-sm font-medium text-green-600">
+                    {pkg.expectedReturn}%
+                  </span>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500">Duration:</span>
+                  <span className="text-sm font-medium">
+                    {pkg.duration} months
+                  </span>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500">Risk Level:</span>
+                  <span className={`text-xs px-2 py-1 rounded-full font-medium ${getRiskColor(pkg.riskLevel)}`}>
                     {pkg.riskLevel}
                   </span>
-                </td>
-                <td style={{ padding: 12 }}>
-                  <span style={{ 
-                    padding: '0.25rem 0.5rem', 
-                    borderRadius: 12, 
-                    fontSize: 12, 
-                    fontWeight: 600,
-                    background: pkg.status === 'Active' ? '#dcfce7' : '#fee2e2',
-                    color: pkg.status === 'Active' ? '#166534' : '#991b1b'
-                  }}>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500">Status:</span>
+                  <span className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(pkg.status)}`}>
                     {pkg.status}
                   </span>
-                </td>
-                <td style={{ padding: 12 }}>{pkg.createdAt}</td>
-                <td style={{ padding: 12 }}>
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <button onClick={() => openEditForm(pkg)} style={{ 
-                      background: 'var(--accent)', 
-                      color: 'var(--primary)', 
-                      border: 'none', 
-                      borderRadius: 6, 
-                      padding: 6, 
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease'
-                    }}>
-                      <Edit size={16} />
-                    </button>
-                    <button onClick={() => handleDelete(pkg.id)} style={{ 
-                      background: '#ef4444', 
-                      color: '#fff', 
-                      border: 'none', 
-                      borderRadius: 6, 
-                      padding: 6, 
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease'
-                    }}>
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                </div>
+              </div>
 
-      {/* Portfolio Link Section */}
-      <div style={{ 
-        background: 'linear-gradient(135deg, var(--primary) 0%, #2a3f5f 100%)', 
-        borderRadius: 12, 
-        padding: '1.5rem', 
-        color: '#fff',
-        marginBottom: 24
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8, color: 'var(--accent)' }}>
-              Portfolio Dashboard Connection
-            </h3>
-            <p style={{ fontSize: 14, opacity: 0.9 }}>
-              View how these packages are performing in the live portfolio dashboard
-            </p>
-          </div>
-          <Link href="/reserved" style={{ textDecoration: 'none' }}>
-            <button style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: 8, 
-              background: 'var(--accent)', 
-              color: 'var(--primary)', 
-              padding: '0.75rem 1.5rem', 
-              borderRadius: 8, 
-              border: 'none', 
-              fontWeight: 600, 
-              cursor: 'pointer',
-              transition: 'all 0.2s ease'
-            }}>
-              <ExternalLink size={18} /> Open Portfolio
-            </button>
-          </Link>
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <div className="flex justify-between items-center text-xs text-gray-500">
+                  <span>Created: {pkg.createdAt}</span>
+                  <span>ID: {pkg.id}</span>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
+
+        {packages.length === 0 && !loading && (
+          <div className="text-center py-12">
+            <Package size={48} className="mx-auto text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No packages yet</h3>
+            <p className="text-gray-600 mb-6">Create your first investment package to get started</p>
+            <button
+              onClick={openAddForm}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 mx-auto transition-colors"
+            >
+              <Plus size={20} />
+              Add Your First Package
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Add/Edit Form Modal */}
       {showForm && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <form onSubmit={handleFormSubmit} style={{ background: '#fff', borderRadius: 12, padding: 32, minWidth: 350, boxShadow: '0 4px 24px rgba(10,37,64,0.10)' }}>
-            <h2 style={{ marginBottom: 16 }}>{isEdit ? 'Edit Package' : 'Add Package'}</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <input name="name" value={formData.name || ''} onChange={handleFormChange} placeholder="Name" required style={{ padding: 8, borderRadius: 6, border: '1px solid #e0e3eb' }} />
-              <input name="description" value={formData.description || ''} onChange={handleFormChange} placeholder="Description" required style={{ padding: 8, borderRadius: 6, border: '1px solid #e0e3eb' }} />
-              <input name="minInvestment" value={formData.minInvestment || 0} onChange={handleFormChange} placeholder="Min Investment" type="number" min={0} required style={{ padding: 8, borderRadius: 6, border: '1px solid #e0e3eb' }} />
-              <input name="maxInvestment" value={formData.maxInvestment || 0} onChange={handleFormChange} placeholder="Max Investment" type="number" min={0} required style={{ padding: 8, borderRadius: 6, border: '1px solid #e0e3eb' }} />
-              <input name="expectedReturn" value={formData.expectedReturn || 0} onChange={handleFormChange} placeholder="Expected ROI (%)" type="number" min={0} required style={{ padding: 8, borderRadius: 6, border: '1px solid #e0e3eb' }} />
-              <input name="duration" value={formData.duration || 0} onChange={handleFormChange} placeholder="Duration" type="number" min={0} required style={{ padding: 8, borderRadius: 6, border: '1px solid #e0e3eb' }} />
-              <select name="riskLevel" value={formData.riskLevel || 'low'} onChange={handleFormChange} style={{ padding: 8, borderRadius: 6, border: '1px solid #e0e3eb' }}>
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-              </select>
-              <select name="status" value={formData.status || 'Active'} onChange={handleFormChange} style={{ padding: 8, borderRadius: 6, border: '1px solid #e0e3eb' }}>
-                <option value="Active">Active</option>
-                <option value="Fundraising">Fundraising</option>
-                <option value="Closed">Closed</option>
-              </select>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <h2 className="text-2xl font-bold text-gray-900">
+                {isEdit ? 'Edit Package' : 'Add New Package'}
+              </h2>
             </div>
-            <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
-              <button type="submit" style={{ background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1.5rem', fontWeight: 600, cursor: 'pointer' }}>{isEdit ? 'Save Changes' : 'Add'}</button>
-              <button type="button" onClick={() => setShowForm(false)} style={{ background: '#e0e3eb', color: 'var(--primary)', border: 'none', borderRadius: 6, padding: '0.5rem 1.5rem', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
-            </div>
-          </form>
+
+            <form onSubmit={handleFormSubmit} className="p-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Package Name *
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name || ''}
+                    onChange={handleFormChange}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Enter package name"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Category *
+                  </label>
+                  <input
+                    type="text"
+                    name="category"
+                    value={formData.category || ''}
+                    onChange={handleFormChange}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="e.g., Conservative, Growth, ESG"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Minimum Investment *
+                  </label>
+                  <input
+                    type="number"
+                    name="minInvestment"
+                    value={formData.minInvestment || ''}
+                    onChange={handleFormChange}
+                    required
+                    min="0"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="0"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Maximum Investment *
+                  </label>
+                  <input
+                    type="number"
+                    name="maxInvestment"
+                    value={formData.maxInvestment || ''}
+                    onChange={handleFormChange}
+                    required
+                    min="0"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="0"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Expected Return (%) *
+                  </label>
+                  <input
+                    type="number"
+                    name="expectedReturn"
+                    value={formData.expectedReturn || ''}
+                    onChange={handleFormChange}
+                    required
+                    min="0"
+                    step="0.1"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="0.0"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Duration (months) *
+                  </label>
+                  <input
+                    type="number"
+                    name="duration"
+                    value={formData.duration || ''}
+                    onChange={handleFormChange}
+                    required
+                    min="1"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="12"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Risk Level *
+                  </label>
+                  <select
+                    name="riskLevel"
+                    value={formData.riskLevel || 'low'}
+                    onChange={handleFormChange}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Status *
+                  </label>
+                  <select
+                    name="status"
+                    value={formData.status || 'Active'}
+                    onChange={handleFormChange}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="Active">Active</option>
+                    <option value="Fundraising">Fundraising</option>
+                    <option value="Closed">Closed</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Description *
+                </label>
+                <textarea
+                  name="description"
+                  value={formData.description || ''}
+                  onChange={handleFormChange}
+                  required
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Describe the investment package..."
+                />
+              </div>
+
+              <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
+                <button
+                  type="button"
+                  onClick={() => setShowForm(false)}
+                  className="px-6 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      {isEdit ? 'Update Package' : 'Create Package'}
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>
