@@ -104,11 +104,11 @@ export default function FinancialNews() {
   const getImpactIcon = (impact: string) => {
     switch (impact) {
       case 'positive':
-        return <TrendingUp className="w-4 h-4 text-green-600" />;
+        return <TrendingUp size={16} style={{ color: '#059669' }} />;
       case 'negative':
-        return <TrendingDown className="w-4 h-4 text-red-600" />;
+        return <TrendingDown size={16} style={{ color: '#dc2626' }} />;
       default:
-        return <TrendingUp className="w-4 h-4 text-gray-600" />;
+        return <TrendingUp size={16} style={{ color: '#6b7280' }} />;
     }
   };
 
@@ -151,31 +151,99 @@ export default function FinancialNews() {
   }, []);
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Live Financial News</h2>
-        <div className="flex items-center space-x-2 text-sm text-gray-500">
-          <Clock className="w-4 h-4" />
+    <div style={{
+      background: 'white',
+      borderRadius: 12,
+      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+      border: '1px solid #e5e7eb',
+      padding: '1.5rem'
+    }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: '1.5rem'
+      }}>
+        <h2 style={{
+          fontSize: '1.5rem',
+          fontWeight: 700,
+          color: '#111827'
+        }}>
+          Live Financial News
+        </h2>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          fontSize: '0.875rem',
+          color: '#6b7280'
+        }}>
+          <Clock size={16} />
           <span>Last update: {lastUpdate}</span>
         </div>
       </div>
       
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+        gap: '1rem'
+      }}>
         {news.map((item) => (
-          <div key={item.id} className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
-            <div className="flex items-start justify-between mb-2">
-              <span className="text-xs font-medium text-blue-600 bg-blue-100 px-2 py-1 rounded">
+          <div key={item.id} style={{
+            background: '#f9fafb',
+            borderRadius: 8,
+            padding: '1rem',
+            transition: 'background-color 0.2s'
+          }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.background = '#f3f4f6';
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.background = '#f9fafb';
+          }}
+          >
+            <div style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'space-between',
+              marginBottom: '0.5rem'
+            }}>
+              <span style={{
+                fontSize: '0.75rem',
+                fontWeight: 500,
+                color: '#2563eb',
+                background: '#dbeafe',
+                padding: '0.25rem 0.5rem',
+                borderRadius: 4
+              }}>
                 {item.category}
               </span>
               {getImpactIcon(item.impact)}
             </div>
-            <h3 className="font-semibold text-gray-900 text-sm mb-2 line-clamp-2">
+            <h3 style={{
+              fontWeight: 600,
+              color: '#111827',
+              fontSize: '0.875rem',
+              marginBottom: '0.5rem',
+              lineHeight: 1.4
+            }}>
               {item.title}
             </h3>
-            <p className="text-xs text-gray-600 mb-3 line-clamp-2">
+            <p style={{
+              fontSize: '0.75rem',
+              color: '#6b7280',
+              marginBottom: '0.75rem',
+              lineHeight: 1.4
+            }}>
               {item.summary}
             </p>
-            <div className="flex items-center justify-between text-xs text-gray-500">
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              fontSize: '0.75rem',
+              color: '#6b7280'
+            }}>
               <span>{item.source}</span>
               <span>{item.timestamp}</span>
             </div>
@@ -183,8 +251,14 @@ export default function FinancialNews() {
         ))}
       </div>
       
-      <div className="mt-6 text-center">
-        <p className="text-sm text-gray-500">
+      <div style={{
+        marginTop: '1.5rem',
+        textAlign: 'center'
+      }}>
+        <p style={{
+          fontSize: '0.875rem',
+          color: '#6b7280'
+        }}>
           News updates automatically every 6 hours. Partnership news updates daily.
         </p>
       </div>
