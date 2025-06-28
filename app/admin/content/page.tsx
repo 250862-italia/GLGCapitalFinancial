@@ -20,177 +20,218 @@ import {
 interface ContentItem {
   id: string;
   title: string;
-  type: 'page' | 'news' | 'market' | 'partnership';
+  type: 'article' | 'news' | 'market' | 'partnership';
   status: 'published' | 'draft' | 'archived';
   author: string;
-  lastModified: Date;
+  publishDate: string;
+  lastModified: string;
   views: number;
-  url: string;
+  content: string;
+  tags: string[];
 }
 
 export default function AdminContentPage() {
-  const [contentItems, setContentItems] = useState<ContentItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [content, setContent] = useState<ContentItem[]>([]);
+  const [filteredContent, setFilteredContent] = useState<ContentItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState<string>('all');
+  const [selectedType, setSelectedType] = useState('all');
+  const [selectedStatus, setSelectedStatus] = useState('all');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<ContentItem | null>(null);
+  const [formData, setFormData] = useState({
+    title: '',
+    type: 'article' as const,
+    status: 'draft' as const,
+    author: '',
+    content: '',
+    tags: [] as string[]
+  });
 
   useEffect(() => {
-    loadContentData();
+    loadContent();
   }, []);
 
-  const loadContentData = async () => {
-    setIsLoading(true);
-    
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock data
-      const mockData: ContentItem[] = [
-        {
-          id: '1',
-          title: 'Homepage',
-          type: 'page',
-          status: 'published',
-          author: 'Admin',
-          lastModified: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-          views: 15420,
-          url: '/'
-        },
-        {
-          id: '2',
-          title: 'About Us',
-          type: 'page',
-          status: 'published',
-          author: 'Admin',
-          lastModified: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-          views: 3240,
-          url: '/about'
-        },
-        {
-          id: '3',
-          title: 'Contact Information',
-          type: 'page',
-          status: 'published',
-          author: 'Admin',
-          lastModified: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3), // 3 days ago
-          views: 1890,
-          url: '/contact'
-        },
-        {
-          id: '4',
-          title: 'Market Analysis Q4 2024',
-          type: 'market',
-          status: 'published',
-          author: 'Analyst Team',
-          lastModified: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7), // 1 week ago
-          views: 5670,
-          url: '/live-markets'
-        },
-        {
-          id: '5',
-          title: 'New Partnership Announcement',
-          type: 'partnership',
-          status: 'draft',
-          author: 'Marketing Team',
-          lastModified: new Date(Date.now() - 1000 * 60 * 60 * 12), // 12 hours ago
-          views: 0,
-          url: '/admin/content/partnership'
-        },
-        {
-          id: '6',
-          title: 'Investment Opportunities Update',
-          type: 'news',
-          status: 'published',
-          author: 'Investment Team',
-          lastModified: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
-          views: 2890,
-          url: '/investments'
-        }
-      ];
+  useEffect(() => {
+    filterContent();
+  }, [content, searchTerm, selectedType, selectedStatus]);
 
-      setContentItems(mockData);
-    } catch (error) {
-      console.error('Error loading content data:', error);
-    } finally {
-      setIsLoading(false);
+  const loadContent = () => {
+    // Mock data - in real app this would come from API
+    const mockData: ContentItem[] = [
+      {
+        id: '1',
+        title: 'GLG Capital Group Q1 2024 Financial Report',
+        type: 'article',
+        status: 'published',
+        author: 'John Smith',
+        publishDate: '2024-01-15',
+        lastModified: '2024-01-15',
+        views: 1247,
+        content: 'Comprehensive analysis of GLG Capital Group performance in Q1 2024...',
+        tags: ['financial', 'report', 'Q1-2024']
+      },
+      {
+        id: '2',
+        title: 'New Partnership with European Investment Bank',
+        type: 'partnership',
+        status: 'published',
+        author: 'Maria Garcia',
+        publishDate: '2024-01-12',
+        lastModified: '2024-01-12',
+        views: 892,
+        content: 'GLG Capital Group announces strategic partnership with European Investment Bank...',
+        tags: ['partnership', 'europe', 'investment']
+      },
+      {
+        id: '3',
+        title: 'Market Analysis: Tech Sector Trends',
+        type: 'market',
+        status: 'draft',
+        author: 'David Chen',
+        publishDate: '',
+        lastModified: '2024-01-14',
+        views: 0,
+        content: 'Analysis of current trends in the technology sector and investment opportunities...',
+        tags: ['market', 'tech', 'analysis']
+      },
+      {
+        id: '4',
+        title: 'Investment Opportunities in Renewable Energy',
+        type: 'news',
+        status: 'archived',
+        author: 'Sarah Johnson',
+        publishDate: '2023-12-20',
+        lastModified: '2023-12-20',
+        views: 2156,
+        content: 'Exploring investment opportunities in the growing renewable energy sector...',
+        tags: ['renewable', 'energy', 'investment']
+      }
+    ];
+    setContent(mockData);
+  };
+
+  const filterContent = () => {
+    let filtered = content;
+
+    if (searchTerm) {
+      filtered = filtered.filter(item =>
+        item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+    }
+
+    if (selectedType !== 'all') {
+      filtered = filtered.filter(item => item.type === selectedType);
+    }
+
+    if (selectedStatus !== 'all') {
+      filtered = filtered.filter(item => item.status === selectedStatus);
+    }
+
+    setFilteredContent(filtered);
+  };
+
+  const handleAdd = () => {
+    setFormData({
+      title: '',
+      type: 'article',
+      status: 'draft',
+      author: '',
+      content: '',
+      tags: []
+    });
+    setShowAddModal(true);
+  };
+
+  const handleEdit = (item: ContentItem) => {
+    setSelectedItem(item);
+    setFormData({
+      title: item.title,
+      type: item.type,
+      status: item.status,
+      author: item.author,
+      content: item.content,
+      tags: item.tags
+    });
+    setShowEditModal(true);
+  };
+
+  const handleDelete = (item: ContentItem) => {
+    setSelectedItem(item);
+    setShowDeleteModal(true);
+  };
+
+  const handleView = (item: ContentItem) => {
+    setSelectedItem(item);
+    setShowViewModal(true);
+  };
+
+  const saveContent = () => {
+    if (showEditModal && selectedItem) {
+      // Update existing item
+      const updated = content.map(item =>
+        item.id === selectedItem.id
+          ? { 
+              ...item, 
+              ...formData, 
+              lastModified: new Date().toISOString().split('T')[0],
+              publishDate: formData.status === 'published' && !item.publishDate 
+                ? new Date().toISOString().split('T')[0] 
+                : item.publishDate
+            }
+          : item
+      );
+      setContent(updated);
+    } else {
+      // Add new item
+      const newItem: ContentItem = {
+        id: Date.now().toString(),
+        ...formData,
+        publishDate: formData.status === 'published' ? new Date().toISOString().split('T')[0] : '',
+        lastModified: new Date().toISOString().split('T')[0],
+        views: 0
+      };
+      setContent([newItem, ...content]);
+    }
+    
+    setShowAddModal(false);
+    setShowEditModal(false);
+    setSelectedItem(null);
+  };
+
+  const confirmDelete = () => {
+    if (selectedItem) {
+      setContent(content.filter(item => item.id !== selectedItem.id));
+      setShowDeleteModal(false);
+      setSelectedItem(null);
     }
   };
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case 'page':
-        return <FileText size={16} />;
-      case 'news':
-        return <Globe size={16} />;
-      case 'market':
-        return <Image size={16} />;
-      case 'partnership':
-        return <Video size={16} />;
-      default:
-        return <FileText size={16} />;
+      case 'article': return <FileText size={16} />;
+      case 'news': return <Globe size={16} />;
+      case 'market': return <Image size={16} />;
+      case 'partnership': return <Video size={16} />;
+      default: return <FileText size={16} />;
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'published':
-        return '#059669';
-      case 'draft':
-        return '#d97706';
-      case 'archived':
-        return '#6b7280';
-      default:
-        return '#6b7280';
+      case 'published': return { bg: '#dcfce7', color: '#166534' };
+      case 'draft': return { bg: '#fef3c7', color: '#92400e' };
+      case 'archived': return { bg: '#f3f4f6', color: '#374151' };
+      default: return { bg: '#f3f4f6', color: '#374151' };
     }
   };
 
-  const formatTimeAgo = (date: Date) => {
-    const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
-    if (diffInHours < 1) return 'Just now';
-    if (diffInHours < 24) return `${diffInHours}h ago`;
-    if (diffInHours < 168) return `${Math.floor(diffInHours / 24)}d ago`;
-    return `${Math.floor(diffInHours / 168)}w ago`;
-  };
-
-  const filteredContent = contentItems.filter(item => {
-    const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterType === 'all' || item.type === filterType;
-    return matchesSearch && matchesFilter;
-  });
-
-  if (isLoading) {
-    return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '60vh',
-        background: '#f9fafb'
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{
-            width: 40,
-            height: 40,
-            border: '4px solid #e2e8f0',
-            borderTop: '4px solid #1a2238',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-            margin: '0 auto 1rem'
-          }} />
-          <p style={{ color: '#64748b' }}>Loading Content...</p>
-          <style jsx>{`
-            @keyframes spin {
-              0% { transform: rotate(0deg); }
-              100% { transform: rotate(360deg); }
-            }
-          `}</style>
-        </div>
-      </div>
-    );
-  }
+  const contentTypes = ['article', 'news', 'market', 'partnership'];
+  const statusOptions = ['published', 'draft', 'archived'];
 
   return (
     <div style={{ padding: '2rem', background: '#f9fafb', minHeight: '100vh' }}>
@@ -301,8 +342,8 @@ export default function AdminContentPage() {
           </div>
           
           <select
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
+            value={selectedType}
+            onChange={(e) => setSelectedType(e.target.value)}
             style={{
               padding: '0.75rem 1rem',
               border: '1px solid #e2e8f0',
@@ -313,10 +354,27 @@ export default function AdminContentPage() {
             }}
           >
             <option value="all">All Types</option>
-            <option value="page">Pages</option>
-            <option value="news">News</option>
-            <option value="market">Markets</option>
-            <option value="partnership">Partnerships</option>
+            {contentTypes.map(type => (
+              <option key={type} value={type}>{type.charAt(0).toUpperCase() + type.slice(1)}</option>
+            ))}
+          </select>
+          
+          <select
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
+            style={{
+              padding: '0.75rem 1rem',
+              border: '1px solid #e2e8f0',
+              borderRadius: 8,
+              fontSize: '1rem',
+              background: '#fff',
+              minWidth: 150
+            }}
+          >
+            <option value="all">All Status</option>
+            {statusOptions.map(status => (
+              <option key={status} value={status}>{status.charAt(0).toUpperCase() + status.slice(1)}</option>
+            ))}
           </select>
           
           <button style={{
@@ -398,8 +456,8 @@ export default function AdminContentPage() {
                   fontSize: '0.75rem',
                   fontWeight: 600,
                   textTransform: 'uppercase',
-                  background: `${getStatusColor(item.status)}20`,
-                  color: getStatusColor(item.status)
+                  background: `${getStatusColor(item.status).bg}20`,
+                  color: getStatusColor(item.status).color
                 }}>
                   {item.status}
                 </span>
@@ -410,7 +468,7 @@ export default function AdminContentPage() {
               </div>
               
               <div style={{ color: '#64748b', fontSize: '0.875rem' }}>
-                {formatTimeAgo(item.lastModified)}
+                {item.lastModified}
               </div>
               
               <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -464,7 +522,7 @@ export default function AdminContentPage() {
             border: '1px solid #e2e8f0'
           }}>
             <div style={{ fontSize: '2rem', fontWeight: 700, color: '#1a2238' }}>
-              {contentItems.length}
+              {content.length}
             </div>
             <div style={{ color: '#64748b' }}>Total Items</div>
           </div>
@@ -477,7 +535,7 @@ export default function AdminContentPage() {
             border: '1px solid #e2e8f0'
           }}>
             <div style={{ fontSize: '2rem', fontWeight: 700, color: '#059669' }}>
-              {contentItems.filter(item => item.status === 'published').length}
+              {content.filter(item => item.status === 'published').length}
             </div>
             <div style={{ color: '#64748b' }}>Published</div>
           </div>
@@ -490,7 +548,7 @@ export default function AdminContentPage() {
             border: '1px solid #e2e8f0'
           }}>
             <div style={{ fontSize: '2rem', fontWeight: 700, color: '#d97706' }}>
-              {contentItems.filter(item => item.status === 'draft').length}
+              {content.filter(item => item.status === 'draft').length}
             </div>
             <div style={{ color: '#64748b' }}>Drafts</div>
           </div>
@@ -503,13 +561,279 @@ export default function AdminContentPage() {
             border: '1px solid #e2e8f0'
           }}>
             <div style={{ fontSize: '2rem', fontWeight: 700, color: '#1a2238' }}>
-              {contentItems.reduce((sum, item) => sum + item.views, 0).toLocaleString()}
+              {content.reduce((sum, item) => sum + item.views, 0).toLocaleString()}
             </div>
             <div style={{ color: '#64748b' }}>Total Views</div>
           </div>
         </div>
 
       </div>
+
+      {/* Add/Edit Modal */}
+      {(showAddModal || showEditModal) && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: 'white',
+            padding: '2rem',
+            borderRadius: '12px',
+            width: '90%',
+            maxWidth: 600,
+            maxHeight: '90vh',
+            overflow: 'auto'
+          }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '1.5rem' }}>
+              {showAddModal ? 'Add Content' : 'Edit Content'}
+            </h2>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <input
+                type="text"
+                placeholder="Content title"
+                value={formData.title}
+                onChange={(e) => setFormData({...formData, title: e.target.value})}
+                style={{ padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+              />
+              
+              <select
+                value={formData.type}
+                onChange={(e) => setFormData({...formData, type: e.target.value as any})}
+                style={{ padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+              >
+                {contentTypes.map(type => (
+                  <option key={type} value={type}>{type.charAt(0).toUpperCase() + type.slice(1)}</option>
+                ))}
+              </select>
+              
+              <input
+                type="text"
+                placeholder="Author name"
+                value={formData.author}
+                onChange={(e) => setFormData({...formData, author: e.target.value})}
+                style={{ padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+              />
+              
+              <select
+                value={formData.status}
+                onChange={(e) => setFormData({...formData, status: e.target.value as any})}
+                style={{ padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+              >
+                {statusOptions.map(status => (
+                  <option key={status} value={status}>{status.charAt(0).toUpperCase() + status.slice(1)}</option>
+                ))}
+              </select>
+              
+              <textarea
+                placeholder="Content..."
+                value={formData.content}
+                onChange={(e) => setFormData({...formData, content: e.target.value})}
+                style={{ 
+                  padding: '0.75rem', 
+                  border: '1px solid #d1d5db', 
+                  borderRadius: '6px',
+                  minHeight: '150px',
+                  resize: 'vertical'
+                }}
+              />
+              
+              <input
+                type="text"
+                placeholder="Tags (comma separated)"
+                value={formData.tags.join(', ')}
+                onChange={(e) => setFormData({...formData, tags: e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag)})}
+                style={{ padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+              />
+            </div>
+            
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+              <button
+                onClick={saveContent}
+                style={{
+                  background: '#3b82f6',
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: 600
+                }}
+              >
+                {showAddModal ? 'Add' : 'Save'}
+              </button>
+              <button
+                onClick={() => {
+                  setShowAddModal(false);
+                  setShowEditModal(false);
+                  setSelectedItem(null);
+                }}
+                style={{
+                  background: '#6b7280',
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '6px',
+                  cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Modal */}
+      {showViewModal && selectedItem && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: 'white',
+            padding: '2rem',
+            borderRadius: '12px',
+            width: '90%',
+            maxWidth: 800,
+            maxHeight: '90vh',
+            overflow: 'auto'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 600 }}>
+                {selectedItem.title}
+              </h2>
+              <button
+                onClick={() => {
+                  setShowViewModal(false);
+                  setSelectedItem(null);
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '1.5rem',
+                  cursor: 'pointer',
+                  color: '#6b7280'
+                }}
+              >
+                ×
+              </button>
+            </div>
+            
+            <div style={{ marginBottom: '1rem' }}>
+              <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>
+                By {selectedItem.author} • {selectedItem.publishDate || 'Not published'} • {selectedItem.views} views
+              </p>
+            </div>
+            
+            <div style={{ marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                {selectedItem.tags.map(tag => (
+                  <span key={tag} style={{
+                    padding: '0.25rem 0.5rem',
+                    background: '#f3f4f6',
+                    borderRadius: '4px',
+                    fontSize: '0.75rem',
+                    color: '#374151'
+                  }}>
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+            
+            <div style={{ 
+              padding: '1rem', 
+              background: '#f9fafb', 
+              borderRadius: '8px',
+              lineHeight: 1.6,
+              color: '#374151'
+            }}>
+              {selectedItem.content}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && selectedItem && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: 'white',
+            padding: '2rem',
+            borderRadius: '12px',
+            width: '90%',
+            maxWidth: 400
+          }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '1rem' }}>
+              Confirm Delete
+            </h2>
+            <p style={{ marginBottom: '1.5rem', color: '#6b7280' }}>
+              Are you sure you want to delete "{selectedItem.title}"? This action cannot be undone.
+            </p>
+            
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button
+                onClick={confirmDelete}
+                style={{
+                  background: '#ef4444',
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: 600
+                }}
+              >
+                Delete
+              </button>
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setSelectedItem(null);
+                }}
+                style={{
+                  background: '#6b7280',
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '6px',
+                  cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 

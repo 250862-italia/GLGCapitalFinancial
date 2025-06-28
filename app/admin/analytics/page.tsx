@@ -1,498 +1,578 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { 
-  Users, 
-  DollarSign, 
-  TrendingUp, 
-  TrendingDown,
-  Activity,
-  BarChart3,
-  PieChart,
-  LineChart,
-  Eye,
-  Download,
-  Calendar,
-  ArrowUpRight,
-  ArrowDownRight,
-  UserPlus,
-  UserCheck,
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  ExternalLink
-} from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Filter, Download, Eye } from 'lucide-react';
 
 interface AnalyticsData {
-  overview: {
-    totalUsers: number;
-    activeUsers: number;
-    totalInvestments: number;
-    totalRevenue: number;
-    userGrowth: number;
-    revenueGrowth: number;
-  };
-  userMetrics: {
-    newUsers: number;
-    verifiedUsers: number;
-    pendingKYC: number;
-    blockedUsers: number;
-  };
-  investmentMetrics: {
-    totalAmount: number;
-    averageInvestment: number;
-    successfulTransactions: number;
-    failedTransactions: number;
-  };
-  securityMetrics: {
-    securityAlerts: number;
-    suspiciousActivities: number;
-    blockedIPs: number;
-    failedLogins: number;
-  };
+  id: string;
+  metric: string;
+  value: number;
+  change: number;
+  period: string;
+  category: string;
+  status: 'active' | 'inactive';
+  lastUpdated: string;
 }
 
-export default function AdminAnalyticsPage() {
-  console.log('AdminAnalyticsPage: Component rendering');
-  
-  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+export default function AnalyticsPage() {
+  const [analytics, setAnalytics] = useState<AnalyticsData[]>([]);
+  const [filteredAnalytics, setFilteredAnalytics] = useState<AnalyticsData[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<AnalyticsData | null>(null);
+  const [formData, setFormData] = useState({
+    metric: '',
+    value: 0,
+    change: 0,
+    period: '',
+    category: '',
+    status: 'active' as const
+  });
 
   useEffect(() => {
-    console.log('AdminAnalyticsPage: useEffect triggered');
-    loadAnalyticsData();
+    loadAnalytics();
   }, []);
 
-  const loadAnalyticsData = async () => {
-    console.log('AdminAnalyticsPage: Loading analytics data');
-    setIsLoading(true);
-    
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock data
-      const mockData: AnalyticsData = {
-        overview: {
-          totalUsers: 1247,
-          activeUsers: 892,
-          totalInvestments: 4560000,
-          totalRevenue: 456000,
-          userGrowth: 12.5,
-          revenueGrowth: 8.3
-        },
-        userMetrics: {
-          newUsers: 45,
-          verifiedUsers: 892,
-          pendingKYC: 23,
-          blockedUsers: 5
-        },
-        investmentMetrics: {
-          totalAmount: 4560000,
-          averageInvestment: 12500,
-          successfulTransactions: 364,
-          failedTransactions: 12
-        },
-        securityMetrics: {
-          securityAlerts: 8,
-          suspiciousActivities: 15,
-          blockedIPs: 23,
-          failedLogins: 156
-        }
-      };
+  useEffect(() => {
+    filterAnalytics();
+  }, [analytics, searchTerm, selectedCategory]);
 
-      console.log('AdminAnalyticsPage: Setting analytics data', mockData);
-      setAnalyticsData(mockData);
-    } catch (error) {
-      console.error('Error loading analytics data:', error);
-    } finally {
-      setIsLoading(false);
+  const loadAnalytics = () => {
+    // Mock data - in real app this would come from API
+    const mockData: AnalyticsData[] = [
+      {
+        id: '1',
+        metric: 'Total Revenue',
+        value: 1250000,
+        change: 12.5,
+        period: 'Q1 2024',
+        category: 'Financial',
+        status: 'active',
+        lastUpdated: '2024-01-15'
+      },
+      {
+        id: '2',
+        metric: 'Active Users',
+        value: 15420,
+        change: -2.3,
+        period: 'Q1 2024',
+        category: 'User',
+        status: 'active',
+        lastUpdated: '2024-01-14'
+      },
+      {
+        id: '3',
+        metric: 'Conversion Rate',
+        value: 3.2,
+        change: 0.8,
+        period: 'Q1 2024',
+        category: 'Performance',
+        status: 'active',
+        lastUpdated: '2024-01-13'
+      },
+      {
+        id: '4',
+        metric: 'Customer Satisfaction',
+        value: 4.7,
+        change: 0.2,
+        period: 'Q1 2024',
+        category: 'Quality',
+        status: 'inactive',
+        lastUpdated: '2024-01-12'
+      }
+    ];
+    setAnalytics(mockData);
+  };
+
+  const filterAnalytics = () => {
+    let filtered = analytics;
+
+    if (searchTerm) {
+      filtered = filtered.filter(item =>
+        item.metric.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.category.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(item => item.category === selectedCategory);
+    }
+
+    setFilteredAnalytics(filtered);
+  };
+
+  const handleAdd = () => {
+    setFormData({
+      metric: '',
+      value: 0,
+      change: 0,
+      period: '',
+      category: '',
+      status: 'active'
+    });
+    setShowAddModal(true);
+  };
+
+  const handleEdit = (item: AnalyticsData) => {
+    setSelectedItem(item);
+    setFormData({
+      metric: item.metric,
+      value: item.value,
+      change: item.change,
+      period: item.period,
+      category: item.category,
+      status: item.status
+    });
+    setShowEditModal(true);
+  };
+
+  const handleDelete = (item: AnalyticsData) => {
+    setSelectedItem(item);
+    setShowDeleteModal(true);
+  };
+
+  const handleView = (item: AnalyticsData) => {
+    setSelectedItem(item);
+    // In a real app, this would navigate to a detailed view
+    alert(`Viewing details for: ${item.metric}`);
+  };
+
+  const saveAnalytics = () => {
+    if (showEditModal && selectedItem) {
+      // Update existing item
+      const updated = analytics.map(item =>
+        item.id === selectedItem.id
+          ? { ...item, ...formData, lastUpdated: new Date().toISOString().split('T')[0] }
+          : item
+      );
+      setAnalytics(updated);
+    } else {
+      // Add new item
+      const newItem: AnalyticsData = {
+        id: Date.now().toString(),
+        ...formData,
+        lastUpdated: new Date().toISOString().split('T')[0]
+      };
+      setAnalytics([newItem, ...analytics]);
+    }
+    
+    setShowAddModal(false);
+    setShowEditModal(false);
+    setSelectedItem(null);
+  };
+
+  const confirmDelete = () => {
+    if (selectedItem) {
+      setAnalytics(analytics.filter(item => item.id !== selectedItem.id));
+      setShowDeleteModal(false);
+      setSelectedItem(null);
     }
   };
 
-  console.log('AdminAnalyticsPage: Current state', { isLoading, analyticsData });
+  const exportData = () => {
+    const csvContent = [
+      ['ID', 'Metric', 'Value', 'Change', 'Period', 'Category', 'Status', 'Last Updated'],
+      ...filteredAnalytics.map(item => [
+        item.id,
+        item.metric,
+        item.value.toString(),
+        item.change.toString(),
+        item.period,
+        item.category,
+        item.status,
+        item.lastUpdated
+      ])
+    ].map(row => row.join(',')).join('\n');
 
-  if (isLoading) {
-    console.log('AdminAnalyticsPage: Showing loading state');
-    return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '60vh',
-        background: '#f9fafb'
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{
-            width: 40,
-            height: 40,
-            border: '4px solid #e2e8f0',
-            borderTop: '4px solid #1a2238',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-            margin: '0 auto 1rem'
-          }} />
-          <p style={{ color: '#64748b' }}>Loading Analytics...</p>
-          <style jsx>{`
-            @keyframes spin {
-              0% { transform: rotate(0deg); }
-              100% { transform: rotate(360deg); }
-            }
-          `}</style>
-        </div>
-      </div>
-    );
-  }
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'analytics-data.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
 
-  console.log('AdminAnalyticsPage: Rendering main content');
+  const categories = ['Financial', 'User', 'Performance', 'Quality'];
+
   return (
-    <div style={{ padding: '2rem', background: '#f9fafb', minHeight: '100vh' }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-        
-        {/* Header */}
-        <div style={{ marginBottom: '2rem' }}>
-          <h1 style={{ 
-            color: '#1a2238', 
-            fontSize: '2.5rem', 
-            fontWeight: 800, 
-            marginBottom: '0.5rem' 
-          }}>
-            Analytics Overview
-          </h1>
-          <p style={{ color: '#64748b', fontSize: '1.1rem' }}>
-            Comprehensive insights into platform performance and user activity
-          </p>
-        </div>
-
-        {/* Quick Navigation */}
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
-          gap: '1rem',
-          marginBottom: '2rem'
-        }}>
-          <a href="/admin/analytics/dashboard" style={{
+    <div style={{ padding: '2rem', maxWidth: 1400, margin: '0 auto' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+        <h1 style={{ fontSize: '2rem', fontWeight: 700, color: '#1f2937' }}>
+          Analytics Dashboard
+        </h1>
+        <button
+          onClick={handleAdd}
+          style={{
+            background: '#3b82f6',
+            color: 'white',
+            border: 'none',
+            padding: '0.75rem 1.5rem',
+            borderRadius: '8px',
             display: 'flex',
             alignItems: 'center',
-            padding: '1rem',
-            background: '#fff',
-            borderRadius: 8,
-            textDecoration: 'none',
-            color: '#1a2238',
-            border: '1px solid #e2e8f0',
-            transition: 'all 0.2s'
-          }}>
-            <BarChart3 size={20} style={{ marginRight: '0.5rem' }} />
-            <span>Detailed Dashboard</span>
-            <ExternalLink size={16} style={{ marginLeft: 'auto', color: '#64748b' }} />
-          </a>
-          
-          <a href="/admin/analytics/reports" style={{
-            display: 'flex',
-            alignItems: 'center',
-            padding: '1rem',
-            background: '#fff',
-            borderRadius: 8,
-            textDecoration: 'none',
-            color: '#1a2238',
-            border: '1px solid #e2e8f0',
-            transition: 'all 0.2s'
-          }}>
-            <PieChart size={20} style={{ marginRight: '0.5rem' }} />
-            <span>Reports</span>
-            <ExternalLink size={16} style={{ marginLeft: 'auto', color: '#64748b' }} />
-          </a>
-          
-          <a href="/admin/analytics/surveillance" style={{
-            display: 'flex',
-            alignItems: 'center',
-            padding: '1rem',
-            background: '#fff',
-            borderRadius: 8,
-            textDecoration: 'none',
-            color: '#1a2238',
-            border: '1px solid #e2e8f0',
-            transition: 'all 0.2s'
-          }}>
-            <Eye size={20} style={{ marginRight: '0.5rem' }} />
-            <span>Surveillance</span>
-            <ExternalLink size={16} style={{ marginLeft: 'auto', color: '#64748b' }} />
-          </a>
-          
-          <a href="/admin/analytics/visitors" style={{
-            display: 'flex',
-            alignItems: 'center',
-            padding: '1rem',
-            background: '#fff',
-            borderRadius: 8,
-            textDecoration: 'none',
-            color: '#1a2238',
-            border: '1px solid #e2e8f0',
-            transition: 'all 0.2s'
-          }}>
-            <Users size={20} style={{ marginRight: '0.5rem' }} />
-            <span>Visitor Analytics</span>
-            <ExternalLink size={16} style={{ marginLeft: 'auto', color: '#64748b' }} />
-          </a>
-        </div>
-
-        {/* Overview Cards */}
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
-          gap: '1.5rem',
-          marginBottom: '2rem'
-        }}>
-          
-          {/* Total Users */}
-          <div style={{ 
-            background: '#fff', 
-            padding: '1.5rem', 
-            borderRadius: 12, 
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-            border: '1px solid #e2e8f0'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
-              <div style={{
-                background: '#dbeafe',
-                padding: '0.5rem',
-                borderRadius: 8,
-                marginRight: '0.75rem'
-              }}>
-                <Users size={20} color="#1d4ed8" />
-              </div>
-              <span style={{ color: '#64748b', fontSize: '0.875rem' }}>Total Users</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '2rem', fontWeight: 700, color: '#1a2238' }}>
-                {analyticsData?.overview.totalUsers.toLocaleString()}
-              </span>
-              <div style={{ display: 'flex', alignItems: 'center', color: '#059669' }}>
-                <TrendingUp size={16} style={{ marginRight: '0.25rem' }} />
-                <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>
-                  +{analyticsData?.overview.userGrowth}%
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Active Users */}
-          <div style={{ 
-            background: '#fff', 
-            padding: '1.5rem', 
-            borderRadius: 12, 
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-            border: '1px solid #e2e8f0'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
-              <div style={{
-                background: '#dcfce7',
-                padding: '0.5rem',
-                borderRadius: 8,
-                marginRight: '0.75rem'
-              }}>
-                <UserCheck size={20} color="#059669" />
-              </div>
-              <span style={{ color: '#64748b', fontSize: '0.875rem' }}>Active Users</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '2rem', fontWeight: 700, color: '#1a2238' }}>
-                {analyticsData?.overview.activeUsers.toLocaleString()}
-              </span>
-              <span style={{ color: '#64748b', fontSize: '0.875rem' }}>
-                {Math.round((analyticsData?.overview.activeUsers || 0) / (analyticsData?.overview.totalUsers || 1) * 100)}% of total
-              </span>
-            </div>
-          </div>
-
-          {/* Total Investments */}
-          <div style={{ 
-            background: '#fff', 
-            padding: '1.5rem', 
-            borderRadius: 12, 
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-            border: '1px solid #e2e8f0'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
-              <div style={{
-                background: '#fef3c7',
-                padding: '0.5rem',
-                borderRadius: 8,
-                marginRight: '0.75rem'
-              }}>
-                <DollarSign size={20} color="#d97706" />
-              </div>
-              <span style={{ color: '#64748b', fontSize: '0.875rem' }}>Total Investments</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '2rem', fontWeight: 700, color: '#1a2238' }}>
-                ${(analyticsData?.overview.totalInvestments || 0).toLocaleString()}
-              </span>
-              <div style={{ display: 'flex', alignItems: 'center', color: '#059669' }}>
-                <TrendingUp size={16} style={{ marginRight: '0.25rem' }} />
-                <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>
-                  +{analyticsData?.overview.revenueGrowth}%
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Total Revenue */}
-          <div style={{ 
-            background: '#fff', 
-            padding: '1.5rem', 
-            borderRadius: 12, 
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-            border: '1px solid #e2e8f0'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
-              <div style={{
-                background: '#fce7f3',
-                padding: '0.5rem',
-                borderRadius: 8,
-                marginRight: '0.75rem'
-              }}>
-                <TrendingUp size={20} color="#be185d" />
-              </div>
-              <span style={{ color: '#64748b', fontSize: '0.875rem' }}>Total Revenue</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '2rem', fontWeight: 700, color: '#1a2238' }}>
-                ${(analyticsData?.overview.totalRevenue || 0).toLocaleString()}
-              </span>
-              <div style={{ display: 'flex', alignItems: 'center', color: '#059669' }}>
-                <TrendingUp size={16} style={{ marginRight: '0.25rem' }} />
-                <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>
-                  +{analyticsData?.overview.revenueGrowth}%
-                </span>
-              </div>
-            </div>
-          </div>
-
-        </div>
-
-        {/* Detailed Metrics */}
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
-          gap: '1.5rem' 
-        }}>
-          
-          {/* User Metrics */}
-          <div style={{ 
-            background: '#fff', 
-            padding: '1.5rem', 
-            borderRadius: 12, 
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-            border: '1px solid #e2e8f0'
-          }}>
-            <h3 style={{ 
-              color: '#1a2238', 
-              fontSize: '1.25rem', 
-              fontWeight: 700, 
-              marginBottom: '1rem' 
-            }}>
-              User Metrics
-            </h3>
-            <div style={{ display: 'grid', gap: '0.75rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ color: '#64748b' }}>New Users (30d)</span>
-                <span style={{ fontWeight: 600, color: '#1a2238' }}>{analyticsData?.userMetrics.newUsers}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ color: '#64748b' }}>Verified Users</span>
-                <span style={{ fontWeight: 600, color: '#1a2238' }}>{analyticsData?.userMetrics.verifiedUsers}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ color: '#64748b' }}>Pending KYC</span>
-                <span style={{ fontWeight: 600, color: '#d97706' }}>{analyticsData?.userMetrics.pendingKYC}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ color: '#64748b' }}>Blocked Users</span>
-                <span style={{ fontWeight: 600, color: '#dc2626' }}>{analyticsData?.userMetrics.blockedUsers}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Investment Metrics */}
-          <div style={{ 
-            background: '#fff', 
-            padding: '1.5rem', 
-            borderRadius: 12, 
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-            border: '1px solid #e2e8f0'
-          }}>
-            <h3 style={{ 
-              color: '#1a2238', 
-              fontSize: '1.25rem', 
-              fontWeight: 700, 
-              marginBottom: '1rem' 
-            }}>
-              Investment Metrics
-            </h3>
-            <div style={{ display: 'grid', gap: '0.75rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ color: '#64748b' }}>Total Amount</span>
-                <span style={{ fontWeight: 600, color: '#1a2238' }}>
-                  ${(analyticsData?.investmentMetrics.totalAmount || 0).toLocaleString()}
-                </span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ color: '#64748b' }}>Average Investment</span>
-                <span style={{ fontWeight: 600, color: '#1a2238' }}>
-                  ${(analyticsData?.investmentMetrics.averageInvestment || 0).toLocaleString()}
-                </span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ color: '#64748b' }}>Successful Transactions</span>
-                <span style={{ fontWeight: 600, color: '#059669' }}>{analyticsData?.investmentMetrics.successfulTransactions}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ color: '#64748b' }}>Failed Transactions</span>
-                <span style={{ fontWeight: 600, color: '#dc2626' }}>{analyticsData?.investmentMetrics.failedTransactions}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Security Metrics */}
-          <div style={{ 
-            background: '#fff', 
-            padding: '1.5rem', 
-            borderRadius: 12, 
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-            border: '1px solid #e2e8f0'
-          }}>
-            <h3 style={{ 
-              color: '#1a2238', 
-              fontSize: '1.25rem', 
-              fontWeight: 700, 
-              marginBottom: '1rem' 
-            }}>
-              Security Metrics
-            </h3>
-            <div style={{ display: 'grid', gap: '0.75rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ color: '#64748b' }}>Security Alerts</span>
-                <span style={{ fontWeight: 600, color: '#dc2626' }}>{analyticsData?.securityMetrics.securityAlerts}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ color: '#64748b' }}>Suspicious Activities</span>
-                <span style={{ fontWeight: 600, color: '#d97706' }}>{analyticsData?.securityMetrics.suspiciousActivities}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ color: '#64748b' }}>Blocked IPs</span>
-                <span style={{ fontWeight: 600, color: '#1a2238' }}>{analyticsData?.securityMetrics.blockedIPs}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ color: '#64748b' }}>Failed Logins</span>
-                <span style={{ fontWeight: 600, color: '#dc2626' }}>{analyticsData?.securityMetrics.failedLogins}</span>
-              </div>
-            </div>
-          </div>
-
-        </div>
-
+            gap: '0.5rem',
+            cursor: 'pointer',
+            fontWeight: 600
+          }}
+        >
+          <Plus size={16} />
+          Add Analytics
+        </button>
       </div>
+
+      {/* Filters */}
+      <div style={{ 
+        display: 'flex', 
+        gap: '1rem', 
+        marginBottom: '2rem',
+        flexWrap: 'wrap',
+        alignItems: 'center'
+      }}>
+        <div style={{ position: 'relative', flex: 1, minWidth: 300 }}>
+          <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#6b7280' }} />
+          <input
+            type="text"
+            placeholder="Search analytics..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '0.75rem 1rem 0.75rem 2.5rem',
+              border: '1px solid #d1d5db',
+              borderRadius: '8px',
+              fontSize: '0.875rem'
+            }}
+          />
+        </div>
+        
+        <select
+          value={selectedCategory}
+          onChange={(e) => setSelectedCategory(e.target.value)}
+          style={{
+            padding: '0.75rem 1rem',
+            border: '1px solid #d1d5db',
+            borderRadius: '8px',
+            fontSize: '0.875rem',
+            minWidth: 150
+          }}
+        >
+          <option value="all">All Categories</option>
+          {categories.map(category => (
+            <option key={category} value={category}>{category}</option>
+          ))}
+        </select>
+
+        <button
+          onClick={exportData}
+          style={{
+            background: '#10b981',
+            color: 'white',
+            border: 'none',
+            padding: '0.75rem 1rem',
+            borderRadius: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            cursor: 'pointer',
+            fontWeight: 600
+          }}
+        >
+          <Download size={16} />
+          Export
+        </button>
+      </div>
+
+      {/* Analytics Grid */}
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', 
+        gap: '1.5rem',
+        marginBottom: '2rem'
+      }}>
+        {filteredAnalytics.map(item => (
+          <div key={item.id} style={{
+            background: 'white',
+            border: '1px solid #e5e7eb',
+            borderRadius: '12px',
+            padding: '1.5rem',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+              <div>
+                <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#1f2937', marginBottom: '0.5rem' }}>
+                  {item.metric}
+                </h3>
+                <p style={{ fontSize: '2rem', fontWeight: 700, color: '#3b82f6' }}>
+                  {typeof item.value === 'number' && item.value > 1000 
+                    ? `$${(item.value / 1000).toFixed(1)}K`
+                    : item.value}
+                </p>
+              </div>
+              <div style={{
+                padding: '0.25rem 0.75rem',
+                borderRadius: '20px',
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                background: item.status === 'active' ? '#dcfce7' : '#fef3c7',
+                color: item.status === 'active' ? '#166534' : '#92400e'
+              }}>
+                {item.status}
+              </div>
+            </div>
+            
+            <div style={{ marginBottom: '1rem' }}>
+              <span style={{
+                color: item.change >= 0 ? '#10b981' : '#ef4444',
+                fontWeight: 600,
+                fontSize: '0.875rem'
+              }}>
+                {item.change >= 0 ? '+' : ''}{item.change}%
+              </span>
+              <span style={{ color: '#6b7280', fontSize: '0.875rem', marginLeft: '0.5rem' }}>
+                vs {item.period}
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ 
+                padding: '0.25rem 0.75rem', 
+                background: '#f3f4f6', 
+                borderRadius: '6px',
+                fontSize: '0.75rem',
+                color: '#374151'
+              }}>
+                {item.category}
+              </span>
+              
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button
+                  onClick={() => handleView(item)}
+                  style={{
+                    background: '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    padding: '0.5rem',
+                    borderRadius: '6px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <Eye size={14} />
+                </button>
+                <button
+                  onClick={() => handleEdit(item)}
+                  style={{
+                    background: '#f59e0b',
+                    color: 'white',
+                    border: 'none',
+                    padding: '0.5rem',
+                    borderRadius: '6px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <Edit size={14} />
+                </button>
+                <button
+                  onClick={() => handleDelete(item)}
+                  style={{
+                    background: '#ef4444',
+                    color: 'white',
+                    border: 'none',
+                    padding: '0.5rem',
+                    borderRadius: '6px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Add/Edit Modal */}
+      {(showAddModal || showEditModal) && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: 'white',
+            padding: '2rem',
+            borderRadius: '12px',
+            width: '90%',
+            maxWidth: 500
+          }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '1.5rem' }}>
+              {showAddModal ? 'Add Analytics' : 'Edit Analytics'}
+            </h2>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <input
+                type="text"
+                placeholder="Metric name"
+                value={formData.metric}
+                onChange={(e) => setFormData({...formData, metric: e.target.value})}
+                style={{ padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+              />
+              
+              <input
+                type="number"
+                placeholder="Value"
+                value={formData.value}
+                onChange={(e) => setFormData({...formData, value: parseFloat(e.target.value) || 0})}
+                style={{ padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+              />
+              
+              <input
+                type="number"
+                placeholder="Change %"
+                value={formData.change}
+                onChange={(e) => setFormData({...formData, change: parseFloat(e.target.value) || 0})}
+                style={{ padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+              />
+              
+              <input
+                type="text"
+                placeholder="Period (e.g., Q1 2024)"
+                value={formData.period}
+                onChange={(e) => setFormData({...formData, period: e.target.value})}
+                style={{ padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+              />
+              
+              <select
+                value={formData.category}
+                onChange={(e) => setFormData({...formData, category: e.target.value})}
+                style={{ padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+              >
+                <option value="">Select Category</option>
+                {categories.map(category => (
+                  <option key={category} value={category}>{category}</option>
+                ))}
+              </select>
+              
+              <select
+                value={formData.status}
+                onChange={(e) => setFormData({...formData, status: e.target.value as 'active' | 'inactive'})}
+                style={{ padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
+              >
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+            
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
+              <button
+                onClick={saveAnalytics}
+                style={{
+                  background: '#3b82f6',
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: 600
+                }}
+              >
+                {showAddModal ? 'Add' : 'Save'}
+              </button>
+              <button
+                onClick={() => {
+                  setShowAddModal(false);
+                  setShowEditModal(false);
+                  setSelectedItem(null);
+                }}
+                style={{
+                  background: '#6b7280',
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '6px',
+                  cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && selectedItem && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: 'white',
+            padding: '2rem',
+            borderRadius: '12px',
+            width: '90%',
+            maxWidth: 400
+          }}>
+            <h2 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '1rem' }}>
+              Confirm Delete
+            </h2>
+            <p style={{ marginBottom: '1.5rem', color: '#6b7280' }}>
+              Are you sure you want to delete "{selectedItem.metric}"? This action cannot be undone.
+            </p>
+            
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button
+                onClick={confirmDelete}
+                style={{
+                  background: '#ef4444',
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: 600
+                }}
+              >
+                Delete
+              </button>
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setSelectedItem(null);
+                }}
+                style={{
+                  background: '#6b7280',
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '6px',
+                  cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 
