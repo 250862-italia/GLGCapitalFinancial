@@ -4,6 +4,11 @@ import type { NextRequest } from 'next/server';
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
+  // Skip middleware for admin login page to avoid redirect loops
+  if (pathname === '/admin/login') {
+    return NextResponse.next();
+  }
+  
   // Get token from cookies or headers
   const token = request.cookies.get('auth-token')?.value || 
                 request.headers.get('authorization')?.replace('Bearer ', '');
@@ -13,7 +18,7 @@ export function middleware(request: NextRequest) {
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
   
   // Public routes that don't need authentication
-  const publicRoutes = ['/login', '/iscriviti', '/', '/about', '/contact', '/admin/login'];
+  const publicRoutes = ['/login', '/iscriviti', '/', '/about', '/contact'];
   const isPublicRoute = publicRoutes.some(route => pathname === route || pathname.startsWith(route));
   
   // If accessing protected route without token, redirect to appropriate login
@@ -34,11 +39,6 @@ export function middleware(request: NextRequest) {
   // If accessing login page with valid token, redirect to reserved area
   if (pathname === '/login' && token) {
     return NextResponse.redirect(new URL('/reserved', request.url));
-  }
-  
-  // If accessing admin login page with valid admin token, redirect to admin dashboard
-  if (pathname === '/admin/login' && token) {
-    return NextResponse.redirect(new URL('/admin', request.url));
   }
   
   return NextResponse.next();
