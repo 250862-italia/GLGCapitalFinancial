@@ -471,7 +471,7 @@ export default function HomePage() {
       <ChatbotWrapper />
       
       {/* NOTIFICATION SYSTEM */}
-      <NotificationSystem />
+      <NotificationSystem userId="guest" />
       
       <style jsx>{`
         @keyframes spin {
