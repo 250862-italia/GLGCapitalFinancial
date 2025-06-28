@@ -1,3 +1,4 @@
+"use client";
 // components/ui/Card.tsx
 import * as React from "react";
 
