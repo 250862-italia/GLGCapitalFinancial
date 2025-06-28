@@ -1,28 +1,51 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+
+interface FormData {
+  // Personal Information
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  
+  // KYC Information
+  idType: string;
+  idNumber: string;
+  
+  // Investment
+  selectedPackage: string;
+  investmentAmount: number;
+  
+  // Payment
+  cardNumber: string;
+  cardExpiry: string;
+  cardCvv: string;
+  cardholderName: string;
+  acceptTerms: boolean;
+  acceptPrivacy: boolean;
+}
+
+interface Package {
+  id: string;
+  name: string;
+  description: string;
+  minInvestment: number;
+  maxInvestment: number;
+  expectedReturn: number;
+  duration: number;
+  riskLevel: string;
+}
 
 export default function IscrivitiPage() {
   const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     firstName: '',
     lastName: '',
     email: '',
     phone: '',
-    password: '',
-    confirmPassword: '',
-    dateOfBirth: '',
-    nationality: '',
-    address: '',
-    city: '',
-    country: '',
-    postalCode: '',
     idType: '',
     idNumber: '',
-    idExpiry: '',
-    occupation: '',
-    annualIncome: '',
-    sourceOfFunds: '',
     selectedPackage: '',
     investmentAmount: 0,
     cardNumber: '',
@@ -30,11 +53,12 @@ export default function IscrivitiPage() {
     cardCvv: '',
     cardholderName: '',
     acceptTerms: false,
-    acceptPrivacy: false,
-    acceptMarketing: false
+    acceptPrivacy: false
   });
 
-  const packages = [
+  const [returns, setReturns] = useState<{ total: number; finalAmount: number } | null>(null);
+
+  const packages: Package[] = [
     {
       id: '1',
       name: 'Pacchetto Starter',
@@ -43,33 +67,33 @@ export default function IscrivitiPage() {
       maxInvestment: 25000,
       expectedReturn: 8,
       duration: 12,
-      riskLevel: 'low'
+      riskLevel: 'basso'
     },
     {
       id: '2',
       name: 'Pacchetto Growth',
-      description: 'Crescita moderata con rendimenti interessanti',
+      description: 'Ideale per investitori con esperienza',
       minInvestment: 25000,
       maxInvestment: 100000,
       expectedReturn: 12,
       duration: 18,
-      riskLevel: 'medium'
+      riskLevel: 'medio'
     },
     {
       id: '3',
       name: 'Pacchetto Premium',
-      description: 'Massimi rendimenti per investitori esperti',
+      description: 'Per investitori esperti che cercano rendimenti elevati',
       minInvestment: 100000,
       maxInvestment: 500000,
-      expectedReturn: 18,
+      expectedReturn: 15,
       duration: 24,
-      riskLevel: 'high'
+      riskLevel: 'alto'
     }
   ];
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
-    const checked = type === 'checkbox' ? (e.target as HTMLInputElement).checked : undefined;
+    const checked = (e.target as HTMLInputElement).checked;
     
     setFormData(prev => ({
       ...prev,
@@ -95,47 +119,58 @@ export default function IscrivitiPage() {
   };
 
   const calculateReturns = () => {
-    if (!formData.selectedPackage || !formData.investmentAmount) return null;
-    
-    const selectedPkg = packages.find(p => p.id === formData.selectedPackage);
-    if (!selectedPkg) return null;
-
-    const totalReturn = (formData.investmentAmount * selectedPkg.expectedReturn) / 100;
-    const dailyReturn = totalReturn / (selectedPkg.duration * 30);
-    const monthlyReturn = totalReturn / selectedPkg.duration;
-    const finalAmount = formData.investmentAmount + totalReturn;
-
-    return {
-      daily: dailyReturn,
-      monthly: monthlyReturn,
-      total: totalReturn,
-      finalAmount: finalAmount
-    };
+    if (formData.selectedPackage && formData.investmentAmount > 0) {
+      const selectedPkg = packages.find(p => p.id === formData.selectedPackage);
+      if (selectedPkg) {
+        const totalReturn = (formData.investmentAmount * selectedPkg.expectedReturn) / 100;
+        const finalAmount = formData.investmentAmount + totalReturn;
+        setReturns({ total: totalReturn, finalAmount });
+      }
+    }
   };
 
-  const returns = calculateReturns();
+  useEffect(() => {
+    calculateReturns();
+  }, [formData.selectedPackage, formData.investmentAmount]);
 
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-4xl mx-auto px-4">
         <div className="bg-white rounded-lg shadow-lg p-8">
-          <h1 className="text-3xl font-bold text-center text-gray-900 mb-8">
-            Registrazione Cliente
-          </h1>
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Registrazione Cliente
+            </h1>
+            <p className="text-gray-600">
+              Completa la registrazione per accedere ai nostri servizi di investimento
+            </p>
+          </div>
 
+          {/* Progress Bar */}
           <div className="mb-8">
             <div className="flex justify-between items-center">
               {[1, 2, 3, 4].map((stepNumber) => (
-                <div key={stepNumber} className="flex items-center">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    step >= stepNumber ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-600'
-                  }`}>
+                <div
+                  key={stepNumber}
+                  className={`flex items-center ${
+                    stepNumber < 4 ? 'flex-1' : ''
+                  }`}
+                >
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                      step >= stepNumber
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-gray-200 text-gray-600'
+                    }`}
+                  >
                     {stepNumber}
                   </div>
                   {stepNumber < 4 && (
-                    <div className={`w-16 h-1 mx-2 ${
-                      step > stepNumber ? 'bg-blue-500' : 'bg-gray-200'
-                    }`} />
+                    <div
+                      className={`flex-1 h-1 mx-2 ${
+                        step > stepNumber ? 'bg-blue-500' : 'bg-gray-200'
+                      }`}
+                    />
                   )}
                 </div>
               ))}
@@ -143,6 +178,7 @@ export default function IscrivitiPage() {
           </div>
 
           <form onSubmit={handleSubmit}>
+            {/* Step 1: Personal Information */}
             {step === 1 && (
               <div className="space-y-6">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Informazioni Personali</h2>
@@ -204,6 +240,7 @@ export default function IscrivitiPage() {
               </div>
             )}
 
+            {/* Step 2: KYC Verification */}
             {step === 2 && (
               <div className="space-y-6">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Verifica KYC</h2>
@@ -254,9 +291,10 @@ export default function IscrivitiPage() {
               </div>
             )}
 
+            {/* Step 3: Investment Package */}
             {step === 3 && (
               <div className="space-y-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Scegli il Tuo Pacchetto di Investimento</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Scegli il Pacchetto di Investimento</h2>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Pacchetti Disponibili</h3>
@@ -346,6 +384,7 @@ export default function IscrivitiPage() {
               </div>
             )}
 
+            {/* Step 4: Payment */}
             {step === 4 && (
               <div className="space-y-6">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Informazioni di Pagamento</h2>
@@ -457,4 +496,4 @@ export default function IscrivitiPage() {
       </div>
     </div>
   );
-}
+} 
