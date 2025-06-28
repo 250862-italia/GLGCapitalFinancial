@@ -51,8 +51,8 @@ export default function AdminPartnershipsPage() {
   const [selectedItem, setSelectedItem] = useState<Partnership | null>(null);
   const [formData, setFormData] = useState({
     name: '',
-    type: 'strategic' as const,
-    status: 'pending' as const,
+    type: 'strategic' as 'strategic' | 'financial' | 'technology' | 'distribution' | 'research',
+    status: 'pending' as 'active' | 'pending' | 'expired' | 'terminated',
     startDate: '',
     endDate: '',
     value: 0,

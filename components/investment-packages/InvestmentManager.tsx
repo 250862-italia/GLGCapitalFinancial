@@ -565,14 +565,14 @@ export default function InvestmentManager() {
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
-              {packages.map(package => (
-                <div key={package.id} style={{
+              {packages.map(pkg => (
+                <div key={pkg.id} style={{
                   border: '1px solid #e5e7eb',
                   borderRadius: '8px',
                   padding: '1.5rem',
                   background: '#fafafa'
                 }}>
-                  {package.popular && (
+                  {pkg.popular && (
                     <div style={{
                       background: '#f59e0b',
                       color: 'white',
@@ -588,28 +588,28 @@ export default function InvestmentManager() {
                   )}
                   
                   <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.5rem' }}>
-                    {package.name}
+                    {pkg.name}
                   </h3>
                   
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
                     <TrendingUp size={20} color="#059669" />
                     <span style={{ fontSize: '1.5rem', fontWeight: 700, color: '#059669' }}>
-                      {package.dailyReturn}%
+                      {pkg.dailyReturn}%
                     </span>
                     <span style={{ color: '#6b7280' }}>daily return</span>
                   </div>
                   
                   <div style={{ marginBottom: '1rem' }}>
                     <p style={{ color: '#6b7280', marginBottom: '0.5rem' }}>
-                      Investment Range: {formatCurrency(package.minAmount)} - {formatCurrency(package.maxAmount)}
+                      Investment Range: {formatCurrency(pkg.minAmount)} - {formatCurrency(pkg.maxAmount)}
                     </p>
                     <p style={{ color: '#6b7280' }}>
-                      Duration: {package.duration} days
+                      Duration: {pkg.duration} days
                     </p>
                   </div>
                   
                   <ul style={{ marginBottom: '1.5rem' }}>
-                    {package.features.map((feature, index) => (
+                    {pkg.features.map((feature, index) => (
                       <li key={index} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
                         <CheckCircle size={14} color="#059669" />
                         <span style={{ fontSize: '0.875rem' }}>{feature}</span>
@@ -618,16 +618,16 @@ export default function InvestmentManager() {
                   </ul>
 
                   <button style={{
-                    background: package.available ? '#059669' : '#6b7280',
+                    background: pkg.available ? '#059669' : '#6b7280',
                     color: 'white',
                     border: 'none',
                     padding: '0.75rem 1rem',
                     borderRadius: '6px',
-                    cursor: package.available ? 'pointer' : 'not-allowed',
+                    cursor: pkg.available ? 'pointer' : 'not-allowed',
                     width: '100%',
                     fontWeight: 600
                   }}>
-                    {package.available ? 'Invest Now' : 'Coming Soon'}
+                    {pkg.available ? 'Invest Now' : 'Coming Soon'}
                   </button>
                 </div>
               ))}

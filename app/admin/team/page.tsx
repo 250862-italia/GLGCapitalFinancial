@@ -32,9 +32,9 @@ export default function TeamPage() {
     name: '',
     email: '',
     phone: '',
-    role: 'analyst' as const,
+    role: 'analyst' as 'admin' | 'manager' | 'analyst' | 'support',
     department: '',
-    status: 'pending' as const,
+    status: 'pending' as 'active' | 'inactive' | 'pending',
     permissions: [] as string[]
   });
 

@@ -43,8 +43,8 @@ export default function AdminContentPage() {
   const [selectedItem, setSelectedItem] = useState<ContentItem | null>(null);
   const [formData, setFormData] = useState({
     title: '',
-    type: 'article' as const,
-    status: 'draft' as const,
+    type: 'article' as 'article' | 'news' | 'market' | 'partnership',
+    status: 'draft' as 'published' | 'draft' | 'archived',
     author: '',
     content: '',
     tags: [] as string[]

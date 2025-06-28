@@ -29,7 +29,7 @@ export default function AnalyticsPage() {
     change: 0,
     period: '',
     category: '',
-    status: 'active' as const
+    status: 'active' as 'active' | 'inactive'
   });
 
   useEffect(() => {
