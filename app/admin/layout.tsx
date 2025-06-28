@@ -91,7 +91,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   if (!isAuthenticated) {
-    return null; // Will redirect to login
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f9fafb' }}>
+        <div style={{ textAlign: 'center', color: '#dc2626', fontWeight: 700, fontSize: 20 }}>
+          Accesso negato. Effettua il login come superadmin per accedere all'area riservata.
+        </div>
+      </div>
+    );
+  }
+
+  if (adminUser?.role !== 'superadmin') {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f9fafb' }}>
+        <div style={{ textAlign: 'center', color: '#dc2626', fontWeight: 700, fontSize: 20 }}>
+          Accesso riservato ai superadmin.<br />Sei loggato come: {adminUser?.name} ({adminUser?.role})
+        </div>
+      </div>
+    );
   }
 
   return (
