@@ -13,19 +13,32 @@ export function middleware(request: NextRequest) {
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
   
   // Public routes that don't need authentication
-  const publicRoutes = ['/login', '/iscriviti', '/', '/about', '/contact'];
+  const publicRoutes = ['/login', '/iscriviti', '/', '/about', '/contact', '/admin/login'];
   const isPublicRoute = publicRoutes.some(route => pathname === route || pathname.startsWith(route));
   
-  // If accessing protected route without token, redirect to login
+  // If accessing protected route without token, redirect to appropriate login
   if (isProtectedRoute && !token) {
-    const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('redirect', pathname);
-    return NextResponse.redirect(loginUrl);
+    // If trying to access admin routes, redirect to admin login
+    if (pathname.startsWith('/admin')) {
+      const adminLoginUrl = new URL('/admin/login', request.url);
+      adminLoginUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(adminLoginUrl);
+    } else {
+      // For other protected routes, redirect to regular login
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
   }
   
   // If accessing login page with valid token, redirect to reserved area
   if (pathname === '/login' && token) {
     return NextResponse.redirect(new URL('/reserved', request.url));
+  }
+  
+  // If accessing admin login page with valid admin token, redirect to admin dashboard
+  if (pathname === '/admin/login' && token) {
+    return NextResponse.redirect(new URL('/admin', request.url));
   }
   
   return NextResponse.next();
