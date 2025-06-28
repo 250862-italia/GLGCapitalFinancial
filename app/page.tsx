@@ -49,21 +49,21 @@ export default function HomePage() {
 
   const packages = [
     {
-      name: "Starter Portfolio",
-      price: "$50,000",
-      features: ["Basic portfolio management", "Monthly reports", "Email support"],
+      name: "Investment Advisory",
+      price: "Consultation",
+      features: ["Strategic planning", "Market analysis", "Risk assessment", "Portfolio review"],
       popular: false
     },
     {
-      name: "Premium Portfolio", 
-      price: "$250,000",
-      features: ["Advanced strategies", "Weekly reports", "Priority support", "Personal advisor"],
+      name: "Capital Solutions", 
+      price: "Tailored",
+      features: ["Debt financing", "Equity investments", "M&A advisory", "Strategic consulting"],
       popular: true
     },
     {
-      name: "Elite Portfolio",
-      price: "$1,000,000+",
-      features: ["Custom strategies", "Daily reports", "24/7 support", "Dedicated team"],
+      name: "Asset Management",
+      price: "Professional",
+      features: ["Portfolio management", "Performance monitoring", "Regular reporting", "Risk management"],
       popular: false
     }
   ]
@@ -71,20 +71,20 @@ export default function HomePage() {
   const testimonials = [
     {
       name: "Michael Anderson",
-      role: "Private Investor",
-      content: "GLG Capital Group has transformed my investment approach. Their expertise and personalized service are unmatched.",
+      role: "CEO, TechCorp Inc.",
+      content: "GLG Capital Group's strategic advisory helped us secure the perfect acquisition deal. Their expertise in M&A and market analysis was invaluable.",
       rating: 5
     },
     {
       name: "Sarah Johnson", 
-      role: "Business Owner",
-      content: "The level of professionalism and attention to detail is exceptional. I feel confident about my financial future.",
+      role: "CFO, Global Industries",
+      content: "The capital raising services provided by GLG exceeded our expectations. They understood our business needs and delivered optimal financing solutions.",
       rating: 5
     },
     {
       name: "David Chen",
-      role: "Retired Executive", 
-      content: "Outstanding service and consistent returns. The team truly understands wealth preservation.",
+      role: "Investment Director, Wealth Management", 
+      content: "Outstanding asset management services with consistent performance. The team's deep market knowledge and risk management approach are exceptional.",
       rating: 5
     }
   ]
@@ -362,7 +362,7 @@ export default function HomePage() {
           marginBottom: '1rem',
           color: 'var(--accent)'
         }}>
-          Ready to Start Your Investment Journey?
+          Ready to Transform Your Financial Strategy?
         </h2>
         <p style={{ 
           fontSize: 18, 
@@ -371,7 +371,7 @@ export default function HomePage() {
           maxWidth: 600,
           margin: '0 auto 2rem auto'
         }}>
-          Join thousands of satisfied clients who trust GLG Capital Group with their financial future.
+          Partner with GLG Capital Group for expert investment banking and financial advisory services.
         </p>
         <button 
           onClick={() => router.push('/iscriviti')}

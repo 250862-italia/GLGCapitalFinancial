@@ -4,19 +4,19 @@ import { useState } from "react";
 const faqs = [
   { 
     q: "What services does GLG Capital Group offer?", 
-    a: "GLG Capital Group offers professional position management services with guaranteed returns. We provide investment packages with daily compound interest, comprehensive KYC verification, secure payment processing, and 24/7 portfolio monitoring through our dashboard." 
+    a: "GLG Capital Group offers professional investment banking and financial advisory services. We provide strategic advice, capital solutions, asset management, and access to global markets for corporations and institutions." 
   },
   { 
     q: "How do I register and start investing?", 
-    a: "Click 'Register' on our homepage to start. The process includes: 1) Personal information, 2) KYC document verification, 3) Package selection, 4) Payment processing. Once approved, you'll access your portfolio dashboard." 
+    a: "Click 'Register' on our homepage to start. The process includes: 1) Personal information, 2) KYC document verification, 3) Investment consultation, 4) Service agreement. Our team will guide you through the entire process." 
   },
   { 
-    q: "What investment packages are available?", 
-    a: "We offer multiple packages: Starter ($1,000-5,000), Professional ($5,000-25,000), Premium ($25,000-100,000), and Elite ($100,000+). Each package offers daily compound interest with returns ranging from 0.5% to 2% daily, depending on the package size." 
+    q: "What investment services are available?", 
+    a: "We offer comprehensive investment banking services including: M&A advisory, capital raising, debt financing, equity investments, asset management, and strategic consulting. Each service is tailored to your specific needs and goals." 
   },
   { 
-    q: "How does the daily earnings calculation work?", 
-    a: "Daily earnings use compound interest: Daily = Principal × (1 + Daily Rate)^Days - Principal. For example, $10,000 at 1% daily = $10,000 × (1.01)^1 - $10,000 = $100. Earnings compound daily for exponential growth." 
+    q: "How does the investment process work?", 
+    a: "Our investment process follows a structured approach: 1) Initial consultation and needs assessment, 2) Strategy development, 3) Due diligence and analysis, 4) Execution and implementation, 5) Ongoing monitoring and optimization." 
   },
   { 
     q: "What documents are required for KYC?", 
@@ -28,48 +28,48 @@ const faqs = [
   },
   { 
     q: "What payment methods are accepted?", 
-    a: "We accept: Credit/Debit cards (Visa, Mastercard), PayPal, and bank transfers (IBAN). All payments are processed securely through our encrypted payment gateway. Minimum investment varies by package." 
+    a: "We accept: Bank transfers (IBAN), wire transfers, and corporate payment methods. All payments are processed securely through our encrypted payment gateway. Payment terms are discussed during the consultation phase." 
   },
   { 
-    q: "How can I view my portfolio and returns?", 
-    a: "After registration and KYC approval, access your portfolio dashboard at /reserved. View real-time positions, daily/monthly/yearly returns, growth charts, and transaction history. The dashboard updates automatically with live market data." 
+    q: "How can I track my investments?", 
+    a: "After registration and KYC approval, our team will provide you with regular reports and updates on your investments. We offer comprehensive reporting including performance analysis, market updates, and strategic recommendations." 
   },
   { 
     q: "Is my investment secure?", 
     a: "Yes, all investments are secured through our professional risk management system. We use bank-grade encryption, secure payment processing, and maintain strict compliance with financial regulations. Your funds are protected by our comprehensive security protocols." 
   },
   { 
-    q: "Can I withdraw my earnings?", 
-    a: "Earnings are automatically reinvested for compound growth. Withdrawal options are available after the initial lock-in period (varies by package). Contact our support team for withdrawal requests and processing times." 
+    q: "Can I withdraw my investments?", 
+    a: "Investment withdrawal terms depend on the specific investment agreement and market conditions. Our team will discuss all terms and conditions during the initial consultation and provide clear guidelines for any exit strategies." 
   },
   { 
     q: "What currencies are supported?", 
-    a: "We support multiple currencies: USD, EUR, GBP, CHF, and JPY. You can select your preferred currency during registration. All calculations and returns are displayed in your chosen currency." 
+    a: "We support multiple currencies: USD, EUR, GBP, CHF, and JPY. You can select your preferred currency during the consultation phase. All transactions and reports are provided in your chosen currency." 
   },
   { 
     q: "How do I contact support?", 
-    a: "Use this chat, email us at corefound@glgcapitalgroupllc.com, or call our support line. Our team is available 24/7 to assist with registration, KYC, payments, portfolio questions, and technical support." 
+    a: "Use this chat, email us at corefound@glgcapitalgroupllc.com, or call our support line. Our team is available during business hours to assist with registration, KYC, investments, and general inquiries." 
   },
   { 
     q: "What is the minimum investment?", 
-    a: "Minimum investment starts at $1,000 for our Starter package. Higher packages offer better daily returns and additional benefits. Choose the package that best fits your investment goals and budget." 
+    a: "Minimum investment requirements vary based on the specific service and investment opportunity. We work with clients of all sizes, from individual investors to large institutions. Contact us for a personalized consultation." 
   },
   { 
-    q: "How often are returns calculated?", 
-    a: "Returns are calculated daily using compound interest. Your portfolio value updates every 24 hours, showing your growth. You can view daily, monthly, and yearly projections in your dashboard." 
+    q: "How often are reports provided?", 
+    a: "We provide regular reports based on your investment agreement. Typically, clients receive monthly performance reports, quarterly reviews, and annual comprehensive analysis. Additional reports are available upon request." 
   },
   { 
-    q: "What happens if I need to cancel my investment?", 
-    a: "Investment cancellation is available for superadmin accounts only. Standard accounts have lock-in periods based on package type. Contact support for specific cancellation policies and any applicable fees." 
+    q: "What happens if I need to modify my investment strategy?", 
+    a: "Investment strategy modifications are possible based on market conditions and your changing needs. Our team will work with you to assess the current situation and recommend appropriate adjustments to your investment strategy." 
   }
 ];
 
 const quickActions = [
-  { label: "View Packages", action: "packages" },
+  { label: "View Services", action: "services" },
   { label: "Start Registration", action: "register" },
   { label: "KYC Process", action: "kyc" },
   { label: "Payment Methods", action: "payments" },
-  { label: "Portfolio Access", action: "portfolio" },
+  { label: "Investment Tracking", action: "tracking" },
   { label: "Contact Support", action: "support" }
 ];
 
@@ -89,8 +89,8 @@ export default function Chatbot() {
 
   const handleQuickAction = (action: string) => {
     switch(action) {
-      case "packages":
-        window.location.href = "/iscriviti";
+      case "services":
+        window.location.href = "/about";
         break;
       case "register":
         window.location.href = "/iscriviti";
@@ -101,8 +101,8 @@ export default function Chatbot() {
       case "payments":
         setSelectedFaq(6); // Payment methods FAQ
         break;
-      case "portfolio":
-        window.location.href = "/reserved";
+      case "tracking":
+        setSelectedFaq(7); // Investment tracking FAQ
         break;
       case "support":
         setSelectedFaq(11); // Contact support FAQ
@@ -198,9 +198,9 @@ export default function Chatbot() {
               onChange={(e) => setSearchTerm(e.target.value)}
               style={{
                 width: "100%",
-                padding: "8px 12px",
+                padding: "0.75rem",
+                border: "1px solid #e5e7eb",
                 borderRadius: 8,
-                border: "1px solid #ddd",
                 fontSize: 14,
                 outline: "none",
               }}
@@ -209,25 +209,25 @@ export default function Chatbot() {
 
           {/* Quick Actions */}
           <div style={{ marginBottom: 16 }}>
-            <div style={{ fontWeight: 600, color: "var(--primary)", marginBottom: 8, fontSize: 14 }}>Quick Actions</div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-              {quickActions.map((action, idx) => (
+            <div style={{ fontSize: 14, fontWeight: 600, color: "var(--primary)", marginBottom: 8 }}>Quick Actions:</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {quickActions.map((action, index) => (
                 <button
-                  key={idx}
+                  key={index}
                   onClick={() => handleQuickAction(action.action)}
                   style={{
                     background: "var(--accent)",
                     color: "var(--primary)",
                     border: "none",
-                    borderRadius: 16,
-                    padding: "6px 12px",
+                    padding: "0.5rem 0.75rem",
+                    borderRadius: 6,
                     fontSize: 12,
-                    fontWeight: 500,
+                    fontWeight: 600,
                     cursor: "pointer",
-                    transition: "background 0.2s ease",
+                    transition: "all 0.2s ease",
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = "#e6c200"}
-                  onMouseLeave={(e) => e.currentTarget.style.background = "var(--accent)"}
+                  onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-1px)"}
+                  onMouseLeave={(e) => e.currentTarget.style.transform = "translateY(0)"}
                 >
                   {action.label}
                 </button>
@@ -235,92 +235,96 @@ export default function Chatbot() {
             </div>
           </div>
 
-          {/* FAQs */}
-          <div style={{ flex: 1, overflow: "auto", marginBottom: 16 }}>
-            <div style={{ fontWeight: 600, color: "var(--primary)", marginBottom: 8, fontSize: 14 }}>Frequently Asked Questions</div>
-            <div style={{ maxHeight: "300px", overflow: "auto" }}>
-              {filteredFaqs.map((faq, idx) => (
-                <div key={idx} style={{ marginBottom: 12, borderBottom: "1px solid #eee", paddingBottom: 8 }}>
-                  <button
-                    onClick={() => setSelectedFaq(selectedFaq === idx ? null : idx)}
-                    style={{
-                      background: "none",
-                      border: "none",
-                      width: "100%",
-                      textAlign: "left",
-                      cursor: "pointer",
-                      padding: 0,
-                    }}
-                  >
-                    <div style={{ 
-                      fontWeight: 500, 
-                      color: "var(--foreground)", 
-                      fontSize: 13,
-                      lineHeight: "1.4",
-                      marginBottom: 4,
-                    }}>
-                      {faq.q}
-                    </div>
-                  </button>
-                  {selectedFaq === idx && (
-                    <div style={{ 
-                      color: "#555", 
-                      fontSize: 12, 
-                      lineHeight: "1.5",
-                      marginTop: 6,
-                      padding: "8px 12px",
-                      background: "#f8f9fa",
-                      borderRadius: 6,
-                      borderLeft: "3px solid var(--accent)",
-                    }}>
-                      {faq.a}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+          {/* FAQ Section */}
+          <div style={{ flex: 1, overflowY: "auto" }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: "var(--primary)", marginBottom: 8 }}>Frequently Asked Questions:</div>
+            {filteredFaqs.map((faq, index) => (
+              <div key={index} style={{ marginBottom: 12 }}>
+                <button
+                  onClick={() => setSelectedFaq(selectedFaq === index ? null : index)}
+                  style={{
+                    width: "100%",
+                    textAlign: "left",
+                    background: "none",
+                    border: "none",
+                    padding: "0.75rem",
+                    borderRadius: 8,
+                    cursor: "pointer",
+                    fontSize: 14,
+                    fontWeight: 600,
+                    color: "var(--primary)",
+                    borderBottom: "1px solid #f3f4f6",
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = "#f9fafb"}
+                  onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+                >
+                  {faq.q}
+                </button>
+                {selectedFaq === index && (
+                  <div style={{
+                    padding: "0.75rem",
+                    background: "#f9fafb",
+                    borderRadius: 8,
+                    marginTop: 4,
+                    fontSize: 13,
+                    color: "#374151",
+                    lineHeight: 1.5,
+                  }}>
+                    {faq.a}
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
 
           {/* Contact Form */}
-          <div style={{ borderTop: "1px solid #eee", paddingTop: 12 }}>
-            <form onSubmit={handleSend} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <label htmlFor="chat-message" style={{ fontWeight: 500, color: "var(--primary)", fontSize: 14 }}>Send us a message:</label>
-              <textarea
-                id="chat-message"
+          <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid #e5e7eb" }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: "var(--primary)", marginBottom: 8 }}>Send us a message:</div>
+            <form onSubmit={handleSend} style={{ display: "flex", gap: 8 }}>
+              <input
+                type="text"
                 value={message}
-                onChange={e => setMessage(e.target.value)}
-                rows={2}
-                placeholder="Type your question or message..."
-                style={{ 
-                  borderRadius: 8, 
-                  border: "1px solid #ccc", 
-                  padding: 8, 
-                  resize: "none", 
-                  fontSize: 13,
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Type your message..."
+                style={{
+                  flex: 1,
+                  padding: "0.75rem",
+                  border: "1px solid #e5e7eb",
+                  borderRadius: 8,
+                  fontSize: 14,
                   outline: "none",
                 }}
-                required
               />
               <button
                 type="submit"
-                style={{ 
-                  background: "var(--accent)", 
-                  color: "var(--primary)", 
-                  fontWeight: 600, 
-                  border: "none", 
-                  borderRadius: 8, 
-                  padding: "8px 16px", 
-                  fontSize: 14, 
-                  cursor: "pointer",
-                  transition: "background 0.2s ease",
+                disabled={!message.trim()}
+                style={{
+                  background: message.trim() ? "var(--accent)" : "#e5e7eb",
+                  color: message.trim() ? "var(--primary)" : "#9ca3af",
+                  border: "none",
+                  padding: "0.75rem 1rem",
+                  borderRadius: 8,
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: message.trim() ? "pointer" : "not-allowed",
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.background = "#e6c200"}
-                onMouseLeave={(e) => e.currentTarget.style.background = "var(--accent)"}
-                disabled={sent}
               >
-                {sent ? "✓ Message sent!" : "Send Message"}
+                Send
               </button>
             </form>
+            {sent && (
+              <div style={{
+                marginTop: 8,
+                padding: "0.5rem",
+                background: "#f0fdf4",
+                color: "#16a34a",
+                borderRadius: 6,
+                fontSize: 12,
+                textAlign: "center",
+              }}>
+                Message sent! We'll get back to you soon.
+              </div>
+            )}
           </div>
         </div>
       )}

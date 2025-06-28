@@ -60,9 +60,9 @@ export default function LoginPage() {
         localStorage.setItem('user', JSON.stringify(data.user));
         localStorage.setItem('token', data.token);
         
-        // Redirect to reserved area after 1 second
+        // Redirect to home page after 1 second
         setTimeout(() => {
-          router.push('/reserved');
+          router.push('/');
         }, 1000);
       } else {
         setError(data.error || 'Login failed');
