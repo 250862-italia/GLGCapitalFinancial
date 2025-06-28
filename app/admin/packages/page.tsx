@@ -139,7 +139,7 @@ export default function PackagesManagementPage() {
     }
   };
 
-  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     let newValue: any = value;
     if (name === 'minInvestment' || name === 'maxInvestment' || name === 'expectedReturn' || name === 'duration') {
