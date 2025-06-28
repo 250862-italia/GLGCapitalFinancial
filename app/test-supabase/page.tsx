@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,34 +15,31 @@ export default function TestSupabase() {
   });
 
   useEffect(() => {
-    // Imposta le informazioni delle variabili d'ambiente solo lato client
     setEnvInfo({
       url: process.env.NEXT_PUBLIC_SUPABASE_URL || 'Non configurato',
       anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 
         `${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.substring(0, 20)}...` : 
         'Non configurato',
-      serviceKey: 'Configurato (non visibile lato client)' // Service role key non è accessibile lato client
+      serviceKey: 'Configurato (non visibile lato client)'
     });
 
     async function testConnection() {
       try {
         setStatus('Testing connection...');
-        
-        // Test 1: Verifica connessione di base
-        console.log('Testing Supabase connection...');
-        console.log('URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
-        console.log('Key:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.substring(0, 20) + '...');
-        
-        // Test 2: Prova a fare una query semplice
+        const { createClient } = await import('@supabase/supabase-js');
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+        if (!supabaseUrl || !supabaseAnonKey) {
+          setError('Supabase environment variables are not configured');
+          setStatus('❌ Errore Supabase');
+          return;
+        }
+        const supabase = createClient(supabaseUrl, supabaseAnonKey);
         const { data: testData, error } = await supabase
           .from('notes')
           .select('*')
           .limit(1);
-
-        console.log('Supabase response:', { data: testData, error });
-
         if (error) {
-          console.error('Supabase error:', error);
           setError(`Supabase Error: ${error.message} (Code: ${error.code})`);
           setStatus('❌ Errore Supabase');
         } else {
@@ -52,12 +48,10 @@ export default function TestSupabase() {
           setData(testData);
         }
       } catch (err: any) {
-        console.error('Connection error:', err);
         setError(`Network Error: ${err.message}`);
         setStatus('❌ Errore di rete');
       }
     }
-
     testConnection();
   }, []);
 
