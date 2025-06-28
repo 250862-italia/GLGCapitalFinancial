@@ -27,7 +27,7 @@ export default function HomePage() {
         }}>
           Our Core Business:<br />
           <span style={{ fontWeight: 400, color: '#1a3556', fontSize: '1.1rem', display: 'block', marginTop: 12 }}>
-            “Empower your vision. Through our premium share-pledge framework, trailblazing enterprises harness strategic capital to dominate tomorrow’s markets—fueling exponential growth, unshakable resilience, and enduring legacy. Align with us, and command the future with unmatched financial mastery.”
+            "Empower your vision. Through our premium share-pledge framework, trailblazing enterprises harness strategic capital to dominate tomorrow's markets—fueling exponential growth, unshakable resilience, and enduring legacy. Align with us, and command the future with unmatched financial mastery."
           </span>
         </blockquote>
         <p style={{ 
@@ -39,6 +39,142 @@ export default function HomePage() {
         }}>
           GLG Capital Group LLC is an innovative and results-driven investment firm committed to providing tailored financial solutions and sustainable growth strategies for private clients, institutions, and businesses. Headquartered in the United States, our mission is to guide our partners toward financial success through a strategic, transparent, and client-focused approach.
         </p>
+      </section>
+
+      {/* SUMMARY BOX SECTION */}
+      <section style={{ marginBottom: '4rem' }}>
+        <div style={{ 
+          background: 'linear-gradient(135deg, #0a2540 0%, #1a3556 100%)', 
+          color: 'white', 
+          padding: '3rem', 
+          borderRadius: 16,
+          boxShadow: '0 8px 32px rgba(10,37,64,0.15)'
+        }}>
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+            gap: '2rem',
+            alignItems: 'start'
+          }}>
+            
+            {/* Key Feature 1 */}
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ 
+                background: 'rgba(255,255,255,0.1)', 
+                width: 80, 
+                height: 80, 
+                borderRadius: '50%', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                margin: '0 auto 1rem',
+                fontSize: '2rem'
+              }}>
+                💼
+              </div>
+              <h3 style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+                Equity Pledge System
+              </h3>
+              <p style={{ fontSize: '1rem', lineHeight: 1.5, opacity: 0.9 }}>
+                Innovative financing model with fixed returns secured by company shares
+              </p>
+            </div>
+
+            {/* Key Feature 2 */}
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ 
+                background: 'rgba(255,255,255,0.1)', 
+                width: 80, 
+                height: 80, 
+                borderRadius: '50%', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                margin: '0 auto 1rem',
+                fontSize: '2rem'
+              }}>
+                🌍
+              </div>
+              <h3 style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+                Global Reach
+              </h3>
+              <p style={{ fontSize: '1rem', lineHeight: 1.5, opacity: 0.9 }}>
+                US-based with exclusive Italian partnership through Magnificus Dominus
+              </p>
+            </div>
+
+            {/* Key Feature 3 */}
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ 
+                background: 'rgba(255,255,255,0.1)', 
+                width: 80, 
+                height: 80, 
+                borderRadius: '50%', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                margin: '0 auto 1rem',
+                fontSize: '2rem'
+              }}>
+                📈
+              </div>
+              <h3 style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+                Proven Results
+              </h3>
+              <p style={{ fontSize: '1rem', lineHeight: 1.5, opacity: 0.9 }}>
+                Strategic capital solutions driving exponential growth and resilience
+              </p>
+            </div>
+
+            {/* Key Feature 4 */}
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ 
+                background: 'rgba(255,255,255,0.1)', 
+                width: 80, 
+                height: 80, 
+                borderRadius: '50%', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                margin: '0 auto 1rem',
+                fontSize: '2rem'
+              }}>
+                🔒
+              </div>
+              <h3 style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: '0.5rem' }}>
+                Secure & Transparent
+              </h3>
+              <p style={{ fontSize: '1rem', lineHeight: 1.5, opacity: 0.9 }}>
+                Robust collateralization and transparent reporting for all investments
+              </p>
+            </div>
+
+          </div>
+          
+          <div style={{ 
+            textAlign: 'center', 
+            marginTop: '2rem', 
+            paddingTop: '2rem', 
+            borderTop: '1px solid rgba(255,255,255,0.2)'
+          }}>
+            <a 
+              href="/equity-pledge" 
+              style={{
+                background: '#f59e0b',
+                color: '#0a2540',
+                padding: '1rem 2rem',
+                borderRadius: 8,
+                textDecoration: 'none',
+                fontWeight: 600,
+                fontSize: '1.1rem',
+                display: 'inline-block',
+                transition: 'all 0.3s ease'
+              }}
+            >
+              Learn About Our Equity Pledge System →
+            </a>
+          </div>
+        </div>
       </section>
 
       {/* VISION SECTION */}
