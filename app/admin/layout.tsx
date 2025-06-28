@@ -20,14 +20,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(true); // Temporarily set to true
   const [isLoading, setIsLoading] = useState(false); // Temporarily set to false
-  const [adminUser, setAdminUser] = useState<any>({
-    name: 'Admin User',
-    role: 'admin'
-  }); // Mock admin user
+  const [adminUser, setAdminUser] = useState<any>(null); // Start as null
 
   useEffect(() => {
-    // Temporarily disabled authentication check
-    // TODO: Re-enable when middleware is active
+    // Recupera l'utente reale da localStorage
+    const adminUserData = localStorage.getItem('admin_user');
+    const adminToken = localStorage.getItem('admin_token');
+    if (!adminUserData || !adminToken) {
+      setIsAuthenticated(false);
+      setAdminUser(null);
+      return;
+    }
+    const user = JSON.parse(adminUserData);
+    setAdminUser(user);
+    setIsAuthenticated(true);
     setIsLoading(false);
   }, [router]);
 
@@ -147,6 +153,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </header>
 
         {/* ADMIN NAVIGATION */}
+        {adminUser?.role === 'superadmin' && (
         <nav style={{ background: '#1f2937', borderBottom: '1px solid #374151' }}>
           <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 1rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', height: '4rem', overflowX: 'auto' }}>
@@ -185,6 +192,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
           </div>
         </nav>
+        )}
 
         {/* Main content */}
         <main style={{ maxWidth: '1280px', margin: '0 auto', padding: '1.5rem 1rem' }}>
