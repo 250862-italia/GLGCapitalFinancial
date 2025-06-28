@@ -1,5 +1,6 @@
 "use client";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { 
   Settings, 
   Users, 
@@ -23,7 +24,28 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 export default function AdminDashboardPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState('overview');
+  const [adminUser, setAdminUser] = useState<any>(null);
+
+  useEffect(() => {
+    // Check if admin is authenticated
+    const adminUserData = localStorage.getItem('admin_user');
+    const adminToken = localStorage.getItem('admin_token');
+    
+    if (!adminUserData || !adminToken) {
+      router.push('/admin/login');
+      return;
+    }
+
+    const user = JSON.parse(adminUserData);
+    if (user.role !== 'admin' && user.role !== 'superadmin') {
+      router.push('/admin/login');
+      return;
+    }
+
+    setAdminUser(user);
+  }, [router]);
 
   const stats = [
     { 
@@ -71,13 +93,58 @@ export default function AdminDashboardPage() {
     { name: "Payment Management", icon: CreditCard, color: "#8b5cf6", href: "/admin/payments" },
   ];
 
+  if (!adminUser) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#f9fafb'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{
+            width: 40,
+            height: 40,
+            border: '4px solid #e2e8f0',
+            borderTop: '4px solid #1a2238',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 1rem'
+          }} />
+          <p style={{ color: '#64748b' }}>Loading admin dashboard...</p>
+        </div>
+        <style jsx>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
   return (
     <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 4px 24px rgba(10,37,64,0.10)', padding: '2rem' }}>
       
       {/* HEADER */}
       <section style={{ textAlign: 'center', marginBottom: '3rem' }}>
         <h1 style={{ color: 'var(--primary)', fontSize: 36, fontWeight: 900, marginBottom: 8 }}>GLG Management Console</h1>
-        <p style={{ color: 'var(--foreground)', fontSize: 18, opacity: 0.8 }}>Administrative dashboard for GLG Capital Group website management</p>
+        <p style={{ color: 'var(--foreground)', fontSize: 18, opacity: 0.8 }}>
+          Administrative dashboard for GLG Capital Group website management
+        </p>
+        <div style={{ 
+          background: '#f0fdf4', 
+          border: '1px solid #bbf7d0', 
+          borderRadius: 8, 
+          padding: '1rem', 
+          marginTop: '1rem',
+          display: 'inline-block'
+        }}>
+          <p style={{ color: '#16a34a', margin: 0, fontSize: 14 }}>
+            Welcome, {adminUser.name} ({adminUser.role})
+          </p>
+        </div>
       </section>
 
       {/* NAVIGATION TABS */}

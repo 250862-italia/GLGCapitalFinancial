@@ -21,7 +21,13 @@ import {
   AlertTriangle,
   Download,
   Plus,
-  DollarSign
+  DollarSign,
+  UserPlus,
+  Trash2,
+  Crown,
+  Lock,
+  EyeOff,
+  AlertCircle
 } from 'lucide-react';
 
 interface User {
@@ -39,678 +45,400 @@ interface User {
   isVerified: boolean;
 }
 
+interface AdminUser {
+  id: string;
+  email: string;
+  name: string;
+  role: 'admin' | 'superadmin';
+  createdAt: string;
+  isVerified: boolean;
+}
+
+interface UserFormData {
+  email: string;
+  name: string;
+  password: string;
+  role: 'admin' | 'superadmin';
+}
+
 export default function AdminUsersPage() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [kycFilter, setKycFilter] = useState<string>('all');
-  const [roleFilter, setRoleFilter] = useState<string>('all');
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [showUserModal, setShowUserModal] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [showForm, setShowForm] = useState(false);
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [isEdit, setIsEdit] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState<UserFormData>({
+    email: '',
+    name: '',
+    password: '',
+    role: 'admin'
+  });
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     loadUsers();
   }, []);
 
-  useEffect(() => {
-    filterUsers();
-  }, [users, searchTerm, statusFilter, kycFilter, roleFilter]);
-
   const loadUsers = async () => {
-    setIsLoading(true);
-    
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock data
-      const mockUsers: User[] = [
-        {
-          id: '1',
-          email: 'john.doe@example.com',
-          name: 'John Doe',
-          role: 'user',
-          status: 'active',
-          kycStatus: 'approved',
-          registrationDate: new Date('2024-01-15'),
-          lastLogin: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-          totalInvestments: 50000,
-          phone: '+1 (555) 123-4567',
-          country: 'United States',
-          isVerified: true
-        },
-        {
-          id: '2',
-          email: 'jane.smith@example.com',
-          name: 'Jane Smith',
-          role: 'user',
-          status: 'active',
-          kycStatus: 'pending',
-          registrationDate: new Date('2024-01-20'),
-          lastLogin: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-          totalInvestments: 25000,
-          phone: '+1 (555) 987-6543',
-          country: 'Canada',
-          isVerified: false
-        },
-        {
-          id: '3',
-          email: 'mike.johnson@example.com',
-          name: 'Mike Johnson',
-          role: 'user',
-          status: 'suspended',
-          kycStatus: 'rejected',
-          registrationDate: new Date('2024-01-10'),
-          lastLogin: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7), // 1 week ago
-          totalInvestments: 0,
-          phone: '+1 (555) 456-7890',
-          country: 'United Kingdom',
-          isVerified: false
-        },
-        {
-          id: '4',
-          email: 'sarah.wilson@example.com',
-          name: 'Sarah Wilson',
-          role: 'admin',
-          status: 'active',
-          kycStatus: 'approved',
-          registrationDate: new Date('2024-01-05'),
-          lastLogin: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-          totalInvestments: 100000,
-          phone: '+1 (555) 321-6540',
-          country: 'Australia',
-          isVerified: true
-        },
-        {
-          id: '5',
-          email: 'david.brown@example.com',
-          name: 'David Brown',
-          role: 'user',
-          status: 'pending',
-          kycStatus: 'not_started',
-          registrationDate: new Date('2024-01-25'),
-          lastLogin: new Date(Date.now() - 1000 * 60 * 60 * 12), // 12 hours ago
-          totalInvestments: 0,
-          phone: '+1 (555) 789-0123',
-          country: 'Germany',
-          isVerified: false
-        }
-      ];
-
-      setUsers(mockUsers);
+      const response = await fetch('/api/admin/users');
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(data.users);
+      }
     } catch (error) {
       console.error('Error loading users:', error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const filterUsers = () => {
-    let filtered = users;
-
-    // Search filter
-    if (searchTerm) {
-      filtered = filtered.filter(user =>
-        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.phone.includes(searchTerm)
-      );
-    }
-
-    // Status filter
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(user => user.status === statusFilter);
-    }
-
-    // KYC filter
-    if (kycFilter !== 'all') {
-      filtered = filtered.filter(user => user.kycStatus === kycFilter);
-    }
-
-    // Role filter
-    if (roleFilter !== 'all') {
-      filtered = filtered.filter(user => user.role === roleFilter);
-    }
-
-    setFilteredUsers(filtered);
+  const resetForm = () => {
+    setFormData({
+      email: '',
+      name: '',
+      password: '',
+      role: 'admin'
+    });
+    setIsEdit(false);
+    setSelectedUser(null);
+    setError('');
+    setSuccess('');
   };
 
-  const handleUserAction = (action: string, user: User) => {
-    switch (action) {
-      case 'view':
-        setSelectedUser(user);
-        setShowUserModal(true);
-        break;
-      case 'edit':
-        // Handle edit user
-        console.log('Edit user:', user.id);
-        break;
-      case 'suspend':
-        // Handle suspend user
-        console.log('Suspend user:', user.id);
-        break;
-      case 'activate':
-        // Handle activate user
-        console.log('Activate user:', user.id);
-        break;
-      case 'delete':
-        // Handle delete user
-        console.log('Delete user:', user.id);
-        break;
+  const openAddForm = () => {
+    resetForm();
+    setShowForm(true);
+  };
+
+  const openEditForm = (user: AdminUser) => {
+    setFormData({
+      email: user.email,
+      name: user.name,
+      password: '',
+      role: user.role
+    });
+    setSelectedUser(user);
+    setIsEdit(true);
+    setShowForm(true);
+  };
+
+  const openPasswordForm = (user: AdminUser) => {
+    setSelectedUser(user);
+    setPasswordData({
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: ''
+    });
+    setShowPasswordForm(true);
+    setError('');
+    setSuccess('');
+  };
+
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    if (!formData.email || !formData.name || (!isEdit && !formData.password)) {
+      setError('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      const url = isEdit ? '/api/admin/users/update' : '/api/admin/users/create';
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...formData,
+          userId: selectedUser?.id
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSuccess(isEdit ? 'User updated successfully!' : 'User created successfully!');
+        setShowForm(false);
+        resetForm();
+        loadUsers();
+      } else {
+        setError(data.error || 'Operation failed');
+      }
+    } catch (error) {
+      setError('Network error. Please try again.');
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return '#059669';
-      case 'inactive':
-        return '#6b7280';
-      case 'suspended':
-        return '#dc2626';
-      case 'pending':
-        return '#d97706';
-      default:
-        return '#6b7280';
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+      setError('Please fill in all password fields');
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setError('New passwords do not match');
+      return;
+    }
+
+    if (passwordData.newPassword.length < 8) {
+      setError('Password must be at least 8 characters long');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/admin/users/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: selectedUser?.id,
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSuccess('Password changed successfully!');
+        setShowPasswordForm(false);
+        setSelectedUser(null);
+        setPasswordData({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        });
+      } else {
+        setError(data.error || 'Password change failed');
+      }
+    } catch (error) {
+      setError('Network error. Please try again.');
     }
   };
 
-  const getKYCStatusColor = (status: string) => {
-    switch (status) {
-      case 'approved':
-        return '#059669';
-      case 'pending':
-        return '#d97706';
-      case 'rejected':
-        return '#dc2626';
-      case 'not_started':
-        return '#6b7280';
-      default:
-        return '#6b7280';
+  const handleDeleteUser = async (userId: string) => {
+    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+      return;
     }
+
+    try {
+      const response = await fetch('/api/admin/users/delete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSuccess('User deleted successfully!');
+        loadUsers();
+      } else {
+        setError(data.error || 'Delete failed');
+      }
+    } catch (error) {
+      setError('Network error. Please try again.');
+    }
+  };
+
+  const getRoleIcon = (role: string) => {
+    return role === 'superadmin' ? <Crown size={16} style={{ color: '#f59e0b' }} /> : <Shield size={16} style={{ color: '#3b82f6' }} />;
   };
 
   const getRoleColor = (role: string) => {
-    switch (role) {
-      case 'superadmin':
-        return '#dc2626';
-      case 'admin':
-        return '#7c3aed';
-      case 'user':
-        return '#3b82f6';
-      default:
-        return '#6b7280';
-    }
+    return role === 'superadmin' ? '#f59e0b' : '#3b82f6';
   };
-
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
-  const formatTimeAgo = (date: Date) => {
-    const now = new Date();
-    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-    
-    if (diffInMinutes < 1) return 'Just now';
-    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-    
-    const diffInHours = Math.floor(diffInMinutes / 60);
-    if (diffInHours < 24) return `${diffInHours}h ago`;
-    
-    const diffInDays = Math.floor(diffInHours / 24);
-    return `${diffInDays}d ago`;
-  };
-
-  if (isLoading) {
-    return (
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '50vh'
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{
-            width: 40,
-            height: 40,
-            border: '4px solid #e2e8f0',
-            borderTop: '4px solid #059669',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-            margin: '0 auto 1rem'
-          }} />
-          <p style={{ color: '#64748b' }}>Loading users...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div style={{ padding: '2rem' }}>
-      {/* Header */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '2rem'
-      }}>
-        <div>
-          <h1 style={{
-            fontSize: 32,
-            fontWeight: 700,
-            color: '#1f2937',
-            marginBottom: 8
-          }}>
-            User Management
-          </h1>
-          <p style={{
-            fontSize: 16,
-            color: '#6b7280',
-            margin: 0
-          }}>
-            Manage user accounts, permissions, and verification status
-          </p>
-        </div>
-        
-        <div style={{
-          display: 'flex',
-          gap: '1rem'
-        }}>
-          <button style={{
-            padding: '0.75rem 1.5rem',
-            border: '1px solid #d1d5db',
-            borderRadius: 8,
-            background: 'white',
-            color: '#374151',
-            fontSize: 14,
-            fontWeight: 600,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8
-          }}>
-            <Download size={16} />
-            Export
+    <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 4px 24px rgba(10,37,64,0.10)', padding: '2rem' }}>
+      
+      {/* HEADER */}
+      <section style={{ marginBottom: '3rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h1 style={{ color: 'var(--primary)', fontSize: 32, fontWeight: 900, margin: 0 }}>Admin Users Management</h1>
+          <button
+            onClick={openAddForm}
+            style={{
+              background: 'var(--accent)',
+              color: 'var(--primary)',
+              border: 'none',
+              padding: '0.75rem 1.5rem',
+              borderRadius: 8,
+              fontSize: 16,
+              fontWeight: 700,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <UserPlus size={20} />
+            Add New Admin
           </button>
+        </div>
+        <p style={{ color: 'var(--foreground)', fontSize: 18, opacity: 0.8, margin: 0 }}>
+          Manage administrative users and their permissions
+        </p>
+      </section>
+
+      {/* Error/Success Messages */}
+      {error && (
+        <div style={{
+          background: '#fef2f2',
+          border: '1px solid #fecaca',
+          borderRadius: 8,
+          padding: '1rem',
+          marginBottom: '2rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          color: '#dc2626'
+        }}>
+          <AlertCircle size={20} />
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div style={{
+          background: '#f0fdf4',
+          border: '1px solid #bbf7d0',
+          borderRadius: 8,
+          padding: '1rem',
+          marginBottom: '2rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          color: '#16a34a'
+        }}>
+          <CheckCircle size={20} />
+          {success}
+        </div>
+      )}
+
+      {/* USERS TABLE */}
+      <section>
+        <div style={{ background: 'var(--secondary)', borderRadius: 12, padding: '1.5rem' }}>
+          <h2 style={{ color: 'var(--primary)', fontSize: 24, fontWeight: 700, marginBottom: '1.5rem' }}>Administrative Users</h2>
           
-          <button style={{
-            padding: '0.75rem 1.5rem',
-            border: 'none',
-            borderRadius: 8,
-            background: '#059669',
-            color: 'white',
-            fontSize: 14,
-            fontWeight: 600,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8
-          }}>
-            <Plus size={16} />
-            Add User
-          </button>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <div style={{
-        background: 'white',
-        borderRadius: 12,
-        padding: '1.5rem',
-        border: '1px solid #e5e7eb',
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-        marginBottom: '2rem'
-      }}>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '1rem'
-        }}>
-          {/* Search */}
-          <div style={{ position: 'relative' }}>
-            <Search size={16} style={{
-              position: 'absolute',
-              left: 12,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              color: '#9ca3af'
-            }} />
-            <input
-              type="text"
-              placeholder="Search users..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '0.75rem 0.75rem 0.75rem 2.5rem',
-                border: '1px solid #d1d5db',
-                borderRadius: 8,
-                fontSize: 14
-              }}
-            />
-          </div>
-
-          {/* Status Filter */}
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            style={{
-              padding: '0.75rem',
-              border: '1px solid #d1d5db',
-              borderRadius: 8,
-              fontSize: 14
-            }}
-          >
-            <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-            <option value="suspended">Suspended</option>
-            <option value="pending">Pending</option>
-          </select>
-
-          {/* KYC Filter */}
-          <select
-            value={kycFilter}
-            onChange={(e) => setKycFilter(e.target.value)}
-            style={{
-              padding: '0.75rem',
-              border: '1px solid #d1d5db',
-              borderRadius: 8,
-              fontSize: 14
-            }}
-          >
-            <option value="all">All KYC Status</option>
-            <option value="approved">Approved</option>
-            <option value="pending">Pending</option>
-            <option value="rejected">Rejected</option>
-            <option value="not_started">Not Started</option>
-          </select>
-
-          {/* Role Filter */}
-          <select
-            value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
-            style={{
-              padding: '0.75rem',
-              border: '1px solid #d1d5db',
-              borderRadius: 8,
-              fontSize: 14
-            }}
-          >
-            <option value="all">All Roles</option>
-            <option value="user">User</option>
-            <option value="admin">Admin</option>
-            <option value="superadmin">Super Admin</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Users Table */}
-      <div style={{
-        background: 'white',
-        borderRadius: 12,
-        border: '1px solid #e5e7eb',
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-        overflow: 'hidden'
-      }}>
-        <div style={{
-          padding: '1.5rem',
-          borderBottom: '1px solid #e5e7eb',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}>
-          <h3 style={{
-            fontSize: 18,
-            fontWeight: 600,
-            color: '#1f2937',
-            margin: 0
-          }}>
-            Users ({filteredUsers.length})
-          </h3>
-        </div>
-
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{
-            width: '100%',
-            borderCollapse: 'collapse'
-          }}>
-            <thead style={{
-              background: '#f8fafc',
-              borderBottom: '1px solid #e5e7eb'
-            }}>
-              <tr>
-                <th style={{
-                  padding: '1rem',
-                  textAlign: 'left',
-                  fontSize: 14,
-                  fontWeight: 600,
-                  color: '#374151'
-                }}>
-                  User
-                </th>
-                <th style={{
-                  padding: '1rem',
-                  textAlign: 'left',
-                  fontSize: 14,
-                  fontWeight: 600,
-                  color: '#374151'
-                }}>
-                  Role
-                </th>
-                <th style={{
-                  padding: '1rem',
-                  textAlign: 'left',
-                  fontSize: 14,
-                  fontWeight: 600,
-                  color: '#374151'
-                }}>
-                  Status
-                </th>
-                <th style={{
-                  padding: '1rem',
-                  textAlign: 'left',
-                  fontSize: 14,
-                  fontWeight: 600,
-                  color: '#374151'
-                }}>
-                  KYC Status
-                </th>
-                <th style={{
-                  padding: '1rem',
-                  textAlign: 'left',
-                  fontSize: 14,
-                  fontWeight: 600,
-                  color: '#374151'
-                }}>
-                  Investments
-                </th>
-                <th style={{
-                  padding: '1rem',
-                  textAlign: 'left',
-                  fontSize: 14,
-                  fontWeight: 600,
-                  color: '#374151'
-                }}>
-                  Last Login
-                </th>
-                <th style={{
-                  padding: '1rem',
-                  textAlign: 'center',
-                  fontSize: 14,
-                  fontWeight: 600,
-                  color: '#374151'
-                }}>
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredUsers.map((user) => (
-                <tr key={user.id} style={{
-                  borderBottom: '1px solid #f1f5f9'
-                }}>
-                  <td style={{ padding: '1rem' }}>
-                    <div>
-                      <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.75rem'
-                      }}>
-                        <div style={{
-                          width: 40,
-                          height: 40,
-                          borderRadius: '50%',
-                          background: '#e5e7eb',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: '#6b7280',
-                          fontWeight: 600
-                        }}>
-                          {user.name.charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <p style={{
-                            fontSize: 14,
-                            fontWeight: 600,
-                            color: '#1f2937',
-                            margin: 0
-                          }}>
-                            {user.name}
-                          </p>
-                          <p style={{
-                            fontSize: 12,
-                            color: '#6b7280',
-                            margin: 0
-                          }}>
-                            {user.email}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td style={{ padding: '1rem' }}>
-                    <span style={{
-                      padding: '0.25rem 0.5rem',
-                      background: getRoleColor(user.role),
-                      color: 'white',
-                      borderRadius: 4,
-                      fontSize: 12,
-                      fontWeight: 600,
-                      textTransform: 'capitalize'
-                    }}>
-                      {user.role}
-                    </span>
-                  </td>
-                  <td style={{ padding: '1rem' }}>
-                    <span style={{
-                      padding: '0.25rem 0.5rem',
-                      background: getStatusColor(user.status),
-                      color: 'white',
-                      borderRadius: 4,
-                      fontSize: 12,
-                      fontWeight: 600,
-                      textTransform: 'capitalize'
-                    }}>
-                      {user.status}
-                    </span>
-                  </td>
-                  <td style={{ padding: '1rem' }}>
-                    <span style={{
-                      padding: '0.25rem 0.5rem',
-                      background: getKYCStatusColor(user.kycStatus),
-                      color: 'white',
-                      borderRadius: 4,
-                      fontSize: 12,
-                      fontWeight: 600,
-                      textTransform: 'capitalize'
-                    }}>
-                      {user.kycStatus.replace('_', ' ')}
-                    </span>
-                  </td>
-                  <td style={{ padding: '1rem' }}>
-                    <span style={{
-                      fontSize: 14,
-                      color: '#1f2937',
-                      fontWeight: 600
-                    }}>
-                      ${user.totalInvestments.toLocaleString()}
-                    </span>
-                  </td>
-                  <td style={{ padding: '1rem' }}>
-                    <span style={{
-                      fontSize: 12,
-                      color: '#6b7280'
-                    }}>
-                      {formatTimeAgo(user.lastLogin)}
-                    </span>
-                  </td>
-                  <td style={{ padding: '1rem', textAlign: 'center' }}>
-                    <div style={{
-                      display: 'flex',
-                      justifyContent: 'center',
-                      gap: '0.5rem'
-                    }}>
-                      <button
-                        onClick={() => handleUserAction('view', user)}
-                        style={{
-                          padding: '0.5rem',
-                          border: '1px solid #d1d5db',
-                          borderRadius: 6,
-                          background: 'white',
-                          color: '#374151',
-                          cursor: 'pointer'
-                        }}
-                        title="View Details"
-                      >
-                        <Eye size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleUserAction('edit', user)}
-                        style={{
-                          padding: '0.5rem',
-                          border: '1px solid #d1d5db',
-                          borderRadius: 6,
-                          background: 'white',
-                          color: '#374151',
-                          cursor: 'pointer'
-                        }}
-                        title="Edit User"
-                      >
-                        <Edit size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleUserAction('suspend', user)}
-                        style={{
-                          padding: '0.5rem',
-                          border: '1px solid #d1d5db',
-                          borderRadius: 6,
-                          background: 'white',
-                          color: '#374151',
-                          cursor: 'pointer'
-                        }}
-                        title="Suspend User"
-                      >
-                        <UserX size={16} />
-                      </button>
-                    </div>
-                  </td>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ borderBottom: '2px solid #e0e3eb' }}>
+                  <th style={{ textAlign: 'left', padding: '1rem', color: 'var(--primary)', fontWeight: 600 }}>User</th>
+                  <th style={{ textAlign: 'left', padding: '1rem', color: 'var(--primary)', fontWeight: 600 }}>Role</th>
+                  <th style={{ textAlign: 'left', padding: '1rem', color: 'var(--primary)', fontWeight: 600 }}>Created</th>
+                  <th style={{ textAlign: 'center', padding: '1rem', color: 'var(--primary)', fontWeight: 600 }}>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {users.map((user) => (
+                  <tr key={user.id} style={{ borderBottom: '1px solid #e0e3eb' }}>
+                    <td style={{ padding: '1rem' }}>
+                      <div>
+                        <div style={{ fontWeight: 600, color: 'var(--primary)' }}>{user.name}</div>
+                        <div style={{ fontSize: 14, color: 'var(--foreground)', opacity: 0.7 }}>{user.email}</div>
+                      </div>
+                    </td>
+                    <td style={{ padding: '1rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        {getRoleIcon(user.role)}
+                        <span style={{ 
+                          color: getRoleColor(user.role), 
+                          fontWeight: 600,
+                          textTransform: 'capitalize'
+                        }}>
+                          {user.role}
+                        </span>
+                      </div>
+                    </td>
+                    <td style={{ padding: '1rem', color: 'var(--foreground)', fontSize: 14 }}>
+                      {new Date(user.createdAt).toLocaleDateString()}
+                    </td>
+                    <td style={{ padding: '1rem', textAlign: 'center' }}>
+                      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+                        <button
+                          onClick={() => openEditForm(user)}
+                          style={{
+                            background: '#3b82f6',
+                            color: 'white',
+                            border: 'none',
+                            padding: '0.5rem',
+                            borderRadius: 6,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                          title="Edit User"
+                        >
+                          <Edit size={16} />
+                        </button>
+                        <button
+                          onClick={() => openPasswordForm(user)}
+                          style={{
+                            background: '#10b981',
+                            color: 'white',
+                            border: 'none',
+                            padding: '0.5rem',
+                            borderRadius: 6,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                          title="Change Password"
+                        >
+                          <Lock size={16} />
+                        </button>
+                        {user.role !== 'superadmin' && (
+                          <button
+                            onClick={() => handleDeleteUser(user.id)}
+                            style={{
+                              background: '#dc2626',
+                              color: 'white',
+                              border: 'none',
+                              padding: '0.5rem',
+                              borderRadius: 6,
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}
+                            title="Delete User"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      </section>
 
-      {/* User Details Modal */}
-      {showUserModal && selectedUser && (
+      {/* ADD/EDIT USER FORM */}
+      {showForm && (
         <div style={{
           position: 'fixed',
           top: 0,
@@ -721,233 +449,319 @@ export default function AdminUsersPage() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          zIndex: 1000
+          zIndex: 1000,
+          padding: '2rem'
         }}>
           <div style={{
             background: 'white',
             borderRadius: 16,
             padding: '2rem',
-            maxWidth: 600,
-            width: '90%',
+            width: '100%',
+            maxWidth: 500,
             maxHeight: '90vh',
             overflowY: 'auto'
           }}>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '1.5rem'
-            }}>
-              <h2 style={{
-                fontSize: 24,
-                fontWeight: 700,
-                color: '#1f2937',
-                margin: 0
-              }}>
-                User Details
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+              <h2 style={{ color: 'var(--primary)', fontSize: 24, fontWeight: 700, margin: 0 }}>
+                {isEdit ? 'Edit Admin User' : 'Add New Admin User'}
               </h2>
               <button
-                onClick={() => setShowUserModal(false)}
+                onClick={() => setShowForm(false)}
                 style={{
                   background: 'none',
                   border: 'none',
-                  cursor: 'pointer',
-                  padding: '0.5rem'
+                  fontSize: 24,
+                  color: '#6b7280',
+                  cursor: 'pointer'
                 }}
               >
-                <XCircle size={24} color="#6b7280" />
+                ×
               </button>
             </div>
 
-            <div style={{
-              display: 'grid',
-              gap: '1.5rem'
-            }}>
-              {/* User Info */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '1rem',
-                padding: '1rem',
-                background: '#f8fafc',
-                borderRadius: 8
-              }}>
-                <div style={{
-                  width: 60,
-                  height: 60,
-                  borderRadius: '50%',
-                  background: '#e5e7eb',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#6b7280',
-                  fontWeight: 600,
-                  fontSize: 20
-                }}>
-                  {selectedUser.name.charAt(0).toUpperCase()}
-                </div>
-                <div>
-                  <h3 style={{
-                    fontSize: 20,
-                    fontWeight: 600,
-                    color: '#1f2937',
-                    margin: 0
-                  }}>
-                    {selectedUser.name}
-                  </h3>
-                  <p style={{
-                    fontSize: 14,
-                    color: '#6b7280',
-                    margin: 0
-                  }}>
-                    {selectedUser.email}
-                  </p>
-                </div>
+            <form onSubmit={handleFormSubmit}>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>
+                  Name <span style={{ color: '#ef4444' }}>*</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #d1d5db',
+                    borderRadius: 8,
+                    fontSize: 16,
+                    boxSizing: 'border-box'
+                  }}
+                  placeholder="Enter full name"
+                />
               </div>
 
-              {/* Details Grid */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                gap: '1rem'
-              }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8
-                }}>
-                  <Phone size={16} color="#6b7280" />
-                  <span style={{ fontSize: 14, color: '#374151' }}>
-                    {selectedUser.phone}
-                  </span>
-                </div>
-
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8
-                }}>
-                  <MapPin size={16} color="#6b7280" />
-                  <span style={{ fontSize: 14, color: '#374151' }}>
-                    {selectedUser.country}
-                  </span>
-                </div>
-
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8
-                }}>
-                  <Calendar size={16} color="#6b7280" />
-                  <span style={{ fontSize: 14, color: '#374151' }}>
-                    Joined {formatDate(selectedUser.registrationDate)}
-                  </span>
-                </div>
-
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8
-                }}>
-                  <DollarSign size={16} color="#6b7280" />
-                  <span style={{ fontSize: 14, color: '#374151' }}>
-                    ${selectedUser.totalInvestments.toLocaleString()} invested
-                  </span>
-                </div>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>
+                  Email <span style={{ color: '#ef4444' }}>*</span>
+                </label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #d1d5db',
+                    borderRadius: 8,
+                    fontSize: 16,
+                    boxSizing: 'border-box'
+                  }}
+                  placeholder="Enter email address"
+                />
               </div>
 
-              {/* Status Badges */}
-              <div style={{
-                display: 'flex',
-                gap: '1rem',
-                flexWrap: 'wrap'
-              }}>
-                <span style={{
-                  padding: '0.5rem 1rem',
-                  background: getRoleColor(selectedUser.role),
-                  color: 'white',
-                  borderRadius: 6,
-                  fontSize: 12,
-                  fontWeight: 600,
-                  textTransform: 'capitalize'
-                }}>
-                  {selectedUser.role}
-                </span>
-                <span style={{
-                  padding: '0.5rem 1rem',
-                  background: getStatusColor(selectedUser.status),
-                  color: 'white',
-                  borderRadius: 6,
-                  fontSize: 12,
-                  fontWeight: 600,
-                  textTransform: 'capitalize'
-                }}>
-                  {selectedUser.status}
-                </span>
-                <span style={{
-                  padding: '0.5rem 1rem',
-                  background: getKYCStatusColor(selectedUser.kycStatus),
-                  color: 'white',
-                  borderRadius: 6,
-                  fontSize: 12,
-                  fontWeight: 600,
-                  textTransform: 'capitalize'
-                }}>
-                  KYC {selectedUser.kycStatus.replace('_', ' ')}
-                </span>
-                {selectedUser.isVerified && (
-                  <span style={{
-                    padding: '0.5rem 1rem',
-                    background: '#059669',
+              {!isEdit && (
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>
+                    Password <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={formData.password}
+                      onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem 2.5rem 0.75rem 0.75rem',
+                        border: '1px solid #d1d5db',
+                        borderRadius: 8,
+                        fontSize: 16,
+                        boxSizing: 'border-box'
+                      }}
+                      placeholder="Enter password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      style={{
+                        position: 'absolute',
+                        right: '0.75rem',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: '#9ca3af'
+                      }}
+                    >
+                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div style={{ marginBottom: '2rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>
+                  Role <span style={{ color: '#ef4444' }}>*</span>
+                </label>
+                <select
+                  value={formData.role}
+                  onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value as 'admin' | 'superadmin' }))}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #d1d5db',
+                    borderRadius: 8,
+                    fontSize: 16,
+                    boxSizing: 'border-box'
+                  }}
+                >
+                  <option value="admin">Admin</option>
+                  <option value="superadmin">Super Admin</option>
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <button
+                  type="submit"
+                  style={{
+                    flex: 1,
+                    background: 'var(--accent)',
+                    color: 'var(--primary)',
+                    border: 'none',
+                    padding: '1rem',
+                    borderRadius: 8,
+                    fontSize: 16,
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  {isEdit ? 'Update User' : 'Create User'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowForm(false)}
+                  style={{
+                    flex: 1,
+                    background: '#6b7280',
                     color: 'white',
-                    borderRadius: 6,
-                    fontSize: 12,
+                    border: 'none',
+                    padding: '1rem',
+                    borderRadius: 8,
+                    fontSize: 16,
                     fontWeight: 600,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 4
-                  }}>
-                    <CheckCircle size={12} />
-                    Verified
-                  </span>
-                )}
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* CHANGE PASSWORD FORM */}
+      {showPasswordForm && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '2rem'
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: 16,
+            padding: '2rem',
+            width: '100%',
+            maxWidth: 500
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+              <h2 style={{ color: 'var(--primary)', fontSize: 24, fontWeight: 700, margin: 0 }}>
+                Change Password
+              </h2>
+              <button
+                onClick={() => setShowPasswordForm(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: 24,
+                  color: '#6b7280',
+                  cursor: 'pointer'
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            <p style={{ color: 'var(--foreground)', marginBottom: '2rem' }}>
+              Changing password for: <strong>{selectedUser?.name}</strong> ({selectedUser?.email})
+            </p>
+
+            <form onSubmit={handlePasswordSubmit}>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>
+                  Current Password <span style={{ color: '#ef4444' }}>*</span>
+                </label>
+                <input
+                  type="password"
+                  value={passwordData.currentPassword}
+                  onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #d1d5db',
+                    borderRadius: 8,
+                    fontSize: 16,
+                    boxSizing: 'border-box'
+                  }}
+                  placeholder="Enter current password"
+                />
               </div>
 
-              {/* Actions */}
-              <div style={{
-                display: 'flex',
-                gap: '1rem',
-                paddingTop: '1rem',
-                borderTop: '1px solid #e5e7eb'
-              }}>
-                <button style={{
-                  flex: 1,
-                  padding: '0.75rem',
-                  border: '1px solid #d1d5db',
-                  borderRadius: 8,
-                  background: 'white',
-                  color: '#374151',
-                  fontSize: 14,
-                  fontWeight: 600,
-                  cursor: 'pointer'
-                }}>
-                  Edit User
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>
+                  New Password <span style={{ color: '#ef4444' }}>*</span>
+                </label>
+                <input
+                  type="password"
+                  value={passwordData.newPassword}
+                  onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #d1d5db',
+                    borderRadius: 8,
+                    fontSize: 16,
+                    boxSizing: 'border-box'
+                  }}
+                  placeholder="Enter new password"
+                />
+              </div>
+
+              <div style={{ marginBottom: '2rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>
+                  Confirm New Password <span style={{ color: '#ef4444' }}>*</span>
+                </label>
+                <input
+                  type="password"
+                  value={passwordData.confirmPassword}
+                  onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    border: '1px solid #d1d5db',
+                    borderRadius: 8,
+                    fontSize: 16,
+                    boxSizing: 'border-box'
+                  }}
+                  placeholder="Confirm new password"
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <button
+                  type="submit"
+                  style={{
+                    flex: 1,
+                    background: '#10b981',
+                    color: 'white',
+                    border: 'none',
+                    padding: '1rem',
+                    borderRadius: 8,
+                    fontSize: 16,
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Change Password
                 </button>
-                <button style={{
-                  flex: 1,
-                  padding: '0.75rem',
-                  border: 'none',
-                  borderRadius: 8,
-                  background: '#dc2626',
-                  color: 'white',
-                  fontSize: 14,
-                  fontWeight: 600,
-                  cursor: 'pointer'
-                }}>
-                  Suspend User
+                <button
+                  type="button"
+                  onClick={() => setShowPasswordForm(false)}
+                  style={{
+                    flex: 1,
+                    background: '#6b7280',
+                    color: 'white',
+                    border: 'none',
+                    padding: '1rem',
+                    borderRadius: 8,
+                    fontSize: 16,
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
                 </button>
               </div>
-            </div>
+            </form>
           </div>
         </div>
       )}

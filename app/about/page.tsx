@@ -69,195 +69,515 @@ export default function AboutPage() {
   ]
 
   return (
-    <main style={{ maxWidth: 1200, margin: '2rem auto', padding: '2rem', background: '#fff', borderRadius: 16, boxShadow: '0 4px 24px rgba(10,37,64,0.10)' }}>
+    <main style={{ maxWidth: 1200, margin: '0 auto', padding: '2rem', background: '#fff' }}>
       
       {/* HERO SECTION */}
-      <section style={{ textAlign: 'center', marginBottom: '4rem', paddingTop: '1rem' }}>
-        <Image src="/glg capital group llcbianco.png" alt="GLG Capital Group LLC" width={100} height={100} style={{ margin: '0 auto 2rem auto', borderRadius: 12, background: '#fff', boxShadow: '0 2px 12px rgba(34,40,49,0.10)' }} />
-        <h1 style={{ color: 'var(--primary)', fontSize: 42, fontWeight: 900, marginBottom: 16, letterSpacing: 1.2 }}>About GLG Capital Group</h1>
-        <p style={{ color: 'var(--foreground)', fontSize: 20, lineHeight: 1.6, maxWidth: 800, margin: '0 auto 2rem auto' }}>
-          A premier investment institution dedicated to empowering high-net-worth individuals and families 
-          with sophisticated investment solutions and exclusive opportunities.
-        </p>
-        <div style={{ background: 'var(--secondary)', padding: '1.5rem', borderRadius: 12, maxWidth: 600, margin: '0 auto' }}>
-          <div style={{ color: 'var(--accent)', fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Our Mission</div>
-          <div style={{ color: 'var(--foreground)', fontSize: 16, fontStyle: 'italic' }}>
-            "To preserve and grow our clients' wealth through innovative strategies, personalized service, and unwavering commitment to excellence."
-          </div>
-        </div>
-      </section>
-
-      {/* OFFICIAL WEBSITE BANNER */}
-      <section style={{ marginBottom: '4rem' }}>
-        <div style={{ 
-          background: 'linear-gradient(135deg, var(--primary) 0%, #2a3f5f 100%)', 
-          borderRadius: 16, 
-          padding: '2.5rem', 
-          color: '#fff', 
-          textAlign: 'center',
-          boxShadow: '0 8px 32px rgba(10,37,64,0.15)',
-          position: 'relative',
-          overflow: 'hidden'
+      <section style={{ textAlign: 'center', marginBottom: '4rem', padding: '3rem 0' }}>
+        <h1 style={{ 
+          color: '#0a2540', 
+          fontSize: '3.5rem', 
+          fontWeight: 900, 
+          marginBottom: '1.5rem',
+          lineHeight: 1.2
         }}>
-          <div style={{ 
-            position: 'absolute', 
-            top: 0, 
-            left: 0, 
-            right: 0, 
-            bottom: 0, 
-            background: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.05\'%3E%3Ccircle cx=\'30\' cy=\'30\' r=\'2\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")',
-            opacity: 0.3
-          }}></div>
-          <div style={{ position: 'relative', zIndex: 1 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', marginBottom: '1rem' }}>
-              <Globe size={32} style={{ color: 'var(--accent)' }} />
-              <span style={{ color: 'var(--accent)', fontSize: 20, fontWeight: 700 }}>Official Website</span>
-            </div>
-            <h3 style={{ fontSize: 24, fontWeight: 700, marginBottom: '1rem', color: 'var(--accent)' }}>
-              Visit Our Official Corporate Website
+          About GLG Capital Group LLC
+        </h1>
+        <p style={{ 
+          color: '#1a3556', 
+          fontSize: '1.4rem', 
+          lineHeight: 1.6,
+          maxWidth: 800,
+          margin: '0 auto'
+        }}>
+          A leading investment firm dedicated to innovative financial solutions and sustainable growth strategies.
+        </p>
+      </section>
+
+      {/* COMPANY OVERVIEW */}
+      <section style={{ marginBottom: '4rem', padding: '3rem', background: '#f8fafc', borderRadius: 16 }}>
+        <h2 style={{ 
+          color: '#0a2540', 
+          fontSize: '2.5rem', 
+          fontWeight: 800, 
+          marginBottom: '1.5rem',
+          textAlign: 'center'
+        }}>
+          Company Overview
+        </h2>
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
+          gap: '2rem',
+          marginTop: '2rem'
+        }}>
+          <div>
+            <h3 style={{ color: '#0a2540', fontSize: '1.3rem', fontWeight: 700, marginBottom: '1rem' }}>
+              Our Mission
             </h3>
-            <p style={{ fontSize: 16, lineHeight: 1.6, marginBottom: '2rem', maxWidth: 600, margin: '0 auto 2rem auto', opacity: 0.95 }}>
-              For comprehensive corporate information, official documentation, and detailed company profiles, 
-              visit our official GLG Capital Group LLC website.
+            <p style={{ color: '#1a3556', lineHeight: 1.6 }}>
+              To guide our partners toward financial success through a strategic, transparent, and client-focused approach. We are committed to providing tailored financial solutions and sustainable growth strategies for private clients, institutions, and businesses.
             </p>
-            <a 
-              href="https://www.glgcapitalgroupllc.com" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              style={{ 
-                display: 'inline-flex', 
-                alignItems: 'center', 
-                gap: '0.5rem',
-                background: 'var(--accent)', 
-                color: 'var(--primary)', 
-                padding: '1rem 2rem', 
-                borderRadius: 8, 
-                textDecoration: 'none', 
-                fontWeight: 700,
-                fontSize: 16,
-                boxShadow: '0 4px 16px rgba(218,165,32,0.3)',
-                transition: 'all 0.3s ease'
-              }}
-              onMouseOver={(e) => {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 6px 20px rgba(218,165,32,0.4)';
-              }}
-              onMouseOut={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 4px 16px rgba(218,165,32,0.3)';
-              }}
-            >
-              <Globe size={20} />
-              Visit Official Website
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                <polyline points="15,3 21,3 21,9"></polyline>
-                <line x1="10" y1="14" x2="21" y2="3"></line>
-              </svg>
-            </a>
-            <div style={{ marginTop: '1rem', fontSize: 14, opacity: 0.8 }}>
-              Opens in new window • External link
-            </div>
+          </div>
+          <div>
+            <h3 style={{ color: '#0a2540', fontSize: '1.3rem', fontWeight: 700, marginBottom: '1rem' }}>
+              Our Vision
+            </h3>
+            <p style={{ color: '#1a3556', lineHeight: 1.6 }}>
+              We believe in the power of innovative ideas, prudent capital management, and long-term partnerships. We strive to be industry leaders by offering solutions that blend advanced market insights with rigorous risk management.
+            </p>
+          </div>
+          <div>
+            <h3 style={{ color: '#0a2540', fontSize: '1.3rem', fontWeight: 700, marginBottom: '1rem' }}>
+              Our Approach
+            </h3>
+            <p style={{ color: '#1a3556', lineHeight: 1.6 }}>
+              We employ a data-driven approach, combining in-depth financial market analysis with our extensive industry expertise. Every investment decision is guided by our dedication to excellence and safeguarding our clients' interests.
+            </p>
           </div>
         </div>
       </section>
 
-      {/* VALUES SECTION */}
+      {/* CORE VALUES */}
       <section style={{ marginBottom: '4rem' }}>
-        <h2 style={{ color: 'var(--primary)', fontSize: 32, fontWeight: 800, textAlign: 'center', marginBottom: '3rem' }}>Our Core Values</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '2rem' }}>
-          {values.map((value, index) => (
-            <div key={index} style={{ background: '#f8f9fa', padding: '2rem', borderRadius: 12, textAlign: 'center', border: '2px solid var(--accent)' }}>
-              <value.icon size={48} style={{ color: 'var(--accent)', margin: '0 auto 1rem auto', display: 'block' }} />
-              <h3 style={{ color: 'var(--primary)', fontSize: 20, fontWeight: 700, marginBottom: 12 }}>{value.title}</h3>
-              <p style={{ color: 'var(--foreground)', fontSize: 15, lineHeight: 1.5 }}>{value.description}</p>
-            </div>
-          ))}
+        <h2 style={{ 
+          color: '#0a2540', 
+          fontSize: '2.5rem', 
+          fontWeight: 800, 
+          marginBottom: '2rem',
+          textAlign: 'center'
+        }}>
+          Our Core Values
+        </h2>
+        
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
+          gap: '2rem' 
+        }}>
+          
+          <div style={{ 
+            background: '#fff', 
+            padding: '2rem', 
+            borderRadius: 12, 
+            boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
+            border: '1px solid #e2e8f0',
+            textAlign: 'center'
+          }}>
+            <h3 style={{ 
+              color: '#0a2540', 
+              fontSize: '1.4rem', 
+              fontWeight: 700, 
+              marginBottom: '1rem' 
+            }}>
+              Extensive Experience
+            </h3>
+            <p style={{ 
+              color: '#1a3556', 
+              lineHeight: 1.6
+            }}>
+              Our team comprises seasoned experts with profound knowledge of global financial markets, bringing decades of combined experience to every client relationship.
+            </p>
+          </div>
+
+          <div style={{ 
+            background: '#fff', 
+            padding: '2rem', 
+            borderRadius: 12, 
+            boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
+            border: '1px solid #e2e8f0',
+            textAlign: 'center'
+          }}>
+            <h3 style={{ 
+              color: '#0a2540', 
+              fontSize: '1.4rem', 
+              fontWeight: 700, 
+              marginBottom: '1rem' 
+            }}>
+              Transparency
+            </h3>
+            <p style={{ 
+              color: '#1a3556', 
+              lineHeight: 1.6
+            }}>
+              We operate with utmost integrity, ensuring our clients always have access to clear and up-to-date information about their investments and our processes.
+            </p>
+          </div>
+
+          <div style={{ 
+            background: '#fff', 
+            padding: '2rem', 
+            borderRadius: 12, 
+            boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
+            border: '1px solid #e2e8f0',
+            textAlign: 'center'
+          }}>
+            <h3 style={{ 
+              color: '#0a2540', 
+              fontSize: '1.4rem', 
+              fontWeight: 700, 
+              marginBottom: '1rem' 
+            }}>
+              Tangible Results
+            </h3>
+            <p style={{ 
+              color: '#1a3556', 
+              lineHeight: 1.6
+            }}>
+              We focus on delivering solutions that create real, measurable value for our clients, with a track record of successful outcomes and satisfied partners.
+            </p>
+          </div>
+
+          <div style={{ 
+            background: '#fff', 
+            padding: '2rem', 
+            borderRadius: 12, 
+            boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
+            border: '1px solid #e2e8f0',
+            textAlign: 'center'
+          }}>
+            <h3 style={{ 
+              color: '#0a2540', 
+              fontSize: '1.4rem', 
+              fontWeight: 700, 
+              marginBottom: '1rem' 
+            }}>
+              Innovation
+            </h3>
+            <p style={{ 
+              color: '#1a3556', 
+              lineHeight: 1.6
+            }}>
+              We remain at the forefront of adopting new technologies and market strategies, continuously evolving to meet the changing needs of our clients.
+            </p>
+          </div>
+
         </div>
       </section>
 
-      {/* CONSULTANTS SECTION */}
+      {/* SERVICES DETAILED */}
+      <section style={{ marginBottom: '4rem', padding: '3rem', background: '#f8fafc', borderRadius: 16 }}>
+        <h2 style={{ 
+          color: '#0a2540', 
+          fontSize: '2.5rem', 
+          fontWeight: 800, 
+          marginBottom: '2rem',
+          textAlign: 'center'
+        }}>
+          Our Comprehensive Services
+        </h2>
+        
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', 
+          gap: '2rem' 
+        }}>
+          
+          <div>
+            <h3 style={{ 
+              color: '#0a2540', 
+              fontSize: '1.4rem', 
+              fontWeight: 700, 
+              marginBottom: '1rem' 
+            }}>
+              Direct Business Structuring & Financing
+            </h3>
+            <ul style={{ 
+              color: '#1a3556', 
+              lineHeight: 1.6,
+              paddingLeft: '1.5rem'
+            }}>
+              <li>Direct business structuring to financing through equity market</li>
+              <li>Business requirements analysis and business target assessment</li>
+              <li>Financial and capital restructuring</li>
+              <li>Due diligence for patronage attribution</li>
+              <li>Creation of business attraction strategies</li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 style={{ 
+              color: '#0a2540', 
+              fontSize: '1.4rem', 
+              fontWeight: 700, 
+              marginBottom: '1rem' 
+            }}>
+              Valuation & Risk Management
+            </h3>
+            <ul style={{ 
+              color: '#1a3556', 
+              lineHeight: 1.6,
+              paddingLeft: '1.5rem'
+            }}>
+              <li>Asset valuations and transfer appraisals</li>
+              <li>Due Diligence and Business Planner services</li>
+              <li>Drafting and assisting in AP&C (Asset Adjustment and Capitalization)</li>
+              <li>Operational plans and support services</li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 style={{ 
+              color: '#0a2540', 
+              fontSize: '1.4rem', 
+              fontWeight: 700, 
+              marginBottom: '1rem' 
+            }}>
+              Advisory & Asset Restructuring
+            </h3>
+            <ul style={{ 
+              color: '#1a3556', 
+              lineHeight: 1.6,
+              paddingLeft: '1.5rem'
+            }}>
+              <li>Enhancement of Corporate and Intangible Assets</li>
+              <li>REOCO Structures Services</li>
+              <li>Real Estate portfolio management and strategy</li>
+              <li>Comprehensive restructuring solutions</li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 style={{ 
+              color: '#0a2540', 
+              fontSize: '1.4rem', 
+              fontWeight: 700, 
+              marginBottom: '1rem' 
+            }}>
+              Investments Research & Assistance
+            </h3>
+            <ul style={{ 
+              color: '#1a3556', 
+              lineHeight: 1.6,
+              paddingLeft: '1.5rem'
+            }}>
+              <li>Research and assistance for professional investors</li>
+              <li>Purchase and credit management services</li>
+              <li>Private banking investor connections</li>
+              <li>SGR (Società di Gestione del Risparmio) partnerships</li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 style={{ 
+              color: '#0a2540', 
+              fontSize: '1.4rem', 
+              fontWeight: 700, 
+              marginBottom: '1rem' 
+            }}>
+              Auction Real Estate Marketplace
+            </h3>
+            <ul style={{ 
+              color: '#1a3556', 
+              lineHeight: 1.6,
+              paddingLeft: '1.5rem'
+            }}>
+              <li>Marketplace of credit assignment</li>
+              <li>Real estate rights management</li>
+              <li>Auction platform services</li>
+              <li>Property investment opportunities</li>
+            </ul>
+          </div>
+
+        </div>
+      </section>
+
+      {/* GLOBAL PRESENCE */}
       <section style={{ marginBottom: '4rem' }}>
-        <h2 style={{ color: 'var(--primary)', fontSize: 32, fontWeight: 800, textAlign: 'center', marginBottom: '3rem' }}>Our Professional Team</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
-          {consultants.map((consultant, index) => (
-            <div key={index} style={{ background: 'var(--secondary)', padding: '2rem', borderRadius: 12, textAlign: 'center', boxShadow: '0 2px 12px rgba(10,37,64,0.08)' }}>
-              <div style={{ 
-                width: '120px', 
-                height: '120px', 
-                borderRadius: '50%', 
-                margin: '0 auto 1.5rem auto',
-                overflow: 'hidden',
-                border: '3px solid var(--accent)',
-                boxShadow: '0 4px 16px rgba(0,0,0,0.1)'
-              }}>
-                <img 
-                  src={consultant.photo} 
-                  alt={consultant.name}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover'
-                  }}
-                />
-              </div>
-              <h3 style={{ color: 'var(--primary)', fontSize: 20, fontWeight: 700, marginBottom: 8 }}>{consultant.name}</h3>
-              <div style={{ color: 'var(--accent)', fontSize: 16, fontWeight: 600, marginBottom: 12 }}>{consultant.role}</div>
-              <p style={{ color: 'var(--foreground)', fontSize: 15, lineHeight: 1.5 }}>{consultant.description}</p>
-            </div>
-          ))}
+        <h2 style={{ 
+          color: '#0a2540', 
+          fontSize: '2.5rem', 
+          fontWeight: 800, 
+          marginBottom: '2rem',
+          textAlign: 'center'
+        }}>
+          Global Presence & Partnerships
+        </h2>
+        
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', 
+          gap: '2rem' 
+        }}>
+          
+          <div style={{ 
+            background: '#fff', 
+            padding: '2rem', 
+            borderRadius: 12, 
+            boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
+            border: '1px solid #e2e8f0'
+          }}>
+            <h3 style={{ 
+              color: '#0a2540', 
+              fontSize: '1.4rem', 
+              fontWeight: 700, 
+              marginBottom: '1rem' 
+            }}>
+              Headquarters
+            </h3>
+            <p style={{ 
+              color: '#1a3556', 
+              lineHeight: 1.6,
+              marginBottom: '1rem'
+            }}>
+              <strong>GLG Capital Group LLC</strong><br />
+              1309 Coffeen Avenue STE 1200<br />
+              Sheridan, Wyoming 82801<br />
+              United States
+            </p>
+            <p style={{ color: '#1a3556', fontSize: '0.9rem' }}>
+              Phone: +1 307 263 0876<br />
+              Email: corefound@glgcapitalgroupllc.com
+            </p>
+          </div>
+
+          <div style={{ 
+            background: '#fff', 
+            padding: '2rem', 
+            borderRadius: 12, 
+            boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
+            border: '1px solid #e2e8f0'
+          }}>
+            <h3 style={{ 
+              color: '#0a2540', 
+              fontSize: '1.4rem', 
+              fontWeight: 700, 
+              marginBottom: '1rem' 
+            }}>
+              Italian Operations
+            </h3>
+            <p style={{ 
+              color: '#1a3556', 
+              lineHeight: 1.6,
+              marginBottom: '1rem'
+            }}>
+              <strong>Magnificus Dominus Consulting Europe Srl</strong><br />
+              Exclusive Partner for Italy<br />
+              Specialized in strategic development, consultancy, and high-value project management.
+            </p>
+            <p style={{ color: '#1a3556', fontSize: '0.9rem' }}>
+              Website: www.magnificusdominusconsulting.com
+            </p>
+          </div>
+
         </div>
       </section>
 
-      {/* TEAM SECTION */}
-      <section style={{ marginBottom: '3rem' }}>
-        <h2 style={{ color: 'var(--primary)', fontSize: 32, fontWeight: 800, textAlign: 'center', marginBottom: '3rem' }}>Our Expertise</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
-          {team.map((member, index) => (
-            <div key={index} style={{ background: 'var(--secondary)', padding: '2rem', borderRadius: 12, textAlign: 'center' }}>
-              <Building size={48} style={{ color: 'var(--accent)', margin: '0 auto 1rem auto', display: 'block' }} />
-              <h3 style={{ color: 'var(--primary)', fontSize: 20, fontWeight: 700, marginBottom: 8 }}>{member.name}</h3>
-              <div style={{ color: 'var(--accent)', fontSize: 16, fontWeight: 600, marginBottom: 12 }}>{member.role}</div>
-              <p style={{ color: 'var(--foreground)', fontSize: 15, lineHeight: 1.5 }}>{member.description}</p>
-            </div>
-          ))}
+      {/* SUSTAINABILITY INITIATIVES */}
+      <section style={{ marginBottom: '4rem', padding: '3rem', background: '#f8fafc', borderRadius: 16 }}>
+        <h2 style={{ 
+          color: '#0a2540', 
+          fontSize: '2.5rem', 
+          fontWeight: 800, 
+          marginBottom: '2rem',
+          textAlign: 'center'
+        }}>
+          Sustainability & Innovation Initiatives
+        </h2>
+        
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', 
+          gap: '2rem' 
+        }}>
+          
+          <div>
+            <h3 style={{ 
+              color: '#0a2540', 
+              fontSize: '1.4rem', 
+              fontWeight: 700, 
+              marginBottom: '1rem' 
+            }}>
+              Wash The World Partnership
+            </h3>
+            <p style={{ 
+              color: '#1a3556', 
+              lineHeight: 1.6,
+              marginBottom: '1rem'
+            }}>
+              A pioneering association dedicated to promoting plastic waste reduction by identifying and introducing innovative, sustainable products to the market. Through research, partnerships, and education, we empower individuals and businesses to embrace eco-friendly alternatives.
+            </p>
+            <p style={{ color: '#1a3556', fontSize: '0.9rem' }}>
+              Website: https://www.washtheworld.it
+            </p>
+          </div>
+
+          <div>
+            <h3 style={{ 
+              color: '#0a2540', 
+              fontSize: '1.4rem', 
+              fontWeight: 700, 
+              marginBottom: '1rem' 
+            }}>
+              Pentawash - Sustainable Innovation
+            </h3>
+            <p style={{ 
+              color: '#1a3556', 
+              lineHeight: 1.6,
+              marginBottom: '1rem'
+            }}>
+              The first Wash The World approved product, embodying our mission to reduce plastic waste through innovative and sustainable solutions. Designed to revolutionize laundry care, Pentawash offers an eco-friendly, efficient, and plastic-free alternative.
+            </p>
+            <p style={{ color: '#1a3556', fontSize: '0.9rem' }}>
+              Website: www.pentawash.com
+            </p>
+          </div>
+
         </div>
       </section>
 
-      {/* CONTACT CTA */}
-      <section style={{ background: 'var(--primary)', borderRadius: 12, padding: '3rem 2rem', textAlign: 'center', marginTop: '3rem' }}>
-        <h3 style={{ color: 'var(--secondary)', fontSize: 28, fontWeight: 700, marginBottom: 16 }}>Ready to Start Your Journey?</h3>
-        <p style={{ color: 'var(--secondary)', fontSize: 18, marginBottom: '2rem', maxWidth: 600, margin: '0 auto 2rem auto' }}>
-          Discover how GLG Capital Group can help you achieve your financial goals with our personalized investment services.
+      {/* CALL TO ACTION */}
+      <section style={{ 
+        background: '#0a2540', 
+        color: 'white', 
+        padding: '3rem', 
+        borderRadius: 16,
+        textAlign: 'center'
+      }}>
+        <h2 style={{ 
+          fontSize: '2.5rem', 
+          fontWeight: 800, 
+          marginBottom: '1.5rem' 
+        }}>
+          Ready to Partner With Us?
+        </h2>
+        <p style={{ 
+          fontSize: '1.2rem', 
+          lineHeight: 1.7,
+          marginBottom: '2rem',
+          maxWidth: 800,
+          margin: '0 auto 2rem'
+        }}>
+          Whether you are an individual investor, a growing business, or a financial institution, GLG Capital Group LLC is the ideal partner to help you achieve your goals. Contact us today to learn how we can help you build a more secure and prosperous financial future.
         </p>
-        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-          <a href="/contact" style={{ 
-            background: 'var(--accent)', 
-            color: 'var(--primary)', 
-            padding: '1rem 2rem', 
-            borderRadius: 8, 
-            textDecoration: 'none', 
-            fontWeight: 700,
-            fontSize: 16,
-            boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+        <div style={{ 
+          background: 'rgba(255,255,255,0.1)', 
+          padding: '2rem', 
+          borderRadius: 12,
+          maxWidth: 600,
+          margin: '0 auto'
+        }}>
+          <h3 style={{ 
+            fontSize: '1.5rem', 
+            fontWeight: 700, 
+            marginBottom: '1rem' 
           }}>
-            Contact Us
-          </a>
-          <a href="/reserved" style={{ 
-            background: 'transparent', 
-            color: 'var(--accent)', 
-            padding: '1rem 2rem', 
-            borderRadius: 8, 
-            textDecoration: 'none', 
-            fontWeight: 700,
-            fontSize: 16,
-            border: '2px solid var(--accent)'
-          }}>
-            Portfolio Dashboard
-          </a>
+            GLG CAPITAL GROUP LLC
+          </h3>
+          <p style={{ fontSize: '1.1rem', lineHeight: 1.6, marginBottom: '0.5rem' }}>
+            1309 Coffeen Avenue STE 1200<br />
+            Sheridan, Wyoming 82801
+          </p>
+          <p style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>
+            <a href="mailto:corefound@glgcapitalgroupllc.com" style={{ color: '#60a5fa' }}>
+              corefound@glgcapitalgroupllc.com
+            </a>
+          </p>
+          <p style={{ fontSize: '1.1rem' }}>
+            Phone: +1 307 263 0876
+          </p>
         </div>
       </section>
 
     </main>
-  )
+  );
 }
