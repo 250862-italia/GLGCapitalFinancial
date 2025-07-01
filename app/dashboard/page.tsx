@@ -45,9 +45,13 @@ export default function ClientDashboard() {
       minAmount: pkg.minAmount || pkg.amount || 1000,
       dailyReturn: pkg.dailyReturn || pkg.expectedReturn || 1.0,
       duration: pkg.duration || 30,
+      isActive: pkg.isActive !== undefined ? pkg.isActive : (pkg.status === 'Active'),
       // altri campi se servono
     };
   }
+
+  // Pacchetti attivi per tutti i clienti
+  const activeInvestments = availablePackages.filter(pkg => pkg.isActive);
 
   useEffect(() => {
     // Carica pacchetti disponibili e investimenti acquistati
@@ -315,15 +319,14 @@ export default function ClientDashboard() {
               </h2>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {myInvestments.length === 0 && <p style={{ color: '#6b7280' }}>Nessun investimento attivo. Acquista un pacchetto qui sotto!</p>}
-              {myInvestments.map(investment => (
-                <div key={investment.id} style={{ border: '1px solid #e5e7eb', borderRadius: '8px', padding: '1rem', background: '#fafafa' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
-                    <div>
-                      <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#1f2937', marginBottom: '0.25rem' }}>{investment.packageName}</h3>
-                      <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>{formatCurrency(investment.amount)} • {formatPercentage(investment.dailyReturn)} daily return</p>
-                    </div>
-                    <div style={{ background: getStatusColor(investment.status), color: 'white', padding: '0.25rem 0.75rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 600 }}>{getStatusText(investment.status)}</div>
+              {activeInvestments.length === 0 && <p style={{ color: '#6b7280' }}>Nessun investimento attivo. L'amministratore non ha ancora attivato pacchetti.</p>}
+              {activeInvestments.map(investment => (
+                <div key={investment.id} style={{ border: '1px solid #e5e7eb', borderRadius: '8px', padding: '1rem', background: '#fafafa', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#1f2937', marginBottom: '0.25rem' }}>{investment.name}
+                      <span style={{ marginLeft: 12, background: '#059669', color: 'white', borderRadius: 12, padding: '2px 12px', fontSize: 12, fontWeight: 700 }}>Attivo</span>
+                    </h3>
+                    <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>{formatCurrency(investment.minAmount)} • {formatPercentage(investment.dailyReturn)} daily return</p>
                   </div>
                 </div>
               ))}
