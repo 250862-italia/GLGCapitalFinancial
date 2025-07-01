@@ -100,7 +100,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  if (adminUser?.role !== 'superadmin') {
+  // Accetta sia 'superadmin' che 'super_admin'
+  const isSuperAdmin = adminUser?.role === 'superadmin' || adminUser?.role === 'super_admin';
+
+  if (!isSuperAdmin) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f9fafb' }}>
         <div style={{ textAlign: 'center', color: '#dc2626', fontWeight: 700, fontSize: 20 }}>
@@ -169,7 +172,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </header>
 
         {/* ADMIN NAVIGATION */}
-        {adminUser?.role === 'superadmin' && (
+        {isSuperAdmin && (
         <nav style={{ background: '#1f2937', borderBottom: '1px solid #374151' }}>
           <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 1rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', height: '4rem', overflowX: 'auto' }}>
