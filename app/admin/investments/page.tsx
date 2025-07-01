@@ -106,12 +106,12 @@ export default function AdminInvestmentsPage() {
     setSelectedInvestment(null);
     setShowForm(true);
   };
-  const openEditForm = (inv) => {
+  const openEditForm = (inv: InvestmentFormData) => {
     setIsEdit(true);
     setSelectedInvestment(inv);
     setShowForm(true);
   };
-  const openDeleteModal = (inv) => {
+  const openDeleteModal = (inv: InvestmentFormData) => {
     setInvestmentToDelete(inv);
     setShowDeleteModal(true);
   };
