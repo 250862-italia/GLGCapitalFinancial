@@ -70,7 +70,7 @@ export default function IscrivitiPage() {
       if (response.ok && data.success) {
         setSuccess(true);
         setTimeout(() => {
-          router.push("/");
+          router.push("/dashboard");
         }, 1500);
       } else {
         setError(data.error || data.message || "Errore durante la registrazione");
