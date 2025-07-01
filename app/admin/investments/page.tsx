@@ -80,6 +80,7 @@ export default function AdminInvestmentsPage() {
   };
 
   const handleDelete = async () => {
+    if (!investmentToDelete) return;
     setError("");
     setSuccess("");
     setLoading(true);
