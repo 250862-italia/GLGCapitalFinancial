@@ -75,12 +75,12 @@ export default function ClientDashboard() {
       }));
       setInvestments(realInvestments);
       // Calcola stats
-      const totalInvested = realInvestments.reduce((sum, inv) => sum + inv.amount, 0);
-      const totalEarned = realInvestments.reduce((sum, inv) => sum + inv.totalEarned, 0);
+      const totalInvested = realInvestments.reduce((sum: number, inv) => sum + inv.amount, 0);
+      const totalEarned = realInvestments.reduce((sum: number, inv) => sum + inv.totalEarned, 0);
       const activeInvestments = realInvestments.length;
-      const averageReturn = realInvestments.length > 0 ? realInvestments.reduce((sum, inv) => sum + inv.dailyReturn, 0) / realInvestments.length : 0;
-      const todayEarnings = realInvestments.reduce((sum, inv) => sum + inv.dailyEarnings, 0);
-      const monthlyEarnings = realInvestments.reduce((sum, inv) => sum + inv.monthlyEarnings, 0);
+      const averageReturn = realInvestments.length > 0 ? realInvestments.reduce((sum: number, inv) => sum + inv.dailyReturn, 0) / realInvestments.length : 0;
+      const todayEarnings = realInvestments.reduce((sum: number, inv) => sum + inv.dailyEarnings, 0);
+      const monthlyEarnings = realInvestments.reduce((sum: number, inv) => sum + inv.monthlyEarnings, 0);
       setStats({ totalInvested, totalEarned, activeInvestments, averageReturn, todayEarnings, monthlyEarnings });
     } else {
       setInvestments([]);
