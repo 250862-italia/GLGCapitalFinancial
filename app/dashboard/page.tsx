@@ -33,6 +33,9 @@ export default function ClientDashboard() {
   const [myInvestments, setMyInvestments] = useState<Investment[]>([]);
   const [selectedTimeframe, setSelectedTimeframe] = useState<'1d' | '7d' | '30d' | '90d'>('30d');
   const [isLoading, setIsLoading] = useState(true);
+  const [showBankModal, setShowBankModal] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState<any>(null);
+  const [bankDetails, setBankDetails] = useState<{iban: string, accountHolder: string, bankName: string, reason: string} | null>(null);
 
   useEffect(() => {
     // Carica pacchetti disponibili e investimenti acquistati
@@ -44,12 +47,18 @@ export default function ClientDashboard() {
       const stored = localStorage.getItem('myInvestments');
       setMyInvestments(stored ? JSON.parse(stored) : []);
     };
+    const loadBankDetails = () => {
+      const stored = localStorage.getItem('bankDetails');
+      if (stored) setBankDetails(JSON.parse(stored));
+    };
     loadPackages();
     loadMyInvestments();
+    loadBankDetails();
     // Sincronizzazione real-time tra tab
     const onStorage = (e: StorageEvent) => {
       if (e.key === 'investmentPackages') loadPackages();
       if (e.key === 'myInvestments') loadMyInvestments();
+      if (e.key === 'bankDetails') loadBankDetails();
     };
     window.addEventListener('storage', onStorage);
     return () => window.removeEventListener('storage', onStorage);
@@ -57,16 +66,22 @@ export default function ClientDashboard() {
 
   // Funzione per acquistare un pacchetto
   const handleBuy = (pkg: any) => {
-    // Evita doppioni
-    if (myInvestments.some(inv => inv.packageName === pkg.name)) return;
+    setSelectedPackage(pkg);
+    setShowBankModal(true);
+  };
+
+  // Funzione di conferma acquisto
+  const confirmBuy = () => {
+    if (!selectedPackage) return;
+    if (myInvestments.some(inv => inv.packageName === selectedPackage.name)) return;
     const newInvestment: Investment = {
-      id: pkg.id || String(Date.now()),
-      packageName: pkg.name,
-      amount: pkg.minAmount || 1000,
-      dailyReturn: pkg.dailyReturn || 1.0,
-      duration: pkg.duration || 30,
+      id: selectedPackage.id || String(Date.now()),
+      packageName: selectedPackage.name,
+      amount: selectedPackage.minAmount || 1000,
+      dailyReturn: selectedPackage.dailyReturn || 1.0,
+      duration: selectedPackage.duration || 30,
       startDate: new Date().toISOString().split('T')[0],
-      endDate: new Date(Date.now() + (pkg.duration || 30) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      endDate: new Date(Date.now() + (selectedPackage.duration || 30) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       status: 'active',
       totalEarned: 0,
       dailyEarnings: 0,
@@ -75,6 +90,8 @@ export default function ClientDashboard() {
     const updated = [...myInvestments, newInvestment];
     setMyInvestments(updated);
     localStorage.setItem('myInvestments', JSON.stringify(updated));
+    setShowBankModal(false);
+    setSelectedPackage(null);
   };
 
   // Stats calcolate solo sugli investimenti acquistati
@@ -501,6 +518,29 @@ export default function ClientDashboard() {
             <li><b>Automatic Release:</b> At maturity, capital and net yield are returned and the pledge is released.</li>
           </ul>
         </section>
+
+        {/* Modale per i dati bancari */}
+        {showBankModal && (
+          <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+            <div style={{ background: 'white', borderRadius: 12, padding: 32, minWidth: 350, boxShadow: '0 4px 24px rgba(10,37,64,0.10)' }}>
+              <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16 }}>Dati Bancari per Bonifico</h2>
+              {bankDetails ? (
+                <div style={{ marginBottom: 24 }}>
+                  <div><b>IBAN:</b> {bankDetails.iban}</div>
+                  <div><b>Intestatario:</b> {bankDetails.accountHolder}</div>
+                  <div><b>Banca:</b> {bankDetails.bankName}</div>
+                  <div><b>Causale:</b> {bankDetails.reason}</div>
+                </div>
+              ) : (
+                <div style={{ color: 'red', marginBottom: 24 }}>Dati bancari non configurati. Contattare l'amministratore.</div>
+              )}
+              <div style={{ display: 'flex', gap: 16, justifyContent: 'flex-end' }}>
+                <button onClick={() => { setShowBankModal(false); setSelectedPackage(null); }} style={{ background: '#d1d5db', color: '#1f2937', padding: '0.5rem 1rem', border: 'none', borderRadius: 6, fontWeight: 500 }}>Annulla</button>
+                <button onClick={confirmBuy} disabled={!bankDetails} style={{ background: '#059669', color: 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: 6, fontWeight: 500, cursor: bankDetails ? 'pointer' : 'not-allowed' }}>Conferma Acquisto</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
