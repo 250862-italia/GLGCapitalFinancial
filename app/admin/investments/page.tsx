@@ -103,9 +103,7 @@ export default function AdminInvestmentsPage() {
 
   // Filters
   const filtered = investments.filter((inv) =>
-    (!searchQuery || (inv.userName?.toLowerCase().includes(searchQuery.toLowerCase()) || inv.userEmail?.toLowerCase().includes(searchQuery.toLowerCase()))) &&
-    (!statusFilter || inv.status === statusFilter) &&
-    (!typeFilter || inv.type === typeFilter)
+    (!statusFilter || inv.status === statusFilter)
   );
 
   return (
@@ -156,26 +154,34 @@ export default function AdminInvestmentsPage() {
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ borderBottom: "2px solid #e0e3eb" }}>
-                <th style={{ textAlign: "left", padding: "1rem" }}>Utente</th>
-                <th style={{ textAlign: "left", padding: "1rem" }}>Email</th>
-                <th style={{ textAlign: "left", padding: "1rem" }}>Tipo</th>
+                <th style={{ textAlign: "left", padding: "1rem" }}>ID Cliente</th>
+                <th style={{ textAlign: "left", padding: "1rem" }}>ID Pacchetto</th>
                 <th style={{ textAlign: "right", padding: "1rem" }}>Importo</th>
-                <th style={{ textAlign: "center", padding: "1rem" }}>Stato</th>
-                <th style={{ textAlign: "center", padding: "1rem" }}>Creato il</th>
+                <th style={{ textAlign: "left", padding: "1rem" }}>Valuta</th>
+                <th style={{ textAlign: "left", padding: "1rem" }}>Data Inizio</th>
+                <th style={{ textAlign: "left", padding: "1rem" }}>Data Fine</th>
+                <th style={{ textAlign: "left", padding: "1rem" }}>Stato</th>
+                <th style={{ textAlign: "right", padding: "1rem" }}>Rendimento Totale</th>
+                <th style={{ textAlign: "right", padding: "1rem" }}>Rendimento Giornaliero</th>
+                <th style={{ textAlign: "left", padding: "1rem" }}>Metodo Pagamento</th>
+                <th style={{ textAlign: "left", padding: "1rem" }}>Note</th>
                 <th style={{ textAlign: "center", padding: "1rem" }}>Azioni</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((inv) => (
                 <tr key={inv.id} style={{ borderBottom: "1px solid #e0e3eb" }}>
-                  <td style={{ padding: "1rem" }}>{inv.userName || '-'}</td>
-                  <td style={{ padding: "1rem", color: "#374151" }}>{inv.userEmail || '-'}</td>
-                  <td style={{ padding: "1rem" }}>{inv.type || '-'}</td>
-                  <td style={{ padding: "1rem", textAlign: "right" }}>€{inv.amount?.toLocaleString() || '-'}</td>
-                  <td style={{ padding: "1rem", textAlign: "center" }}>
-                    <span style={{ background: inv.status === "active" ? "#bbf7d0" : inv.status === "completed" ? "#dbeafe" : "#fee2e2", color: inv.status === "active" ? "#166534" : inv.status === "completed" ? "#1e40af" : "#991b1b", padding: "0.3rem 0.7rem", borderRadius: 8, fontWeight: 600, fontSize: 14 }}>{inv.status}</span>
-                  </td>
-                  <td style={{ padding: "1rem", textAlign: "center" }}>{inv.createdAt ? new Date(inv.createdAt).toLocaleDateString() : '-'}</td>
+                  <td style={{ padding: "1rem" }}>{inv.clientId || '-'}</td>
+                  <td style={{ padding: "1rem" }}>{inv.packageId || '-'}</td>
+                  <td style={{ padding: "1rem" }}>{inv.amount?.toLocaleString() || '-'}</td>
+                  <td style={{ padding: "1rem" }}>{inv.currency || '-'}</td>
+                  <td style={{ padding: "1rem" }}>{inv.startDate || '-'}</td>
+                  <td style={{ padding: "1rem" }}>{inv.endDate || '-'}</td>
+                  <td style={{ padding: "1rem" }}>{inv.status || '-'}</td>
+                  <td style={{ padding: "1rem" }}>{inv.totalReturns?.toLocaleString() || '-'}</td>
+                  <td style={{ padding: "1rem" }}>{inv.dailyReturns?.toLocaleString() || '-'}</td>
+                  <td style={{ padding: "1rem" }}>{inv.paymentMethod || '-'}</td>
+                  <td style={{ padding: "1rem" }}>{inv.notes || '-'}</td>
                   <td style={{ padding: "1rem", textAlign: "center" }}>
                     <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center" }}>
                       <button onClick={() => router.push(`/admin/investments/${inv.id}`)} style={{ background: "#f59e0b", color: "white", border: "none", padding: "0.5rem", borderRadius: 6, cursor: "pointer" }} title="Dettagli"><Eye size={16} /></button>
@@ -194,10 +200,11 @@ export default function AdminInvestmentsPage() {
         <Modal onClose={() => setShowForm(false)}>
           <h2 style={{ marginBottom: 16 }}>{isEdit ? "Modifica" : "Nuovo"} Investimento</h2>
           <InvestmentForm
-            initialData={selectedInvestment}
+            initialData={selectedInvestment ?? undefined}
             onSubmit={handleCreateOrEdit}
             onCancel={() => setShowForm(false)}
             loading={loading}
+            isEdit={isEdit}
           />
         </Modal>
       )}
@@ -221,41 +228,56 @@ function InvestmentForm({
   initialData,
   onSubmit,
   onCancel,
-  loading
+  loading,
+  isEdit
 }: {
   initialData?: Partial<InvestmentFormData>;
   onSubmit: (data: InvestmentFormData) => void;
   onCancel: () => void;
   loading: boolean;
+  isEdit: boolean;
 }) {
   const [form, setForm] = useState({
     clientId: initialData?.clientId || '',
     packageId: initialData?.packageId || '',
-    amount: initialData?.amount || '',
+    amount: initialData?.amount?.toString() || '',
     currency: initialData?.currency || 'EUR',
     startDate: initialData?.startDate || '',
     endDate: initialData?.endDate || '',
     status: initialData?.status || 'active',
-    totalReturns: initialData?.totalReturns || '',
-    dailyReturns: initialData?.dailyReturns || '',
+    totalReturns: initialData?.totalReturns?.toString() || '',
+    dailyReturns: initialData?.dailyReturns?.toString() || '',
     paymentMethod: initialData?.paymentMethod || 'bank',
     notes: initialData?.notes || ''
   });
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string>('');
 
-  const handleChange = e => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setForm(f => ({ ...f, [name]: value }));
   };
 
-  const handleSubmit = e => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
     if (!form.clientId || !form.amount || !form.packageId) {
       setError('Compila tutti i campi obbligatori');
       return;
     }
-    onSubmit({ ...form, id: initialData?.id });
+    onSubmit({
+      id: initialData?.id,
+      clientId: form.clientId,
+      packageId: form.packageId,
+      amount: Number(form.amount),
+      currency: form.currency,
+      startDate: form.startDate,
+      endDate: form.endDate,
+      status: form.status as 'active' | 'completed' | 'cancelled',
+      totalReturns: Number(form.totalReturns),
+      dailyReturns: Number(form.dailyReturns),
+      paymentMethod: form.paymentMethod as 'bank' | 'usdt',
+      notes: form.notes
+    });
   };
 
   return (
