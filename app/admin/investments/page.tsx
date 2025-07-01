@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { InvestmentFormData } from "@/types/investment";
 
 export default function AdminInvestmentsPage() {
-  const [investments, setInvestments] = useState([]);
+  const [investments, setInvestments] = useState<InvestmentFormData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
