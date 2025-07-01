@@ -236,15 +236,6 @@ export default function AdminDashboardPage() {
                   </div>
                 ))}
               </div>
-              {/* ELENCO PUNTI */}
-              <ul style={{ marginTop: 32, background: '#fff', borderRadius: 12, border: '1px solid #e0e3eb', padding: '2rem', listStyle: 'none', boxShadow: '0 2px 8px rgba(10,37,64,0.06)' }}>
-                <li style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}><span style={{ color: '#0a2540', fontWeight: 700 }}>&#128188;</span> Dedicated Vehicle: We create a dedicated vehicle company that issues shares reserved for investors.</li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}><span style={{ color: '#0a2540', fontWeight: 700 }}>&#128221;</span> Simple Subscription: Investors complete the online form, digitally sign the agreement, and transfer funds to a segregated account.</li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}><span style={{ color: '#0a2540', fontWeight: 700 }}>&#128274;</span> Secured by Pledge: Each investment is secured by a formal pledge on the newly issued shares.</li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}><span style={{ color: '#0a2540', fontWeight: 700 }}>&#128200;</span> Fixed, Attractive Yield: % gross per year (minus 0.7% management fee), paid at 36-month maturity.</li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}><span style={{ color: '#0a2540', fontWeight: 700 }}>&#128202;</span> Transparent Reporting: Quarterly reports keep investors informed about principal and accrued interest.</li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: 12 }}><span style={{ color: '#0a2540', fontWeight: 700 }}>&#128275;</span> Automatic Release: At maturity, capital and net yield are returned and the pledge is released.</li>
-              </ul>
             </section>
 
             {/* QUICK ACTIONS */}

@@ -1,15 +1,28 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function IscrivitiPage() {
+  const router = useRouter();
   const [form, setForm] = useState({
     name: "",
     email: "",
     phone: "",
   });
+  const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+  const [isRegistered, setIsRegistered] = useState(false);
+
+  // Controlla se già registrato
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const user = localStorage.getItem("user");
+      const token = localStorage.getItem("token");
+      setIsRegistered(!!user || !!token);
+    }
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -17,6 +30,12 @@ export default function IscrivitiPage() {
       ...prev,
       [name]: value,
     }));
+    setError("");
+  };
+
+  const handleLoginChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setLoginForm((prev) => ({ ...prev, [name]: value }));
     setError("");
   };
 
@@ -32,10 +51,64 @@ export default function IscrivitiPage() {
     }
     setLoading(true);
     setError("");
-    setTimeout(() => {
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: form.name.split(" ")[0] || form.name,
+          lastName: form.name.split(" ").slice(1).join(" ") || form.name,
+          email: form.email,
+          phone: form.phone,
+          password: "TempPassword!2024", // oppure chiedi la password all'utente
+          acceptTerms: true,
+          acceptPrivacy: true,
+          acceptMarketing: false
+        })
+      });
+      const data = await response.json();
+      if (response.ok && data.success) {
+        setSuccess(true);
+      } else {
+        setError(data.error || data.message || "Errore durante la registrazione");
+      }
+    } catch (err) {
+      setError("Errore di rete. Riprova.");
+    } finally {
       setLoading(false);
-      setSuccess(true);
-    }, 1500);
+    }
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!loginForm.email || !loginForm.password) {
+      setError("Inserisci email e password");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: loginForm.email, password: loginForm.password }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        localStorage.setItem("user", JSON.stringify(data.user));
+        localStorage.setItem("token", data.token);
+        setSuccess(true);
+        setTimeout(() => {
+          router.push("/");
+        }, 1000);
+      } else {
+        setError(data.error || "Login fallito");
+      }
+    } catch {
+      setError("Errore di rete. Riprova.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -44,8 +117,20 @@ export default function IscrivitiPage() {
       {error && <div style={{ background: "#fef2f2", color: "#dc2626", borderRadius: 8, padding: 12, marginBottom: 16 }}>{error}</div>}
       {success ? (
         <div style={{ textAlign: "center", color: "#16a34a", fontWeight: 700, fontSize: 20 }}>
-          Registrazione completata!<br />Riceverai una mail di conferma.
+          {isRegistered ? "Login effettuato!" : "Registrazione completata!"}<br />Riceverai una mail di conferma.
         </div>
+      ) : isRegistered ? (
+        <form onSubmit={handleLogin}>
+          <div>
+            <label>Email*</label>
+            <input name="email" type="email" value={loginForm.email} onChange={handleLoginChange} style={inputStyle} required />
+            <label>Password*</label>
+            <input name="password" type="password" value={loginForm.password} onChange={handleLoginChange} style={inputStyle} required />
+          </div>
+          <div style={{ display: "flex", justifyContent: "center", marginTop: 24 }}>
+            <button type="submit" style={buttonStyle} disabled={loading}>{loading ? "Attendi..." : "Accedi"}</button>
+          </div>
+        </form>
       ) : (
         <form onSubmit={handleSubmit}>
           <div>
