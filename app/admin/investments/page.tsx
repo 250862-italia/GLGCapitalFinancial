@@ -32,7 +32,7 @@ export default function AdminInvestmentsPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [investmentToDelete, setInvestmentToDelete] = useState(null);
+  const [investmentToDelete, setInvestmentToDelete] = useState<InvestmentFormData | null>(null);
   const router = useRouter();
 
   // Carica investimenti reali
