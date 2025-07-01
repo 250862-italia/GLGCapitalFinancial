@@ -47,6 +47,7 @@ export default function RootLayout({
         {/* CLIENT NAVIGATION */}
         <nav style={{ display: 'flex', justifyContent: 'center', gap: '2rem', padding: '1.25rem 0', background: 'var(--secondary)', color: 'var(--primary)', fontWeight: 600, fontSize: 18, borderBottom: '1px solid #e0e3eb' }}>
           <Link href="/" style={{ color: 'var(--primary)', textDecoration: 'none' }}>Home</Link>
+          <Link href="/equity-pledge" style={{ color: 'var(--primary)' }}>Equity-Pledge</Link>
           <Link href="/about" style={{ color: 'var(--primary)' }}>About Us</Link>
           <Link href="/contact" style={{ color: 'var(--primary)' }}>Contact</Link>
           <Link href="/iscriviti" style={{ color: 'var(--primary)' }}>Register</Link>

@@ -1,639 +1,117 @@
+"use client";
+
 export default function EquityPledgePage() {
   return (
-    <main style={{ maxWidth: 1200, margin: '0 auto', padding: '2rem', background: '#fff' }}>
-      
-      {/* HERO SECTION */}
-      <section style={{ textAlign: 'center', marginBottom: '4rem', padding: '3rem 0' }}>
-        <h1 style={{ 
-          color: '#0a2540', 
-          fontSize: '3.5rem', 
-          fontWeight: 900, 
-          marginBottom: '1.5rem',
-          lineHeight: 1.2
-        }}>
-          How to Implement an "Equity Pledge" System
-        </h1>
-        <p style={{ 
-          color: '#1a3556', 
-          fontSize: '1.4rem', 
-          lineHeight: 1.6,
-          maxWidth: 800,
-          margin: '0 auto 2rem'
-        }}>
-          A comprehensive guide to replicating the GLG Equity Pledge model—raising capital from investors at a fixed, guaranteed return secured by a pledge of your company's shares.
+    <main style={{ maxWidth: 900, margin: "0 auto", padding: "3rem 1rem", background: "#fff", borderRadius: 16, boxShadow: "0 4px 24px rgba(10,37,64,0.10)" }}>
+      <h1 style={{ color: "#0a2540", fontSize: 38, fontWeight: 900, marginBottom: 24, textAlign: "center" }}>
+        Equity-Pledge System
+      </h1>
+      <p style={{ color: "#1a3556", fontSize: 20, lineHeight: 1.7, textAlign: "center", marginBottom: 32 }}>
+        Il nostro modello Equity-Pledge offre agli investitori una soluzione innovativa, sicura e trasparente per ottenere rendimenti fissi e protezione del capitale. Scopri come funziona e perché sempre più investitori scelgono GLG Capital Group LLC.
+      </p>
+      <section style={{ marginBottom: 40 }}>
+        <h2 style={{ color: "#f59e0b", fontSize: 28, fontWeight: 800, marginBottom: 18, textAlign: "center" }}>
+          Come funziona il nostro modello Equity-Pledge
+        </h2>
+        <ul style={{ color: "#1a3556", fontSize: 18, lineHeight: 1.7, paddingLeft: 24, maxWidth: 700, margin: "0 auto" }}>
+          <li><b>Dedicated Vehicle:</b> Creiamo una società veicolo dedicata che emette azioni riservate agli investitori.</li>
+          <li><b>Simple Subscription:</b> L'investitore compila il form online, firma digitalmente il contratto e trasferisce i fondi su un conto segregato.</li>
+          <li><b>Secured by Pledge:</b> Ogni investimento è garantito da un pegno formale sulle nuove azioni emesse.</li>
+          <li><b>Fixed, Attractive Yield:</b> 12% annuo lordo (meno 0,7% management fee), pagato a scadenza 36 mesi.</li>
+          <li><b>Transparent Reporting:</b> Report trimestrali informano su capitale e interessi maturati.</li>
+          <li><b>Automatic Release:</b> A scadenza, capitale e rendimento netto vengono restituiti e il pegno si estingue.</li>
+        </ul>
+      </section>
+      <section style={{ marginBottom: 40 }}>
+        <h2 style={{ color: "#0a2540", fontSize: 26, fontWeight: 800, marginBottom: 16, textAlign: "center" }}>
+          Perché scegliere l'Equity-Pledge di GLG Capital Group?
+        </h2>
+        <ul style={{ color: "#1a3556", fontSize: 17, lineHeight: 1.7, paddingLeft: 24, maxWidth: 700, margin: "0 auto" }}>
+          <li>Rendimento fisso e competitivo</li>
+          <li>Protezione reale del capitale investito</li>
+          <li>Massima trasparenza e reportistica periodica</li>
+          <li>Processo digitale semplice e sicuro</li>
+          <li>Supporto dedicato in ogni fase</li>
+        </ul>
+      </section>
+      <section style={{ margin: '60px 0', background: '#f8fafc', borderRadius: 16, padding: '2.5rem 1.5rem' }}>
+        <h2 style={{ color: '#0a2540', fontSize: 30, fontWeight: 900, marginBottom: 24, textAlign: 'center' }}>
+          How to Implement an "Equity Pledge" System in Your Company
+        </h2>
+        <p style={{ color: '#1a3556', fontSize: 18, lineHeight: 1.7, maxWidth: 800, margin: '0 auto 2.5rem', textAlign: 'center' }}>
+          If you want to replicate the GLG Equity Pledge model—raising capital from investors at a fixed, guaranteed return secured by a pledge of your company's shares—follow these key steps:
         </p>
-        <div style={{
-          background: '#f8fafc',
-          border: '2px solid #e2e8f0',
-          borderRadius: 12,
-          padding: '2rem',
-          margin: '2rem auto',
-          maxWidth: 900
-        }}>
-          <h3 style={{ color: '#0a2540', fontSize: '1.3rem', fontWeight: 700, marginBottom: '1rem' }}>
-            What is an Equity Pledge System?
-          </h3>
-          <p style={{ color: '#1a3556', lineHeight: 1.6 }}>
-            An equity pledge system allows companies to raise capital by offering investors a fixed, guaranteed return secured by pledging company shares as collateral. This innovative financing model provides transparency, flexibility, and robust collateralization through share pledges.
-          </p>
-        </div>
+        <ol style={{ color: '#0a2540', fontSize: 17, lineHeight: 1.8, maxWidth: 800, margin: '0 auto', paddingLeft: 0 }}>
+          <li style={{ marginBottom: 24 }}>
+            <b>1. Create the Appropriate Corporate Vehicle</b><br />
+            Establish a separate entity or branch (e.g. "MyCompany Italy Branch") whose articles expressly allow issuing dedicated shares to investors.<br />
+            Define share capital, nominal value per share, and transfer restrictions clearly in the bylaws.
+          </li>
+          <li style={{ marginBottom: 24 }}>
+            <b>2. Prepare Your Legal Documentation</b><br />
+            <ul style={{ margin: '8px 0 8px 24px', color: '#1a3556', fontSize: 16 }}>
+              <li><b>Term Sheet:</b> outlines economics (term, yield, fees, repayment terms).</li>
+              <li><b>Subscription & Pledge Agreement:</b> covers payment mechanics and pledge of shares as security.</li>
+              <li><b>Appendices:</b> Subscription Form, Bank Details, Pledge Enforcement Procedures.</li>
+            </ul>
+            Engage a corporate law firm or notary to draft and review these documents for compliance and enforceability.
+          </li>
+          <li style={{ marginBottom: 24 }}>
+            <b>3. Secure Regulatory Approvals and Compliance</b><br />
+            <ul style={{ margin: '8px 0 8px 24px', color: '#1a3556', fontSize: 16 }}>
+              <li><b>KYC/AML:</b> implement a compliant onboarding workflow (ID checks, beneficial-owner screening, anti-money laundering screening).</li>
+              <li>If you anticipate large-scale or public solicitations, verify whether any securities-law notifications or opinions (e.g. from your local regulator) are required—otherwise treat it as a private placement.</li>
+            </ul>
+          </li>
+          <li style={{ marginBottom: 24 }}>
+            <b>4. Build Your Subscription Platform</b><br />
+            <ul style={{ margin: '8px 0 8px 24px', color: '#1a3556', fontSize: 16 }}>
+              <li>Develop a web portal or digital form where investors complete the Subscription Form and upload documents.</li>
+              <li>Integrate an e-signature solution for executing the Subscription & Pledge Agreement.</li>
+              <li>Provide a "Pay Now" button that issues an instruction with IBAN and payment reference automatically.</li>
+            </ul>
+          </li>
+          <li style={{ marginBottom: 24 }}>
+            <b>5. Process Funds and Establish the Pledge</b><br />
+            <ul style={{ margin: '8px 0 8px 24px', color: '#1a3556', fontSize: 16 }}>
+              <li>Confirm receipt of investor wire transfers into a segregated escrow account.</li>
+              <li>Register or deposit the pledged shares with a custodian or record the pledge in your shareholders' register in accordance with local law.</li>
+            </ul>
+          </li>
+          <li style={{ marginBottom: 24 }}>
+            <b>6. Manage Investments and Reporting</b><br />
+            <ul style={{ margin: '8px 0 8px 24px', color: '#1a3556', fontSize: 16 }}>
+              <li>Track monthly contributions, interest accrual, and upcoming maturities.</li>
+              <li>Distribute clear, periodic investor reports (e.g., quarterly) showing principal and interest earned.</li>
+              <li>Maintain separate accounting for the pledged-share vehicle to ensure transparency.</li>
+            </ul>
+          </li>
+          <li style={{ marginBottom: 24 }}>
+            <b>7. Repay and Release the Pledge</b><br />
+            At maturity, calculate net returns (e.g., 12% gross less 0.7% management fee) and execute wire transfers back to each investor's designated bank account.<br />
+            Automatically release the pledge and return full ownership of shares to the issuer once obligations are settled.
+          </li>
+          <li style={{ marginBottom: 0 }}>
+            <b>8. Provide Early-Exit Options</b><br />
+            Offer investors a predefined early-exit mechanism—typically at a slight yield penalty—detailed in the Term Sheet and Subscription Agreement, for those who wish to redeem before maturity.
+          </li>
+        </ol>
       </section>
-
-      {/* OVERVIEW SECTION */}
-      <section style={{ marginBottom: '4rem', padding: '3rem', background: '#f8fafc', borderRadius: 16 }}>
-        <h2 style={{ 
-          color: '#0a2540', 
-          fontSize: '2.5rem', 
-          fontWeight: 800, 
-          marginBottom: '1.5rem',
-          textAlign: 'center'
+      <div style={{ textAlign: "center", marginTop: 40 }}>
+        <a href="/iscriviti" style={{
+          background: "#f59e0b",
+          color: "#0a2540",
+          padding: "1rem 2.5rem",
+          borderRadius: 8,
+          textDecoration: "none",
+          fontWeight: 700,
+          fontSize: 20,
+          boxShadow: "0 2px 8px rgba(245,158,11,0.10)",
+          transition: "all 0.3s"
         }}>
-          System Overview
-        </h2>
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
-          gap: '2rem',
-          marginTop: '2rem'
-        }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ 
-              background: '#0a2540', 
-              color: 'white', 
-              width: 60, 
-              height: 60, 
-              borderRadius: '50%', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              margin: '0 auto 1rem',
-              fontSize: '1.5rem',
-              fontWeight: 'bold'
-            }}>
-              1
-            </div>
-            <h4 style={{ color: '#0a2540', fontSize: '1.2rem', fontWeight: 600, marginBottom: '0.5rem' }}>
-              Corporate Structure
-            </h4>
-            <p style={{ color: '#1a3556', fontSize: '1rem' }}>
-              Establish appropriate corporate vehicle with dedicated shares for investors
-            </p>
-          </div>
-          
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ 
-              background: '#0a2540', 
-              color: 'white', 
-              width: 60, 
-              height: 60, 
-              borderRadius: '50%', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              margin: '0 auto 1rem',
-              fontSize: '1.5rem',
-              fontWeight: 'bold'
-            }}>
-              2
-            </div>
-            <h4 style={{ color: '#0a2540', fontSize: '1.2rem', fontWeight: 600, marginBottom: '0.5rem' }}>
-              Legal Framework
-            </h4>
-            <p style={{ color: '#1a3556', fontSize: '1rem' }}>
-              Prepare comprehensive legal documentation and secure regulatory approvals
-            </p>
-          </div>
-          
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ 
-              background: '#0a2540', 
-              color: 'white', 
-              width: 60, 
-              height: 60, 
-              borderRadius: '50%', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              margin: '0 auto 1rem',
-              fontSize: '1.5rem',
-              fontWeight: 'bold'
-            }}>
-              3
-            </div>
-            <h4 style={{ color: '#0a2540', fontSize: '1.2rem', fontWeight: 600, marginBottom: '0.5rem' }}>
-              Digital Platform
-            </h4>
-            <p style={{ color: '#1a3556', fontSize: '1rem' }}>
-              Build subscription platform with KYC/AML compliance and payment processing
-            </p>
-          </div>
-          
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ 
-              background: '#0a2540', 
-              color: 'white', 
-              width: 60, 
-              height: 60, 
-              borderRadius: '50%', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              margin: '0 auto 1rem',
-              fontSize: '1.5rem',
-              fontWeight: 'bold'
-            }}>
-              4
-            </div>
-            <h4 style={{ color: '#0a2540', fontSize: '1.2rem', fontWeight: 600, marginBottom: '0.5rem' }}>
-              Management
-            </h4>
-            <p style={{ color: '#1a3556', fontSize: '1rem' }}>
-              Monitor investments, provide reporting, and handle repayments with pledge release
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* DETAILED STEPS SECTION */}
-      <section style={{ marginBottom: '4rem' }}>
-        <h2 style={{ 
-          color: '#0a2540', 
-          fontSize: '2.5rem', 
-          fontWeight: 800, 
-          marginBottom: '2rem',
-          textAlign: 'center'
-        }}>
-          Implementation Steps
-        </h2>
-        
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          
-          {/* Step 1 */}
-          <div style={{ 
-            background: '#fff', 
-            padding: '2rem', 
-            borderRadius: 12, 
-            boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
-            border: '1px solid #e2e8f0'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <div style={{ 
-                background: '#0a2540', 
-                color: 'white', 
-                width: 50, 
-                height: 50, 
-                borderRadius: '50%', 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center',
-                marginRight: '1rem',
-                fontSize: '1.2rem',
-                fontWeight: 'bold'
-              }}>
-                1
-              </div>
-              <h3 style={{ 
-                color: '#0a2540', 
-                fontSize: '1.8rem', 
-                fontWeight: 700, 
-                margin: 0
-              }}>
-                Create the Appropriate Corporate Vehicle
-              </h3>
-            </div>
-            <ul style={{ 
-              color: '#1a3556', 
-              lineHeight: 1.6,
-              paddingLeft: '1.5rem',
-              fontSize: '1.1rem'
-            }}>
-              <li>Establish a separate entity or branch (e.g. "MyCompany Italy Branch") whose articles expressly allow issuing dedicated shares to investors</li>
-              <li>Define share capital, nominal value per share, and transfer restrictions clearly in the bylaws</li>
-              <li>Ensure the corporate structure supports the equity pledge mechanism</li>
-            </ul>
-          </div>
-
-          {/* Step 2 */}
-          <div style={{ 
-            background: '#fff', 
-            padding: '2rem', 
-            borderRadius: 12, 
-            boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
-            border: '1px solid #e2e8f0'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <div style={{ 
-                background: '#0a2540', 
-                color: 'white', 
-                width: 50, 
-                height: 50, 
-                borderRadius: '50%', 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center',
-                marginRight: '1rem',
-                fontSize: '1.2rem',
-                fontWeight: 'bold'
-              }}>
-                2
-              </div>
-              <h3 style={{ 
-                color: '#0a2540', 
-                fontSize: '1.8rem', 
-                fontWeight: 700, 
-                margin: 0
-              }}>
-                Prepare Your Legal Documentation
-              </h3>
-            </div>
-            <ul style={{ 
-              color: '#1a3556', 
-              lineHeight: 1.6,
-              paddingLeft: '1.5rem',
-              fontSize: '1.1rem'
-            }}>
-              <li><strong>Term Sheet:</strong> outlines economics (term, yield, fees, repayment terms)</li>
-              <li><strong>Subscription & Pledge Agreement:</strong> covers payment mechanics and pledge of shares as security</li>
-              <li><strong>Appendices:</strong> Subscription Form, Bank Details, Pledge Enforcement Procedures</li>
-              <li>Engage a corporate law firm or notary to draft and review these documents for compliance and enforceability</li>
-            </ul>
-          </div>
-
-          {/* Step 3 */}
-          <div style={{ 
-            background: '#fff', 
-            padding: '2rem', 
-            borderRadius: 12, 
-            boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
-            border: '1px solid #e2e8f0'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <div style={{ 
-                background: '#0a2540', 
-                color: 'white', 
-                width: 50, 
-                height: 50, 
-                borderRadius: '50%', 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center',
-                marginRight: '1rem',
-                fontSize: '1.2rem',
-                fontWeight: 'bold'
-              }}>
-                3
-              </div>
-              <h3 style={{ 
-                color: '#0a2540', 
-                fontSize: '1.8rem', 
-                fontWeight: 700, 
-                margin: 0
-              }}>
-                Secure Regulatory Approvals and Compliance
-              </h3>
-            </div>
-            <ul style={{ 
-              color: '#1a3556', 
-              lineHeight: 1.6,
-              paddingLeft: '1.5rem',
-              fontSize: '1.1rem'
-            }}>
-              <li><strong>KYC/AML:</strong> implement a compliant onboarding workflow (ID checks, beneficial-owner screening, anti-money laundering screening)</li>
-              <li>If you anticipate large-scale or public solicitations, verify whether any securities-law notifications or opinions are required</li>
-              <li>Otherwise treat it as a private placement</li>
-            </ul>
-          </div>
-
-          {/* Step 4 */}
-          <div style={{ 
-            background: '#fff', 
-            padding: '2rem', 
-            borderRadius: 12, 
-            boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
-            border: '1px solid #e2e8f0'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <div style={{ 
-                background: '#0a2540', 
-                color: 'white', 
-                width: 50, 
-                height: 50, 
-                borderRadius: '50%', 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center',
-                marginRight: '1rem',
-                fontSize: '1.2rem',
-                fontWeight: 'bold'
-              }}>
-                4
-              </div>
-              <h3 style={{ 
-                color: '#0a2540', 
-                fontSize: '1.8rem', 
-                fontWeight: 700, 
-                margin: 0
-              }}>
-                Build Your Subscription Platform
-              </h3>
-            </div>
-            <ul style={{ 
-              color: '#1a3556', 
-              lineHeight: 1.6,
-              paddingLeft: '1.5rem',
-              fontSize: '1.1rem'
-            }}>
-              <li>Develop a web portal or digital form where investors complete the Subscription Form and upload documents</li>
-              <li>Integrate an e-signature solution for executing the Subscription & Pledge Agreement</li>
-              <li>Provide a "Pay Now" button that issues an instruction with IBAN and payment reference automatically</li>
-            </ul>
-          </div>
-
-          {/* Step 5 */}
-          <div style={{ 
-            background: '#fff', 
-            padding: '2rem', 
-            borderRadius: 12, 
-            boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
-            border: '1px solid #e2e8f0'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <div style={{ 
-                background: '#0a2540', 
-                color: 'white', 
-                width: 50, 
-                height: 50, 
-                borderRadius: '50%', 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center',
-                marginRight: '1rem',
-                fontSize: '1.2rem',
-                fontWeight: 'bold'
-              }}>
-                5
-              </div>
-              <h3 style={{ 
-                color: '#0a2540', 
-                fontSize: '1.8rem', 
-                fontWeight: 700, 
-                margin: 0
-              }}>
-                Process Funds and Establish the Pledge
-              </h3>
-            </div>
-            <ul style={{ 
-              color: '#1a3556', 
-              lineHeight: 1.6,
-              paddingLeft: '1.5rem',
-              fontSize: '1.1rem'
-            }}>
-              <li>Confirm receipt of investor wire transfers into a segregated escrow account</li>
-              <li>Register or deposit the pledged shares with a custodian or record the pledge in your shareholders' register in accordance with local law</li>
-            </ul>
-          </div>
-
-          {/* Step 6 */}
-          <div style={{ 
-            background: '#fff', 
-            padding: '2rem', 
-            borderRadius: 12, 
-            boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
-            border: '1px solid #e2e8f0'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <div style={{ 
-                background: '#0a2540', 
-                color: 'white', 
-                width: 50, 
-                height: 50, 
-                borderRadius: '50%', 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center',
-                marginRight: '1rem',
-                fontSize: '1.2rem',
-                fontWeight: 'bold'
-              }}>
-                6
-              </div>
-              <h3 style={{ 
-                color: '#0a2540', 
-                fontSize: '1.8rem', 
-                fontWeight: 700, 
-                margin: 0
-              }}>
-                Manage Investments and Reporting
-              </h3>
-            </div>
-            <ul style={{ 
-              color: '#1a3556', 
-              lineHeight: 1.6,
-              paddingLeft: '1.5rem',
-              fontSize: '1.1rem'
-            }}>
-              <li>Track monthly contributions, interest accrual, and upcoming maturities</li>
-              <li>Distribute clear, periodic investor reports (e.g., quarterly) showing principal and interest earned</li>
-              <li>Maintain separate accounting for the pledged-share vehicle to ensure transparency</li>
-            </ul>
-          </div>
-
-          {/* Step 7 */}
-          <div style={{ 
-            background: '#fff', 
-            padding: '2rem', 
-            borderRadius: 12, 
-            boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
-            border: '1px solid #e2e8f0'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <div style={{ 
-                background: '#0a2540', 
-                color: 'white', 
-                width: 50, 
-                height: 50, 
-                borderRadius: '50%', 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center',
-                marginRight: '1rem',
-                fontSize: '1.2rem',
-                fontWeight: 'bold'
-              }}>
-                7
-              </div>
-              <h3 style={{ 
-                color: '#0a2540', 
-                fontSize: '1.8rem', 
-                fontWeight: 700, 
-                margin: 0
-              }}>
-                Repay and Release the Pledge
-              </h3>
-            </div>
-            <ul style={{ 
-              color: '#1a3556', 
-              lineHeight: 1.6,
-              paddingLeft: '1.5rem',
-              fontSize: '1.1rem'
-            }}>
-              <li>At maturity, calculate net returns (e.g., 12% gross less 0.7% management fee) and execute wire transfers back to each investor's designated bank account</li>
-              <li>Automatically release the pledge and return full ownership of shares to the issuer once obligations are settled</li>
-            </ul>
-          </div>
-
-          {/* Step 8 */}
-          <div style={{ 
-            background: '#fff', 
-            padding: '2rem', 
-            borderRadius: 12, 
-            boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
-            border: '1px solid #e2e8f0'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <div style={{ 
-                background: '#0a2540', 
-                color: 'white', 
-                width: 50, 
-                height: 50, 
-                borderRadius: '50%', 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center',
-                marginRight: '1rem',
-                fontSize: '1.2rem',
-                fontWeight: 'bold'
-              }}>
-                8
-              </div>
-              <h3 style={{ 
-                color: '#0a2540', 
-                fontSize: '1.8rem', 
-                fontWeight: 700, 
-                margin: 0
-              }}>
-                Provide Early-Exit Options
-              </h3>
-            </div>
-            <ul style={{ 
-              color: '#1a3556', 
-              lineHeight: 1.6,
-              paddingLeft: '1.5rem',
-              fontSize: '1.1rem'
-            }}>
-              <li>Offer investors a predefined early-exit mechanism—typically at a slight yield penalty—detailed in the Term Sheet and Subscription Agreement</li>
-              <li>Allow investors who wish to redeem before maturity to exit with appropriate terms</li>
-            </ul>
-          </div>
-
-        </div>
-      </section>
-
-      {/* SUMMARY WORKFLOW SECTION */}
-      <section style={{ marginBottom: '4rem', padding: '3rem', background: '#f8fafc', borderRadius: 16 }}>
-        <h2 style={{ 
-          color: '#0a2540', 
-          fontSize: '2.5rem', 
-          fontWeight: 800, 
-          marginBottom: '1.5rem',
-          textAlign: 'center'
-        }}>
-          Summary Workflow
-        </h2>
-        
-        <div style={{ 
-          background: '#fff', 
-          padding: '2rem', 
-          borderRadius: 12, 
-          boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
-          border: '1px solid #e2e8f0'
-        }}>
-          <ol style={{ 
-            color: '#1a3556', 
-            lineHeight: 1.8,
-            paddingLeft: '1.5rem',
-            fontSize: '1.2rem'
-          }}>
-            <li><strong>Incorporate or designate</strong> the special branch/entity</li>
-            <li><strong>Draft your Term Sheet</strong> and Subscription & Pledge Agreement</li>
-            <li><strong>Implement KYC/AML</strong> and your digital subscription portal</li>
-            <li><strong>Collect funds</strong> and lock shares under pledge</li>
-            <li><strong>Monitor performance</strong> and report regularly</li>
-            <li><strong>Repay principal + interest</strong> at maturity and remove the pledge</li>
-          </ol>
-          
-          <div style={{ 
-            background: '#0a2540', 
-            color: 'white', 
-            padding: '2rem', 
-            borderRadius: 12,
-            marginTop: '2rem',
-            textAlign: 'center'
-          }}>
-            <h3 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1rem' }}>
-              Key Benefits
-            </h3>
-            <p style={{ fontSize: '1.1rem', lineHeight: 1.6 }}>
-              By following this blueprint, your company can secure transparent, flexible funding, offer investors a competitive fixed return, and ensure robust collateralization through a share pledge.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* CONTACT SECTION */}
-      <section style={{ 
-        background: '#0a2540', 
-        color: 'white', 
-        padding: '3rem', 
-        borderRadius: 16,
-        textAlign: 'center'
-      }}>
-        <h2 style={{ 
-          fontSize: '2.5rem', 
-          fontWeight: 800, 
-          marginBottom: '2rem' 
-        }}>
-          Need Professional Assistance?
-        </h2>
-        <p style={{ 
-          fontSize: '1.2rem', 
-          lineHeight: 1.6, 
-          marginBottom: '2rem',
-          maxWidth: 800,
-          margin: '0 auto 2rem'
-        }}>
-          GLG Capital Group LLC specializes in implementing equity pledge systems and can provide expert guidance throughout the entire process.
-        </p>
-        
-        <div style={{ 
-          background: 'rgba(255,255,255,0.1)', 
-          padding: '2rem', 
-          borderRadius: 12,
-          maxWidth: 600,
-          margin: '0 auto'
-        }}>
-          <h3 style={{ 
-            fontSize: '1.5rem', 
-            fontWeight: 700, 
-            marginBottom: '1rem' 
-          }}>
-            Contact Us
-          </h3>
-          <p style={{ fontSize: '1.1rem', lineHeight: 1.6, marginBottom: '0.5rem' }}>
-            1309 Coffeen Avenue STE 1200<br />
-            Sheridan, Wyoming 82801
-          </p>
-          <p style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>
-            <a href="mailto:corefound@glgcapitalgroupllc.com" style={{ color: '#60a5fa' }}>
-              corefound@glgcapitalgroupllc.com
-            </a>
-          </p>
-          <p style={{ fontSize: '1.1rem' }}>
-            Phone: +1 307 263 0876
-          </p>
-        </div>
-      </section>
-
+          Inizia ora: Registrati come investitore
+        </a>
+      </div>
     </main>
   );
 }

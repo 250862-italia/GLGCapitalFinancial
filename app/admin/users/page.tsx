@@ -29,6 +29,7 @@ import {
   EyeOff,
   AlertCircle
 } from 'lucide-react';
+import Modal from '@/components/ui/Modal';
 
 interface User {
   id: string;
