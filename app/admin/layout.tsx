@@ -107,9 +107,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <Image src="/glg capital group llcbianco.png" alt="GLG Capital Group LLC" width={50} height={50} style={{ borderRadius: 8, background: '#fff' }} />
                 <div>
                   <h1 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#111827', margin: 0 }}>GLG Admin Console</h1>
-                  <p style={{ color: '#6b7280', margin: 0, fontSize: '0.875rem' }}>
-                    Welcome, {adminUser?.name} ({adminUser?.role})
-                  </p>
                 </div>
               </div>
               <nav style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
@@ -153,6 +150,29 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
           </div>
         </header>
+
+        {/* Welcome Block - always visible */}
+        <div style={{
+          maxWidth: '1280px',
+          margin: '2rem auto 0',
+          padding: '0 1rem',
+          display: 'flex',
+          justifyContent: 'center',
+        }}>
+          <div style={{
+            background: '#dcfce7',
+            border: '1px solid #bbf7d0',
+            borderRadius: 8,
+            padding: '1rem 2rem',
+            color: '#166534',
+            fontWeight: 600,
+            fontSize: 18,
+            textAlign: 'center',
+            minWidth: 320
+          }}>
+            Welcome, {adminUser?.name || 'Admin'} ({adminUser?.role || 'admin'})
+          </div>
+        </div>
 
         {/* ADMIN NAVIGATION */}
         {/* isSuperAdmin && (
