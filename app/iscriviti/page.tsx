@@ -69,6 +69,13 @@ export default function IscrivitiPage() {
       const data = await response.json();
       if (response.ok && data.success) {
         setSuccess(true);
+        // Salva i dati base in kycData
+        localStorage.setItem("kycData", JSON.stringify({
+          firstName: form.name.split(" ")[0] || form.name,
+          lastName: form.name.split(" ").slice(1).join(" ") || form.name,
+          email: form.email,
+          phone: form.phone
+        }));
         setTimeout(() => {
           router.push("/dashboard");
         }, 1500);
