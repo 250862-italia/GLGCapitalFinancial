@@ -7,31 +7,31 @@ export default function EquityPledgePage() {
         Equity-Pledge System
       </h1>
       <p style={{ color: "#1a3556", fontSize: 20, lineHeight: 1.7, textAlign: "center", marginBottom: 32 }}>
-        Il nostro modello Equity-Pledge offre agli investitori una soluzione innovativa, sicura e trasparente per ottenere rendimenti fissi e protezione del capitale. Scopri come funziona e perché sempre più investitori scelgono GLG Capital Group LLC.
+        Our Equity-Pledge model offers investors an innovative, secure, and transparent solution to achieve fixed returns and capital protection. Discover how it works and why more and more investors are choosing GLG Capital Group LLC.
       </p>
       <section style={{ marginBottom: 40 }}>
         <h2 style={{ color: "#f59e0b", fontSize: 28, fontWeight: 800, marginBottom: 18, textAlign: "center" }}>
-          Come funziona il nostro modello Equity-Pledge
+          How Our Equity-Pledge Model Works
         </h2>
         <ul style={{ color: "#1a3556", fontSize: 18, lineHeight: 1.7, paddingLeft: 24, maxWidth: 700, margin: "0 auto" }}>
-          <li><b>Dedicated Vehicle:</b> Creiamo una società veicolo dedicata che emette azioni riservate agli investitori.</li>
-          <li><b>Simple Subscription:</b> L'investitore compila il form online, firma digitalmente il contratto e trasferisce i fondi su un conto segregato.</li>
-          <li><b>Secured by Pledge:</b> Ogni investimento è garantito da un pegno formale sulle nuove azioni emesse.</li>
-          <li><b>Fixed, Attractive Yield:</b> 12% annuo lordo (meno 0,7% management fee), pagato a scadenza 36 mesi.</li>
-          <li><b>Transparent Reporting:</b> Report trimestrali informano su capitale e interessi maturati.</li>
-          <li><b>Automatic Release:</b> A scadenza, capitale e rendimento netto vengono restituiti e il pegno si estingue.</li>
+          <li><b>Dedicated Vehicle:</b> We create a dedicated vehicle company that issues shares reserved for investors.</li>
+          <li><b>Simple Subscription:</b> Investors complete the online form, digitally sign the agreement, and transfer funds to a segregated account.</li>
+          <li><b>Secured by Pledge:</b> Each investment is secured by a formal pledge on the newly issued shares.</li>
+          <li><b>Fixed, Attractive Yield:</b> 12% gross per year (minus 0.7% management fee), paid at 36-month maturity.</li>
+          <li><b>Transparent Reporting:</b> Quarterly reports keep investors informed about principal and accrued interest.</li>
+          <li><b>Automatic Release:</b> At maturity, capital and net yield are returned and the pledge is released.</li>
         </ul>
       </section>
       <section style={{ marginBottom: 40 }}>
         <h2 style={{ color: "#0a2540", fontSize: 26, fontWeight: 800, marginBottom: 16, textAlign: "center" }}>
-          Perché scegliere l'Equity-Pledge di GLG Capital Group?
+          Why Choose the Equity-Pledge by GLG Capital Group?
         </h2>
         <ul style={{ color: "#1a3556", fontSize: 17, lineHeight: 1.7, paddingLeft: 24, maxWidth: 700, margin: "0 auto" }}>
-          <li>Rendimento fisso e competitivo</li>
-          <li>Protezione reale del capitale investito</li>
-          <li>Massima trasparenza e reportistica periodica</li>
-          <li>Processo digitale semplice e sicuro</li>
-          <li>Supporto dedicato in ogni fase</li>
+          <li>Fixed and competitive returns</li>
+          <li>Real protection of invested capital</li>
+          <li>Maximum transparency and periodic reporting</li>
+          <li>Simple and secure digital process</li>
+          <li>Dedicated support at every stage</li>
         </ul>
       </section>
       <section style={{ margin: '60px 0', background: '#f8fafc', borderRadius: 16, padding: '2.5rem 1.5rem' }}>
@@ -109,7 +109,7 @@ export default function EquityPledgePage() {
           boxShadow: "0 2px 8px rgba(245,158,11,0.10)",
           transition: "all 0.3s"
         }}>
-          Inizia ora: Registrati come investitore
+          Start now: Register as an investor
         </a>
       </div>
     </main>

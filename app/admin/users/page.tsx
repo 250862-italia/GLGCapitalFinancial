@@ -30,6 +30,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import Modal from '@/components/ui/Modal';
+import { useRouter } from 'next/navigation';
 
 interface User {
   id: string;
@@ -86,6 +87,11 @@ export default function AdminUsersPage() {
   const [showKYCModal, setShowKYCModal] = useState(false);
   const [showActivityModal, setShowActivityModal] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<AdminUser | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState('');
+  const router = useRouter();
 
   useEffect(() => {
     loadUsers();
@@ -236,7 +242,12 @@ export default function AdminUsersPage() {
   };
 
   const handleDeleteUser = async (userId: string) => {
-    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+    setUserToDelete(users.find(u => u.id === userId) || null);
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!userToDelete) {
       return;
     }
 
@@ -246,7 +257,7 @@ export default function AdminUsersPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ userId }),
+        body: JSON.stringify({ userId: userToDelete.id }),
       });
 
       const data = await response.json();
@@ -254,6 +265,7 @@ export default function AdminUsersPage() {
       if (response.ok) {
         setSuccess('User deleted successfully!');
         loadUsers();
+        setShowDeleteModal(false);
       } else {
         setError(data.error || 'Delete failed');
       }
@@ -358,6 +370,38 @@ export default function AdminUsersPage() {
         </div>
       )}
 
+      {/* SEARCH BAR & ROLE FILTER */}
+      <section style={{ marginBottom: '1.5rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
+        <input
+          type="text"
+          placeholder="Search by name or email..."
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          style={{
+            flex: 2,
+            padding: '0.75rem',
+            border: '1px solid #d1d5db',
+            borderRadius: 8,
+            fontSize: 16
+          }}
+        />
+        <select
+          value={roleFilter}
+          onChange={e => setRoleFilter(e.target.value)}
+          style={{
+            flex: 1,
+            padding: '0.75rem',
+            border: '1px solid #d1d5db',
+            borderRadius: 8,
+            fontSize: 16
+          }}
+        >
+          <option value="">All Roles</option>
+          <option value="admin">Admin</option>
+          <option value="superadmin">Super Admin</option>
+        </select>
+      </section>
+
       {/* USERS TABLE */}
       <section>
         <div style={{ background: 'var(--secondary)', borderRadius: 12, padding: '1.5rem' }}>
@@ -374,70 +418,40 @@ export default function AdminUsersPage() {
                 </tr>
               </thead>
               <tbody>
-                {users.map((user) => (
-                  <tr key={user.id} style={{ borderBottom: '1px solid #e0e3eb' }}>
-                    <td style={{ padding: '1rem' }}>
-                      <div>
-                        <div style={{ fontWeight: 600, color: 'var(--primary)' }}>{user.name}</div>
-                        <div style={{ fontSize: 14, color: 'var(--foreground)', opacity: 0.7 }}>{user.email}</div>
-                      </div>
-                    </td>
-                    <td style={{ padding: '1rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        {getRoleIcon(user.role)}
-                        <span style={{ 
-                          color: getRoleColor(user.role), 
-                          fontWeight: 600,
-                          textTransform: 'capitalize'
-                        }}>
-                          {user.role}
-                        </span>
-                      </div>
-                    </td>
-                    <td style={{ padding: '1rem', color: 'var(--foreground)', fontSize: 14 }}>
-                      {new Date(user.createdAt).toLocaleDateString()}
-                    </td>
-                    <td style={{ padding: '1rem', textAlign: 'center' }}>
-                      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
-                        <button
-                          onClick={() => openEditForm(user)}
-                          style={{
-                            background: '#3b82f6',
-                            color: 'white',
-                            border: 'none',
-                            padding: '0.5rem',
-                            borderRadius: 6,
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                          }}
-                          title="Edit User"
-                        >
-                          <Edit size={16} />
-                        </button>
-                        <button
-                          onClick={() => openPasswordForm(user)}
-                          style={{
-                            background: '#10b981',
-                            color: 'white',
-                            border: 'none',
-                            padding: '0.5rem',
-                            borderRadius: 6,
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                          }}
-                          title="Change Password"
-                        >
-                          <Lock size={16} />
-                        </button>
-                        {user.role !== 'superadmin' && (
+                {users
+                  .filter(user =>
+                    (!searchQuery || user.name.toLowerCase().includes(searchQuery.toLowerCase()) || user.email.toLowerCase().includes(searchQuery.toLowerCase())) &&
+                    (!roleFilter || user.role === roleFilter)
+                  )
+                  .map((user) => (
+                    <tr key={user.id} style={{ borderBottom: '1px solid #e0e3eb' }}>
+                      <td style={{ padding: '1rem' }}>
+                        <div>
+                          <div style={{ fontWeight: 600, color: 'var(--primary)' }}>{user.name}</div>
+                          <div style={{ fontSize: 14, color: 'var(--foreground)', opacity: 0.7 }}>{user.email}</div>
+                        </div>
+                      </td>
+                      <td style={{ padding: '1rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          {getRoleIcon(user.role)}
+                          <span style={{ 
+                            color: getRoleColor(user.role), 
+                            fontWeight: 600,
+                            textTransform: 'capitalize'
+                          }}>
+                            {user.role}
+                          </span>
+                        </div>
+                      </td>
+                      <td style={{ padding: '1rem', color: 'var(--foreground)', fontSize: 14 }}>
+                        {new Date(user.createdAt).toLocaleDateString()}
+                      </td>
+                      <td style={{ padding: '1rem', textAlign: 'center' }}>
+                        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
                           <button
-                            onClick={() => handleDeleteUser(user.id)}
+                            onClick={() => openEditForm(user)}
                             style={{
-                              background: '#dc2626',
+                              background: '#3b82f6',
                               color: 'white',
                               border: 'none',
                               padding: '0.5rem',
@@ -447,27 +461,81 @@ export default function AdminUsersPage() {
                               alignItems: 'center',
                               justifyContent: 'center'
                             }}
-                            title="Delete User"
+                            title="Edit User"
                           >
-                            <Trash2 size={16} />
+                            <Edit size={16} />
                           </button>
-                        )}
-                        <button title="Investimenti" onClick={() => openInvestmentsModal(user)} style={{ marginRight: 8 }}>
-                          <DollarSign size={16} />
-                        </button>
-                        <button title="KYC" onClick={() => openKYCModal(user)} style={{ marginRight: 8 }}>
-                          <Shield size={16} />
-                        </button>
-                        <button title="Attività" onClick={() => openActivityModal(user)} style={{ marginRight: 8 }}>
-                          <Clock size={16} />
-                        </button>
-                        <button title="Invia Email" onClick={() => openEmailModal(user)}>
-                          <Mail size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                          <button
+                            onClick={() => openPasswordForm(user)}
+                            style={{
+                              background: '#10b981',
+                              color: 'white',
+                              border: 'none',
+                              padding: '0.5rem',
+                              borderRadius: 6,
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}
+                            title="Change Password"
+                          >
+                            <Lock size={16} />
+                          </button>
+                          {user.role !== 'superadmin' && (
+                            <button
+                              onClick={() => handleDeleteUser(user.id)}
+                              style={{
+                                background: '#dc2626',
+                                color: 'white',
+                                border: 'none',
+                                padding: '0.5rem',
+                                borderRadius: 6,
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                              }}
+                              title="Delete User"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          )}
+                          <button title="Investimenti" onClick={() => openInvestmentsModal(user)} style={{ marginRight: 8 }}>
+                            <DollarSign size={16} />
+                          </button>
+                          <button title="KYC" onClick={() => openKYCModal(user)} style={{ marginRight: 8 }}>
+                            <Shield size={16} />
+                          </button>
+                          <button title="Attività" onClick={() => openActivityModal(user)} style={{ marginRight: 8 }}>
+                            <Clock size={16} />
+                          </button>
+                          <button title="Invia Email" onClick={() => openEmailModal(user)}>
+                            <Mail size={16} />
+                          </button>
+                          <button
+                            onClick={() => router.push(`/admin/users/${user.id}`)}
+                            style={{
+                              background: '#f59e0b',
+                              color: 'white',
+                              border: 'none',
+                              padding: '0.5rem',
+                              borderRadius: 6,
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}
+                            title="Dettagli Utente"
+                          >
+                            <Eye size={16} />
+                          </button>
+                          {/* Divider */}
+                          <span style={{ width: 1, background: '#e5e7eb', margin: '0 4px', display: 'inline-block', height: 24 }} />
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>
@@ -803,28 +871,47 @@ export default function AdminUsersPage() {
         </div>
       )}
 
+      {showDeleteModal && (
+        <Modal onClose={() => setShowDeleteModal(false)}>
+          <h2>Conferma eliminazione</h2>
+          <p>Sei sicuro di voler eliminare l'utente <b>{userToDelete?.name}</b>? Questa azione è irreversibile.</p>
+          <div style={{ display: 'flex', gap: '1rem', marginTop: 24 }}>
+            <button onClick={handleConfirmDelete} style={{ background: '#dc2626', color: 'white', padding: '0.75rem 1.5rem', borderRadius: 8, border: 'none', fontWeight: 700 }}>Elimina</button>
+            <button onClick={() => setShowDeleteModal(false)} style={{ background: '#6b7280', color: 'white', padding: '0.75rem 1.5rem', borderRadius: 8, border: 'none', fontWeight: 600 }}>Annulla</button>
+          </div>
+        </Modal>
+      )}
+
       {showInvestmentsModal && (
         <Modal onClose={() => setShowInvestmentsModal(false)}>
           <h2>Investimenti di {selectedUser?.name}</h2>
-          <p>Funzionalità in sviluppo.</p>
+          <p>Email: {selectedUser?.email}</p>
+          <p>Ruolo: {selectedUser?.role}</p>
+          <p style={{ color: '#f59e0b', fontWeight: 600 }}>Funzionalità in sviluppo.</p>
         </Modal>
       )}
       {showKYCModal && (
         <Modal onClose={() => setShowKYCModal(false)}>
           <h2>KYC di {selectedUser?.name}</h2>
-          <p>Funzionalità in sviluppo.</p>
+          <p>Email: {selectedUser?.email}</p>
+          <p>Ruolo: {selectedUser?.role}</p>
+          <p style={{ color: '#f59e0b', fontWeight: 600 }}>Funzionalità in sviluppo.</p>
         </Modal>
       )}
       {showActivityModal && (
         <Modal onClose={() => setShowActivityModal(false)}>
           <h2>Attività di {selectedUser?.name}</h2>
-          <p>Funzionalità in sviluppo.</p>
+          <p>Email: {selectedUser?.email}</p>
+          <p>Ruolo: {selectedUser?.role}</p>
+          <p style={{ color: '#f59e0b', fontWeight: 600 }}>Funzionalità in sviluppo.</p>
         </Modal>
       )}
       {showEmailModal && (
         <Modal onClose={() => setShowEmailModal(false)}>
           <h2>Invia Email a {selectedUser?.name}</h2>
-          <p>Funzionalità in sviluppo.</p>
+          <p>Email: {selectedUser?.email}</p>
+          <p>Ruolo: {selectedUser?.role}</p>
+          <p style={{ color: '#f59e0b', fontWeight: 600 }}>Funzionalità in sviluppo.</p>
         </Modal>
       )}
     </div>

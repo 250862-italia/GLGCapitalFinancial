@@ -239,143 +239,150 @@ export default function PackagesManagementPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Investment Packages</h1>
-            <p className="text-gray-600 mt-2">Manage your investment packages and offerings</p>
-          </div>
-          <button
-            onClick={openAddForm}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition-colors"
-          >
-            <Plus size={20} />
-            Add Package
-          </button>
-        </div>
-
-        {/* Success/Error Messages */}
-        {successMessage && (
-          <div className={`mb-6 p-4 rounded-lg flex items-center gap-2 ${
-            successMessage.includes('Error') 
-              ? 'bg-red-100 text-red-700 border border-red-200' 
-              : 'bg-green-100 text-green-700 border border-green-200'
-          }`}>
-            {successMessage.includes('Error') ? <AlertCircle size={20} /> : <CheckCircle size={20} />}
-            {successMessage}
-          </div>
-        )}
-
-        {error && (
-          <div className="mb-6 p-4 bg-red-100 text-red-700 rounded-lg border border-red-200 flex items-center gap-2">
-            <AlertCircle size={20} />
-            {error}
-          </div>
-        )}
-
-        {/* Packages Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {packages.map((pkg) => (
-            <div key={pkg.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">{pkg.name}</h3>
-                  <p className="text-gray-600 text-sm mb-3">{pkg.description}</p>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => openEditForm(pkg)}
-                    className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                    title="Edit package"
-                  >
-                    <Edit size={16} />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(pkg.id)}
-                    className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    title="Delete package"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-500">Investment Range:</span>
-                  <span className="text-sm font-medium">
-                    ${pkg.minInvestment.toLocaleString()} - ${pkg.maxInvestment.toLocaleString()}
-                  </span>
-                </div>
-                
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-500">Expected Return:</span>
-                  <span className="text-sm font-medium text-green-600">
-                    {pkg.expectedReturn}%
-                  </span>
-                </div>
-                
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-500">Duration:</span>
-                  <span className="text-sm font-medium">
-                    {pkg.duration} months
-                  </span>
-                </div>
-                
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-500">Risk Level:</span>
-                  <span className={`text-xs px-2 py-1 rounded-full font-medium ${getRiskColor(pkg.riskLevel)}`}>
-                    {pkg.riskLevel}
-                  </span>
-                </div>
-                
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-500">Status:</span>
-                  <span className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(pkg.status)}`}>
-                    {pkg.status}
-                  </span>
-                </div>
-              </div>
-
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <div className="flex justify-between items-center text-xs text-gray-500">
-                  <span>Created: {pkg.createdAt}</span>
-                  <span>ID: {pkg.id}</span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {packages.length === 0 && !loading && (
-          <div className="text-center py-12">
-            <Package size={48} className="mx-auto text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No packages yet</h3>
-            <p className="text-gray-600 mb-6">Create your first investment package to get started</p>
-            <button
-              onClick={openAddForm}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 mx-auto transition-colors"
-            >
-              <Plus size={20} />
-              Add Your First Package
-            </button>
-          </div>
-        )}
+    <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 4px 24px rgba(10,37,64,0.10)', padding: '2.5rem 2rem', maxWidth: 1200, margin: '2rem auto' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
+        <h1 style={{ color: 'var(--primary)', fontSize: 32, fontWeight: 900, margin: 0 }}>Investment Packages</h1>
+        <button
+          style={{
+            background: 'var(--accent)',
+            color: 'var(--primary)',
+            border: 'none',
+            padding: '0.75rem 1.5rem',
+            borderRadius: 8,
+            fontSize: 16,
+            fontWeight: 700,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            boxShadow: '0 2px 8px rgba(34,40,49,0.07)'
+          }}
+          onClick={openAddForm}
+        >
+          <Plus size={20} />
+          Add New Package
+        </button>
       </div>
 
-      {/* Add/Edit Form Modal */}
+      {/* Success Message */}
+      {successMessage && (
+        <div style={{
+          background: '#f0fdf4',
+          border: '1px solid #bbf7d0',
+          borderRadius: 8,
+          padding: '1rem',
+          marginBottom: '1.5rem',
+          color: '#16a34a',
+          fontWeight: 600,
+          textAlign: 'center',
+          fontSize: 16
+        }}>
+          {successMessage}
+        </div>
+      )}
+
+      {/* Table */}
+      <div style={{ overflowX: 'auto', marginBottom: 32 }}>
+        <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0, minWidth: 900 }}>
+          <thead>
+            <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0', fontWeight: 700, color: '#374151' }}>
+              <th style={{ padding: '1rem', textAlign: 'left' }}>Name</th>
+              <th style={{ padding: '1rem', textAlign: 'left' }}>Description</th>
+              <th style={{ padding: '1rem', textAlign: 'center' }}>Min</th>
+              <th style={{ padding: '1rem', textAlign: 'center' }}>Max</th>
+              <th style={{ padding: '1rem', textAlign: 'center' }}>Return</th>
+              <th style={{ padding: '1rem', textAlign: 'center' }}>Duration</th>
+              <th style={{ padding: '1rem', textAlign: 'center' }}>Risk</th>
+              <th style={{ padding: '1rem', textAlign: 'center' }}>Status</th>
+              <th style={{ padding: '1rem', textAlign: 'center' }}>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {packages.map((pkg) => (
+              <tr key={pkg.id} style={{ borderBottom: '1px solid #e2e8f0', background: '#fff', transition: 'background 0.2s' }}
+                onMouseOver={e => (e.currentTarget.style.background = '#f3f4f6')}
+                onMouseOut={e => (e.currentTarget.style.background = '#fff')}
+              >
+                <td style={{ padding: '1rem', fontWeight: 600 }}>{pkg.name}</td>
+                <td style={{ padding: '1rem', color: '#64748b' }}>{pkg.description}</td>
+                <td style={{ padding: '1rem', textAlign: 'center' }}>{pkg.minInvestment.toLocaleString()}</td>
+                <td style={{ padding: '1rem', textAlign: 'center' }}>{pkg.maxInvestment.toLocaleString()}</td>
+                <td style={{ padding: '1rem', textAlign: 'center', color: '#10b981', fontWeight: 700 }}>{pkg.expectedReturn}%</td>
+                <td style={{ padding: '1rem', textAlign: 'center' }}>{pkg.duration} mo</td>
+                <td style={{ padding: '1rem', textAlign: 'center' }}>
+                  <span style={{
+                    background: pkg.riskLevel === 'high' ? '#fee2e2' : pkg.riskLevel === 'medium' ? '#fef9c3' : '#dcfce7',
+                    color: pkg.riskLevel === 'high' ? '#dc2626' : pkg.riskLevel === 'medium' ? '#b45309' : '#166534',
+                    borderRadius: 6,
+                    padding: '0.25rem 0.75rem',
+                    fontWeight: 600,
+                    fontSize: 14
+                  }}>{pkg.riskLevel.charAt(0).toUpperCase() + pkg.riskLevel.slice(1)}</span>
+                </td>
+                <td style={{ padding: '1rem', textAlign: 'center' }}>
+                  <span style={{
+                    background: pkg.status === 'Active' ? '#dcfce7' : pkg.status === 'Fundraising' ? '#fef9c3' : '#fee2e2',
+                    color: pkg.status === 'Active' ? '#166534' : pkg.status === 'Fundraising' ? '#b45309' : '#dc2626',
+                    borderRadius: 6,
+                    padding: '0.25rem 0.75rem',
+                    fontWeight: 600,
+                    fontSize: 14
+                  }}>{pkg.status}</span>
+                </td>
+                <td style={{ padding: '1rem', textAlign: 'center', display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+                  <button style={{ background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1rem', fontWeight: 600, cursor: 'pointer', transition: 'background 0.2s' }} onClick={() => openEditForm(pkg)}><Edit size={16} /></button>
+                  <button style={{ background: '#dc2626', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1rem', fontWeight: 600, cursor: 'pointer', transition: 'background 0.2s' }} onClick={() => handleDelete(pkg.id)}><Trash2 size={16} /></button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Add/Edit Modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
-              <h2 className="text-2xl font-bold text-gray-900">
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '2rem'
+        }}>
+          <div style={{
+            background: '#fff',
+            borderRadius: 16,
+            padding: '2rem',
+            width: '100%',
+            maxWidth: 500,
+            maxHeight: '90vh',
+            overflowY: 'auto',
+            boxShadow: '0 8px 32px rgba(10,37,64,0.18)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+              <h2 style={{ color: 'var(--primary)', fontSize: 24, fontWeight: 700, margin: 0 }}>
                 {isEdit ? 'Edit Package' : 'Add New Package'}
               </h2>
+              <button
+                onClick={() => setShowForm(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: 24,
+                  color: '#6b7280',
+                  cursor: 'pointer'
+                }}
+              >
+                ×
+              </button>
             </div>
-
-            <form onSubmit={handleFormSubmit} className="p-6 space-y-6">
+            <form onSubmit={handleFormSubmit}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -522,30 +529,39 @@ export default function PackagesManagementPage() {
                 />
               </div>
 
-              <div className="flex justify-end gap-4 pt-6 border-t border-gray-200">
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
+                <button
+                  type="submit"
+                  style={{
+                    flex: 1,
+                    background: '#10b981',
+                    color: 'white',
+                    border: 'none',
+                    padding: '1rem',
+                    borderRadius: 8,
+                    fontSize: 16,
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  {isEdit ? 'Update Package' : 'Create Package'}
+                </button>
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
-                  className="px-6 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                  disabled={isSubmitting}
+                  style={{
+                    flex: 1,
+                    background: '#6b7280',
+                    color: 'white',
+                    border: 'none',
+                    padding: '1rem',
+                    borderRadius: 8,
+                    fontSize: 16,
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
                 >
                   Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      {isEdit ? 'Update Package' : 'Create Package'}
-                    </>
-                  )}
                 </button>
               </div>
             </form>
