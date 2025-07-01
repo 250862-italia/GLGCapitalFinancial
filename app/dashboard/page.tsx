@@ -61,6 +61,7 @@ export default function ClientDashboard() {
       if (e.key === 'bankDetails') loadBankDetails();
     };
     window.addEventListener('storage', onStorage);
+    setIsLoading(false);
     return () => window.removeEventListener('storage', onStorage);
   }, []);
 
