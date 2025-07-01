@@ -37,11 +37,26 @@ export default function ClientDashboard() {
   const [selectedPackage, setSelectedPackage] = useState<any>(null);
   const [bankDetails, setBankDetails] = useState<{iban: string, accountHolder: string, bankName: string, reason: string} | null>(null);
 
+  // Funzione di normalizzazione pacchetti
+  function normalizePackage(pkg: any): any {
+    return {
+      id: pkg.id || pkg.ID || String(Date.now()),
+      name: pkg.name || pkg.packageName || '',
+      minAmount: pkg.minAmount || pkg.amount || 1000,
+      dailyReturn: pkg.dailyReturn || pkg.expectedReturn || 1.0,
+      duration: pkg.duration || 30,
+      // altri campi se servono
+    };
+  }
+
   useEffect(() => {
     // Carica pacchetti disponibili e investimenti acquistati
     const loadPackages = () => {
       const stored = localStorage.getItem('investmentPackages');
-      setAvailablePackages(stored ? JSON.parse(stored) : []);
+      let pkgs = stored ? JSON.parse(stored) : [];
+      // Normalizza tutti i pacchetti
+      pkgs = Array.isArray(pkgs) ? pkgs.map(normalizePackage) : [];
+      setAvailablePackages(pkgs);
     };
     const loadMyInvestments = () => {
       const stored = localStorage.getItem('myInvestments');
@@ -319,12 +334,12 @@ export default function ClientDashboard() {
           <div style={{ background: 'white', borderRadius: '12px', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #e5e7eb', marginTop: '2rem' }}>
             <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#1f2937', marginBottom: '1.5rem' }}>Pacchetti disponibili</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {availablePackages.length === 0 && <p style={{ color: '#6b7280' }}>Nessun pacchetto disponibile.</p>}
+              {availablePackages.length === 0 && <p style={{ color: '#6b7280' }}>Nessun pacchetto disponibile. Crea un pacchetto dall'area admin.</p>}
               {availablePackages.map(pkg => (
                 <div key={pkg.id} style={{ border: '1px solid #e5e7eb', borderRadius: '8px', padding: '1rem', background: '#f9fafb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
                     <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#1f2937', marginBottom: '0.25rem' }}>{pkg.name}</h3>
-                    <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Min: {formatCurrency(pkg.minAmount || 1000)} • {formatPercentage(pkg.dailyReturn || 1.0)} daily return</p>
+                    <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Min: {formatCurrency(pkg.minAmount)} • {formatPercentage(pkg.dailyReturn)} daily return</p>
                   </div>
                   <button onClick={() => handleBuy(pkg)} disabled={myInvestments.some(inv => inv.packageName === pkg.name)} style={{ background: myInvestments.some(inv => inv.packageName === pkg.name) ? '#d1d5db' : '#059669', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '6px', cursor: myInvestments.some(inv => inv.packageName === pkg.name) ? 'not-allowed' : 'pointer', fontWeight: 500 }}>
                     {myInvestments.some(inv => inv.packageName === pkg.name) ? 'Acquistato' : 'Acquista'}
