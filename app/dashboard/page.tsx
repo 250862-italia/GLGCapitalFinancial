@@ -17,20 +17,7 @@ import {
   Download,
   RefreshCw
 } from 'lucide-react';
-
-interface Investment {
-  id: string;
-  packageName: string;
-  amount: number;
-  dailyReturn: number;
-  duration: number;
-  startDate: string;
-  endDate: string;
-  status: 'active' | 'completed' | 'pending';
-  totalEarned: number;
-  dailyEarnings: number;
-  monthlyEarnings: number;
-}
+import { Investment } from "@/types/investment";
 
 interface PortfolioStats {
   totalInvested: number;
@@ -60,7 +47,7 @@ export default function ClientDashboard() {
     if (stored) {
       const packages = JSON.parse(stored);
       // Trasforma ogni pacchetto in un investimento demo attivo
-      const realInvestments = packages.map((pkg: any, idx: number) => ({
+      const realInvestments: Investment[] = packages.map((pkg: any, idx: number) => ({
         id: pkg.id || String(idx + 1),
         packageName: pkg.name,
         amount: pkg.minAmount || 1000,
@@ -75,12 +62,12 @@ export default function ClientDashboard() {
       }));
       setInvestments(realInvestments);
       // Calcola stats
-      const totalInvested = realInvestments.reduce((sum: number, inv: Investment) => sum + inv.amount, 0);
-      const totalEarned = realInvestments.reduce((sum: number, inv: Investment) => sum + inv.totalEarned, 0);
+      const totalInvested = realInvestments.reduce((sum, inv) => sum + inv.amount, 0);
+      const totalEarned = realInvestments.reduce((sum, inv) => sum + inv.totalEarned, 0);
       const activeInvestments = realInvestments.length;
-      const averageReturn = realInvestments.length > 0 ? realInvestments.reduce((sum: number, inv: Investment) => sum + inv.dailyReturn, 0) / realInvestments.length : 0;
-      const todayEarnings = realInvestments.reduce((sum: number, inv: Investment) => sum + inv.dailyEarnings, 0);
-      const monthlyEarnings = realInvestments.reduce((sum: number, inv: Investment) => sum + inv.monthlyEarnings, 0);
+      const averageReturn = realInvestments.length > 0 ? realInvestments.reduce((sum, inv) => sum + inv.dailyReturn, 0) / realInvestments.length : 0;
+      const todayEarnings = realInvestments.reduce((sum, inv) => sum + inv.dailyEarnings, 0);
+      const monthlyEarnings = realInvestments.reduce((sum, inv) => sum + inv.monthlyEarnings, 0);
       setStats({ totalInvested, totalEarned, activeInvestments, averageReturn, todayEarnings, monthlyEarnings });
     } else {
       setInvestments([]);

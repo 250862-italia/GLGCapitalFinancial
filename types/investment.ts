@@ -11,4 +11,18 @@ export interface InvestmentFormData {
   dailyReturns: number;
   paymentMethod: 'bank' | 'usdt';
   notes?: string;
+}
+
+export interface Investment {
+  id: string;
+  packageName: string;
+  amount: number;
+  dailyReturn: number;
+  duration: number;
+  startDate: string;
+  endDate: string;
+  status: 'active' | 'completed' | 'pending';
+  totalEarned: number;
+  dailyEarnings: number;
+  monthlyEarnings: number;
 } 
