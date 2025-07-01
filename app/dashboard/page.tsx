@@ -53,6 +53,9 @@ export default function ClientDashboard() {
   // Pacchetti attivi per tutti i clienti
   const activeInvestments = availablePackages.filter(pkg => pkg.isActive);
 
+  // Pacchetti da mostrare: tutti quelli presenti in localStorage
+  const allPackages = availablePackages;
+
   useEffect(() => {
     // Carica pacchetti disponibili e investimenti acquistati
     const loadPackages = () => {
@@ -315,18 +318,18 @@ export default function ClientDashboard() {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
               <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#1f2937' }}>
-                Active Investments
+                Pacchetti disponibili
               </h2>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {activeInvestments.length === 0 && <p style={{ color: '#6b7280' }}>Nessun investimento attivo. L'amministratore non ha ancora attivato pacchetti.</p>}
-              {activeInvestments.map(investment => (
-                <div key={investment.id} style={{ border: '1px solid #e5e7eb', borderRadius: '8px', padding: '1rem', background: '#fafafa', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              {allPackages.length === 0 && <p style={{ color: '#6b7280' }}>Nessun pacchetto disponibile. Crea un pacchetto dall'area admin.</p>}
+              {allPackages.map(pkg => (
+                <div key={pkg.id} style={{ border: '1px solid #e5e7eb', borderRadius: '8px', padding: '1rem', background: '#f9fafb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
-                    <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#1f2937', marginBottom: '0.25rem' }}>{investment.name}
-                      <span style={{ marginLeft: 12, background: '#059669', color: 'white', borderRadius: 12, padding: '2px 12px', fontSize: 12, fontWeight: 700 }}>Attivo</span>
-                    </h3>
-                    <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>{formatCurrency(investment.minAmount)} • {formatPercentage(investment.dailyReturn)} daily return</p>
+                    <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#1f2937', marginBottom: '0.25rem' }}>{pkg.name || pkg.packageName}</h3>
+                    <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                      Min: {formatCurrency(pkg.minAmount || pkg.amount || 0)} • {formatPercentage(pkg.dailyReturn || pkg.expectedReturn || 0)} daily return
+                    </p>
                   </div>
                 </div>
               ))}
