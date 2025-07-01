@@ -81,6 +81,10 @@ export default function AdminUsersPage() {
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showInvestmentsModal, setShowInvestmentsModal] = useState(false);
+  const [showKYCModal, setShowKYCModal] = useState(false);
+  const [showActivityModal, setShowActivityModal] = useState(false);
+  const [showEmailModal, setShowEmailModal] = useState(false);
 
   useEffect(() => {
     loadUsers();
@@ -265,6 +269,26 @@ export default function AdminUsersPage() {
     return role === 'superadmin' ? '#f59e0b' : '#3b82f6';
   };
 
+  const openInvestmentsModal = (user: AdminUser) => {
+    setSelectedUser(user);
+    setShowInvestmentsModal(true);
+  };
+
+  const openKYCModal = (user: AdminUser) => {
+    setSelectedUser(user);
+    setShowKYCModal(true);
+  };
+
+  const openActivityModal = (user: AdminUser) => {
+    setSelectedUser(user);
+    setShowActivityModal(true);
+  };
+
+  const openEmailModal = (user: AdminUser) => {
+    setSelectedUser(user);
+    setShowEmailModal(true);
+  };
+
   return (
     <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 4px 24px rgba(10,37,64,0.10)', padding: '2rem' }}>
       
@@ -427,6 +451,18 @@ export default function AdminUsersPage() {
                             <Trash2 size={16} />
                           </button>
                         )}
+                        <button title="Investimenti" onClick={() => openInvestmentsModal(user)} style={{ marginRight: 8 }}>
+                          <DollarSign size={16} />
+                        </button>
+                        <button title="KYC" onClick={() => openKYCModal(user)} style={{ marginRight: 8 }}>
+                          <Shield size={16} />
+                        </button>
+                        <button title="Attività" onClick={() => openActivityModal(user)} style={{ marginRight: 8 }}>
+                          <Clock size={16} />
+                        </button>
+                        <button title="Invia Email" onClick={() => openEmailModal(user)}>
+                          <Mail size={16} />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -764,6 +800,31 @@ export default function AdminUsersPage() {
             </form>
           </div>
         </div>
+      )}
+
+      {showInvestmentsModal && (
+        <Modal onClose={() => setShowInvestmentsModal(false)}>
+          <h2>Investimenti di {selectedUser?.name}</h2>
+          <p>Funzionalità in sviluppo.</p>
+        </Modal>
+      )}
+      {showKYCModal && (
+        <Modal onClose={() => setShowKYCModal(false)}>
+          <h2>KYC di {selectedUser?.name}</h2>
+          <p>Funzionalità in sviluppo.</p>
+        </Modal>
+      )}
+      {showActivityModal && (
+        <Modal onClose={() => setShowActivityModal(false)}>
+          <h2>Attività di {selectedUser?.name}</h2>
+          <p>Funzionalità in sviluppo.</p>
+        </Modal>
+      )}
+      {showEmailModal && (
+        <Modal onClose={() => setShowEmailModal(false)}>
+          <h2>Invia Email a {selectedUser?.name}</h2>
+          <p>Funzionalità in sviluppo.</p>
+        </Modal>
       )}
     </div>
   );
