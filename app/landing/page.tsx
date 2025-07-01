@@ -31,7 +31,7 @@ export default function HomePage() {
           </span>
         </blockquote>
         <p style={{ 
-          color: '#1a3556', 
+          color: '#fff',
           fontSize: '1.4rem', 
           lineHeight: 1.6,
           maxWidth: 800,
