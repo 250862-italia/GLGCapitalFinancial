@@ -4,6 +4,8 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -12,6 +14,25 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const router = useRouter()
+
+  useEffect(() => {
+    // Controlla se esiste un utente loggato (user o admin)
+    const user = localStorage.getItem('user')
+    const adminUser = localStorage.getItem('admin_user')
+    setIsLoggedIn(!!user || !!adminUser)
+  }, [])
+
+  const handleLogout = () => {
+    localStorage.removeItem('user')
+    localStorage.removeItem('token')
+    localStorage.removeItem('admin_user')
+    localStorage.removeItem('admin_token')
+    router.push('/')
+    setIsLoggedIn(false)
+  }
+
   return (
     <html lang="en">
       <body style={{ background: 'var(--background)', minHeight: '100vh', fontFamily: 'Inter, Open Sans, Roboto, sans-serif' }}>
@@ -32,6 +53,24 @@ export default function RootLayout({
           <div style={{ marginLeft: '2rem', display: 'flex', gap: '1rem' }}>
             <Link href="/admin/login" style={{ background: 'var(--accent)', color: 'var(--primary)', padding: '0.5rem 1.25rem', borderRadius: 6, fontWeight: 700, textDecoration: 'none', boxShadow: '0 2px 8px rgba(34,40,49,0.07)' }}>Admin Console</Link>
             <Link href="/iscriviti" style={{ background: '#3b82f6', color: '#fff', padding: '0.5rem 1.25rem', borderRadius: 6, fontWeight: 700, textDecoration: 'none', boxShadow: '0 2px 8px rgba(34,40,49,0.07)' }}>Register</Link>
+            {isLoggedIn && (
+              <button
+                onClick={handleLogout}
+                style={{
+                  background: '#dc2626',
+                  color: '#fff',
+                  padding: '0.5rem 1.25rem',
+                  borderRadius: 6,
+                  fontWeight: 700,
+                  border: 'none',
+                  marginLeft: '1rem',
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 8px rgba(34,40,49,0.07)'
+                }}
+              >
+                Logout
+              </button>
+            )}
           </div>
         </nav>
         
