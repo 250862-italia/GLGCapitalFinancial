@@ -75,6 +75,15 @@ export default function HomePage() {
           }}>
             GLG Capital Group LLC
           </h1>
+          <div style={{
+            color: '#fff',
+            fontSize: '2rem',
+            fontWeight: 700,
+            marginBottom: '2.5rem',
+            textShadow: '0 2px 8px rgba(0,0,0,0.25)'
+          }}>
+            Empowering Your Financial Future
+          </div>
           
           <blockquote style={{
             fontSize: '1.4rem',
