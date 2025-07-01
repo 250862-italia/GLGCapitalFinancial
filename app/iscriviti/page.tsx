@@ -69,6 +69,9 @@ export default function IscrivitiPage() {
       const data = await response.json();
       if (response.ok && data.success) {
         setSuccess(true);
+        setTimeout(() => {
+          router.push("/");
+        }, 1500);
       } else {
         setError(data.error || data.message || "Errore durante la registrazione");
       }
