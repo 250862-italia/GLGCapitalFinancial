@@ -54,71 +54,38 @@ export default function ClientDashboard() {
   const [selectedTimeframe, setSelectedTimeframe] = useState<'1d' | '7d' | '30d' | '90d'>('30d');
   const [isLoading, setIsLoading] = useState(true);
 
-  // Mock data - replace with actual API calls
   useEffect(() => {
-    const mockInvestments: Investment[] = [
-      {
-        id: '1',
-        packageName: 'Premium Package',
-        amount: 10000,
-        dailyReturn: 1.2,
-        duration: 60,
-        startDate: '2024-01-15',
-        endDate: '2024-03-15',
+    // Carica pacchetti reali da localStorage
+    const stored = localStorage.getItem('investmentPackages');
+    if (stored) {
+      const packages = JSON.parse(stored);
+      // Trasforma ogni pacchetto in un investimento demo attivo
+      const realInvestments = packages.map((pkg: any, idx: number) => ({
+        id: pkg.id || String(idx + 1),
+        packageName: pkg.name,
+        amount: pkg.minAmount || 1000,
+        dailyReturn: pkg.dailyReturn || 1.0,
+        duration: pkg.duration || 30,
+        startDate: new Date().toISOString().split('T')[0],
+        endDate: new Date(Date.now() + (pkg.duration || 30) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         status: 'active',
-        totalEarned: 2400,
-        dailyEarnings: 120,
-        monthlyEarnings: 3600
-      },
-      {
-        id: '2',
-        packageName: 'Starter Package',
-        amount: 3000,
-        dailyReturn: 0.8,
-        duration: 30,
-        startDate: '2024-02-01',
-        endDate: '2024-03-02',
-        status: 'active',
-        totalEarned: 480,
-        dailyEarnings: 24,
-        monthlyEarnings: 720
-      },
-      {
-        id: '3',
-        packageName: 'VIP Package',
-        amount: 25000,
-        dailyReturn: 1.8,
-        duration: 90,
-        startDate: '2024-01-01',
-        endDate: '2024-04-01',
-        status: 'active',
-        totalEarned: 8100,
-        dailyEarnings: 450,
-        monthlyEarnings: 13500
-      }
-    ];
-
-    setInvestments(mockInvestments);
-
-    // Calculate stats
-    const totalInvested = mockInvestments.reduce((sum, inv) => sum + inv.amount, 0);
-    const totalEarned = mockInvestments.reduce((sum, inv) => sum + inv.totalEarned, 0);
-    const activeInvestments = mockInvestments.filter(inv => inv.status === 'active').length;
-    const averageReturn = mockInvestments.length > 0 
-      ? mockInvestments.reduce((sum, inv) => sum + inv.dailyReturn, 0) / mockInvestments.length 
-      : 0;
-    const todayEarnings = mockInvestments.reduce((sum, inv) => sum + inv.dailyEarnings, 0);
-    const monthlyEarnings = mockInvestments.reduce((sum, inv) => sum + inv.monthlyEarnings, 0);
-
-    setStats({
-      totalInvested,
-      totalEarned,
-      activeInvestments,
-      averageReturn,
-      todayEarnings,
-      monthlyEarnings
-    });
-
+        totalEarned: 0,
+        dailyEarnings: 0,
+        monthlyEarnings: 0
+      }));
+      setInvestments(realInvestments);
+      // Calcola stats
+      const totalInvested = realInvestments.reduce((sum, inv) => sum + inv.amount, 0);
+      const totalEarned = realInvestments.reduce((sum, inv) => sum + inv.totalEarned, 0);
+      const activeInvestments = realInvestments.length;
+      const averageReturn = realInvestments.length > 0 ? realInvestments.reduce((sum, inv) => sum + inv.dailyReturn, 0) / realInvestments.length : 0;
+      const todayEarnings = realInvestments.reduce((sum, inv) => sum + inv.dailyEarnings, 0);
+      const monthlyEarnings = realInvestments.reduce((sum, inv) => sum + inv.monthlyEarnings, 0);
+      setStats({ totalInvested, totalEarned, activeInvestments, averageReturn, todayEarnings, monthlyEarnings });
+    } else {
+      setInvestments([]);
+      setStats({ totalInvested: 0, totalEarned: 0, activeInvestments: 0, averageReturn: 0, todayEarnings: 0, monthlyEarnings: 0 });
+    }
     setIsLoading(false);
   }, []);
 
