@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Plus, Edit, Trash2, Eye, User, Loader2, AlertCircle, CheckCircle } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import { useRouter } from "next/navigation";
-import { InvestmentFormData } from "@/types/user";
+import { InvestmentFormData } from "@/types/investment";
 
 export default function AdminInvestmentsPage() {
   const [investments, setInvestments] = useState([]);
