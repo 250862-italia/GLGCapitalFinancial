@@ -15,6 +15,7 @@ import {
   LogOut
 } from 'lucide-react';
 import PackageProviderWrapper from '../package-provider';
+import '../globals.css';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
