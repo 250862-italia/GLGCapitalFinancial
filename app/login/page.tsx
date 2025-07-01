@@ -32,46 +32,56 @@ export default function LoginPage() {
   };
 
   const handleSubmit = async () => {
-    if (!validateForm()) {
-      setError('Please fill in all required fields');
-      return;
-    }
+    // DISABILITATO: login libero per sviluppo
+    // if (!validateForm()) {
+    //   setError('Please fill in all required fields');
+    //   return;
+    // }
 
     setIsLoading(true);
     setError('');
 
-    try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password
-        }),
-      });
+    // Simula login sempre valido
+    setSuccess('Login successful! Redirecting...');
+    localStorage.setItem('user', JSON.stringify({ email: formData.email }));
+    localStorage.setItem('token', 'dev-token');
+    setTimeout(() => {
+      router.push('/dashboard');
+    }, 1000);
+    setIsLoading(false);
+    return;
 
-      const data = await response.json();
+    // --- codice originale commentato ---
+    // try {
+    //   const response = await fetch('/api/auth/login', {
+    //     method: 'POST',
+    //     headers: {
+    //       'Content-Type': 'application/json',
+    //     },
+    //     body: JSON.stringify({
+    //       email: formData.email,
+    //       password: formData.password
+    //     }),
+    //   });
 
-      if (response.ok) {
-        setSuccess('Login successful! Redirecting...');
-        // Store user data in localStorage
-        localStorage.setItem('user', JSON.stringify(data.user));
-        localStorage.setItem('token', data.token);
-        
-        // Redirect to home page after 1 second
-        setTimeout(() => {
-          router.push('/');
-        }, 1000);
-      } else {
-        setError(data.error || 'Login failed');
-      }
-    } catch (err) {
-      setError('Network error. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
+    //   const data = await response.json();
+
+    //   if (response.ok) {
+    //     setSuccess('Login successful! Redirecting...');
+    //     // Store user data in localStorage
+    //     localStorage.setItem('user', JSON.stringify(data.user));
+    //     localStorage.setItem('token', data.token);
+    //     setTimeout(() => {
+    //       router.push('/');
+    //     }, 1000);
+    //   } else {
+    //     setError(data.error || 'Login failed');
+    //   }
+    // } catch (err) {
+    //   setError('Network error. Please try again.');
+    // } finally {
+    //   setIsLoading(false);
+    // }
   };
 
   return (
