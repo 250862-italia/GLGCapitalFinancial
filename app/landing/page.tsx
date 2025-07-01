@@ -492,6 +492,44 @@ export default function HomePage() {
           Our Italian Partners
         </h2>
         
+        {/* Magnificus Dominus Promo Block */}
+        <div style={{
+          background: 'linear-gradient(135deg, #f59e0b 0%, #fffbe6 100%)',
+          border: '2px solid #f59e0b',
+          borderRadius: 14,
+          boxShadow: '0 4px 20px rgba(245,158,11,0.10)',
+          padding: '2.5rem',
+          marginBottom: '2.5rem',
+          maxWidth: 900,
+          marginLeft: 'auto',
+          marginRight: 'auto',
+          textAlign: 'center'
+        }}>
+          <img src="https://www.magnificusdominusconsulting.com/wp-content/uploads/2023/09/cropped-logo-magnificus-dominus-1.png" alt="Magnificus Dominus Logo" style={{ width: 90, marginBottom: 18, borderRadius: 8, background: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.07)' }} />
+          <h3 style={{ color: '#b45309', fontSize: '1.5rem', fontWeight: 800, marginBottom: 12 }}>
+            Magnificus Dominus Consulting Europe Srl
+          </h3>
+          <p style={{ color: '#1a3556', fontSize: '1.1rem', lineHeight: 1.7, marginBottom: 18 }}>
+            <b>Partner esclusivo per l'Italia di GLG Capital Group LLC.</b><br/>
+            Magnificus Dominus è leader nella consulenza strategica, sviluppo d'impresa e gestione di progetti ad alto valore aggiunto. Grazie a un team altamente qualificato e a una rete consolidata, garantisce crescita, innovazione e risultati concreti per i nostri clienti italiani.<br/>
+            <span style={{ color: '#f59e0b', fontWeight: 700 }}>Scopri come Magnificus Dominus può portare la tua azienda al prossimo livello!</span>
+          </p>
+          <a href="https://www.magnificusdominusconsulting.com" target="_blank" rel="noopener noreferrer" style={{
+            background: '#0a2540',
+            color: '#fff',
+            padding: '1rem 2rem',
+            borderRadius: 8,
+            textDecoration: 'none',
+            fontWeight: 700,
+            fontSize: '1.1rem',
+            display: 'inline-block',
+            boxShadow: '0 2px 8px rgba(34,40,49,0.07)',
+            marginTop: 10
+          }}>
+            Visita il sito Magnificus Dominus
+          </a>
+        </div>
+
         <div style={{ 
           display: 'grid', 
           gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', 
