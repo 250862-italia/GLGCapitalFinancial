@@ -49,59 +49,48 @@ class EmailNotificationService {
   private initializeTemplates(): void {
     // Welcome email template
     this.templates.set('welcome', {
-      subject: 'Welcome to GLG Capital Group - Your Account is Ready',
+      subject: 'Benvenuto in GLG Capital Group - Il tuo account è attivo',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2rem; text-align: center;">
-            <h1 style="color: white; margin: 0;">Welcome to GLG Capital Group</h1>
+          <div style="background: linear-gradient(135deg, #0a2540 0%, #1a3556 100%); padding: 2rem; text-align: center; border-radius: 12px 12px 0 0;">
+            <img src='https://glgcapitalgroupllc.com/logo.png' alt='GLG Capital Group LLC' style='width: 80px; margin-bottom: 1rem;'/>
+            <h1 style="color: white; margin: 0; font-size: 2rem;">Benvenuto in GLG Capital Group</h1>
           </div>
-          <div style="padding: 2rem; background: white;">
-            <h2 style="color: #1f2937;">Hello {{name}},</h2>
-            <p style="color: #6b7280; line-height: 1.6;">
-              Welcome to GLG Capital Group! Your account has been successfully created and is ready for use.
+          <div style="padding: 2rem; background: white; border-radius: 0 0 12px 12px;">
+            <h2 style="color: #0a2540; font-size: 1.5rem;">Gentile {{name}},</h2>
+            <p style="color: #1a3556; font-size: 1.1rem; line-height: 1.7;">
+              Siamo lieti di confermare la creazione del tuo account presso <b>GLG Capital Group LLC</b>.<br/>
+              Da questo momento puoi accedere alla tua area riservata e iniziare il tuo percorso di investimento con noi.
             </p>
-            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 1rem; margin: 1rem 0;">
-              <h3 style="color: #166534; margin: 0 0 0.5rem 0;">Next Steps:</h3>
-              <ul style="color: #166534; margin: 0; padding-left: 1.5rem;">
-                <li>Complete your KYC verification</li>
-                <li>Explore our investment packages</li>
-                <li>Set up your payment methods</li>
-                <li>Start your investment journey</li>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1.5rem; margin: 2rem 0;">
+              <h3 style="color: #0a2540; margin: 0 0 0.5rem 0; font-size: 1.1rem;">Prossimi Passi:</h3>
+              <ul style="color: #1a3556; margin: 0; padding-left: 1.5rem; font-size: 1rem;">
+                <li>Completa la verifica KYC nella tua area riservata</li>
+                <li>Esplora e scegli i pacchetti di investimento più adatti a te</li>
+                <li>Gestisci i tuoi dati e documenti in totale sicurezza</li>
+                <li>Ricevi supporto dedicato dal nostro team in ogni fase</li>
               </ul>
             </div>
             <div style="text-align: center; margin: 2rem 0;">
-              <a href="{{loginUrl}}" style="background: #059669; color: white; padding: 1rem 2rem; text-decoration: none; border-radius: 8px; display: inline-block;">
-                Access Your Account
-              </a>
+              <a href="{{loginUrl}}" style="background: #f59e0b; color: #0a2540; padding: 1rem 2rem; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 1.1rem; display: inline-block;">Accedi alla tua Area Riservata</a>
             </div>
-            <p style="color: #6b7280; font-size: 14;">
-              If you have any questions, please don't hesitate to contact our support team.
+            <p style="color: #64748b; font-size: 1rem; margin-bottom: 1.5rem;">
+              Per qualsiasi domanda o necessità, il nostro team di supporto è a tua disposizione:<br/>
+              <b>Email:</b> <a href="mailto:support@glgcapitalgroupllc.com" style="color: #2563eb;">support@glgcapitalgroupllc.com</a><br/>
+              <b>Telefono:</b> +1 307 263 0876
+            </p>
+            <p style="color: #6b7280; font-size: 0.95rem;">
+              Ti ricordiamo che l'accesso all'area riservata è personale e protetto. Conserva con cura le tue credenziali.<br/>
+              Grazie per aver scelto GLG Capital Group LLC.<br/>
+              <b>Il Team GLG Capital Group</b>
             </p>
           </div>
-          <div style="background: #f8fafc; padding: 1rem; text-align: center; color: #6b7280; font-size: 12;">
-            © 2024 GLG Capital Group. All rights reserved.
+          <div style="background: #f8fafc; padding: 1rem; text-align: center; color: #6b7280; font-size: 12px; border-radius: 0 0 12px 12px;">
+            © 2024 GLG Capital Group LLC. Tutti i diritti riservati.
           </div>
         </div>
       `,
-      text: `
-Welcome to GLG Capital Group!
-
-Hello {{name}},
-
-Welcome to GLG Capital Group! Your account has been successfully created and is ready for use.
-
-Next Steps:
-- Complete your KYC verification
-- Explore our investment packages
-- Set up your payment methods
-- Start your investment journey
-
-Access your account: {{loginUrl}}
-
-If you have any questions, please don't hesitate to contact our support team.
-
-© 2024 GLG Capital Group. All rights reserved.
-      `
+      text: `Benvenuto in GLG Capital Group\n\nGentile {{name}},\n\nSiamo lieti di confermare la creazione del tuo account presso GLG Capital Group LLC. Da questo momento puoi accedere alla tua area riservata e iniziare il tuo percorso di investimento con noi.\n\nProssimi Passi:\n- Completa la verifica KYC nella tua area riservata\n- Esplora e scegli i pacchetti di investimento più adatti a te\n- Gestisci i tuoi dati e documenti in totale sicurezza\n- Ricevi supporto dedicato dal nostro team in ogni fase\n\nAccedi alla tua area riservata: {{loginUrl}}\n\nPer qualsiasi domanda o necessità, il nostro team di supporto è a tua disposizione:\nEmail: support@glgcapitalgroupllc.com\nTelefono: +1 307 263 0876\n\nTi ricordiamo che l'accesso all'area riservata è personale e protetto. Conserva con cura le tue credenziali.\nGrazie per aver scelto GLG Capital Group LLC.\n\nIl Team GLG Capital Group\n\n© 2024 GLG Capital Group LLC. Tutti i diritti riservati.`
     });
 
     // Security alert template
