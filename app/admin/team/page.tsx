@@ -39,67 +39,76 @@ export default function TeamPage() {
   });
 
   useEffect(() => {
-    loadTeam();
+    // Carica da localStorage, se vuoto usa mock
+    const stored = localStorage.getItem('teamMembers');
+    if (stored) {
+      setTeam(JSON.parse(stored));
+    } else {
+      const mockData: TeamMember[] = [
+        {
+          id: '1',
+          name: 'John Smith',
+          email: 'john.smith@glgcapitalgroupllc.com',
+          phone: '+1 786 798 8311',
+          role: 'admin',
+          department: 'Management',
+          status: 'active',
+          joinDate: '2023-01-15',
+          lastActive: '2024-01-15',
+          permissions: ['full_access', 'user_management', 'analytics', 'content']
+        },
+        {
+          id: '2',
+          name: 'Maria Garcia',
+          email: 'maria.garcia@glgcapitalgroupllc.com',
+          phone: '+1 786 798 8312',
+          role: 'manager',
+          department: 'Operations',
+          status: 'active',
+          joinDate: '2023-03-20',
+          lastActive: '2024-01-14',
+          permissions: ['analytics', 'content', 'team_view']
+        },
+        {
+          id: '3',
+          name: 'David Chen',
+          email: 'david.chen@glgcapitalgroupllc.com',
+          phone: '+1 786 798 8313',
+          role: 'analyst',
+          department: 'Analytics',
+          status: 'active',
+          joinDate: '2023-06-10',
+          lastActive: '2024-01-13',
+          permissions: ['analytics', 'reports']
+        },
+        {
+          id: '4',
+          name: 'Sarah Johnson',
+          email: 'sarah.johnson@glgcapitalgroupllc.com',
+          phone: '+1 786 798 8314',
+          role: 'support',
+          department: 'Customer Service',
+          status: 'inactive',
+          joinDate: '2023-02-28',
+          lastActive: '2023-12-15',
+          permissions: ['support', 'user_view']
+        }
+      ];
+      setTeam(mockData);
+      localStorage.setItem('teamMembers', JSON.stringify(mockData));
+    }
   }, []);
+
+  // Salva su localStorage ogni volta che cambia il team
+  useEffect(() => {
+    if (team.length > 0) {
+      localStorage.setItem('teamMembers', JSON.stringify(team));
+    }
+  }, [team]);
 
   useEffect(() => {
     filterTeam();
   }, [team, searchTerm, selectedRole, selectedStatus]);
-
-  const loadTeam = () => {
-    // Mock data - in real app this would come from API
-    const mockData: TeamMember[] = [
-      {
-        id: '1',
-        name: 'John Smith',
-        email: 'john.smith@glgcapitalgroupllc.com',
-        phone: '+1 786 798 8311',
-        role: 'admin',
-        department: 'Management',
-        status: 'active',
-        joinDate: '2023-01-15',
-        lastActive: '2024-01-15',
-        permissions: ['full_access', 'user_management', 'analytics', 'content']
-      },
-      {
-        id: '2',
-        name: 'Maria Garcia',
-        email: 'maria.garcia@glgcapitalgroupllc.com',
-        phone: '+1 786 798 8312',
-        role: 'manager',
-        department: 'Operations',
-        status: 'active',
-        joinDate: '2023-03-20',
-        lastActive: '2024-01-14',
-        permissions: ['analytics', 'content', 'team_view']
-      },
-      {
-        id: '3',
-        name: 'David Chen',
-        email: 'david.chen@glgcapitalgroupllc.com',
-        phone: '+1 786 798 8313',
-        role: 'analyst',
-        department: 'Analytics',
-        status: 'active',
-        joinDate: '2023-06-10',
-        lastActive: '2024-01-13',
-        permissions: ['analytics', 'reports']
-      },
-      {
-        id: '4',
-        name: 'Sarah Johnson',
-        email: 'sarah.johnson@glgcapitalgroupllc.com',
-        phone: '+1 786 798 8314',
-        role: 'support',
-        department: 'Customer Service',
-        status: 'inactive',
-        joinDate: '2023-02-28',
-        lastActive: '2023-12-15',
-        permissions: ['support', 'user_view']
-      }
-    ];
-    setTeam(mockData);
-  };
 
   const filterTeam = () => {
     let filtered = team;
@@ -183,7 +192,6 @@ export default function TeamPage() {
       };
       setTeam([newMember, ...team]);
     }
-    
     setShowAddModal(false);
     setShowEditModal(false);
     setSelectedItem(null);
