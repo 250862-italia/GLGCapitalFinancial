@@ -212,6 +212,55 @@ export default function HomePage() {
           Our Services
         </h2>
         
+        {/* Equity-Pledge Model Block */}
+        <div style={{
+          background: '#fff',
+          border: '2px solid #f59e0b',
+          borderRadius: 14,
+          boxShadow: '0 4px 20px rgba(245,158,11,0.08)',
+          padding: '2.5rem',
+          marginBottom: '2.5rem',
+          maxWidth: 900,
+          marginLeft: 'auto',
+          marginRight: 'auto',
+        }}>
+          <h3 style={{
+            color: '#f59e0b',
+            fontSize: '1.7rem',
+            fontWeight: 800,
+            marginBottom: '1.2rem',
+            textAlign: 'center',
+            letterSpacing: 0.5
+          }}>
+            How Our Equity-Pledge Model Works
+          </h3>
+          <ul style={{
+            color: '#1a3556',
+            fontSize: '1.1rem',
+            lineHeight: 1.7,
+            marginBottom: '1.5rem',
+            paddingLeft: '1.5rem',
+            maxWidth: 800,
+            margin: '0 auto'
+          }}>
+            <li><b>Dedicated Vehicle:</b> We create a special branch or subsidiary empowered to issue shares exclusively for investors.</li>
+            <li><b>Simple Subscription:</b> Investors complete an online form, e-sign the agreement, and wire funds to a segregated account.</li>
+            <li><b>Secured by Pledge:</b> Each investment is backed by a formal pledge of those newly issued shares—guaranteeing repayment.</li>
+            <li><b>Fixed, Attractive Yield:</b> 12% p.a. gross return (minus a 0.7% management fee), paid at a 36-month maturity.</li>
+            <li><b>Transparent Reporting:</b> Quarterly statements keep investors informed of principal and interest accrual.</li>
+            <li><b>Automatic Release:</b> On maturity, capital + net yield is wired back and the pledge is lifted—no hidden costs, no surprises.</li>
+          </ul>
+          <div style={{
+            color: '#0a2540',
+            fontWeight: 700,
+            fontSize: '1.15rem',
+            textAlign: 'center',
+            marginTop: '1.5rem'
+          }}>
+            Empower your growth with predictable returns and rock-solid security.
+          </div>
+        </div>
+
         <div style={{ 
           display: 'grid', 
           gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', 
