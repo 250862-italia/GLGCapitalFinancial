@@ -107,6 +107,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f9fafb' }}>
         <div style={{ textAlign: 'center', color: '#dc2626', fontWeight: 700, fontSize: 20 }}>
+          {/* DEBUG: Mostra ruolo rilevato */}
+          <div style={{ color: '#1a3556', fontSize: 16, marginBottom: 16 }}>
+            <b>DEBUG:</b> Ruolo rilevato: {adminUser?.role ? adminUser.role : 'Nessun utente loggato'}
+          </div>
           Accesso riservato ai superadmin.<br />Sei loggato come: {adminUser?.name} ({adminUser?.role})
         </div>
       </div>
