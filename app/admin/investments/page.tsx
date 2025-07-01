@@ -4,6 +4,22 @@ import { Plus, Edit, Trash2, Eye, User, Loader2, AlertCircle, CheckCircle } from
 import Modal from "@/components/ui/Modal";
 import { useRouter } from "next/navigation";
 
+// Definisci il tipo per i dati del form investimento
+interface InvestmentFormData {
+  id?: string;
+  clientId: string;
+  packageId: string;
+  amount: number;
+  currency: string;
+  startDate: string;
+  endDate: string;
+  status: 'active' | 'completed' | 'cancelled';
+  totalReturns: number;
+  dailyReturns: number;
+  paymentMethod: 'bank' | 'usdt';
+  notes?: string;
+}
+
 export default function AdminInvestmentsPage() {
   const [investments, setInvestments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -39,7 +55,7 @@ export default function AdminInvestmentsPage() {
   }, []);
 
   // CRUD
-  const handleCreateOrEdit = async (formData) => {
+  const handleCreateOrEdit = async (formData: InvestmentFormData) => {
     setError("");
     setSuccess("");
     setLoading(true);
@@ -215,7 +231,17 @@ export default function AdminInvestmentsPage() {
 }
 
 // --- COMPONENTE FORM ---
-function InvestmentForm({ initialData, onSubmit, onCancel, loading }) {
+function InvestmentForm({
+  initialData,
+  onSubmit,
+  onCancel,
+  loading
+}: {
+  initialData?: Partial<InvestmentFormData>;
+  onSubmit: (data: InvestmentFormData) => void;
+  onCancel: () => void;
+  loading: boolean;
+}) {
   const [form, setForm] = useState({
     clientId: initialData?.clientId || '',
     packageId: initialData?.packageId || '',
