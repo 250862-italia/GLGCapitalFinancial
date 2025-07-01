@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import bcrypt from 'bcryptjs'
+import { emailNotificationService } from '../../../../lib/email-service'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -173,8 +174,8 @@ export async function POST(request: NextRequest) {
       console.error('Terms acceptance error:', termsError)
     }
 
-    // Send welcome email (you can implement this later)
-    // await sendWelcomeEmail(email, firstName);
+    // Send welcome email
+    await emailNotificationService.sendWelcomeEmail(email, firstName, `${process.env.NEXT_PUBLIC_BASE_URL || 'https://glgcapitalgroupllc.com'}/login`);
 
     return NextResponse.json({
       success: true,
