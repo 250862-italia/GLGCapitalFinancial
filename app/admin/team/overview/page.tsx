@@ -1,5 +1,5 @@
 "use client";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { User, Mail, Phone, MapPin, Eye, Edit, Plus, Trash2, Search, Users, Star, Calendar } from 'lucide-react';
 
 interface TeamMember {
@@ -17,48 +17,7 @@ interface TeamMember {
 }
 
 export default function TeamManagementPage() {
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([
-    {
-      id: '1',
-      name: 'Dr. Sarah Johnson',
-      position: 'Senior Financial Consultant',
-      email: 'sarah.johnson@glgcapitalgroupllc.com',
-      phone: '+1 (555) 123-4567',
-      department: 'Consulting',
-      status: 'Active',
-      joinDate: '2023-01-15',
-      avatar: '/api/placeholder/60/60',
-      bio: 'Expert in strategic financial planning with 15+ years of experience in global markets.',
-      skills: ['Financial Planning', 'Risk Management', 'Portfolio Strategy']
-    },
-    {
-      id: '2',
-      name: 'Michael Chen',
-      position: 'Investment Analyst',
-      email: 'michael.chen@glgcapitalgroupllc.com',
-      phone: '+1 (555) 234-5678',
-      department: 'Analytics',
-      status: 'Active',
-      joinDate: '2023-03-20',
-      avatar: '/api/placeholder/60/60',
-      bio: 'Specialized in market analysis and investment research with expertise in emerging markets.',
-      skills: ['Market Analysis', 'Data Analytics', 'Research']
-    },
-    {
-      id: '3',
-      name: 'Emily Rodriguez',
-      position: 'Client Relations Manager',
-      email: 'emily.rodriguez@glgcapitalgroupllc.com',
-      phone: '+1 (555) 345-6789',
-      department: 'Client Services',
-      status: 'Active',
-      joinDate: '2023-06-10',
-      avatar: '/api/placeholder/60/60',
-      bio: 'Dedicated to building strong client relationships and ensuring exceptional service delivery.',
-      skills: ['Client Relations', 'Communication', 'Project Management']
-    }
-  ]);
-
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [activeTab, setActiveTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
@@ -77,6 +36,17 @@ export default function TeamManagementPage() {
   });
 
   const departments = ['Consulting', 'Analytics', 'Client Services', 'Operations', 'Marketing'];
+
+  // Carica membri da localStorage all'avvio
+  useEffect(() => {
+    const stored = localStorage.getItem('teamMembers');
+    if (stored) setTeamMembers(JSON.parse(stored));
+  }, []);
+
+  // Salva membri su localStorage a ogni modifica
+  useEffect(() => {
+    localStorage.setItem('teamMembers', JSON.stringify(teamMembers));
+  }, [teamMembers]);
 
   const filteredMembers = teamMembers.filter(member => {
     const matchesSearch = member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

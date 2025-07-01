@@ -157,6 +157,17 @@ export default function InvestmentManager() {
     setIsLoading(false);
   }, []);
 
+  // Carica pacchetti da localStorage all'avvio
+  useEffect(() => {
+    const stored = localStorage.getItem('investmentPackages');
+    if (stored) setPackages(JSON.parse(stored));
+  }, []);
+
+  // Salva pacchetti su localStorage a ogni modifica
+  useEffect(() => {
+    localStorage.setItem('investmentPackages', JSON.stringify(packages));
+  }, [packages]);
+
   const filteredInvestments = investments.filter(investment => {
     const matchesFilter = selectedFilter === 'all' || investment.status === selectedFilter;
     const matchesSearch = investment.packageName.toLowerCase().includes(searchTerm.toLowerCase());
