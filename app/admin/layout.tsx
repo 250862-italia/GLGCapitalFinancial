@@ -90,32 +90,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  if (!isAuthenticated) {
-    return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f9fafb' }}>
-        <div style={{ textAlign: 'center', color: '#dc2626', fontWeight: 700, fontSize: 20 }}>
-          Accesso negato. Effettua il login come superadmin per accedere all'area riservata.
-        </div>
-      </div>
-    );
-  }
-
-  // Accetta sia 'superadmin' che 'super_admin'
-  const isSuperAdmin = adminUser?.role === 'superadmin' || adminUser?.role === 'super_admin';
-
-  if (!isSuperAdmin) {
-    return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f9fafb' }}>
-        <div style={{ textAlign: 'center', color: '#dc2626', fontWeight: 700, fontSize: 20 }}>
-          {/* DEBUG: Mostra ruolo rilevato */}
-          <div style={{ color: '#1a3556', fontSize: 16, marginBottom: 16 }}>
-            <b>DEBUG:</b> Ruolo rilevato: {adminUser?.role ? adminUser.role : 'Nessun utente loggato'}
-          </div>
-          Accesso riservato ai superadmin.<br />Sei loggato come: {adminUser?.name} ({adminUser?.role})
-        </div>
-      </div>
-    );
-  }
+  // DISABILITATO controllo autenticazione e ruolo per sviluppo
+  // if (!isAuthenticated) { ... }
+  // if (!isSuperAdmin) { ... }
+  // Mostra sempre il contenuto admin per ora
 
   return (
     <PackageProviderWrapper>
@@ -176,7 +154,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </header>
 
         {/* ADMIN NAVIGATION */}
-        {isSuperAdmin && (
+        {/* isSuperAdmin && (
         <nav style={{ background: '#1f2937', borderBottom: '1px solid #374151' }}>
           <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 1rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', height: '4rem', overflowX: 'auto' }}>
@@ -215,7 +193,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
           </div>
         </nav>
-        )}
+        ) */}
 
         {/* Main content */}
         <main style={{ maxWidth: '1280px', margin: '0 auto', padding: '1.5rem 1rem' }}>
