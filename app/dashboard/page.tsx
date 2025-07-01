@@ -29,52 +29,63 @@ interface PortfolioStats {
 }
 
 export default function ClientDashboard() {
-  const [investments, setInvestments] = useState<Investment[]>([]);
-  const [stats, setStats] = useState<PortfolioStats>({
-    totalInvested: 0,
-    totalEarned: 0,
-    activeInvestments: 0,
-    averageReturn: 0,
-    todayEarnings: 0,
-    monthlyEarnings: 0
-  });
+  const [availablePackages, setAvailablePackages] = useState<any[]>([]);
+  const [myInvestments, setMyInvestments] = useState<Investment[]>([]);
   const [selectedTimeframe, setSelectedTimeframe] = useState<'1d' | '7d' | '30d' | '90d'>('30d');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Carica pacchetti reali da localStorage
-    const stored = localStorage.getItem('investmentPackages');
-    if (stored) {
-      const packages = JSON.parse(stored);
-      // Trasforma ogni pacchetto in un investimento demo attivo
-      const realInvestments: Investment[] = packages.map((pkg: any, idx: number) => ({
-        id: pkg.id || String(idx + 1),
-        packageName: pkg.name,
-        amount: pkg.minAmount || 1000,
-        dailyReturn: pkg.dailyReturn || 1.0,
-        duration: pkg.duration || 30,
-        startDate: new Date().toISOString().split('T')[0],
-        endDate: new Date(Date.now() + (pkg.duration || 30) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        status: 'active',
-        totalEarned: 0,
-        dailyEarnings: 0,
-        monthlyEarnings: 0
-      }));
-      setInvestments(realInvestments);
-      // Calcola stats
-      const totalInvested = realInvestments.reduce((sum, inv) => sum + inv.amount, 0);
-      const totalEarned = realInvestments.reduce((sum, inv) => sum + inv.totalEarned, 0);
-      const activeInvestments = realInvestments.length;
-      const averageReturn = realInvestments.length > 0 ? realInvestments.reduce((sum, inv) => sum + inv.dailyReturn, 0) / realInvestments.length : 0;
-      const todayEarnings = realInvestments.reduce((sum, inv) => sum + inv.dailyEarnings, 0);
-      const monthlyEarnings = realInvestments.reduce((sum, inv) => sum + inv.monthlyEarnings, 0);
-      setStats({ totalInvested, totalEarned, activeInvestments, averageReturn, todayEarnings, monthlyEarnings });
-    } else {
-      setInvestments([]);
-      setStats({ totalInvested: 0, totalEarned: 0, activeInvestments: 0, averageReturn: 0, todayEarnings: 0, monthlyEarnings: 0 });
-    }
-    setIsLoading(false);
+    // Carica pacchetti disponibili e investimenti acquistati
+    const loadPackages = () => {
+      const stored = localStorage.getItem('investmentPackages');
+      setAvailablePackages(stored ? JSON.parse(stored) : []);
+    };
+    const loadMyInvestments = () => {
+      const stored = localStorage.getItem('myInvestments');
+      setMyInvestments(stored ? JSON.parse(stored) : []);
+    };
+    loadPackages();
+    loadMyInvestments();
+    // Sincronizzazione real-time tra tab
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'investmentPackages') loadPackages();
+      if (e.key === 'myInvestments') loadMyInvestments();
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
   }, []);
+
+  // Funzione per acquistare un pacchetto
+  const handleBuy = (pkg: any) => {
+    // Evita doppioni
+    if (myInvestments.some(inv => inv.packageName === pkg.name)) return;
+    const newInvestment: Investment = {
+      id: pkg.id || String(Date.now()),
+      packageName: pkg.name,
+      amount: pkg.minAmount || 1000,
+      dailyReturn: pkg.dailyReturn || 1.0,
+      duration: pkg.duration || 30,
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: new Date(Date.now() + (pkg.duration || 30) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      status: 'active',
+      totalEarned: 0,
+      dailyEarnings: 0,
+      monthlyEarnings: 0
+    };
+    const updated = [...myInvestments, newInvestment];
+    setMyInvestments(updated);
+    localStorage.setItem('myInvestments', JSON.stringify(updated));
+  };
+
+  // Stats calcolate solo sugli investimenti acquistati
+  const stats = {
+    totalInvested: myInvestments.reduce((sum, inv) => sum + inv.amount, 0),
+    totalEarned: myInvestments.reduce((sum, inv) => sum + inv.totalEarned, 0),
+    activeInvestments: myInvestments.length,
+    averageReturn: myInvestments.length > 0 ? myInvestments.reduce((sum, inv) => sum + inv.dailyReturn, 0) / myInvestments.length : 0,
+    todayEarnings: myInvestments.reduce((sum, inv) => sum + inv.dailyEarnings, 0),
+    monthlyEarnings: myInvestments.reduce((sum, inv) => sum + inv.monthlyEarnings, 0)
+  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -269,131 +280,99 @@ export default function ClientDashboard() {
               <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#1f2937' }}>
                 Active Investments
               </h2>
-              <button style={{
-                background: '#3b82f6',
-                color: 'white',
-                border: 'none',
-                padding: '0.5rem 1rem',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '0.875rem',
-                fontWeight: 500
-              }}>
-                View All
-              </button>
             </div>
-
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {investments.map(investment => (
-                <div key={investment.id} style={{
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '8px',
-                  padding: '1rem',
-                  background: '#fafafa'
-                }}>
+              {myInvestments.length === 0 && <p style={{ color: '#6b7280' }}>Nessun investimento attivo. Acquista un pacchetto qui sotto!</p>}
+              {myInvestments.map(investment => (
+                <div key={investment.id} style={{ border: '1px solid #e5e7eb', borderRadius: '8px', padding: '1rem', background: '#fafafa' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
                     <div>
-                      <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#1f2937', marginBottom: '0.25rem' }}>
-                        {investment.packageName}
-                      </h3>
-                      <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-                        {formatCurrency(investment.amount)} • {formatPercentage(investment.dailyReturn)} daily return
-                      </p>
+                      <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#1f2937', marginBottom: '0.25rem' }}>{investment.packageName}</h3>
+                      <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>{formatCurrency(investment.amount)} • {formatPercentage(investment.dailyReturn)} daily return</p>
                     </div>
-                    <div style={{
-                      background: getStatusColor(investment.status),
-                      color: 'white',
-                      padding: '0.25rem 0.75rem',
-                      borderRadius: '20px',
-                      fontSize: '0.75rem',
-                      fontWeight: 600
-                    }}>
-                      {getStatusText(investment.status)}
-                    </div>
-                  </div>
-                  
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginTop: '1rem' }}>
-                    <div>
-                      <p style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>Daily Earnings</p>
-                      <p style={{ fontSize: '1rem', fontWeight: 600, color: '#059669' }}>
-                        {formatCurrency(investment.dailyEarnings)}
-                      </p>
-                    </div>
-                    <div>
-                      <p style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>Total Earned</p>
-                      <p style={{ fontSize: '1rem', fontWeight: 600, color: '#1f2937' }}>
-                        {formatCurrency(investment.totalEarned)}
-                      </p>
-                    </div>
-                    <div>
-                      <p style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>End Date</p>
-                      <p style={{ fontSize: '1rem', fontWeight: 600, color: '#1f2937' }}>
-                        {new Date(investment.endDate).toLocaleDateString()}
-                      </p>
-                    </div>
+                    <div style={{ background: getStatusColor(investment.status), color: 'white', padding: '0.25rem 0.75rem', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 600 }}>{getStatusText(investment.status)}</div>
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Quick Stats */}
-          <div style={{ 
-            background: 'white', 
-            borderRadius: '12px', 
-            padding: '1.5rem',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-            border: '1px solid #e5e7eb',
-            height: 'fit-content'
-          }}>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#1f2937', marginBottom: '1.5rem' }}>
-              Portfolio Summary
-            </h2>
-            
+          {/* Pacchetti disponibili */}
+          <div style={{ background: 'white', borderRadius: '12px', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #e5e7eb', marginTop: '2rem' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#1f2937', marginBottom: '1.5rem' }}>Pacchetti disponibili</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>Active Investments</span>
-                <span style={{ fontSize: '1rem', fontWeight: 600, color: '#1f2937' }}>
-                  {stats.activeInvestments}
-                </span>
-              </div>
-              
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>Average Return</span>
-                <span style={{ fontSize: '1rem', fontWeight: 600, color: '#059669' }}>
-                  {formatPercentage(stats.averageReturn)}
-                </span>
-              </div>
-              
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>Total Portfolio Value</span>
-                <span style={{ fontSize: '1rem', fontWeight: 600, color: '#1f2937' }}>
-                  {formatCurrency(stats.totalInvested + stats.totalEarned)}
-                </span>
-              </div>
-              
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>ROI</span>
-                <span style={{ fontSize: '1rem', fontWeight: 600, color: '#059669' }}>
-                  {formatPercentage((stats.totalEarned / stats.totalInvested) * 100)}
-                </span>
-              </div>
+              {availablePackages.length === 0 && <p style={{ color: '#6b7280' }}>Nessun pacchetto disponibile.</p>}
+              {availablePackages.map(pkg => (
+                <div key={pkg.id} style={{ border: '1px solid #e5e7eb', borderRadius: '8px', padding: '1rem', background: '#f9fafb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <h3 style={{ fontSize: '1rem', fontWeight: 600, color: '#1f2937', marginBottom: '0.25rem' }}>{pkg.name}</h3>
+                    <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Min: {formatCurrency(pkg.minAmount || 1000)} • {formatPercentage(pkg.dailyReturn || 1.0)} daily return</p>
+                  </div>
+                  <button onClick={() => handleBuy(pkg)} disabled={myInvestments.some(inv => inv.packageName === pkg.name)} style={{ background: myInvestments.some(inv => inv.packageName === pkg.name) ? '#d1d5db' : '#059669', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '6px', cursor: myInvestments.some(inv => inv.packageName === pkg.name) ? 'not-allowed' : 'pointer', fontWeight: 500 }}>
+                    {myInvestments.some(inv => inv.packageName === pkg.name) ? 'Acquistato' : 'Acquista'}
+                  </button>
+                </div>
+              ))}
             </div>
+          </div>
+        </div>
 
-            <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid #e5e7eb' }}>
-              <button style={{
-                background: '#059669',
-                color: 'white',
-                border: 'none',
-                padding: '0.75rem 1rem',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                width: '100%',
-                fontWeight: 600
-              }}>
-                Invest More
-              </button>
+        {/* Quick Stats */}
+        <div style={{ 
+          background: 'white', 
+          borderRadius: '12px', 
+          padding: '1.5rem',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+          border: '1px solid #e5e7eb',
+          height: 'fit-content'
+        }}>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#1f2937', marginBottom: '1.5rem' }}>
+            Portfolio Summary
+          </h2>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>Active Investments</span>
+              <span style={{ fontSize: '1rem', fontWeight: 600, color: '#1f2937' }}>
+                {stats.activeInvestments}
+              </span>
             </div>
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>Average Return</span>
+              <span style={{ fontSize: '1rem', fontWeight: 600, color: '#059669' }}>
+                {formatPercentage(stats.averageReturn)}
+              </span>
+            </div>
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>Total Portfolio Value</span>
+              <span style={{ fontSize: '1rem', fontWeight: 600, color: '#1f2937' }}>
+                {formatCurrency(stats.totalInvested + stats.totalEarned)}
+              </span>
+            </div>
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>ROI</span>
+              <span style={{ fontSize: '1rem', fontWeight: 600, color: '#059669' }}>
+                {formatPercentage((stats.totalEarned / stats.totalInvested) * 100)}
+              </span>
+            </div>
+          </div>
+
+          <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid #e5e7eb' }}>
+            <button style={{
+              background: '#059669',
+              color: 'white',
+              border: 'none',
+              padding: '0.75rem 1rem',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              width: '100%',
+              fontWeight: 600
+            }}>
+              Invest More
+            </button>
           </div>
         </div>
 
