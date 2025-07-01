@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Package, DollarSign, TrendingUp, Calendar, Eye, Edit, Plus, Trash2, Search, Filter, ExternalLink, CheckCircle, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
-import { usePackages } from '../../../lib/package-context';
+import { usePackages, InvestmentPackage } from '../../../lib/package-context';
 import { emailNotificationService } from '../../../lib/email-service';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
@@ -84,6 +84,7 @@ export default function PackagesManagementPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [riskFilter, setRiskFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [selectedPackage, setSelectedPackage] = useState<InvestmentPackage | null>(null);
 
   // Debug: monitor packages changes
   useEffect(() => {
@@ -113,7 +114,7 @@ export default function PackagesManagementPage() {
     setShowForm(true);
   };
 
-  const openEditForm = (pkg: Package) => {
+  const openEditForm = (pkg: InvestmentPackage) => {
     console.log('Opening edit form for package:', pkg);
     setFormData(pkg);
     setIsEdit(true);

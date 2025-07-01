@@ -3,22 +3,7 @@ import { useState, useEffect } from "react";
 import { Plus, Edit, Trash2, Eye, User, Loader2, AlertCircle, CheckCircle } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import { useRouter } from "next/navigation";
-
-// Definisci il tipo per i dati del form investimento
-interface InvestmentFormData {
-  id?: string;
-  clientId: string;
-  packageId: string;
-  amount: number;
-  currency: string;
-  startDate: string;
-  endDate: string;
-  status: 'active' | 'completed' | 'cancelled';
-  totalReturns: number;
-  dailyReturns: number;
-  paymentMethod: 'bank' | 'usdt';
-  notes?: string;
-}
+import { InvestmentFormData } from "@/types/user";
 
 export default function AdminInvestmentsPage() {
   const [investments, setInvestments] = useState([]);
@@ -27,7 +12,7 @@ export default function AdminInvestmentsPage() {
   const [success, setSuccess] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
-  const [selectedInvestment, setSelectedInvestment] = useState(null);
+  const [selectedInvestment, setSelectedInvestment] = useState<InvestmentFormData | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
