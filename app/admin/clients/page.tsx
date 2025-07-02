@@ -42,6 +42,13 @@ const normalizeStatus = (status: string): 'Active' | 'Inactive' | 'Suspended' =>
   return 'Active';
 };
 
+// Funzione per normalizzare il metodo di pagamento preferito
+const normalizePaymentMethod = (method: string): 'bank' | 'usdt' | 'both' => {
+  if (!method) return 'bank';
+  if (method === 'bank' || method === 'usdt' || method === 'both') return method;
+  return 'bank';
+};
+
 export default function ClientsManagementPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
@@ -114,7 +121,7 @@ export default function ClientsManagementPage() {
             profilePhoto: '',
             bankDetails: { iban: '', bic: '', accountHolder: '', bankName: '' },
             usdtWallet: '',
-            preferredPaymentMethod: 'bank',
+            preferredPaymentMethod: normalizePaymentMethod(c.preferredPaymentMethod),
           };
         }));
         setClients(clientsWithKyc);
@@ -335,7 +342,7 @@ export default function ClientsManagementPage() {
           profilePhoto: '',
           bankDetails: { iban: '', bic: '', accountHolder: '', bankName: '' },
           usdtWallet: '',
-          preferredPaymentMethod: 'bank',
+          preferredPaymentMethod: normalizePaymentMethod(c.preferredPaymentMethod),
         };
       }));
       setClients(clientsWithKyc);
