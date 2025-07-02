@@ -440,7 +440,7 @@ export default function ClientDashboard() {
               {riskData && riskData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={180}>
                   <PieChart>
-                    <Pie data={riskData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={60} label>
+                    <Pie data={riskData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={60} label={true}>
                       {riskData.map((entry, idx) => (
                         <Cell key={`cell-${idx}`} fill={riskColors[idx % riskColors.length]} />
                       ))}
