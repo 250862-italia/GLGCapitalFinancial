@@ -19,6 +19,8 @@ import {
 } from 'lucide-react';
 import { Investment } from "@/types/investment";
 import { Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import KYCProcess from "../components/kyc/kyc-process";
+import { useAuth } from "../../hooks/use-auth";
 
 interface PortfolioStats {
   totalInvested: number;
@@ -30,6 +32,7 @@ interface PortfolioStats {
 }
 
 export default function ClientDashboard() {
+  const { user } = useAuth();
   const [availablePackages, setAvailablePackages] = useState<any[]>([]);
   const [myInvestments, setMyInvestments] = useState<Investment[]>([]);
   const [selectedTimeframe, setSelectedTimeframe] = useState<'1d' | '7d' | '30d' | '90d'>('30d');
@@ -256,6 +259,14 @@ export default function ClientDashboard() {
             <div style={{ fontSize: 32, fontWeight: 900, color: '#0a2540', letterSpacing: -1 }}>{formatCurrency(stats.monthlyEarnings)}</div>
           </div>
         </div>
+
+        {/* KYC Process */}
+        {user && (
+          <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 2px 8px rgba(10,37,64,0.08)', padding: '2rem', marginBottom: '2.5rem' }}>
+            <h2 style={{ color: 'var(--primary)', fontSize: 24, fontWeight: 800, marginBottom: 18 }}>KYC - Complete Your Profile</h2>
+            <KYCProcess userId={user.id} onComplete={status => {}} />
+          </div>
+        )}
 
         {/* Pacchetti attivi */}
         <div style={{ margin: '2rem 0' }}>
