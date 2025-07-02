@@ -349,7 +349,7 @@ export default function ClientDashboard() {
               </h2>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {allPackages.length === 0 && <p style={{ color: '#6b7280' }}>Nessun pacchetto disponibile. Crea un pacchetto dall'area admin.</p>}
+              {/* {allPackages.length === 0 && <p style={{ color: '#6b7280' }}>Nessun pacchetto disponibile. Crea un pacchetto dall'area admin.</p>} */}
               {allPackages.map(pkg => (
                 <div key={pkg.id} style={{ border: '1px solid #e5e7eb', borderRadius: '8px', padding: '1rem', background: '#f9fafb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
@@ -367,7 +367,7 @@ export default function ClientDashboard() {
           <div style={{ background: 'white', borderRadius: '12px', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #e5e7eb', marginTop: '2rem' }}>
             <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#1f2937', marginBottom: '1.5rem' }}>Pacchetti disponibili</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {availablePackages.length === 0 && <p style={{ color: '#6b7280' }}>Nessun pacchetto disponibile. Crea un pacchetto dall'area admin.</p>}
+              {/* {availablePackages.length === 0 && <p style={{ color: '#6b7280' }}>Nessun pacchetto disponibile. Crea un pacchetto dall'area admin.</p>} */}
               {availablePackages.map(pkg => (
                 <div key={pkg.id} style={{ border: '1px solid #e5e7eb', borderRadius: '8px', padding: '1rem', background: '#f9fafb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
