@@ -671,3 +671,98 @@ INSERT INTO users (email, passwordHash, firstName, lastName, role, isActive, ema
 VALUES ('test@example.com', 'hashfinto', 'Test', 'User', 'user', true, false);
 
 SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'users';
+
+-- RINOMINA COLONNE IN camelCase (esegui solo se non sono già così)
+ALTER TABLE packages RENAME COLUMN min_investment TO "minInvestment";
+ALTER TABLE packages RENAME COLUMN max_investment TO "maxInvestment";
+ALTER TABLE packages RENAME COLUMN expected_return TO "expectedReturn";
+ALTER TABLE packages RENAME COLUMN daily_return TO "dailyReturn";
+ALTER TABLE packages RENAME COLUMN is_active TO "isActive";
+ALTER TABLE packages RENAME COLUMN created_at TO "createdAt";
+ALTER TABLE packages RENAME COLUMN updated_at TO "updatedAt";
+
+-- AGGIUNGI COLONNE MANCANTI (se necessario, ignora errori se già esistono)
+ALTER TABLE packages ADD COLUMN IF NOT EXISTS "riskLevel" VARCHAR(20);
+ALTER TABLE packages ADD COLUMN IF NOT EXISTS "category" VARCHAR(100);
+
+-- ABILITA RLS E POLICY DI LETTURA
+ALTER TABLE packages ENABLE ROW LEVEL SECURITY;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'packages' AND policyname = 'Allow read'
+  ) THEN
+    CREATE POLICY "Allow read" ON packages FOR SELECT USING (true);
+  END IF;
+END $$;
+
+-- INSERISCI UN PACCHETTO DI TEST
+INSERT INTO packages (id, name, description, "minInvestment", "maxInvestment", "expectedReturn", "dailyReturn", "isActive", "riskLevel", "category", status, "createdAt", "updatedAt", price, duration)
+VALUES (
+  gen_random_uuid(),
+  'Test Package',
+  'Pacchetto di test per debug',
+  1000,
+  10000,
+  8.5,
+  0.00023,
+  true,
+  'low',
+  'Conservative',
+  'Active',
+  NOW(),
+  NOW(),
+  1000,
+  12
+)
+ON CONFLICT DO NOTHING;
+
+-- =========================
+-- SISTEMA TABELLA CLIENTS
+-- =========================
+
+-- Rinomina colonne in camelCase (ignora errori se già esistono)
+ALTER TABLE clients RENAME COLUMN first_name TO "firstName";
+ALTER TABLE clients RENAME COLUMN last_name TO "lastName";
+ALTER TABLE clients RENAME COLUMN date_of_birth TO "dateOfBirth";
+ALTER TABLE clients RENAME COLUMN photo_url TO "photoUrl";
+ALTER TABLE clients RENAME COLUMN usdt_wallet TO "usdtWallet";
+ALTER TABLE clients RENAME COLUMN account_holder TO "accountHolder";
+ALTER TABLE clients RENAME COLUMN created_at TO "createdAt";
+ALTER TABLE clients RENAME COLUMN updated_at TO "updatedAt";
+
+-- Aggiungi colonne mancanti (ignora errori se già esistono)
+ALTER TABLE clients ADD COLUMN IF NOT EXISTS "preferredPaymentMethod" VARCHAR(20);
+
+-- Abilita RLS e policy di lettura
+ALTER TABLE clients ENABLE ROW LEVEL SECURITY;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE tablename = 'clients' AND policyname = 'Allow read'
+  ) THEN
+    CREATE POLICY "Allow read" ON clients FOR SELECT USING (true);
+  END IF;
+END $$;
+
+-- Inserisci un client di test (sostituisci user_id con un id valido dalla tabella users)
+INSERT INTO clients (id, user_id, email, "firstName", "lastName", phone, nationality, "photoUrl", iban, bic, "accountHolder", status, "createdAt", "updatedAt", "preferredPaymentMethod")
+SELECT
+  gen_random_uuid(),
+  id,
+  'test.client@glgcapital.com',
+  'Test',
+  'Client',
+  '+390123456789',
+  'Italy',
+  NULL,
+  'IT60X0542811101000000123456',
+  'BNLIITRR',
+  'Test Client',
+  'active',
+  NOW(),
+  NOW(),
+  'bank'
+FROM users
+LIMIT 1
+ON CONFLICT DO NOTHING;
