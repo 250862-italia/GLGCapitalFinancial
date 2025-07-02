@@ -193,6 +193,11 @@ export default function ClientDashboard() {
           </p>
         </div>
 
+        {/* KYC Process - subito sotto il welcome */}
+        <div style={{ marginBottom: '2rem' }}>
+          <KYCProcess />
+        </div>
+
         {/* Pacchetti & Analisi Rischio - SPOSTATO IN ALTO */}
         <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 4px 24px rgba(10,37,64,0.10)', padding: '2rem', margin: '2.5rem 0' }}>
           <div style={{ display: 'flex', gap: 32, flexWrap: 'wrap' }}>
@@ -252,14 +257,6 @@ export default function ClientDashboard() {
             </div>
           </div>
         </div>
-
-        {/* KYC Process - SPOSTATO SUBITO DOPO PACCHETTI & ANALISI RISCHIO */}
-        {user && (
-          <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 2px 8px rgba(10,37,64,0.08)', padding: '2rem', marginBottom: '2.5rem' }}>
-            <h2 style={{ color: 'var(--primary)', fontSize: 24, fontWeight: 800, marginBottom: 18 }}>KYC - Complete Your Profile</h2>
-            <KYCProcess userId={user.id} onComplete={status => {}} />
-          </div>
-        )}
 
         {/* Portfolio Summary - blocco attrattivo */}
         <div style={{

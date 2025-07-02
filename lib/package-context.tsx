@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import Toast from "../components/ui/Toast";
 
 export interface InvestmentPackage {
   id: string;
@@ -107,6 +108,7 @@ export function PackageProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedPackage, setSelectedPackage] = useState<InvestmentPackage | null>(null);
+  const [showToast, setShowToast] = useState(false);
 
   // Load packages from localStorage
   const loadFromStorage = (): InvestmentPackage[] => {
@@ -217,6 +219,15 @@ export function PackageProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     fetchPackages();
+    // Real-time sync tra tab: aggiorna pacchetti se cambia localStorage
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === STORAGE_KEY) {
+        fetchPackages();
+        setShowToast(true);
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
   }, []);
 
   const value: PackageContextType = {
@@ -236,6 +247,12 @@ export function PackageProvider({ children }: { children: ReactNode }) {
   return (
     <PackageContext.Provider value={value}>
       {children}
+      <Toast
+        message="Pacchetti aggiornati in background"
+        visible={showToast}
+        onClose={() => setShowToast(false)}
+        duration={3000}
+      />
     </PackageContext.Provider>
   );
 }
