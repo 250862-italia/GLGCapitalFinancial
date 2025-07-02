@@ -18,7 +18,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { Investment } from "@/types/investment";
-import { Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import KYCProcess from "../../components/kyc/kyc-process";
 import { useAuth } from "../../hooks/use-auth";
 import { usePackages } from "../../lib/package-context";
@@ -446,7 +446,6 @@ export default function ClientDashboard() {
                       ))}
                     </Pie>
                     <Tooltip />
-                    <Legend />
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
