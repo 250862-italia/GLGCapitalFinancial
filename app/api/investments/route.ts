@@ -74,8 +74,11 @@ export async function PUT(request: NextRequest) {
       } else if (fields.status === 'cancelled') {
         await emailNotificationService.sendEmail({
           to: userData.email,
-          subject: 'Investimento rifiutato',
-          html: `<p>Gentile ${userData.firstName},<br/>la tua richiesta di investimento nel pacchetto <b>${packageData.name}</b> è stata <b>rifiutata</b>.<br/>Per maggiori informazioni contatta il supporto.</p>`
+          template: 'investment_rejected',
+          data: {
+            name: userData.firstName,
+            packageName: packageData.name
+          }
         });
       }
     }

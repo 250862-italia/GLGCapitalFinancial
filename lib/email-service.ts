@@ -148,57 +148,75 @@ If this activity was not performed by you, please contact our security team imme
 
     // Investment confirmation template
     this.templates.set('investment_confirmation', {
-      subject: 'Investment Confirmation - GLG Capital Group',
+      subject: 'Conferma Investimento - GLG Capital Group',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <div style="background: #059669; padding: 2rem; text-align: center;">
-            <h1 style="color: white; margin: 0;">Investment Confirmation</h1>
+          <div style="background: linear-gradient(135deg, #0a2540 0%, #1a3556 100%); padding: 2rem; text-align: center; border-radius: 12px 12px 0 0;">
+            <img src='https://glgcapitalgroupllc.com/logo.png' alt='GLG Capital Group LLC' style='width: 80px; margin-bottom: 1rem;'/>
+            <h1 style="color: white; margin: 0; font-size: 2rem;">Investimento Confermato</h1>
           </div>
-          <div style="padding: 2rem; background: white;">
-            <h2 style="color: #1f2937;">Hello {{name}},</h2>
-            <p style="color: #6b7280; line-height: 1.6;">
-              Your investment has been successfully processed. Here are the details:
+          <div style="padding: 2rem; background: white; border-radius: 0 0 12px 12px;">
+            <h2 style="color: #0a2540; font-size: 1.5rem;">Gentile {{name}},</h2>
+            <p style="color: #1a3556; font-size: 1.1rem; line-height: 1.7;">
+              Siamo lieti di confermare che il tuo investimento nel pacchetto <b>{{packageName}}</b> è stato <b>confermato</b>.<br/>
+              <b>Importo:</b> {{amount}} EUR<br/>
+              <b>Data:</b> {{date}}
             </p>
-            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 1rem; margin: 1rem 0;">
-              <h3 style="color: #166534; margin: 0 0 0.5rem 0;">Investment Details:</h3>
-              <p style="color: #166534; margin: 0;"><strong>Package:</strong> {{packageName}}</p>
-              <p style="color: #166534; margin: 0;"><strong>Amount:</strong> $' + '{{amount}}' + '</p>
-              <p style="color: #166534; margin: 0;"><strong>Transaction ID:</strong> {{transactionId}}</p>
-              <p style="color: #166534; margin: 0;"><strong>Date:</strong> {{date}}</p>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1.5rem; margin: 2rem 0;">
+              <h3 style="color: #0a2540; margin: 0 0 0.5rem 0; font-size: 1.1rem;">Cosa succede ora?</h3>
+              <ul style="color: #1a3556; margin: 0; padding-left: 1.5rem; font-size: 1rem;">
+                <li>Riceverai aggiornamenti sull'andamento del tuo investimento nella tua area riservata</li>
+                <li>Per qualsiasi domanda, il nostro team è a tua disposizione</li>
+              </ul>
             </div>
             <div style="text-align: center; margin: 2rem 0;">
-              <a href="{{portfolioUrl}}" style="background: #059669; color: white; padding: 1rem 2rem; text-decoration: none; border-radius: 8px; display: inline-block;">
-                View Portfolio
-              </a>
+              <a href="{{portfolioUrl}}" style="background: #f59e0b; color: #0a2540; padding: 1rem 2rem; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 1.1rem; display: inline-block;">Vai al tuo portafoglio</a>
             </div>
-            <p style="color: #6b7280; font-size: 14;">
-              Thank you for choosing GLG Capital Group for your investment needs.
+            <p style="color: #64748b; font-size: 1rem; margin-bottom: 1.5rem;">
+              Per assistenza: <b>Email:</b> <a href="mailto:support@glgcapitalgroupllc.com" style="color: #2563eb;">support@glgcapitalgroupllc.com</a>
+            </p>
+            <p style="color: #6b7280; font-size: 0.95rem;">
+              Grazie per aver scelto GLG Capital Group LLC.<br/>
+              <b>Il Team GLG Capital Group</b>
             </p>
           </div>
-          <div style="background: #f8fafc; padding: 1rem; text-align: center; color: #6b7280; font-size: 12;">
-            © 2024 GLG Capital Group. All rights reserved.
+          <div style="background: #f8fafc; padding: 1rem; text-align: center; color: #6b7280; font-size: 12px; border-radius: 0 0 12px 12px;">
+            © 2024 GLG Capital Group LLC. Tutti i diritti riservati.
           </div>
         </div>
       `,
-      text: `
-Investment Confirmation - GLG Capital Group
+      text: `Gentile {{name}},\n\nIl tuo investimento nel pacchetto {{packageName}} è stato confermato.\nImporto: {{amount}} EUR\nData: {{date}}\n\nAccedi al tuo portafoglio: {{portfolioUrl}}\n\nGrazie per aver scelto GLG Capital Group LLC.`
+    });
 
-Hello {{name}},
-
-Your investment has been successfully processed. Here are the details:
-
-Investment Details:
-- Package: {{packageName}}
-- Amount: $' + '{{amount}}' + '
-- Transaction ID: {{transactionId}}
-- Date: {{date}}
-
-View your portfolio: {{portfolioUrl}}
-
-Thank you for choosing GLG Capital Group for your investment needs.
-
-© 2024 GLG Capital Group. All rights reserved.
-      `
+    // Email rifiuto investimento
+    this.templates.set('investment_rejected', {
+      subject: 'Investimento Rifiutato - GLG Capital Group',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background: #dc2626; padding: 2rem; text-align: center; border-radius: 12px 12px 0 0;">
+            <img src='https://glgcapitalgroupllc.com/logo.png' alt='GLG Capital Group LLC' style='width: 80px; margin-bottom: 1rem;'/>
+            <h1 style="color: white; margin: 0; font-size: 2rem;">Investimento Rifiutato</h1>
+          </div>
+          <div style="padding: 2rem; background: white; border-radius: 0 0 12px 12px;">
+            <h2 style="color: #dc2626; font-size: 1.5rem;">Gentile {{name}},</h2>
+            <p style="color: #1a3556; font-size: 1.1rem; line-height: 1.7;">
+              Siamo spiacenti di comunicarti che la tua richiesta di investimento nel pacchetto <b>{{packageName}}</b> è stata <b>rifiutata</b>.<br/>
+              Per maggiori informazioni o chiarimenti, contatta il nostro supporto.
+            </p>
+            <div style="text-align: center; margin: 2rem 0;">
+              <a href="mailto:support@glgcapitalgroupllc.com" style="background: #dc2626; color: white; padding: 1rem 2rem; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 1.1rem; display: inline-block;">Contatta il supporto</a>
+            </div>
+            <p style="color: #6b7280; font-size: 0.95rem;">
+              Ci auguriamo di poterti aiutare in futuro.<br/>
+              <b>Il Team GLG Capital Group</b>
+            </p>
+          </div>
+          <div style="background: #f8fafc; padding: 1rem; text-align: center; color: #6b7280; font-size: 12px; border-radius: 0 0 12px 12px;">
+            © 2024 GLG Capital Group LLC. Tutti i diritti riservati.
+          </div>
+        </div>
+      `,
+      text: `Gentile {{name}},\n\nLa tua richiesta di investimento nel pacchetto {{packageName}} è stata rifiutata.\nPer assistenza scrivi a support@glgcapitalgroupllc.com\n\nIl Team GLG Capital Group.`
     });
 
     // KYC status update template
