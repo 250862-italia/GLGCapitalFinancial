@@ -391,62 +391,64 @@ export default function ClientDashboard() {
           </div>
         </div>
 
-        {/* Quick Stats */}
-        <div style={{ 
-          background: 'white', 
-          borderRadius: '12px', 
-          padding: '1.5rem',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          border: '1px solid #e5e7eb',
-          height: 'fit-content'
+        {/* Portfolio Summary - blocco attrattivo */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+          gap: '2rem',
+          marginBottom: '2.5rem',
         }}>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#1f2937', marginBottom: '1.5rem' }}>
-            Portfolio Summary
-          </h2>
-          
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>Active Investments</span>
-              <span style={{ fontSize: '1rem', fontWeight: 600, color: '#1f2937' }}>
-                {stats.activeInvestments}
-              </span>
-            </div>
-            
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>Average Return</span>
-              <span style={{ fontSize: '1rem', fontWeight: 600, color: '#059669' }}>
-                {formatPercentage(stats.averageReturn)}
-              </span>
-            </div>
-            
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>Total Portfolio Value</span>
-              <span style={{ fontSize: '1rem', fontWeight: 600, color: '#1f2937' }}>
-                {formatCurrency(stats.totalInvested + stats.totalEarned)}
-              </span>
-            </div>
-            
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>ROI</span>
-              <span style={{ fontSize: '1rem', fontWeight: 600, color: '#059669' }}>
-                {formatPercentage((stats.totalEarned / stats.totalInvested) * 100)}
-              </span>
-            </div>
+          {/* Total Invested */}
+          <div style={{
+            background: 'linear-gradient(135deg, #f0fdf4 60%, #bbf7d0 100%)',
+            padding: '2rem 1.5rem',
+            borderRadius: '18px',
+            boxShadow: '0 4px 24px rgba(16,185,129,0.10)',
+            border: '1px solid #bbf7d0',
+            display: 'flex', flexDirection: 'column', alignItems: 'center',
+          }}>
+            <DollarSign size={38} color="#059669" style={{ marginBottom: 12 }} />
+            <div style={{ fontSize: 16, color: '#059669', fontWeight: 700, marginBottom: 6 }}>Total Invested</div>
+            <div style={{ fontSize: 32, fontWeight: 900, color: '#0a2540', letterSpacing: -1 }}>{formatCurrency(stats.totalInvested)}</div>
           </div>
-
-          <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid #e5e7eb' }}>
-            <button style={{
-              background: '#059669',
-              color: 'white',
-              border: 'none',
-              padding: '0.75rem 1rem',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              width: '100%',
-              fontWeight: 600
-            }}>
-              Invest More
-            </button>
+          {/* Total Earned */}
+          <div style={{
+            background: 'linear-gradient(135deg, #fef3c7 60%, #fde68a 100%)',
+            padding: '2rem 1.5rem',
+            borderRadius: '18px',
+            boxShadow: '0 4px 24px rgba(245,158,11,0.10)',
+            border: '1px solid #fde68a',
+            display: 'flex', flexDirection: 'column', alignItems: 'center',
+          }}>
+            <TrendingUp size={38} color="#f59e0b" style={{ marginBottom: 12 }} />
+            <div style={{ fontSize: 16, color: '#f59e0b', fontWeight: 700, marginBottom: 6 }}>Total Earned</div>
+            <div style={{ fontSize: 32, fontWeight: 900, color: '#0a2540', letterSpacing: -1 }}>{formatCurrency(stats.totalEarned)}</div>
+          </div>
+          {/* Today's Earnings */}
+          <div style={{
+            background: 'linear-gradient(135deg, #eff6ff 60%, #bae6fd 100%)',
+            padding: '2rem 1.5rem',
+            borderRadius: '18px',
+            boxShadow: '0 4px 24px rgba(59,130,246,0.10)',
+            border: '1px solid #bae6fd',
+            display: 'flex', flexDirection: 'column', alignItems: 'center',
+          }}>
+            <Target size={38} color="#3b82f6" style={{ marginBottom: 12 }} />
+            <div style={{ fontSize: 16, color: '#3b82f6', fontWeight: 700, marginBottom: 6 }}>Today's Earnings</div>
+            <div style={{ fontSize: 32, fontWeight: 900, color: '#0a2540', letterSpacing: -1 }}>{formatCurrency(stats.todayEarnings)}</div>
+          </div>
+          {/* Monthly Earnings */}
+          <div style={{
+            background: 'linear-gradient(135deg, #fdf2f8 60%, #fbcfe8 100%)',
+            padding: '2rem 1.5rem',
+            borderRadius: '18px',
+            boxShadow: '0 4px 24px rgba(236,72,153,0.10)',
+            border: '1px solid #fbcfe8',
+            display: 'flex', flexDirection: 'column', alignItems: 'center',
+          }}>
+            <BarChart3 size={38} color="#ec4899" style={{ marginBottom: 12 }} />
+            <div style={{ fontSize: 16, color: '#ec4899', fontWeight: 700, marginBottom: 6 }}>Monthly Earnings</div>
+            <div style={{ fontSize: 32, fontWeight: 900, color: '#0a2540', letterSpacing: -1 }}>{formatCurrency(stats.monthlyEarnings)}</div>
           </div>
         </div>
 
