@@ -181,15 +181,20 @@ export default function PackagesManagementPage() {
           { package: formData, action: 'edit' }
         );
       } else {
-        await createPackage({
-          ...formData,
-          expectedReturn: formData.expectedReturn ?? 0,
-          isActive: true,
-          features: [],
-          terms: ''
-        } as any);
+        // Mapping dei campi per Supabase
+        const mapped = {
+          name: formData.name,
+          description: formData.description,
+          price: formData.minInvestment, // oppure un campo dedicato se serve
+          daily_return: (formData.expectedReturn ?? 0) / 100 / 365, // se expectedReturn è % annua
+          duration_days: formData.duration,
+          min_investment: formData.minInvestment,
+          max_investment: formData.maxInvestment,
+          currency: 'USD',
+          status: formData.status || 'active',
+        };
+        await createPackage(mapped as any);
         setSuccessMessage('Package created successfully!');
-        
         // Send surveillance notification for package creation
         emailNotificationService.notifyAdminAction(
           { id: 'admin', name: 'Admin User' },
