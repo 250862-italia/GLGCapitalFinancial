@@ -438,7 +438,7 @@ export default function AdminContentPage() {
                   {item.title}
                 </div>
                 <div style={{ fontSize: '0.875rem', color: '#64748b' }}>
-                  {item.views.toLocaleString()} views
+                  {item.views != null ? item.views.toLocaleString() : '-'} views
                 </div>
               </div>
               
@@ -561,7 +561,7 @@ export default function AdminContentPage() {
             border: '1px solid #e2e8f0'
           }}>
             <div style={{ fontSize: '2rem', fontWeight: 700, color: '#1a2238' }}>
-              {content.reduce((sum, item) => sum + item.views, 0).toLocaleString()}
+              {content.reduce((sum, item) => sum + (item.views || 0), 0).toLocaleString()}
             </div>
             <div style={{ color: '#64748b' }}>Total Views</div>
           </div>

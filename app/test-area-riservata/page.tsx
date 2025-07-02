@@ -250,7 +250,7 @@ function DashboardContent() {
               color: '#1f2937',
               margin: 0
             }}>
-              ${user.totalInvestment.toLocaleString()}
+              ${user.totalInvestment != null ? user.totalInvestment.toLocaleString() : '-'}
             </p>
           </div>
 
@@ -282,7 +282,7 @@ function DashboardContent() {
               color: '#1f2937',
               margin: 0
             }}>
-              ${user.currentValue.toLocaleString()}
+              ${user.currentValue != null ? user.currentValue.toLocaleString() : '-'}
             </p>
           </div>
 
@@ -314,7 +314,7 @@ function DashboardContent() {
               color: '#16a34a',
               margin: 0
             }}>
-              +${user.profit.toLocaleString()} (+{user.profitPercentage}%)
+              +${user.profit != null ? user.profit.toLocaleString() : '-'} (+{user.profitPercentage}%)
             </p>
           </div>
 
@@ -458,7 +458,7 @@ function DashboardContent() {
                       textAlign: 'right',
                       color: '#374151'
                     }}>
-                      ${item.amount.toLocaleString()}
+                      ${item.amount != null ? item.amount.toLocaleString() : '-'}
                     </td>
                     <td style={{
                       padding: '0.75rem 0',
@@ -466,7 +466,7 @@ function DashboardContent() {
                       color: '#374151',
                       fontWeight: 600
                     }}>
-                      ${item.currentValue.toLocaleString()}
+                      ${item.currentValue != null ? item.currentValue.toLocaleString() : '-'}
                     </td>
                     <td style={{
                       padding: '0.75rem 0',
@@ -474,7 +474,7 @@ function DashboardContent() {
                       color: item.profit >= 0 ? '#16a34a' : '#dc2626',
                       fontWeight: 600
                     }}>
-                      ${item.profit.toLocaleString()} ({item.profitPercentage}%)
+                      ${item.profit != null ? item.profit.toLocaleString() : '-'} ({item.profitPercentage}%)
                     </td>
                     <td style={{
                       padding: '0.75rem 0',

@@ -407,7 +407,7 @@ export default function AdminPartnershipsPage() {
                 </p>
                 <p style={{ color: '#6b7280', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
                   <DollarSign size={14} style={{ marginRight: '0.25rem' }} />
-                  ${partnership.value.toLocaleString()}
+                  ${partnership.value != null ? partnership.value.toLocaleString() : '-'}
                 </p>
                 <p style={{ color: '#374151', fontSize: '0.875rem', lineHeight: 1.5 }}>
                   {partnership.description.substring(0, 100)}...
@@ -770,7 +770,7 @@ export default function AdminPartnershipsPage() {
               </div>
               
               <div>
-                <strong>Value:</strong> ${selectedItem.value.toLocaleString()}
+                <strong>Value:</strong> ${selectedItem.value != null ? selectedItem.value.toLocaleString() : '-'}
               </div>
               
               <div>

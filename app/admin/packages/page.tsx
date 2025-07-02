@@ -343,8 +343,8 @@ export default function PackagesManagementPage() {
                   <td style={{ padding: '1rem', textAlign: 'center' }}>
                     <span style={{ background: pkg.riskLevel === 'low' ? '#bbf7d0' : pkg.riskLevel === 'medium' ? '#fef3c7' : '#fee2e2', color: pkg.riskLevel === 'low' ? '#166534' : pkg.riskLevel === 'medium' ? '#92400e' : '#991b1b', padding: '0.3rem 0.7rem', borderRadius: 8, fontWeight: 600, fontSize: 14, textTransform: 'capitalize' }}>{pkg.riskLevel}</span>
                   </td>
-                  <td style={{ padding: '1rem', textAlign: 'right' }}>€{pkg.minInvestment.toLocaleString()}</td>
-                  <td style={{ padding: '1rem', textAlign: 'right' }}>€{pkg.maxInvestment.toLocaleString()}</td>
+                  <td style={{ padding: '1rem', textAlign: 'right' }}>€{pkg.minInvestment != null ? pkg.minInvestment.toLocaleString() : '-'}</td>
+                  <td style={{ padding: '1rem', textAlign: 'right' }}>€{pkg.maxInvestment != null ? pkg.maxInvestment.toLocaleString() : '-'}</td>
                   <td style={{ padding: '1rem', textAlign: 'right' }}>{pkg.expectedReturn}%</td>
                   <td style={{ padding: '1rem', textAlign: 'center' }}>{pkg.duration}</td>
                   <td style={{ padding: '1rem', textAlign: 'center' }}>

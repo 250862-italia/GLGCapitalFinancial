@@ -354,7 +354,7 @@ export default function AdminMarketsPage() {
                 <td style={{ padding: '1rem', fontWeight: 600, color: '#1f2937' }}>{item.symbol}</td>
                 <td style={{ padding: '1rem', color: '#374151' }}>{item.name}</td>
                 <td style={{ padding: '1rem', textAlign: 'right', fontWeight: 600, color: '#1f2937' }}>
-                  ${item.currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
+                  ${item.currentPrice != null ? item.currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 }) : '-'}
                 </td>
                 <td style={{ padding: '1rem', textAlign: 'right' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'flex-end' }}>

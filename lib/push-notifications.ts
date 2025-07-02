@@ -357,7 +357,7 @@ class PushNotificationService {
   static createInvestmentNotification(amount: number, packageName: string): Omit<PushNotification, 'id' | 'timestamp'> {
     return {
       title: 'Investment Successful',
-      body: `Your investment of $${amount.toLocaleString()} in ${packageName} has been processed successfully.`,
+      body: `Your investment of $${amount != null ? amount.toLocaleString() : '-'} in ${packageName} has been processed successfully.`,
       icon: '/icon-192x192.png',
       tag: 'investment',
       data: { type: 'investment', amount, package: packageName },

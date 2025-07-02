@@ -646,7 +646,7 @@ export default function AdminAnalyticsDashboard() {
             }}>
               <span style={{ fontSize: 14, color: '#374151' }}>Average Investment</span>
               <span style={{ fontSize: 16, fontWeight: 600, color: '#059669' }}>
-                ${analyticsData.investmentMetrics.averageInvestment.toLocaleString()}
+                ${analyticsData.investmentMetrics.averageInvestment != null ? analyticsData.investmentMetrics.averageInvestment.toLocaleString() : '-'}
               </span>
             </div>
             

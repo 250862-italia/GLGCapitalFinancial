@@ -333,7 +333,7 @@ If you have any questions about your KYC status, please contact our support team
       data: {
         name: userName,
         packageName,
-        amount: amount.toLocaleString(),
+        amount: amount != null ? amount.toLocaleString() : '-',
         transactionId,
         date: new Date().toLocaleDateString(),
         portfolioUrl
@@ -549,7 +549,7 @@ For immediate attention, contact the security team.
     await this.sendNotification({
       type: 'package_purchase',
       title: 'Investment Package Purchase',
-      message: `${userData.firstName} ${userData.lastName} purchased ${packageData.name} for $${amount.toLocaleString()}`,
+      message: `${userData.firstName} ${userData.lastName} purchased ${packageData.name} for $${amount != null ? amount.toLocaleString() : '-'}`,
       details: {
         user: userData,
         package: packageData,

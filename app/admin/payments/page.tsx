@@ -440,10 +440,10 @@ export default function PaymentsManagementPage() {
                   </td>
                   <td style={{ padding: '1rem 1.5rem', whiteSpace: 'nowrap' }}>
                     <div style={{ fontSize: '0.875rem', fontWeight: 500 }}>
-                      {payment.currency} {payment.amount.toLocaleString('en-US')}
+                      {payment.currency} {payment.amount != null ? payment.amount.toLocaleString('en-US') : '-'}
                     </div>
                     <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                      Net: {payment.currency} {payment.netAmount.toLocaleString('en-US')}
+                      Net: {payment.currency} {payment.netAmount != null ? payment.netAmount.toLocaleString('en-US') : '-'}
                     </div>
                   </td>
                   <td style={{ padding: '1rem 1.5rem', whiteSpace: 'nowrap' }}>
@@ -830,13 +830,13 @@ export default function PaymentsManagementPage() {
                 <div>
                   <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151' }}>Amount</label>
                   <p style={{ fontSize: '0.875rem', color: 'var(--primary)' }}>
-                    {viewingPayment.currency} {viewingPayment.amount.toLocaleString('en-US')}
+                    {viewingPayment.currency} {viewingPayment.amount != null ? viewingPayment.amount.toLocaleString('en-US') : '-'}
                   </p>
                 </div>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151' }}>Net Amount</label>
                   <p style={{ fontSize: '0.875rem', color: 'var(--primary)' }}>
-                    {viewingPayment.currency} {viewingPayment.netAmount.toLocaleString('en-US')}
+                    {viewingPayment.currency} {viewingPayment.netAmount != null ? viewingPayment.netAmount.toLocaleString('en-US') : '-'}
                   </p>
                 </div>
               </div>
@@ -895,7 +895,7 @@ export default function PaymentsManagementPage() {
               <div>
                 <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151' }}>Fees</label>
                 <p style={{ fontSize: '0.875rem', color: 'var(--primary)' }}>
-                  {viewingPayment.currency} {viewingPayment.fees.toLocaleString('en-US')}
+                  {viewingPayment.currency} {viewingPayment.fees != null ? viewingPayment.fees.toLocaleString('en-US') : '-'}
                 </p>
               </div>
 

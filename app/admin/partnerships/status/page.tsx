@@ -220,7 +220,7 @@ export default function PartnershipsManagementPage() {
             <div>
               <p className="text-sm text-gray-600">Total Value</p>
               <p className="text-2xl font-bold text-blue-600">
-                ${partnerships.reduce((sum, p) => sum + p.value, 0).toLocaleString('en-US')}
+                ${partnerships.reduce((sum, p) => sum + (p.value || 0), 0).toLocaleString('en-US')}
               </p>
             </div>
             <DollarSign className="text-blue-600" size={24} />
@@ -313,7 +313,7 @@ export default function PartnershipsManagementPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">${partnership.value.toLocaleString('en-US')}</div>
+                    <div className="text-sm font-medium text-gray-900">${partnership.value != null ? partnership.value.toLocaleString('en-US') : '-'}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
@@ -554,7 +554,7 @@ export default function PartnershipsManagementPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Value</label>
-                  <p className="text-sm text-gray-900">${viewingPartnership.value.toLocaleString('en-US')}</p>
+                  <p className="text-sm text-gray-900">${viewingPartnership.value != null ? viewingPartnership.value.toLocaleString('en-US') : '-'}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Duration</label>
