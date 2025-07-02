@@ -445,7 +445,6 @@ export default function ClientDashboard() {
                         <Cell key={`cell-${idx}`} fill={riskColors[idx % riskColors.length]} />
                       ))}
                     </Pie>
-                    <Tooltip />
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
