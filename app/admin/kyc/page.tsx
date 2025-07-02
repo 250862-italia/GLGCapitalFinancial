@@ -102,7 +102,9 @@ export default function AdminKYCPage() {
                 <td style={{ padding: 12 }}>{app.user_id}</td>
                 <td style={{ padding: 12 }}>{app.personal_info?.firstName || '-'}</td>
                 <td style={{ padding: 12 }}>{app.verification_status}</td>
-                <td style={{ padding: 12 }}>{new Date(app.submitted_at).toLocaleString()}</td>
+                <td style={{ padding: 12 }}>
+                  {app.submitted_at ? new Date(app.submitted_at).toLocaleString() : '-'}
+                </td>
                 <td style={{ padding: 12 }}>
                   {app.documents?.idDocument ? (
                     <a href={app.documents.idDocument} target="_blank" rel="noopener noreferrer">View</a>
