@@ -154,10 +154,12 @@ export default function ClientDashboard() {
   };
 
   // --- GRAFICO DISTRIBUZIONE RISCHIO ---
-  const riskData = ['low', 'medium', 'high'].map(risk => ({
-    name: risk.charAt(0).toUpperCase() + risk.slice(1),
-    value: availablePackages.filter(p => p.riskLevel === risk).length
-  })).filter(d => d.value > 0);
+  // TEST: dati statici per PieChart
+  const riskData = [
+    { name: 'Low', value: 1 },
+    { name: 'Medium', value: 2 },
+    { name: 'High', value: 3 }
+  ];
   const riskColors = ['#10b981', '#f59e0b', '#ef4444'];
 
   if (isLoading || packagesLoading) {
