@@ -766,3 +766,8 @@ SELECT
 FROM users
 LIMIT 1
 ON CONFLICT DO NOTHING;
+
+SELECT * FROM pg_policies WHERE tablename = 'packages';
+
+CREATE POLICY "Allow read" ON packages FOR SELECT USING (true);
+ALTER TABLE packages ENABLE ROW LEVEL SECURITY;
