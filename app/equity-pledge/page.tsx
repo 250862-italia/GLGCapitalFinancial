@@ -14,7 +14,7 @@ export default function EquityPledgePage() {
       </p>
 
       {/* 1. Vision & Goal */}
-      <SectionBlock icon={<TrendingUp color="var(--accent)" size={32} />} title="1. Vision & Goal">
+      <SectionBlock icon={<TrendingUp color="var(--accent)" size={32} />} title="1. Vision & Goal" bg="white">
         <p>
           Imagine your business expanding without being bound by traditional lending constraints.<br /><br />
           With our Equity-Pledge system, you transform your own shares into strategic financing power: unlock capital on favorable terms while retaining full control.
@@ -25,7 +25,7 @@ export default function EquityPledgePage() {
       </SectionBlock>
 
       {/* 2. Legal Vehicle Structure */}
-      <SectionBlock icon={<Shield color="var(--accent)" size={32} />} title="2. Legal Vehicle Structure">
+      <SectionBlock icon={<Shield color="var(--accent)" size={32} />} title="2. Legal Vehicle Structure" bg="gray">
         <p>
           A dedicated branch or subsidiary (e.g., “MyCompany Italy Branch”) is established, empowered to issue investor-specific shares.
         </p>
@@ -37,7 +37,7 @@ export default function EquityPledgePage() {
       </SectionBlock>
 
       {/* 3. Subscription & Onboarding */}
-      <SectionBlock icon={<FileText color="var(--accent)" size={32} />} title="3. Subscription & Onboarding">
+      <SectionBlock icon={<FileText color="var(--accent)" size={32} />} title="3. Subscription & Onboarding" bg="white">
         <ol>
           <li>Investors fill out the online form and digitally sign the Subscription Agreement.</li>
           <li>Funds are transferred into a segregated escrow account, guaranteeing security.</li>
@@ -49,7 +49,7 @@ export default function EquityPledgePage() {
       </SectionBlock>
 
       {/* 4. Collateral & Pledge */}
-      <SectionBlock icon={<CheckCircle color="var(--accent)" size={32} />} title="4. Collateral & Pledge">
+      <SectionBlock icon={<CheckCircle color="var(--accent)" size={32} />} title="4. Collateral & Pledge" bg="gray">
         <p>
           Upon funding, the newly issued shares are formally pledged as collateral.<br /><br />
           Enforcement is documented via:
@@ -64,7 +64,7 @@ export default function EquityPledgePage() {
       </SectionBlock>
 
       {/* 5. Fixed Returns & Security */}
-      <SectionBlock icon={<TrendingUp color="var(--accent)" size={32} />} title="5. Fixed Returns & Security" highlight>
+      <SectionBlock icon={<TrendingUp color="var(--accent)" size={32} />} title="5. Fixed Returns & Security" bg="white" highlight>
         <ul>
           <li>Enjoy a predictable and attractive return profile, designed to outperform traditional financing.</li>
           <li>Benefit from true security: your investment is backed by a real equity pledge.</li>
@@ -73,7 +73,7 @@ export default function EquityPledgePage() {
       </SectionBlock>
 
       {/* 6. Transparent Reporting */}
-      <SectionBlock icon={<Users color="var(--accent)" size={32} />} title="6. Transparent Reporting">
+      <SectionBlock icon={<Users color="var(--accent)" size={32} />} title="6. Transparent Reporting" bg="gray">
         <ul>
           <li>Quarterly reports include:</li>
           <ul style={{ marginLeft: 24 }}>
@@ -86,7 +86,7 @@ export default function EquityPledgePage() {
       </SectionBlock>
 
       {/* 7. Early Exit Option */}
-      <SectionBlock icon={<ArrowRight color="var(--accent)" size={32} />} title="7. Early Exit Option">
+      <SectionBlock icon={<ArrowRight color="var(--accent)" size={32} />} title="7. Early Exit Option" bg="white">
         <ul>
           <li>Should an investor choose to exit early:</li>
           <ul style={{ marginLeft: 24 }}>
@@ -100,7 +100,7 @@ export default function EquityPledgePage() {
       </SectionBlock>
 
       {/* 8. Key Benefits */}
-      <SectionBlock icon={<CheckCircle color="var(--accent)" size={32} />} title="8. Key Benefits">
+      <SectionBlock icon={<CheckCircle color="var(--accent)" size={32} />} title="8. Key Benefits" bg="gray">
         <ul>
           <li>Predictable returns higher than many traditional options</li>
           <li>Real capital protection via equity pledge</li>
@@ -143,10 +143,10 @@ export default function EquityPledgePage() {
   );
 }
 
-function SectionBlock({ icon, title, children, highlight }: { icon: React.ReactNode, title: string, children: React.ReactNode, highlight?: boolean }) {
+function SectionBlock({ icon, title, children, highlight, bg }: { icon: React.ReactNode, title: string, children: React.ReactNode, highlight?: boolean, bg?: 'white' | 'gray' }) {
   return (
     <section style={{
-      background: highlight ? 'var(--secondary)' : '#fff',
+      background: bg === 'gray' ? 'var(--secondary)' : '#fff',
       borderRadius: 16,
       padding: '2rem 1.5rem',
       marginBottom: 28,
