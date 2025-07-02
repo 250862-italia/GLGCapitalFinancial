@@ -200,6 +200,75 @@ export default function ClientDashboard() {
           </p>
         </div>
 
+        {/* Portfolio Summary - blocco attrattivo */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+          gap: '2rem',
+          marginBottom: '2.5rem',
+        }}>
+          {/* Total Invested */}
+          <div style={{
+            background: 'linear-gradient(135deg, #f0fdf4 60%, #bbf7d0 100%)',
+            padding: '2rem 1.5rem',
+            borderRadius: '18px',
+            boxShadow: '0 4px 24px rgba(16,185,129,0.10)',
+            border: '1px solid #bbf7d0',
+            display: 'flex', flexDirection: 'column', alignItems: 'center',
+          }}>
+            <DollarSign size={38} color="#059669" style={{ marginBottom: 12 }} />
+            <div style={{ fontSize: 16, color: '#059669', fontWeight: 700, marginBottom: 6 }}>Total Invested</div>
+            <div style={{ fontSize: 32, fontWeight: 900, color: '#0a2540', letterSpacing: -1 }}>{formatCurrency(stats.totalInvested)}</div>
+          </div>
+          {/* Total Earned */}
+          <div style={{
+            background: 'linear-gradient(135deg, #fef3c7 60%, #fde68a 100%)',
+            padding: '2rem 1.5rem',
+            borderRadius: '18px',
+            boxShadow: '0 4px 24px rgba(245,158,11,0.10)',
+            border: '1px solid #fde68a',
+            display: 'flex', flexDirection: 'column', alignItems: 'center',
+          }}>
+            <TrendingUp size={38} color="#f59e0b" style={{ marginBottom: 12 }} />
+            <div style={{ fontSize: 16, color: '#f59e0b', fontWeight: 700, marginBottom: 6 }}>Total Earned</div>
+            <div style={{ fontSize: 32, fontWeight: 900, color: '#0a2540', letterSpacing: -1 }}>{formatCurrency(stats.totalEarned)}</div>
+          </div>
+          {/* Today's Earnings */}
+          <div style={{
+            background: 'linear-gradient(135deg, #eff6ff 60%, #bae6fd 100%)',
+            padding: '2rem 1.5rem',
+            borderRadius: '18px',
+            boxShadow: '0 4px 24px rgba(59,130,246,0.10)',
+            border: '1px solid #bae6fd',
+            display: 'flex', flexDirection: 'column', alignItems: 'center',
+          }}>
+            <Target size={38} color="#3b82f6" style={{ marginBottom: 12 }} />
+            <div style={{ fontSize: 16, color: '#3b82f6', fontWeight: 700, marginBottom: 6 }}>Today's Earnings</div>
+            <div style={{ fontSize: 32, fontWeight: 900, color: '#0a2540', letterSpacing: -1 }}>{formatCurrency(stats.todayEarnings)}</div>
+          </div>
+          {/* Monthly Earnings */}
+          <div style={{
+            background: 'linear-gradient(135deg, #fdf2f8 60%, #fbcfe8 100%)',
+            padding: '2rem 1.5rem',
+            borderRadius: '18px',
+            boxShadow: '0 4px 24px rgba(236,72,153,0.10)',
+            border: '1px solid #fbcfe8',
+            display: 'flex', flexDirection: 'column', alignItems: 'center',
+          }}>
+            <BarChart3 size={38} color="#ec4899" style={{ marginBottom: 12 }} />
+            <div style={{ fontSize: 16, color: '#ec4899', fontWeight: 700, marginBottom: 6 }}>Monthly Earnings</div>
+            <div style={{ fontSize: 32, fontWeight: 900, color: '#0a2540', letterSpacing: -1 }}>{formatCurrency(stats.monthlyEarnings)}</div>
+          </div>
+        </div>
+
+        {/* KYC Process */}
+        {user && (
+          <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 2px 8px rgba(10,37,64,0.08)', padding: '2rem', marginBottom: '2.5rem' }}>
+            <h2 style={{ color: 'var(--primary)', fontSize: 24, fontWeight: 800, marginBottom: 18 }}>KYC - Complete Your Profile</h2>
+            <KYCProcess userId={user.id} onComplete={status => {}} />
+          </div>
+        )}
+
         {/* Earnings Chart */}
         <div style={{ 
           background: 'white', 
