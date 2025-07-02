@@ -43,14 +43,7 @@ export default function ClientDashboard() {
   const [bankDetails, setBankDetails] = useState<{iban: string, accountHolder: string, bankName: string, reason: string} | null>(null);
 
   useEffect(() => {
-    // Carica pacchetti disponibili e investimenti acquistati
-    const loadPackages = () => {
-      const stored = localStorage.getItem('glg-investment-packages');
-      let pkgs = stored ? JSON.parse(stored) : [];
-      // Normalizza tutti i pacchetti
-      pkgs = Array.isArray(pkgs) ? pkgs.map(normalizePackage) : [];
-      setAvailablePackages(pkgs);
-    };
+    // Carica investimenti acquistati e dati bancari
     const loadMyInvestments = () => {
       const stored = localStorage.getItem('myInvestments');
       setMyInvestments(stored ? JSON.parse(stored) : []);
@@ -59,12 +52,10 @@ export default function ClientDashboard() {
       const stored = localStorage.getItem('bankDetails');
       if (stored) setBankDetails(JSON.parse(stored));
     };
-    loadPackages();
     loadMyInvestments();
     loadBankDetails();
     // Sincronizzazione real-time tra tab
     const onStorage = (e: StorageEvent) => {
-      if (e.key === 'glg-investment-packages') loadPackages();
       if (e.key === 'myInvestments') loadMyInvestments();
       if (e.key === 'bankDetails') loadBankDetails();
     };
