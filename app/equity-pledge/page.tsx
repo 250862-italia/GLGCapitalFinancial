@@ -65,16 +65,20 @@ export default function EquityPledgePage() {
       </section>
 
       {/* 5. Fixed Returns & Security */}
-      <section style={blockStyle}>
-        <h2 style={titleStyle}>5. Fixed Returns & Security</h2>
-        <ul style={listStyle}>
-          <li>Guaranteed gross yield: 12% p.a.</li>
-          <li>Management fee: 0.7% of interest earned</li>
-          <li>36-month term with automatic repayment of principal plus net returns.</li>
-        </ul>
-        <blockquote style={quoteStyle}>
-          “When you know exactly what you'll earn, you can focus on growing your core business.”
-        </blockquote>
+      <section style={{...blockStyle, background: 'linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%)', color: '#fff', boxShadow: '0 4px 24px rgba(245,158,11,0.15)'}}>
+        <div style={{display: 'flex', alignItems: 'center', gap: 20}}>
+          <span style={{fontSize: 38, background: '#fff', color: '#f59e0b', borderRadius: '50%', padding: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.08)'}}>
+            <svg width="32" height="32" fill="none" viewBox="0 0 24 24"><path stroke="#f59e0b" strokeWidth="2" d="M12 3v18m0 0c-4.418 0-8-3.582-8-8s3.582-8 8-8 8 3.582 8 8-3.582 8-8 8Z"/></svg>
+          </span>
+          <div>
+            <h2 style={{fontSize: 26, fontWeight: 800, marginBottom: 8, color: '#fff'}}>5. Fixed Returns & Security</h2>
+            <ul style={{fontSize: 18, lineHeight: 1.7, color: '#fff', marginBottom: 0, paddingLeft: 24}}>
+              <li>Enjoy a predictable and attractive return profile, designed to outperform traditional financing.</li>
+              <li>Benefit from true security: your investment is backed by a real equity pledge.</li>
+              <li>Experience hassle‑free financing: automatic principal and earnings release at the end of the agreed term.</li>
+            </ul>
+          </div>
+        </div>
       </section>
 
       {/* 6. Transparent Reporting */}
@@ -118,12 +122,27 @@ export default function EquityPledgePage() {
       </section>
 
       {/* 9. Ready to Secure Your Tomorrow? */}
-      <section style={blockStyle}>
-        <h2 style={titleStyle}>9. Ready to Secure Your Tomorrow?</h2>
-        <p style={textStyle}>
+      <section style={{...blockStyle, background: 'linear-gradient(90deg, #0a2540 0%, #1e3a8a 100%)', color: '#fff', textAlign: 'center'}}>
+        <h2 style={{...titleStyle, color: '#fff', textAlign: 'center'}}>9. Ready to Secure Your Tomorrow?</h2>
+        <p style={{...textStyle, color: '#fff', fontSize: 20}}>
           Discover how GLG Capital Group LLC's Equity-Pledge model can elevate your enterprise.<br />
           <b>Contact our team for a free, personalized consultation and forge the path to lasting success.</b>
         </p>
+        <a href="/contact" style={{
+          display: 'inline-block',
+          marginTop: 24,
+          background: '#f59e0b',
+          color: '#fff',
+          padding: '1rem 2.5rem',
+          borderRadius: 8,
+          textDecoration: 'none',
+          fontWeight: 700,
+          fontSize: 22,
+          boxShadow: '0 2px 8px rgba(245,158,11,0.15)',
+          transition: 'all 0.3s',
+        }}>
+          Request Your Free Consultation
+        </a>
       </section>
     </main>
   );
@@ -131,10 +150,11 @@ export default function EquityPledgePage() {
 
 const blockStyle = {
   background: '#f8fafc',
-  borderRadius: 16,
-  padding: '2rem 1.5rem',
-  marginBottom: 32,
-  boxShadow: '0 2px 8px rgba(10,37,64,0.06)'
+  borderRadius: 20,
+  padding: '2.5rem 2rem',
+  marginBottom: 36,
+  boxShadow: '0 4px 24px rgba(10,37,64,0.10)',
+  border: '1px solid #e5e7eb',
 };
 
 const titleStyle = {
