@@ -72,25 +72,43 @@ export default function ClientsManagementPage() {
         .from('clients')
         .select('*');
       if (!error && data) {
-        setClients(data.map((c: any) => ({
-          id: c.id,
-          name: c.first_name + ' ' + c.last_name,
-          email: c.email,
-          phone: c.phone,
-          location: c.nationality || '',
-          status: c.status === 'active' ? 'Active' : 'Inactive',
-          kycStatus: 'Pending', // Da collegare a KYC reale se serve
-          joinDate: c.created_at ? c.created_at.slice(0, 10) : '',
-          lastActivity: c.updated_at ? c.updated_at.slice(0, 10) : '',
-          totalPositions: 0,
-          activePositions: 0,
-          performance: '',
-          notes: '',
-          profilePhoto: '',
-          bankDetails: { iban: '', bic: '', accountHolder: '', bankName: '' },
-          usdtWallet: '',
-          preferredPaymentMethod: 'bank',
-        })));
+        // Per ogni cliente, recupera lo stato KYC reale
+        const clientsWithKyc = await Promise.all(data.map(async (c: any) => {
+          let kycStatus: 'Verified' | 'Pending' | 'Rejected' = 'Pending';
+          // Cerca la KYC più recente per questo utente
+          const { data: kycData } = await supabase
+            .from('kyc_applications')
+            .select('verification_status')
+            .eq('user_id', c.user_id)
+            .order('submitted_at', { ascending: false })
+            .limit(1)
+            .single();
+          if (kycData && kycData.verification_status) {
+            if (kycData.verification_status === 'approved') kycStatus = 'Verified';
+            else if (kycData.verification_status === 'rejected') kycStatus = 'Rejected';
+            else kycStatus = 'Pending';
+          }
+          return {
+            id: c.id,
+            name: c.first_name + ' ' + c.last_name,
+            email: c.email,
+            phone: c.phone,
+            location: c.nationality || '',
+            status: c.status === 'active' ? 'Active' : 'Inactive',
+            kycStatus,
+            joinDate: c.created_at ? c.created_at.slice(0, 10) : '',
+            lastActivity: c.updated_at ? c.updated_at.slice(0, 10) : '',
+            totalPositions: 0,
+            activePositions: 0,
+            performance: '',
+            notes: '',
+            profilePhoto: '',
+            bankDetails: { iban: '', bic: '', accountHolder: '', bankName: '' },
+            usdtWallet: '',
+            preferredPaymentMethod: 'bank',
+          };
+        }));
+        setClients(clientsWithKyc);
       }
       setLoading(false);
     };
@@ -140,73 +158,39 @@ export default function ClientsManagementPage() {
     resetForm();
   };
 
-  const handleEditClient = () => {
+  const handleEditClient = async () => {
     if (!editingClient) return;
-
-    const updatedClients = clients.map(client =>
-      client.id === editingClient.id
-        ? {
-            ...client,
-            name: formData.name,
-            email: formData.email,
-            phone: formData.phone,
-            location: formData.location,
-            status: formData.status,
-            kycStatus: formData.kycStatus,
-            totalPositions: parseFloat(formData.totalPositions) || 0,
-            activePositions: parseInt(formData.activePositions) || 0,
-            performance: formData.performance,
-            notes: formData.notes,
-            profilePhoto: formData.profilePhoto,
-            bankDetails: formData.bankDetails,
-            usdtWallet: formData.usdtWallet,
-            preferredPaymentMethod: formData.preferredPaymentMethod,
-          }
-        : client
-    );
-
-    setClients(updatedClients);
-    
-    // Send surveillance notification for client edit
-    const updatedClient = updatedClients.find(client => client.id === editingClient.id);
-    if (updatedClient) {
-      emailNotificationService.notifyAdminAction(
-        { id: 'admin', name: 'Admin User' },
-        'Client Edited',
-        { client: updatedClient, action: 'edit', originalClient: editingClient }
-      );
-    }
-    
+    setLoading(true);
+    const { error } = await supabase
+      .from('clients')
+      .update({
+        first_name: formData.name.split(' ')[0],
+        last_name: formData.name.split(' ').slice(1).join(' '),
+        email: formData.email,
+        phone: formData.phone,
+        nationality: formData.location,
+        status: formData.status.toLowerCase(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', editingClient.id);
     setEditingClient(null);
     resetForm();
+    await refreshClients();
+    setLoading(false);
   };
 
-  const handleDeleteClient = (id: string) => {
+  const handleDeleteClient = async (id: string) => {
     const clientToDelete = clients.find(client => client.id === id);
     if (!clientToDelete) {
       alert('Client not found!');
       return;
     }
-
     const confirmMessage = `Are you sure you want to delete client "${clientToDelete.name}"?\n\nThis action cannot be undone and will permanently remove all client data.`;
-    
     if (confirm(confirmMessage)) {
-      try {
-        const updatedClients = clients.filter(client => client.id !== id);
-        setClients(updatedClients);
-        
-        // Send surveillance notification for client deletion
-        emailNotificationService.notifyAdminAction(
-          { id: 'admin', name: 'Admin User' },
-          'Client Deleted',
-          { client: clientToDelete, action: 'delete' }
-        );
-        
-        console.log(`Client "${clientToDelete.name}" deleted successfully`);
-      } catch (error) {
-        console.error('Error deleting client:', error);
-        alert('Error deleting client. Please try again.');
-      }
+      setLoading(true);
+      await supabase.from('clients').delete().eq('id', id);
+      await refreshClients();
+      setLoading(false);
     }
   };
 
@@ -303,6 +287,51 @@ export default function ClientsManagementPage() {
     } catch (err) {
       console.error('Failed to copy text: ', err);
     }
+  };
+
+  const refreshClients = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('clients')
+      .select('*');
+    if (!error && data) {
+      const clientsWithKyc = await Promise.all(data.map(async (c: any) => {
+        let kycStatus: 'Verified' | 'Pending' | 'Rejected' = 'Pending';
+        const { data: kycData } = await supabase
+          .from('kyc_applications')
+          .select('verification_status')
+          .eq('user_id', c.user_id)
+          .order('submitted_at', { ascending: false })
+          .limit(1)
+          .single();
+        if (kycData && kycData.verification_status) {
+          if (kycData.verification_status === 'approved') kycStatus = 'Verified';
+          else if (kycData.verification_status === 'rejected') kycStatus = 'Rejected';
+          else kycStatus = 'Pending';
+        }
+        return {
+          id: c.id,
+          name: c.first_name + ' ' + c.last_name,
+          email: c.email,
+          phone: c.phone,
+          location: c.nationality || '',
+          status: c.status === 'active' ? 'Active' : 'Inactive',
+          kycStatus,
+          joinDate: c.created_at ? c.created_at.slice(0, 10) : '',
+          lastActivity: c.updated_at ? c.updated_at.slice(0, 10) : '',
+          totalPositions: 0,
+          activePositions: 0,
+          performance: '',
+          notes: '',
+          profilePhoto: '',
+          bankDetails: { iban: '', bic: '', accountHolder: '', bankName: '' },
+          usdtWallet: '',
+          preferredPaymentMethod: 'bank',
+        };
+      }));
+      setClients(clientsWithKyc);
+    }
+    setLoading(false);
   };
 
   return (
