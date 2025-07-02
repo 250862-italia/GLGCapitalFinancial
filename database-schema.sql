@@ -195,6 +195,7 @@ CREATE POLICY "Allow all operations on team_members" ON team_members FOR ALL USI
 CREATE POLICY "Allow all operations on partnerships" ON partnerships FOR ALL USING (true);
 CREATE POLICY "Allow all operations on client_packages" ON client_packages FOR ALL USING (true);
 CREATE POLICY "Allow all for admin" ON kyc_applications FOR ALL USING (true);
+CREATE POLICY "Allow insert for all" ON users FOR INSERT USING (true);
 
 -- Insert default super admin user (password: SuperAdmin123!)
 INSERT INTO users (email, password_hash, first_name, last_name, role, is_active, email_verified) VALUES
@@ -207,7 +208,7 @@ INSERT INTO packages (
 ('Starter Package', 'Pacchetto base per iniziare', 1000.00, 0.008, 30, 1000.00, 5000.00, 'USD', 'active', 'Conservative', 8.5),
 ('Growth Package', 'Balanced growth and stability', 5000.00, 0.012, 60, 5000.00, 25000.00, 'USD', 'active', 'Growth', 10.0),
 ('Premium Package', 'High returns for experienced investors', 10000.00, 0.015, 90, 10000.00, 100000.00, 'USD', 'active', 'Premium', 15.0),
-('Elite Package', 'Maximum returns with premium features', 25000.00, 0.018, 120, 25000.00, 500000.00, 'USD', 'active', 'Elite', 18.0);
+('Elite Package', 'Maximum returns with premium features', 25000.00, 0.018, 120, 25000.00, 500000.00, 'USD', 'active', 'Elite', 18.0);https://glg-capital-financial.vercel.app/login
 
 INSERT INTO team_members (name, position, bio, photo_url, email) VALUES
 ('Sarah Johnson', 'Senior Financial Advisor', 'Expert in portfolio management with 15+ years experience', '/team/sarah.jpg', 'sarah@glgcapital.com'),
@@ -644,3 +645,5 @@ USING (
 
 INSERT INTO users (email, passwordHash, firstName, lastName, role, isActive, emailVerified)
 VALUES ('test@example.com', 'hashfinto', 'Test', 'User', 'user', true, false);
+
+SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'users';
