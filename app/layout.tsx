@@ -86,6 +86,13 @@ export default function RootLayout({
           <div style={{ fontWeight: 600, fontSize: 18 }}>GLG Capital Group LLC</div>
           <div style={{ margin: '0.5rem 0', color: 'var(--accent)' }}>Empowering Your Financial Future</div>
           <div style={{ fontSize: 14, color: 'var(--secondary)' }}>&copy; {new Date().getFullYear()} GLG Capital Group LLC. All rights reserved.</div>
+          <div style={{ marginTop: 24, fontSize: 15, color: 'var(--secondary)', lineHeight: 1.7 }}>
+            <div><b>GLG CAPITAL GROUP LLC</b></div>
+            <div>1309 Coffeen Avenue STE 1200</div>
+            <div>Sheridan, Wyoming 82801</div>
+            <div><a href="mailto:corefound@glgcapitalgroupllc.com" style={{ color: 'var(--accent)' }}>corefound@glgcapitalgroupllc.com</a></div>
+            <div>Phone: +1 307 263 0876</div>
+          </div>
         </footer>
         </AuthProvider>
       </body>
