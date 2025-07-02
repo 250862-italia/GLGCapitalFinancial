@@ -1,5 +1,7 @@
 "use client";
 
+import { createClient } from '@supabase/supabase-js';
+
 // Email notification service for system surveillance
 export interface NotificationData {
   type: 'user_registration' | 'kyc_submission' | 'package_purchase' | 'investment_cancellation' | 
@@ -278,6 +280,12 @@ If you have any questions about your KYC status, please contact our support team
     this.config = config;
   }
 
+  // Configura client Supabase per logging notifiche lato server
+  private supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
   // Send email
   async sendEmail(emailData: EmailData): Promise<boolean> {
     try {
@@ -308,6 +316,33 @@ If you have any questions about your KYC status, please contact our support team
 
       // Simulate email sending delay
       await new Promise(resolve => setTimeout(resolve, 100));
+
+      let emailSent = true;
+      let logStatus = 'sent';
+      let logError = null;
+
+      if (emailSent) {
+        // ... existing code ...
+      } else {
+        // ... existing code ...
+        logStatus = 'simulated';
+      }
+
+      // Log in tabella notifications
+      try {
+        await this.supabaseAdmin.from('notifications').insert({
+          email: emailData.to,
+          type: emailData.template || emailData.subject || 'custom',
+          title: emailData.subject || emailData.template,
+          message: emailData.html || emailData.text || '',
+          status: logStatus,
+          sent_at: new Date().toISOString(),
+          details: emailData.data ? emailData.data : null
+        });
+      } catch (err) {
+        // Log error logging notification (non blocca invio email)
+        console.error('Errore logging notification:', err);
+      }
 
       return true;
     } catch (error) {
