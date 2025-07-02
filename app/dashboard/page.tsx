@@ -19,8 +19,9 @@ import {
 } from 'lucide-react';
 import { Investment } from "@/types/investment";
 import { Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
-import KYCProcess from "../components/kyc/kyc-process";
+import KYCProcess from "../../components/kyc/kyc-process";
 import { useAuth } from "../../hooks/use-auth";
+import { usePackages } from "../../lib/package-context";
 
 interface PortfolioStats {
   totalInvested: number;
@@ -33,32 +34,13 @@ interface PortfolioStats {
 
 export default function ClientDashboard() {
   const { user } = useAuth();
-  const [availablePackages, setAvailablePackages] = useState<any[]>([]);
+  const { packages: availablePackages, loading: packagesLoading, error: packagesError } = usePackages();
   const [myInvestments, setMyInvestments] = useState<Investment[]>([]);
   const [selectedTimeframe, setSelectedTimeframe] = useState<'1d' | '7d' | '30d' | '90d'>('30d');
   const [isLoading, setIsLoading] = useState(true);
   const [showBankModal, setShowBankModal] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<any>(null);
   const [bankDetails, setBankDetails] = useState<{iban: string, accountHolder: string, bankName: string, reason: string} | null>(null);
-
-  // Funzione di normalizzazione pacchetti
-  function normalizePackage(pkg: any): any {
-    return {
-      id: pkg.id || pkg.ID || String(Date.now()),
-      name: pkg.name || pkg.packageName || '',
-      minAmount: pkg.minAmount || pkg.amount || 1000,
-      dailyReturn: pkg.dailyReturn || pkg.expectedReturn || 1.0,
-      duration: pkg.duration || 30,
-      isActive: pkg.isActive !== undefined ? pkg.isActive : (pkg.status === 'Active'),
-      // altri campi se servono
-    };
-  }
-
-  // Pacchetti attivi per tutti i clienti
-  const activeInvestments = availablePackages.filter(pkg => pkg.isActive);
-
-  // Pacchetti da mostrare: tutti quelli presenti in localStorage
-  const allPackages = availablePackages;
 
   useEffect(() => {
     // Carica pacchetti disponibili e investimenti acquistati
@@ -90,6 +72,25 @@ export default function ClientDashboard() {
     setIsLoading(false);
     return () => window.removeEventListener('storage', onStorage);
   }, []);
+
+  // Funzione di normalizzazione pacchetti
+  function normalizePackage(pkg: any): any {
+    return {
+      id: pkg.id || pkg.ID || String(Date.now()),
+      name: pkg.name || pkg.packageName || '',
+      minAmount: pkg.minAmount || pkg.amount || 1000,
+      dailyReturn: pkg.dailyReturn || pkg.expectedReturn || 1.0,
+      duration: pkg.duration || 30,
+      isActive: pkg.isActive !== undefined ? pkg.isActive : (pkg.status === 'Active'),
+      // altri campi se servono
+    };
+  }
+
+  // Pacchetti attivi per tutti i clienti
+  const activeInvestments = availablePackages.filter(pkg => pkg.isActive);
+
+  // Pacchetti da mostrare: tutti quelli presenti in localStorage
+  const allPackages = availablePackages;
 
   // Funzione per acquistare un pacchetto
   const handleBuy = (pkg: any) => {
@@ -168,7 +169,7 @@ export default function ClientDashboard() {
   })).filter(d => d.value > 0);
   const riskColors = ['#10b981', '#f59e0b', '#ef4444'];
 
-  if (isLoading) {
+  if (isLoading || packagesLoading) {
     return (
       <div style={{ 
         minHeight: '100vh', 
@@ -430,9 +431,9 @@ export default function ClientDashboard() {
                         <td style={{ padding: '1rem', textAlign: 'center' }}>
                           <span style={{ background: pkg.riskLevel === 'low' ? '#bbf7d0' : pkg.riskLevel === 'medium' ? '#fef3c7' : '#fee2e2', color: pkg.riskLevel === 'low' ? '#166534' : pkg.riskLevel === 'medium' ? '#92400e' : '#991b1b', padding: '0.3rem 0.7rem', borderRadius: 8, fontWeight: 600, fontSize: 14, textTransform: 'capitalize' }}>{pkg.riskLevel}</span>
                         </td>
-                        <td style={{ padding: '1rem', textAlign: 'right' }}>€{pkg.minInvestment?.toLocaleString?.() ?? pkg.minAmount?.toLocaleString?.() ?? '-'}</td>
-                        <td style={{ padding: '1rem', textAlign: 'right' }}>€{pkg.maxInvestment?.toLocaleString?.() ?? pkg.maxAmount?.toLocaleString?.() ?? '-'}</td>
-                        <td style={{ padding: '1rem', textAlign: 'right' }}>{pkg.expectedReturn ?? pkg.dailyReturn ?? '-'}%</td>
+                        <td style={{ padding: '1rem', textAlign: 'right' }}>€{pkg.minInvestment?.toLocaleString?.() ?? '-'}</td>
+                        <td style={{ padding: '1rem', textAlign: 'right' }}>€{pkg.maxInvestment?.toLocaleString?.() ?? '-'}</td>
+                        <td style={{ padding: '1rem', textAlign: 'right' }}>{pkg.expectedReturn ?? '-'}%</td>
                         <td style={{ padding: '1rem', textAlign: 'center' }}>{pkg.duration}</td>
                         <td style={{ padding: '1rem', textAlign: 'center' }}>
                           <span style={{ background: pkg.status === 'Active' ? '#bbf7d0' : pkg.status === 'Fundraising' ? '#fef3c7' : '#e0e7ff', color: pkg.status === 'Active' ? '#166534' : pkg.status === 'Fundraising' ? '#92400e' : '#3730a3', padding: '0.3rem 0.7rem', borderRadius: 8, fontWeight: 600, fontSize: 14 }}>{pkg.status}</span>
