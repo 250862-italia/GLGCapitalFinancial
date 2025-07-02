@@ -85,6 +85,30 @@ export default function AdminInvestmentsPage() {
     setLoading(false);
   };
 
+  // Azioni rapide: conferma/rifiuta
+  const handleChangeStatus = async (invId: string, newStatus: string) => {
+    setLoading(true);
+    setError("");
+    setSuccess("");
+    try {
+      const res = await fetch("/api/investments", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: invId, status: newStatus })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSuccess("Stato investimento aggiornato!");
+        loadInvestments();
+      } else {
+        setError(data.error || "Errore aggiornamento stato");
+      }
+    } catch (e) {
+      setError("Errore di rete");
+    }
+    setLoading(false);
+  };
+
   // Handlers UI
   const openAddForm = () => {
     setIsEdit(false);
@@ -154,39 +178,26 @@ export default function AdminInvestmentsPage() {
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ borderBottom: "2px solid #e0e3eb" }}>
-                <th style={{ textAlign: "left", padding: "1rem" }}>ID Cliente</th>
-                <th style={{ textAlign: "left", padding: "1rem" }}>ID Pacchetto</th>
+                <th style={{ textAlign: "left", padding: "1rem" }}>Cliente</th>
+                <th style={{ textAlign: "left", padding: "1rem" }}>Email</th>
+                <th style={{ textAlign: "left", padding: "1rem" }}>Pacchetto</th>
                 <th style={{ textAlign: "right", padding: "1rem" }}>Importo</th>
-                <th style={{ textAlign: "left", padding: "1rem" }}>Valuta</th>
-                <th style={{ textAlign: "left", padding: "1rem" }}>Data Inizio</th>
-                <th style={{ textAlign: "left", padding: "1rem" }}>Data Fine</th>
                 <th style={{ textAlign: "left", padding: "1rem" }}>Stato</th>
-                <th style={{ textAlign: "right", padding: "1rem" }}>Rendimento Totale</th>
-                <th style={{ textAlign: "right", padding: "1rem" }}>Rendimento Giornaliero</th>
-                <th style={{ textAlign: "left", padding: "1rem" }}>Metodo Pagamento</th>
-                <th style={{ textAlign: "left", padding: "1rem" }}>Note</th>
                 <th style={{ textAlign: "center", padding: "1rem" }}>Azioni</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((inv) => (
                 <tr key={inv.id} style={{ borderBottom: "1px solid #e0e3eb" }}>
-                  <td style={{ padding: "1rem" }}>{inv.clientId || '-'}</td>
-                  <td style={{ padding: "1rem" }}>{inv.packageId || '-'}</td>
-                  <td style={{ padding: "1rem" }}>{inv.amount?.toLocaleString() || '-'}</td>
-                  <td style={{ padding: "1rem" }}>{inv.currency || '-'}</td>
-                  <td style={{ padding: "1rem" }}>{inv.startDate || '-'}</td>
-                  <td style={{ padding: "1rem" }}>{inv.endDate || '-'}</td>
+                  <td style={{ padding: "1rem" }}>{inv.client?.first_name} {inv.client?.last_name}</td>
+                  <td style={{ padding: "1rem" }}>{inv.client?.email}</td>
+                  <td style={{ padding: "1rem" }}>{inv.package?.name}</td>
+                  <td style={{ padding: "1rem", textAlign: "right" }}>{inv.amount?.toLocaleString() || '-'}</td>
                   <td style={{ padding: "1rem" }}>{inv.status || '-'}</td>
-                  <td style={{ padding: "1rem" }}>{inv.totalReturns?.toLocaleString() || '-'}</td>
-                  <td style={{ padding: "1rem" }}>{inv.dailyReturns?.toLocaleString() || '-'}</td>
-                  <td style={{ padding: "1rem" }}>{inv.paymentMethod || '-'}</td>
-                  <td style={{ padding: "1rem" }}>{inv.notes || '-'}</td>
                   <td style={{ padding: "1rem", textAlign: "center" }}>
                     <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center" }}>
-                      <button onClick={() => router.push(`/admin/investments/${inv.id}`)} style={{ background: "#f59e0b", color: "white", border: "none", padding: "0.5rem", borderRadius: 6, cursor: "pointer" }} title="Dettagli"><Eye size={16} /></button>
-                      <button onClick={() => openEditForm(inv)} style={{ background: "#3b82f6", color: "white", border: "none", padding: "0.5rem", borderRadius: 6, cursor: "pointer" }} title="Modifica"><Edit size={16} /></button>
-                      <button onClick={() => openDeleteModal(inv)} style={{ background: "#dc2626", color: "white", border: "none", padding: "0.5rem", borderRadius: 6, cursor: "pointer" }} title="Elimina"><Trash2 size={16} /></button>
+                      <button onClick={() => handleChangeStatus(inv.id, 'active')} style={{ background: "#059669", color: "white", border: "none", padding: "0.5rem 1rem", borderRadius: 6, cursor: "pointer" }} title="Conferma">Conferma</button>
+                      <button onClick={() => handleChangeStatus(inv.id, 'cancelled')} style={{ background: "#dc2626", color: "white", border: "none", padding: "0.5rem 1rem", borderRadius: 6, cursor: "pointer" }} title="Rifiuta">Rifiuta</button>
                     </div>
                   </td>
                 </tr>

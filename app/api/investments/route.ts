@@ -11,8 +11,10 @@ export async function GET(request: NextRequest) {
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
     return NextResponse.json(data);
   } else {
-    // Lista
-    const { data, error } = await supabase.from('investments').select('*');
+    // Lista con join su clients e packages
+    const { data, error } = await supabase
+      .from('investments')
+      .select(`*, client:clientId (first_name, last_name, email), package:packageId (name)`) // join
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
     return NextResponse.json(data);
   }
