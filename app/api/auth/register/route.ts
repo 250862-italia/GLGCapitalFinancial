@@ -99,31 +99,29 @@ export async function POST(request: NextRequest) {
     }
 
     // Create client profile
-    const { error: profileError } = await supabase
-      .from('client_profiles')
+    const { error: clientError } = await supabase
+      .from('clients')
       .insert({
         user_id: user.id,
+        email,
+        first_name: firstName,
+        last_name: lastName,
+        phone,
         date_of_birth: dateOfBirth,
         nationality,
-        address,
-        city,
-        country,
-        postal_code: postalCode,
-        occupation,
-        annual_income: annualIncome,
-        source_of_funds: sourceOfFunds,
-        kyc_status: 'pending',
-        created_at: new Date().toISOString()
-      })
+        status: 'active',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
 
-    if (profileError) {
-      console.error('Profile creation error:', profileError)
-      // Clean up user if profile creation fails
-      await supabase.from('users').delete().eq('id', user.id)
+    if (clientError) {
+      console.error('Client creation error:', clientError);
+      // Clean up user if client creation fails
+      await supabase.from('users').delete().eq('id', user.id);
       return NextResponse.json(
         { error: 'Failed to create client profile' },
         { status: 500 }
-      )
+      );
     }
 
     // Create KYC record

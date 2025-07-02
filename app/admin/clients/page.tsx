@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { User, DollarSign, TrendingUp, Calendar, Mail, Phone, MapPin, Eye, Edit, MessageSquare, Shield, Plus, Trash2, Search, Filter, Download, Copy, CheckCircle, Camera } from 'lucide-react';
 import { emailNotificationService } from '../../../lib/email-service';
+import { createClient } from '@supabase/supabase-js';
 
 interface Client {
   id: string;
@@ -28,67 +29,13 @@ interface Client {
   preferredPaymentMethod?: 'bank' | 'usdt' | 'both';
 }
 
-export default function ClientsManagementPage() {
-  const [clients, setClients] = useState<Client[]>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('clients');
-      return saved ? JSON.parse(saved) : [
-        {
-          id: '1',
-          name: 'John Smith',
-          email: 'john.smith@email.com',
-          phone: '+1 (555) 123-4567',
-          location: 'New York, NY',
-          status: 'Active',
-          kycStatus: 'Verified',
-          joinDate: '2023-01-15',
-          lastActivity: '2024-01-20',
-          totalPositions: 150000,
-          activePositions: 3,
-          performance: '+12.5%',
-          notes: 'High-value client with excellent track record'
-        },
-        {
-          id: '2',
-          name: 'Maria Garcia',
-          email: 'maria.garcia@email.com',
-          phone: '+1 (555) 987-6543',
-          location: 'Los Angeles, CA',
-          status: 'Active',
-          kycStatus: 'Verified',
-          joinDate: '2023-03-10',
-          lastActivity: '2024-01-18',
-          totalPositions: 85000,
-          activePositions: 2,
-          performance: '+8.2%',
-          notes: 'Conservative investor, prefers stable positions'
-        },
-        {
-          id: '3',
-          name: 'David Chen',
-          email: 'david.chen@email.com',
-          phone: '+1 (555) 456-7890',
-          location: 'San Francisco, CA',
-          status: 'Inactive',
-          kycStatus: 'Pending',
-          joinDate: '2023-06-20',
-          lastActivity: '2023-12-15',
-          totalPositions: 25000,
-          activePositions: 0,
-          performance: '-2.1%',
-          notes: 'Account suspended due to incomplete KYC'
-        }
-      ];
-    }
-    return [];
-  });
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-  // Save to localStorage whenever clients change
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('clients', JSON.stringify(clients));
-    }
-  }, [clients]);
+export default function ClientsManagementPage() {
+  const [clients, setClients] = useState<Client[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -117,6 +64,38 @@ export default function ClientsManagementPage() {
     usdtWallet: '',
     preferredPaymentMethod: 'bank' as 'bank' | 'usdt' | 'both',
   });
+
+  useEffect(() => {
+    const fetchClients = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('clients')
+        .select('*');
+      if (!error && data) {
+        setClients(data.map((c: any) => ({
+          id: c.id,
+          name: c.first_name + ' ' + c.last_name,
+          email: c.email,
+          phone: c.phone,
+          location: c.nationality || '',
+          status: c.status === 'active' ? 'Active' : 'Inactive',
+          kycStatus: 'Pending', // Da collegare a KYC reale se serve
+          joinDate: c.created_at ? c.created_at.slice(0, 10) : '',
+          lastActivity: c.updated_at ? c.updated_at.slice(0, 10) : '',
+          totalPositions: 0,
+          activePositions: 0,
+          performance: '',
+          notes: '',
+          profilePhoto: '',
+          bankDetails: { iban: '', bic: '', accountHolder: '', bankName: '' },
+          usdtWallet: '',
+          preferredPaymentMethod: 'bank',
+        })));
+      }
+      setLoading(false);
+    };
+    fetchClients();
+  }, []);
 
   const filteredClients = clients.filter(client => {
     const matchesSearch = client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
