@@ -22,6 +22,8 @@ import { Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import KYCProcess from "../../components/kyc/kyc-process";
 import { useAuth } from "../../hooks/use-auth";
 import { usePackages } from "../../lib/package-context";
+import Toast from "../../components/ui/Toast";
+import { supabase } from "../../lib/supabase";
 
 interface PortfolioStats {
   totalInvested: number;
@@ -41,6 +43,8 @@ export default function ClientDashboard() {
   const [showBankModal, setShowBankModal] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<any>(null);
   const [bankDetails, setBankDetails] = useState<{iban: string, accountHolder: string, bankName: string, reason: string} | null>(null);
+  const [showKycToast, setShowKycToast] = useState(false);
+  const [kycToastMsg, setKycToastMsg] = useState("");
 
   useEffect(() => {
     // Carica investimenti acquistati e dati bancari
@@ -161,6 +165,33 @@ export default function ClientDashboard() {
     { name: 'High', value: 3 }
   ];
   const riskColors = ['#10b981', '#f59e0b', '#ef4444'];
+
+  // Controlla stato KYC e mostra toast se necessario
+  useEffect(() => {
+    if (!user) return;
+    const checkKycStatus = async () => {
+      const { data, error } = await supabase
+        .from('kyc_applications')
+        .select('verification_status')
+        .eq('user_id', user.id)
+        .order('submitted_at', { ascending: false })
+        .limit(1)
+        .single();
+      if (error || !data) return;
+      const status = data.verification_status;
+      const lastNotified = localStorage.getItem('kyc-last-notified');
+      if ((status === 'approved' || status === 'rejected') && lastNotified !== status) {
+        setKycToastMsg(
+          status === 'approved'
+            ? 'La tua KYC è stata APPROVATA! Ora puoi operare liberamente.'
+            : 'La tua KYC è stata RIFIUTATA. Contatta il supporto per dettagli.'
+        );
+        setShowKycToast(true);
+        localStorage.setItem('kyc-last-notified', status);
+      }
+    };
+    checkKycStatus();
+  }, [user]);
 
   if (isLoading || packagesLoading) {
     return (
@@ -461,6 +492,13 @@ export default function ClientDashboard() {
             </div>
           </div>
         )}
+
+        <Toast
+          message={kycToastMsg}
+          visible={showKycToast}
+          onClose={() => setShowKycToast(false)}
+          duration={5000}
+        />
       </div>
     </div>
   );

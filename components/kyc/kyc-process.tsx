@@ -19,6 +19,7 @@ import {
   Phone,
   Mail
 } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
 
 interface KYCData {
   personalInfo: {
@@ -41,9 +42,9 @@ interface KYCData {
     investmentGoals: string[];
   };
   documents: {
-    idDocument: File | null;
-    proofOfAddress: File | null;
-    bankStatement: File | null;
+    idDocument: string | null;
+    proofOfAddress: string | null;
+    bankStatement: string | null;
   };
   verification: {
     personalInfoVerified: boolean;
@@ -158,13 +159,34 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleFileUpload = (field: string, file: File) => {
+  // Upload file su Supabase Storage e restituisci l'URL pubblico
+  const uploadDocument = async (field: string, file: File) => {
+    if (!file || !userId) return null;
+    const filePath = `${userId}/${Date.now()}_${file.name}`;
+    const { error } = await supabase.storage.from('kyc-documents').upload(filePath, file, { upsert: true });
+    if (error) {
+      alert('Errore upload documento: ' + error.message);
+      return null;
+    }
+    // Ottieni public URL
+    const { data } = supabase.storage.from('kyc-documents').getPublicUrl(filePath);
+    return data.publicUrl;
+  };
+
+  // Modifica handleFileUpload per upload reale
+  const handleFileUpload = async (field: string, file: File | null) => {
+    if (!file) {
+      setKycData(prev => ({
+        ...prev,
+        documents: { ...prev.documents, [field]: null }
+      }));
+      return;
+    }
+    // Upload reale
+    const url = await uploadDocument(field, file);
     setKycData(prev => ({
       ...prev,
-      documents: {
-        ...prev.documents,
-        [field]: file
-      }
+      documents: { ...prev.documents, [field]: url }
     }));
   };
 
@@ -180,12 +202,18 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
-    
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
-      // Update verification status
+      // Salva la KYC application su Supabase
+      const { error } = await supabase.from('kyc_applications').insert([
+        {
+          user_id: userId,
+          personal_info: kycData.personalInfo,
+          financial_profile: kycData.financialProfile,
+          documents: kycData.documents, // ora contiene URL
+          verification_status: 'pending',
+        }
+      ]);
+      if (error) throw error;
       setKycData(prev => ({
         ...prev,
         verification: {
@@ -195,10 +223,10 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
           overallStatus: 'in_review'
         }
       }));
-      
       onComplete('in_review');
     } catch (error) {
       console.error('KYC submission error:', error);
+      alert('Errore durante il salvataggio della KYC. Riprova.');
     } finally {
       setIsSubmitting(false);
     }
@@ -901,7 +929,7 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
                         color: '#6b7280',
                         marginBottom: '1rem'
                       }}>
-                        {(kycData.documents[doc.key as keyof typeof kycData.documents] as File)?.name}
+                        <a href={kycData.documents[doc.key as keyof typeof kycData.documents] as string} target="_blank" rel="noopener noreferrer">View Document</a>
                       </p>
                       <button
                         onClick={() => handleFileUpload(doc.key, null as any)}
@@ -939,11 +967,9 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
                       <input
                         type="file"
                         accept=".pdf,.jpg,.jpeg,.png"
-                        onChange={(e) => {
+                        onChange={async (e) => {
                           const file = e.target.files?.[0];
-                          if (file) {
-                            handleFileUpload(doc.key, file);
-                          }
+                          if (file) await handleFileUpload(doc.key, file);
                         }}
                         style={{ display: 'none' }}
                         id={`file-${doc.key}`}
