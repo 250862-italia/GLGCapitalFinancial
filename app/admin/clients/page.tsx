@@ -33,6 +33,15 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+// Funzione per normalizzare lo status (deve essere dichiarata PRIMA dell'uso)
+const normalizeStatus = (status: string): 'Active' | 'Inactive' | 'Suspended' => {
+  if (!status) return 'Active';
+  if (status.toLowerCase() === 'active') return 'Active';
+  if (status.toLowerCase() === 'inactive') return 'Inactive';
+  if (status.toLowerCase() === 'suspended') return 'Suspended';
+  return 'Active';
+};
+
 export default function ClientsManagementPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
@@ -332,14 +341,6 @@ export default function ClientsManagementPage() {
       setClients(clientsWithKyc);
     }
     setLoading(false);
-  };
-
-  // Funzione per normalizzare lo status
-  const normalizeStatus = (status: string): 'Active' | 'Inactive' | 'Suspended' => {
-    if (status.toLowerCase() === 'active') return 'Active';
-    if (status.toLowerCase() === 'inactive') return 'Inactive';
-    if (status.toLowerCase() === 'suspended') return 'Suspended';
-    return 'Active';
   };
 
   return (
