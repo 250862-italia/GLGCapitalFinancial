@@ -24,6 +24,7 @@ import { useAuth } from "../../hooks/use-auth";
 import { usePackages } from "../../lib/package-context";
 import Toast from "../../components/ui/Toast";
 import { supabase } from "../../lib/supabase";
+import { useRouter } from 'next/navigation';
 
 interface PortfolioStats {
   totalInvested: number;
@@ -45,6 +46,7 @@ export default function ClientDashboard() {
   const [bankDetails, setBankDetails] = useState<{iban: string, accountHolder: string, bankName: string, reason: string} | null>(null);
   const [showKycToast, setShowKycToast] = useState(false);
   const [kycToastMsg, setKycToastMsg] = useState("");
+  const router = useRouter();
 
   useEffect(() => {
     // Carica investimenti acquistati e dati bancari
@@ -229,7 +231,9 @@ export default function ClientDashboard() {
           {user ? (
             <>
               {console.log('DEBUG: KYCProcess montato per userId', user.id)}
-              <KYCProcess userId={user.id} onComplete={() => {}} />
+              <KYCProcess userId={user.id} onComplete={() => {
+                router.push('/kyc/informational-request');
+              }} />
             </>
           ) : (
             <div style={{ color: '#dc2626', fontWeight: 700, fontSize: 18, padding: 16, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8 }}>
