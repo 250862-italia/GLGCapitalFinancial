@@ -76,7 +76,7 @@ export default function IscrivitiPage() {
           email: form.email,
           phone: form.phone
         }));
-        router.push("/dashboard");
+        window.location.href = "https://glg-capital-financial.vercel.app/login";
       } else {
         setError(data.error || data.message || "Errore durante la registrazione");
       }
