@@ -553,21 +553,6 @@ export default function ClientDashboard() {
           </div>
         </div>
 
-        {/* --- SEZIONE EQUITY-PLEDGE AREA RISERVATA --- */}
-        <section style={{ margin: '3rem 0 0 0', background: '#fff7ed', borderRadius: 16, padding: '2.5rem 1.5rem', boxShadow: '0 2px 8px rgba(245,158,11,0.08)' }}>
-          <h2 style={{ color: '#f59e0b', fontSize: 26, fontWeight: 800, marginBottom: 18, textAlign: 'center' }}>
-            How Our Equity-Pledge Model Works
-          </h2>
-          <ul style={{ color: '#1a3556', fontSize: 17, lineHeight: 1.7, paddingLeft: 24, maxWidth: 700, margin: '0 auto' }}>
-            <li><b>Dedicated Vehicle:</b> We create a dedicated vehicle company that issues shares reserved for investors.</li>
-            <li><b>Simple Subscription:</b> Investors complete the online form, digitally sign the agreement, and transfer funds to a segregated account.</li>
-            <li><b>Secured by Pledge:</b> Each investment is secured by a formal pledge on the newly issued shares.</li>
-            <li><b>Fixed, Attractive Yield:</b> 12% gross per year (minus 0.7% management fee), paid at 36-month maturity.</li>
-            <li><b>Transparent Reporting:</b> Quarterly reports keep investors informed about principal and accrued interest.</li>
-            <li><b>Automatic Release:</b> At maturity, capital and net yield are returned and the pledge is released.</li>
-          </ul>
-        </section>
-
         {/* Modale per i dati bancari */}
         {showBankModal && (
           <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
