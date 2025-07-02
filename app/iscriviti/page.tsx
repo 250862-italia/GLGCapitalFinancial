@@ -76,9 +76,7 @@ export default function IscrivitiPage() {
           email: form.email,
           phone: form.phone
         }));
-        setTimeout(() => {
-          router.push("/dashboard");
-        }, 1500);
+        router.push("/dashboard");
       } else {
         setError(data.error || data.message || "Errore durante la registrazione");
       }
@@ -108,9 +106,7 @@ export default function IscrivitiPage() {
         localStorage.setItem("user", JSON.stringify(data.user));
         localStorage.setItem("token", data.token);
         setSuccess(true);
-        setTimeout(() => {
-          router.push("/");
-        }, 1000);
+        router.push("/dashboard");
       } else {
         setError(data.error || "Login fallito");
       }

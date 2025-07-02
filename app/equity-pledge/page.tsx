@@ -4,10 +4,21 @@ export default function EquityPledgePage() {
   return (
     <main style={{ maxWidth: 900, margin: "0 auto", padding: "3rem 1rem", background: "#fff", borderRadius: 16, boxShadow: "0 4px 24px rgba(10,37,64,0.10)" }}>
       <h1 style={{ color: "#0a2540", fontSize: 38, fontWeight: 900, marginBottom: 24, textAlign: "center" }}>
-        Equity-Pledge System
+        Our Equity-Pledge Model at a Glance
       </h1>
+      <ul style={{ color: "#1a3556", fontSize: 20, lineHeight: 1.7, textAlign: "left", margin: "0 auto 32px", maxWidth: 700, paddingLeft: 0, listStyle: "none" }}>
+        <li><b>Legal Vehicle</b><br />Dedicated branch/subsidiary for investor shares</li>
+        <li><b>Documentation</b><br />Simple Term Sheet & Digital Subscription Agreement</li>
+        <li><b>Compliance</b><br />Seamless KYC/AML checks</li>
+        <li><b>Online Onboarding</b><br />E-form, e-signature & "Pay Now" integration</li>
+        <li><b>Escrow & Pledge</b><br />Funds in segregated account + formal share pledge</li>
+        <li><b>Fixed Yield</b><br />XXXX % p.a. (minus XXXX % fee), paid at 12/24/36/48-month maturity</li>
+        <li><b>Transparent Reporting</b><br />Quarterly statements on principal & interest</li>
+        <li><b>Maturity & Release</b><br />Automatic repayment + pledge lift</li>
+        <li><b>Early Exit</b><br />Optional early redemption at predefined terms</li>
+      </ul>
       <p style={{ color: "#1a3556", fontSize: 20, lineHeight: 1.7, textAlign: "center", marginBottom: 32 }}>
-        Our Equity-Pledge model offers investors an innovative, secure, and transparent solution to achieve fixed returns and capital protection. Discover how it works and why more and more investors are choosing GLG Capital Group LLC.
+        A streamlined, secure way to raise capital—with predictable returns and rock-solid collateral.
       </p>
       <section style={{ marginBottom: 40 }}>
         <h2 style={{ color: "#f59e0b", fontSize: 28, fontWeight: 800, marginBottom: 18, textAlign: "center" }}>
