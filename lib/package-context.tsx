@@ -140,6 +140,7 @@ export function PackageProvider({ children }: { children: ReactNode }) {
       if (error) throw error;
       setPackages(prev => [ ...(data || []), ...prev ]);
     } catch (err: any) {
+      console.error('CREATE PACKAGE ERROR:', err);
       setError(err.message || 'Failed to create package');
       throw err;
     }
