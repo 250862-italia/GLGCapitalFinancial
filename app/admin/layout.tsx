@@ -98,140 +98,122 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <PackageProviderWrapper>
-      <div style={{ minHeight: '100vh', background: '#f9fafb' }}>
-        {/* Header */}
-        <header style={{ background: '#fff', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)', borderBottom: '1px solid #e5e7eb' }}>
-          <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 1rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 0' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <Image src="/glg capital group llcbianco.png" alt="GLG Capital Group LLC" width={50} height={50} style={{ borderRadius: 8, background: '#fff' }} />
-                <div>
-                  <h1 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#111827', margin: 0 }}>GLG Admin Console</h1>
-                </div>
-              </div>
-              <nav style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
-                <Link 
-                  href="/" 
-                  style={{ 
-                    color: '#6b7280', 
-                    textDecoration: 'none',
-                    fontWeight: 500,
-                    transition: 'color 0.2s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem'
-                  }}
-                  onMouseOver={(e) => e.currentTarget.style.color = '#374151'}
-                  onMouseOut={(e) => e.currentTarget.style.color = '#6b7280'}
-                >
-                  <Home size={16} />
-                  Back to Site
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#dc2626',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    fontWeight: 500,
-                    transition: 'color 0.2s ease'
-                  }}
-                  onMouseOver={(e) => e.currentTarget.style.color = '#b91c1c'}
-                  onMouseOut={(e) => e.currentTarget.style.color = '#dc2626'}
-                >
-                  <LogOut size={16} />
-                  Logout
-                </button>
-              </nav>
-            </div>
-          </div>
-        </header>
-
-        {/* Welcome Block - always visible */}
-        <div style={{
-          maxWidth: '1280px',
-          margin: '2rem auto 0',
-          padding: '0 1rem',
+      <div style={{ display: 'flex', minHeight: '100vh', background: '#f9fafb' }}>
+        {/* Sidebar */}
+        <aside style={{
+          width: 240,
+          background: '#0a2540',
+          color: '#fff',
           display: 'flex',
-          justifyContent: 'center',
+          flexDirection: 'column',
+          padding: '2rem 1rem 1rem 1rem',
+          minHeight: '100vh'
         }}>
-          <div style={{
-            background: '#dcfce7',
-            border: '1px solid #bbf7d0',
-            borderRadius: 8,
-            padding: '1rem 2rem',
-            color: '#166534',
-            fontWeight: 600,
-            fontSize: 18,
-            textAlign: 'center',
-            minWidth: 320
-          }}>
-            Welcome, {adminUser?.name || 'Admin'} ({adminUser?.role || 'admin'})
+          <div style={{ marginBottom: 32 }}>
+            <Image src="/glg capital group llcbianco.png" alt="GLG Capital Group LLC" width={48} height={48} style={{ borderRadius: 8, background: '#fff' }} />
+            <h2 style={{ fontSize: 20, fontWeight: 700, margin: '1rem 0 0.5rem' }}>GLG Console</h2>
           </div>
-        </div>
-
-        {/* ADMIN NAVIGATION */}
-        {/* isSuperAdmin && (
-        <nav style={{ background: '#1f2937', borderBottom: '1px solid #374151' }}>
-          <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 1rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', height: '4rem', overflowX: 'auto' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', minWidth: 'max-content' }}>
-                {adminNavItems.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    style={{ 
-                      color: '#d1d5db', 
-                      textDecoration: 'none',
-                      padding: '0.5rem 0.75rem',
-                      borderRadius: '0.375rem',
-                      fontSize: '0.875rem',
-                      fontWeight: 500,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      transition: 'all 0.2s ease',
-                      whiteSpace: 'nowrap'
-                    }}
-                    onMouseOver={(e) => {
-                      e.currentTarget.style.background = '#374151';
-                      e.currentTarget.style.color = '#fff';
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.background = 'transparent';
-                      e.currentTarget.style.color = '#d1d5db';
-                    }}
-                  >
-                    <item.icon size={16} />
-                    {item.name}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </div>
-        </nav>
-        ) */}
+          <nav style={{ flex: 1 }}>
+            {adminNavItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  color: '#fff',
+                  textDecoration: 'none',
+                  padding: '0.75rem 1rem',
+                  borderRadius: 6,
+                  marginBottom: 4,
+                  fontWeight: 500,
+                  transition: 'background 0.2s',
+                }}
+                onMouseOver={e => e.currentTarget.style.background = '#1e293b'}
+                onMouseOut={e => e.currentTarget.style.background = 'transparent'}
+              >
+                <item.icon size={18} />
+                {item.name}
+              </Link>
+            ))}
+          </nav>
+          <button
+            onClick={handleLogout}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#f87171',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              fontWeight: 500,
+              marginTop: 24
+            }}
+          >
+            <LogOut size={18} />
+            Logout
+          </button>
+        </aside>
 
         {/* Main content */}
-        <main style={{ maxWidth: '1280px', margin: '0 auto', padding: '1.5rem 1rem' }}>
-          {children}
-        </main>
+        <div style={{ flex: 1 }}>
+          {/* Header */}
+          <header style={{ background: '#fff', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)', borderBottom: '1px solid #e5e7eb' }}>
+            <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', padding: '1rem 0' }}>
+                <nav style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
+                  <Link 
+                    href="/" 
+                    style={{ 
+                      color: '#6b7280', 
+                      textDecoration: 'none',
+                      fontWeight: 500,
+                      transition: 'color 0.2s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.color = '#374151'}
+                    onMouseOut={(e) => e.currentTarget.style.color = '#6b7280'}
+                  >
+                    <Home size={16} />
+                    Back to Site
+                  </Link>
+                </nav>
+              </div>
+            </div>
+          </header>
 
-        {/* ADMIN FOOTER */}
-        <footer style={{ background: '#1f2937', color: '#d1d5db', padding: '2rem 0', marginTop: 'auto' }}>
-          <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 1rem', textAlign: 'center' }}>
-            <p style={{ margin: 0, fontSize: '0.875rem' }}>
-              © 2024 GLG Capital Group LLC. All rights reserved.
-            </p>
-            <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.75rem', color: '#9ca3af' }}>
-              Admin Console v1.0 - Secure access only
-            </p>
+          {/* Welcome Block - always visible */}
+          <div style={{
+            maxWidth: '1280px',
+            margin: '2rem auto 0',
+            padding: '0 1rem',
+            display: 'flex',
+            justifyContent: 'center',
+          }}>
+            <div style={{
+              background: '#dcfce7',
+              border: '1px solid #bbf7d0',
+              borderRadius: 8,
+              padding: '1rem 2rem',
+              color: '#166534',
+              fontWeight: 600,
+              fontSize: 18,
+              textAlign: 'center',
+              minWidth: 320
+            }}>
+              Welcome, {adminUser?.name || 'Admin'} ({adminUser?.role || 'admin'})
+            </div>
           </div>
-        </footer>
+
+          {/* Page content */}
+          <div style={{ maxWidth: '1280px', margin: '2rem auto', padding: '0 1rem' }}>
+            {children}
+          </div>
+        </div>
       </div>
     </PackageProviderWrapper>
   );
