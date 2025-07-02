@@ -193,6 +193,66 @@ export default function ClientDashboard() {
           </p>
         </div>
 
+        {/* Pacchetti & Analisi Rischio - SPOSTATO IN ALTO */}
+        <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 4px 24px rgba(10,37,64,0.10)', padding: '2rem', margin: '2.5rem 0' }}>
+          <div style={{ display: 'flex', gap: 32, flexWrap: 'wrap' }}>
+            <div style={{ flex: 2, minWidth: 320 }}>
+              <h2 style={{ color: 'var(--primary)', fontSize: 28, fontWeight: 900, margin: 0 }}>Pacchetti di Investimento</h2>
+              <p style={{ color: '#64748b', fontSize: 16, margin: '8px 0 1.5rem 0' }}>Tutti i pacchetti disponibili e le loro caratteristiche principali.</p>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '2px solid #e0e3eb' }}>
+                      <th style={{ textAlign: 'left', padding: '1rem' }}>Nome</th>
+                      <th style={{ textAlign: 'left', padding: '1rem' }}>Categoria</th>
+                      <th style={{ textAlign: 'center', padding: '1rem' }}>Rischio</th>
+                      <th style={{ textAlign: 'right', padding: '1rem' }}>Min</th>
+                      <th style={{ textAlign: 'right', padding: '1rem' }}>Max</th>
+                      <th style={{ textAlign: 'right', padding: '1rem' }}>Rendimento (%)</th>
+                      <th style={{ textAlign: 'center', padding: '1rem' }}>Durata (mesi)</th>
+                      <th style={{ textAlign: 'center', padding: '1rem' }}>Stato</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {availablePackages.map(pkg => (
+                      <tr key={pkg.id} style={{ borderBottom: '1px solid #e0e3eb' }}>
+                        <td style={{ padding: '1rem', fontWeight: 600, color: '#0a2540' }}>{pkg.name}</td>
+                        <td style={{ padding: '1rem', color: '#64748b' }}>{pkg.category}</td>
+                        <td style={{ padding: '1rem', textAlign: 'center' }}>
+                          <span style={{ background: pkg.riskLevel === 'low' ? '#bbf7d0' : pkg.riskLevel === 'medium' ? '#fef3c7' : '#fee2e2', color: pkg.riskLevel === 'low' ? '#166534' : pkg.riskLevel === 'medium' ? '#92400e' : '#991b1b', padding: '0.3rem 0.7rem', borderRadius: 8, fontWeight: 600, fontSize: 14, textTransform: 'capitalize' }}>{pkg.riskLevel}</span>
+                        </td>
+                        <td style={{ padding: '1rem', textAlign: 'right' }}>€{pkg.minInvestment?.toLocaleString?.() ?? '-'}</td>
+                        <td style={{ padding: '1rem', textAlign: 'right' }}>€{pkg.maxInvestment?.toLocaleString?.() ?? '-'}</td>
+                        <td style={{ padding: '1rem', textAlign: 'right' }}>{pkg.expectedReturn ?? '-'}%</td>
+                        <td style={{ padding: '1rem', textAlign: 'center' }}>{pkg.duration}</td>
+                        <td style={{ padding: '1rem', textAlign: 'center' }}>
+                          <span style={{ background: pkg.status === 'Active' ? '#bbf7d0' : pkg.status === 'Fundraising' ? '#fef3c7' : '#e0e7ff', color: pkg.status === 'Active' ? '#166534' : pkg.status === 'Fundraising' ? '#92400e' : '#3730a3', padding: '0.3rem 0.7rem', borderRadius: 8, fontWeight: 600, fontSize: 14 }}>{pkg.status}</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div style={{ flex: 1, minWidth: 260, background: 'var(--secondary)', borderRadius: 12, padding: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginTop: 24 }}>
+              <h3 style={{ color: '#0a2540', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>Distribuzione Rischio</h3>
+              {riskData && riskData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={180}>
+                  <PieChart>
+                    <Pie data={riskData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={60}>
+                      {riskData.map((entry, idx) => (
+                        <Cell key={`cell-${idx}`} fill={riskColors[idx % riskColors.length]} />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div style={{ color: '#64748b', fontSize: 16, marginTop: 32, textAlign: 'center' }}>Nessun dato rischio disponibile</div>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* Portfolio Summary - blocco attrattivo */}
         <div style={{
           display: 'grid',
@@ -395,66 +455,6 @@ export default function ClientDashboard() {
             </div>
           </div>
         )}
-
-        {/* Pacchetti & Analisi Rischio */}
-        <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 4px 24px rgba(10,37,64,0.10)', padding: '2rem', margin: '2.5rem 0' }}>
-          <div style={{ display: 'flex', gap: 32, flexWrap: 'wrap' }}>
-            <div style={{ flex: 2, minWidth: 320 }}>
-              <h2 style={{ color: 'var(--primary)', fontSize: 28, fontWeight: 900, margin: 0 }}>Pacchetti di Investimento</h2>
-              <p style={{ color: '#64748b', fontSize: 16, margin: '8px 0 1.5rem 0' }}>Tutti i pacchetti disponibili e le loro caratteristiche principali.</p>
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr style={{ borderBottom: '2px solid #e0e3eb' }}>
-                      <th style={{ textAlign: 'left', padding: '1rem' }}>Nome</th>
-                      <th style={{ textAlign: 'left', padding: '1rem' }}>Categoria</th>
-                      <th style={{ textAlign: 'center', padding: '1rem' }}>Rischio</th>
-                      <th style={{ textAlign: 'right', padding: '1rem' }}>Min</th>
-                      <th style={{ textAlign: 'right', padding: '1rem' }}>Max</th>
-                      <th style={{ textAlign: 'right', padding: '1rem' }}>Rendimento (%)</th>
-                      <th style={{ textAlign: 'center', padding: '1rem' }}>Durata (mesi)</th>
-                      <th style={{ textAlign: 'center', padding: '1rem' }}>Stato</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {availablePackages.map(pkg => (
-                      <tr key={pkg.id} style={{ borderBottom: '1px solid #e0e3eb' }}>
-                        <td style={{ padding: '1rem', fontWeight: 600, color: '#0a2540' }}>{pkg.name}</td>
-                        <td style={{ padding: '1rem', color: '#64748b' }}>{pkg.category}</td>
-                        <td style={{ padding: '1rem', textAlign: 'center' }}>
-                          <span style={{ background: pkg.riskLevel === 'low' ? '#bbf7d0' : pkg.riskLevel === 'medium' ? '#fef3c7' : '#fee2e2', color: pkg.riskLevel === 'low' ? '#166534' : pkg.riskLevel === 'medium' ? '#92400e' : '#991b1b', padding: '0.3rem 0.7rem', borderRadius: 8, fontWeight: 600, fontSize: 14, textTransform: 'capitalize' }}>{pkg.riskLevel}</span>
-                        </td>
-                        <td style={{ padding: '1rem', textAlign: 'right' }}>€{pkg.minInvestment?.toLocaleString?.() ?? '-'}</td>
-                        <td style={{ padding: '1rem', textAlign: 'right' }}>€{pkg.maxInvestment?.toLocaleString?.() ?? '-'}</td>
-                        <td style={{ padding: '1rem', textAlign: 'right' }}>{pkg.expectedReturn ?? '-'}%</td>
-                        <td style={{ padding: '1rem', textAlign: 'center' }}>{pkg.duration}</td>
-                        <td style={{ padding: '1rem', textAlign: 'center' }}>
-                          <span style={{ background: pkg.status === 'Active' ? '#bbf7d0' : pkg.status === 'Fundraising' ? '#fef3c7' : '#e0e7ff', color: pkg.status === 'Active' ? '#166534' : pkg.status === 'Fundraising' ? '#92400e' : '#3730a3', padding: '0.3rem 0.7rem', borderRadius: 8, fontWeight: 600, fontSize: 14 }}>{pkg.status}</span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            <div style={{ flex: 1, minWidth: 260, background: 'var(--secondary)', borderRadius: 12, padding: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginTop: 24 }}>
-              <h3 style={{ color: '#0a2540', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>Distribuzione Rischio</h3>
-              {riskData && riskData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={180}>
-                  <PieChart>
-                    <Pie data={riskData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={60}>
-                      {riskData.map((entry, idx) => (
-                        <Cell key={`cell-${idx}`} fill={riskColors[idx % riskColors.length]} />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <div style={{ color: '#64748b', fontSize: 16, marginTop: 32, textAlign: 'center' }}>Nessun dato rischio disponibile</div>
-              )}
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
