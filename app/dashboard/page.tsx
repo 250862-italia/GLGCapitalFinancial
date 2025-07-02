@@ -195,7 +195,9 @@ export default function ClientDashboard() {
 
         {/* KYC Process - subito sotto il welcome */}
         <div style={{ marginBottom: '2rem' }}>
-          <KYCProcess />
+          {user && (
+            <KYCProcess userId={user.id} onComplete={() => {}} />
+          )}
         </div>
 
         {/* Pacchetti & Analisi Rischio - SPOSTATO IN ALTO */}
