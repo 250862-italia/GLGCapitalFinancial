@@ -94,7 +94,7 @@ export default function ClientsManagementPage() {
             email: c.email,
             phone: c.phone,
             location: c.nationality || '',
-            status: c.status === 'active' ? 'Active' : 'Inactive',
+            status: normalizeStatus(c.status),
             kycStatus,
             joinDate: c.created_at ? c.created_at.slice(0, 10) : '',
             lastActivity: c.updated_at ? c.updated_at.slice(0, 10) : '',
@@ -315,7 +315,7 @@ export default function ClientsManagementPage() {
           email: c.email,
           phone: c.phone,
           location: c.nationality || '',
-          status: c.status === 'active' ? 'Active' : 'Inactive',
+          status: normalizeStatus(c.status),
           kycStatus,
           joinDate: c.created_at ? c.created_at.slice(0, 10) : '',
           lastActivity: c.updated_at ? c.updated_at.slice(0, 10) : '',
@@ -332,6 +332,14 @@ export default function ClientsManagementPage() {
       setClients(clientsWithKyc);
     }
     setLoading(false);
+  };
+
+  // Funzione per normalizzare lo status
+  const normalizeStatus = (status: string): 'Active' | 'Inactive' | 'Suspended' => {
+    if (status.toLowerCase() === 'active') return 'Active';
+    if (status.toLowerCase() === 'inactive') return 'Inactive';
+    if (status.toLowerCase() === 'suspended') return 'Suspended';
+    return 'Active';
   };
 
   return (
