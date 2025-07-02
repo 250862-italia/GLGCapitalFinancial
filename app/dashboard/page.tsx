@@ -300,6 +300,33 @@ export default function ClientDashboard() {
           </div>
         </div>
 
+        {/* Pacchetti attivi */}
+        <div style={{ margin: '2rem 0' }}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: '#1f2937', marginBottom: '1rem' }}>
+            Active Investment Packages
+          </h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+            {availablePackages.filter(pkg => pkg.isActive).map(pkg => (
+              <div key={pkg.id} style={{ background: 'white', borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', padding: '1.5rem' }}>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#0a2540' }}>{pkg.name}</h3>
+                <p style={{ color: '#6b7280', margin: '0.5rem 0 1rem' }}>{pkg.description}</p>
+                <div style={{ marginBottom: 8 }}>
+                  <b>Min:</b> {pkg.minAmount} USD &nbsp; <b>Max:</b> {pkg.maxAmount} USD
+                </div>
+                <div style={{ marginBottom: 8 }}>
+                  <b>Yield:</b> {pkg.dailyReturn}% &nbsp; <b>Duration:</b> {pkg.duration} days
+                </div>
+                <button 
+                  style={{ background: '#f59e0b', color: '#fff', border: 'none', borderRadius: 8, padding: '0.5rem 1.5rem', fontWeight: 700, cursor: 'pointer', marginTop: 12 }}
+                  onClick={() => handleBuy(pkg)}
+                >
+                  Invest Now
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Portfolio Overview */}
         <div style={{ 
           display: 'grid', 
