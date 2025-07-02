@@ -629,17 +629,21 @@ export default function ClientDashboard() {
             </div>
             <div style={{ flex: 1, minWidth: 260, background: 'var(--secondary)', borderRadius: 12, padding: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginTop: 24 }}>
               <h3 style={{ color: '#0a2540', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>Distribuzione Rischio</h3>
-              <ResponsiveContainer width="100%" height={180}>
-                <PieChart>
-                  <Pie data={riskData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={60} label>
-                    {riskData.map((entry, idx) => (
-                      <Cell key={`cell-${idx}`} fill={riskColors[idx % riskColors.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
+              {riskData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={180}>
+                  <PieChart>
+                    <Pie data={riskData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={60} label>
+                      {riskData.map((entry, idx) => (
+                        <Cell key={`cell-${idx}`} fill={riskColors[idx % riskColors.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div style={{ color: '#64748b', fontSize: 16, marginTop: 32, textAlign: 'center' }}>Nessun dato rischio disponibile</div>
+              )}
             </div>
           </div>
         </div>
