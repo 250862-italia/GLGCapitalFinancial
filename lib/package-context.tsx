@@ -33,7 +33,20 @@ interface PackageContextType {
   saveToStorage: () => void;
 }
 
-const PackageContext = createContext<PackageContextType | null>(null);
+const defaultContext: PackageContextType = {
+  packages: [],
+  loading: false,
+  error: null,
+  selectedPackage: null,
+  setSelectedPackage: () => { console.warn('setSelectedPackage chiamato fuori da PackageProvider'); },
+  setPackages: () => { console.warn('setPackages chiamato fuori da PackageProvider'); },
+  fetchPackages: async () => { console.warn('fetchPackages chiamato fuori da PackageProvider'); },
+  createPackage: async () => { console.warn('createPackage chiamato fuori da PackageProvider'); },
+  updatePackage: async () => { console.warn('updatePackage chiamato fuori da PackageProvider'); },
+  deletePackage: async () => { console.warn('deletePackage chiamato fuori da PackageProvider'); },
+  saveToStorage: () => { console.warn('saveToStorage chiamato fuori da PackageProvider'); },
+};
+const PackageContext = createContext<PackageContextType>(defaultContext);
 
 // Mock data for development
 const mockPackages: InvestmentPackage[] = [
@@ -228,7 +241,5 @@ export function PackageProvider({ children }: { children: ReactNode }) {
 }
 
 export function usePackages() {
-  const ctx = useContext(PackageContext);
-  if (!ctx) throw new Error('usePackages must be used within a PackageProvider');
-  return ctx;
+  return useContext(PackageContext);
 } 
