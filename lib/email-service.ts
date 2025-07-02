@@ -35,6 +35,9 @@ interface EmailData {
   to: string;
   template: string;
   data: Record<string, any>;
+  subject?: string;
+  html?: string;
+  text?: string;
 }
 
 class EmailNotificationService {

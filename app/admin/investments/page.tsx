@@ -5,8 +5,14 @@ import Modal from "@/components/ui/Modal";
 import { useRouter } from "next/navigation";
 import { InvestmentFormData } from "@/types/investment";
 
+// Tipo per investimenti con join
+interface InvestmentWithJoin extends InvestmentFormData {
+  client?: { first_name?: string; last_name?: string; email?: string };
+  package?: { name?: string };
+}
+
 export default function AdminInvestmentsPage() {
-  const [investments, setInvestments] = useState<InvestmentFormData[]>([]);
+  const [investments, setInvestments] = useState<InvestmentWithJoin[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -189,15 +195,15 @@ export default function AdminInvestmentsPage() {
             <tbody>
               {filtered.map((inv) => (
                 <tr key={inv.id} style={{ borderBottom: "1px solid #e0e3eb" }}>
-                  <td style={{ padding: "1rem" }}>{inv.client?.first_name} {inv.client?.last_name}</td>
-                  <td style={{ padding: "1rem" }}>{inv.client?.email}</td>
-                  <td style={{ padding: "1rem" }}>{inv.package?.name}</td>
+                  <td style={{ padding: "1rem" }}>{inv.client?.first_name || ''} {inv.client?.last_name || ''}</td>
+                  <td style={{ padding: "1rem" }}>{inv.client?.email || ''}</td>
+                  <td style={{ padding: "1rem" }}>{inv.package?.name || ''}</td>
                   <td style={{ padding: "1rem", textAlign: "right" }}>{inv.amount?.toLocaleString() || '-'}</td>
                   <td style={{ padding: "1rem" }}>{inv.status || '-'}</td>
                   <td style={{ padding: "1rem", textAlign: "center" }}>
                     <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center" }}>
-                      <button onClick={() => handleChangeStatus(inv.id, 'active')} style={{ background: "#059669", color: "white", border: "none", padding: "0.5rem 1rem", borderRadius: 6, cursor: "pointer" }} title="Conferma">Conferma</button>
-                      <button onClick={() => handleChangeStatus(inv.id, 'cancelled')} style={{ background: "#dc2626", color: "white", border: "none", padding: "0.5rem 1rem", borderRadius: 6, cursor: "pointer" }} title="Rifiuta">Rifiuta</button>
+                      <button onClick={() => inv.id && handleChangeStatus(inv.id, 'active')} style={{ background: "#059669", color: "white", border: "none", padding: "0.5rem 1rem", borderRadius: 6, cursor: "pointer" }} title="Conferma">Conferma</button>
+                      <button onClick={() => inv.id && handleChangeStatus(inv.id, 'cancelled')} style={{ background: "#dc2626", color: "white", border: "none", padding: "0.5rem 1rem", borderRadius: 6, cursor: "pointer" }} title="Rifiuta">Rifiuta</button>
                     </div>
                   </td>
                 </tr>
