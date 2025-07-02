@@ -155,6 +155,29 @@ CREATE TABLE IF NOT EXISTS kyc_applications (
   submitted_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- NOTIFICATIONS TABLE (log invio email/notifiche)
+CREATE TABLE notifications (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID,
+  email VARCHAR(255),
+  type VARCHAR(50),
+  title VARCHAR(255),
+  message TEXT,
+  status VARCHAR(20) DEFAULT 'sent',
+  sent_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  details JSONB
+);
+
+-- INFORMATIONAL REQUESTS TABLE (log richieste modulo informativo)
+CREATE TABLE IF NOT EXISTS informational_requests (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name VARCHAR(255),
+  email VARCHAR(255),
+  date DATE,
+  signature VARCHAR(255),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Create indexes for better performance
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_role ON users(role);
@@ -183,6 +206,7 @@ ALTER TABLE team_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE partnerships ENABLE ROW LEVEL SECURITY;
 ALTER TABLE client_packages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE kyc_applications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 
 -- Create RLS policies (basic - allow all for now, customize later)
 CREATE POLICY "Allow all operations on users" ON users FOR ALL USING (true);
