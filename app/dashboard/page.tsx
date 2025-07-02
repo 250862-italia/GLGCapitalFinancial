@@ -195,8 +195,15 @@ export default function ClientDashboard() {
 
         {/* KYC Process - subito sotto il welcome */}
         <div style={{ marginBottom: '2rem' }}>
-          {user && (
-            <KYCProcess userId={user.id} onComplete={() => {}} />
+          {user ? (
+            <>
+              {console.log('DEBUG: KYCProcess montato per userId', user.id)}
+              <KYCProcess userId={user.id} onComplete={() => {}} />
+            </>
+          ) : (
+            <div style={{ color: '#dc2626', fontWeight: 700, fontSize: 18, padding: 16, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8 }}>
+              Utente non autenticato, KYC nascosto
+            </div>
           )}
         </div>
 

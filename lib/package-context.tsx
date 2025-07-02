@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import Toast from "../components/ui/Toast";
+import { supabase } from "./supabase";
 
 export interface InvestmentPackage {
   id: string;
@@ -110,124 +111,77 @@ export function PackageProvider({ children }: { children: ReactNode }) {
   const [selectedPackage, setSelectedPackage] = useState<InvestmentPackage | null>(null);
   const [showToast, setShowToast] = useState(false);
 
-  // Load packages from localStorage
-  const loadFromStorage = (): InvestmentPackage[] => {
-    if (typeof window === 'undefined') return mockPackages;
-    
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        return Array.isArray(parsed) ? parsed : mockPackages;
-      }
-    } catch (err) {
-      console.error('Error loading packages from storage:', err);
-    }
-    return mockPackages;
-  };
-
-  // Save packages to localStorage
-  const saveToStorage = () => {
-    if (typeof window === 'undefined') return;
-    
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(packages));
-      console.log('Packages saved to localStorage:', packages);
-    } catch (err) {
-      console.error('Error saving packages to storage:', err);
-      setError('Failed to save packages to storage');
-    }
-  };
-
+  // Fetch packages from Supabase
   const fetchPackages = async () => {
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      setError(null);
-      
-      // Load from localStorage or use mock data
-      const loadedPackages = loadFromStorage();
-      setPackages(loadedPackages);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch packages');
+      const { data, error } = await supabase
+        .from('packages')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      setPackages(data || []);
+    } catch (err: any) {
+      setError(err.message || 'Failed to fetch packages');
     } finally {
       setLoading(false);
     }
   };
 
+  // Create package in Supabase
   const createPackage = async (pkg: Omit<InvestmentPackage, 'id'>) => {
+    setError(null);
     try {
-      const newPackage: InvestmentPackage = {
-        ...pkg,
-        id: Date.now().toString(),
-        createdAt: new Date().toISOString().slice(0, 10)
-      };
-      const updatedPackages = [...packages, newPackage];
-      setPackages(updatedPackages);
-      
-      // Save to localStorage
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedPackages));
-      }
-      
-      console.log('Package created and saved:', newPackage);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create package');
+      const { data, error } = await supabase
+        .from('packages')
+        .insert([{ ...pkg }])
+        .select();
+      if (error) throw error;
+      setPackages(prev => [ ...(data || []), ...prev ]);
+    } catch (err: any) {
+      setError(err.message || 'Failed to create package');
       throw err;
     }
   };
 
+  // Update package in Supabase
   const updatePackage = async (id: string, pkg: Partial<InvestmentPackage>) => {
+    setError(null);
     try {
-      const updatedPackages = packages.map(p => p.id === id ? { ...p, ...pkg } : p);
-      setPackages(updatedPackages);
-      
-      // Save to localStorage
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedPackages));
-      }
-      
-      console.log('Package updated and saved:', pkg);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update package');
+      const { data, error } = await supabase
+        .from('packages')
+        .update({ ...pkg })
+        .eq('id', id)
+        .select();
+      if (error) throw error;
+      setPackages(prev => prev.map(p => p.id === id ? { ...p, ...pkg } : p));
+    } catch (err: any) {
+      setError(err.message || 'Failed to update package');
       throw err;
     }
   };
 
+  // Delete package in Supabase
   const deletePackage = async (id: string) => {
+    setError(null);
     try {
-      const updatedPackages = packages.filter(p => p.id !== id);
-      setPackages(updatedPackages);
-      
-      // Save to localStorage
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedPackages));
-      }
-      
-      console.log('Package deleted and saved');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete package');
+      const { error } = await supabase
+        .from('packages')
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+      setPackages(prev => prev.filter(p => p.id !== id));
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete package');
       throw err;
     }
   };
 
-  // Auto-save when packages change
-  useEffect(() => {
-    if (packages.length > 0) {
-      saveToStorage();
-    }
-  }, [packages]);
-
+  // On mount, fetch packages
   useEffect(() => {
     fetchPackages();
-    // Real-time sync tra tab: aggiorna pacchetti se cambia localStorage
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === STORAGE_KEY) {
-        fetchPackages();
-        setShowToast(true);
-      }
-    };
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
+    // (Opzionale) qui puoi aggiungere la logica realtime Supabase
   }, []);
 
   const value: PackageContextType = {
@@ -241,7 +195,7 @@ export function PackageProvider({ children }: { children: ReactNode }) {
     createPackage,
     updatePackage,
     deletePackage,
-    saveToStorage
+    saveToStorage: () => {}, // deprecato
   };
 
   return (
