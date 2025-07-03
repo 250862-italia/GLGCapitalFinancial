@@ -15,7 +15,7 @@ interface MarketData {
   high24h: number;
   low24h: number;
   category: 'Forex' | 'Crypto' | 'Stocks' | 'Commodities';
-  status: 'Active' | 'Inactive' | 'Suspended';
+  status: 'active' | 'inactive' | 'pending';
   lastUpdated: string;
   description: string;
 }
@@ -33,7 +33,7 @@ const initialMarketData: MarketData[] = [
     high24h: 1.0872,
     low24h: 1.0834,
     category: 'Forex',
-    status: 'Active',
+    status: 'active',
     lastUpdated: '2024-01-15T10:30:00Z',
     description: 'Major currency pair representing Euro to US Dollar exchange rate'
   },
@@ -49,7 +49,7 @@ const initialMarketData: MarketData[] = [
     high24h: 44500.00,
     low24h: 42800.00,
     category: 'Crypto',
-    status: 'Active',
+    status: 'active',
     lastUpdated: '2024-01-15T10:30:00Z',
     description: 'Leading cryptocurrency by market capitalization'
   },
@@ -65,7 +65,7 @@ const initialMarketData: MarketData[] = [
     high24h: 186.50,
     low24h: 183.20,
     category: 'Stocks',
-    status: 'Active',
+    status: 'active',
     lastUpdated: '2024-01-15T10:30:00Z',
     description: 'Technology company focused on consumer electronics and software'
   },
@@ -81,7 +81,7 @@ const initialMarketData: MarketData[] = [
     high24h: 2055.00,
     low24h: 2035.50,
     category: 'Commodities',
-    status: 'Active',
+    status: 'active',
     lastUpdated: '2024-01-15T10:30:00Z',
     description: 'Precious metal commodity trading against US Dollar'
   }
@@ -136,7 +136,7 @@ export default function AdminMarketsPage() {
 
   // Stats
   const totalItems = marketData.length;
-  const activeItems = marketData.filter(item => item.status === 'Active').length;
+  const activeItems = marketData.filter(item => item.status === 'active').length;
   const totalVolume = marketData.reduce((sum, item) => sum + item.volume, 0);
   const avgChangePercent = marketData.reduce((sum, item) => sum + item.changePercent, 0) / marketData.length;
 
@@ -154,7 +154,7 @@ export default function AdminMarketsPage() {
       high24h: 0,
       low24h: 0,
       category: 'Forex',
-      status: 'Active',
+      status: 'active',
       description: ''
     });
     setShowModal(true);
@@ -327,9 +327,9 @@ export default function AdminMarketsPage() {
           }}
         >
           <option value="All">All Status</option>
-          <option value="Active">Active</option>
-          <option value="Inactive">Inactive</option>
-          <option value="Suspended">Suspended</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+          <option value="pending">Pending</option>
         </select>
       </div>
 
@@ -389,10 +389,10 @@ export default function AdminMarketsPage() {
                     borderRadius: 20,
                     fontSize: 12,
                     fontWeight: 500,
-                    background: item.status === 'Active' ? '#dcfce7' : 
-                               item.status === 'Inactive' ? '#fef2f2' : '#fef3c7',
-                    color: item.status === 'Active' ? '#166534' : 
-                           item.status === 'Inactive' ? '#dc2626' : '#d97706'
+                    background: item.status === 'active' ? '#dcfce7' : 
+                               item.status === 'inactive' ? '#fef2f2' : '#fef3c7',
+                    color: item.status === 'active' ? '#166534' : 
+                           item.status === 'inactive' ? '#dc2626' : '#d97706'
                   }}>
                     {item.status}
                   </span>
@@ -603,7 +603,7 @@ export default function AdminMarketsPage() {
               <div>
                 <label style={{ display: 'block', marginBottom: 8, fontWeight: 500, color: '#374151' }}>Status</label>
                 <select
-                  value={formData.status || 'Active'}
+                  value={formData.status || 'active'}
                   onChange={(e) => setFormData({...formData, status: e.target.value as any})}
                   disabled={modalType === 'view'}
                   style={{
@@ -615,9 +615,9 @@ export default function AdminMarketsPage() {
                     background: modalType === 'view' ? '#f9fafb' : '#fff'
                   }}
                 >
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
-                  <option value="Suspended">Suspended</option>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                  <option value="pending">Pending</option>
                 </select>
               </div>
             </div>

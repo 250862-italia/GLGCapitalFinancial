@@ -6,7 +6,7 @@ interface Partnership {
   id: string;
   name: string;
   partnerType: 'Strategic' | 'Financial' | 'Technology' | 'Marketing';
-  status: 'Active' | 'Pending' | 'Expired' | 'Terminated';
+  status: 'active' | 'pending' | 'expired' | 'terminated';
   startDate: string;
   endDate: string;
   value: number;
@@ -24,7 +24,7 @@ export default function PartnershipsManagementPage() {
       id: '1',
       name: 'Magnificus Dominus Consulting',
       partnerType: 'Strategic',
-      status: 'Active',
+      status: 'active',
       startDate: '2024-01-15',
       endDate: '2025-01-15',
       value: 500000,
@@ -46,7 +46,7 @@ export default function PartnershipsManagementPage() {
   const [formData, setFormData] = useState({
     name: '',
     partnerType: 'Strategic' as 'Strategic' | 'Financial' | 'Technology' | 'Marketing',
-    status: 'Active' as 'Active' | 'Pending' | 'Expired' | 'Terminated',
+    status: 'active' as 'active' | 'pending' | 'expired' | 'terminated',
     startDate: '',
     endDate: '',
     value: '',
@@ -125,7 +125,7 @@ export default function PartnershipsManagementPage() {
     setFormData({
       name: '',
       partnerType: 'Strategic',
-      status: 'Active',
+      status: 'active',
       startDate: '',
       endDate: '',
       value: '',
@@ -158,10 +158,10 @@ export default function PartnershipsManagementPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Active': return 'text-green-600 bg-green-100';
-      case 'Pending': return 'text-yellow-600 bg-yellow-100';
-      case 'Expired': return 'text-red-600 bg-red-100';
-      case 'Terminated': return 'text-gray-600 bg-gray-100';
+      case 'active': return 'text-green-600 bg-green-100';
+      case 'pending': return 'text-yellow-600 bg-yellow-100';
+      case 'expired': return 'text-red-600 bg-red-100';
+      case 'terminated': return 'text-gray-600 bg-gray-100';
       default: return 'text-gray-600 bg-gray-100';
     }
   };
@@ -209,7 +209,7 @@ export default function PartnershipsManagementPage() {
             <div>
               <p className="text-sm text-gray-600">Active Partnerships</p>
               <p className="text-2xl font-bold text-green-600">
-                {partnerships.filter(p => p.status === 'Active').length}
+                {partnerships.filter(p => p.status === 'active').length}
               </p>
             </div>
             <TrendingUp className="text-green-600" size={24} />
@@ -231,7 +231,7 @@ export default function PartnershipsManagementPage() {
             <div>
               <p className="text-sm text-gray-600">Pending Review</p>
               <p className="text-2xl font-bold text-yellow-600">
-                {partnerships.filter(p => p.status === 'Pending').length}
+                {partnerships.filter(p => p.status === 'pending').length}
               </p>
             </div>
             <FileText className="text-yellow-600" size={24} />
@@ -391,14 +391,14 @@ export default function PartnershipsManagementPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                   <select
                     value={formData.status}
-                    onChange={(e) => setFormData({...formData, status: e.target.value as 'Active' | 'Pending' | 'Expired' | 'Terminated'})}
+                    onChange={(e) => setFormData({...formData, status: e.target.value as 'active' | 'pending' | 'expired' | 'terminated'})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   >
-                    <option value="Active">Active</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Expired">Expired</option>
-                    <option value="Terminated">Terminated</option>
+                    <option value="active">Active</option>
+                    <option value="pending">Pending</option>
+                    <option value="expired">Expired</option>
+                    <option value="terminated">Terminated</option>
                   </select>
                 </div>
               </div>

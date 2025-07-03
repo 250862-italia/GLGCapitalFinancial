@@ -16,7 +16,7 @@ interface Package {
   duration: number;
   riskLevel: 'low' | 'medium' | 'high';
   category: string;
-  status: 'Active' | 'Fundraising' | 'Closed';
+  status: 'active' | 'fundraising' | 'closed';
   createdAt: string;
 }
 
@@ -31,7 +31,7 @@ const initialPackages: Package[] = [
     duration: 12,
     riskLevel: 'low',
     category: 'Conservative',
-    status: 'Active',
+    status: 'active',
     createdAt: '2024-01-15'
   },
   {
@@ -44,7 +44,7 @@ const initialPackages: Package[] = [
     duration: 24,
     riskLevel: 'high',
     category: 'Growth',
-    status: 'Active',
+    status: 'active',
     createdAt: '2024-01-20'
   },
   {
@@ -57,7 +57,7 @@ const initialPackages: Package[] = [
     duration: 18,
     riskLevel: 'medium',
     category: 'ESG',
-    status: 'Active',
+    status: 'active',
     createdAt: '2024-02-01'
   }
 ];
@@ -78,7 +78,7 @@ export default function PackagesManagementPage() {
     duration: 0,
     riskLevel: 'low',
     category: '',
-    status: 'Active',
+    status: 'active',
     createdAt: ''
   });
   const [searchQuery, setSearchQuery] = useState('');
@@ -102,7 +102,7 @@ export default function PackagesManagementPage() {
       duration: 0,
       riskLevel: 'low',
       category: '',
-      status: 'Active',
+      status: 'active',
       createdAt: ''
     });
     setIsEdit(false);
@@ -224,7 +224,7 @@ export default function PackagesManagementPage() {
   };
 
   const getStatusColor = (status: string) => {
-    return status === 'Active' ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100';
+    return status === 'active' ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100';
   };
 
   // --- GRAFICO DISTRIBUZIONE RISCHIO ---
@@ -295,9 +295,9 @@ export default function PackagesManagementPage() {
         </select>
         <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{ flex: 1, padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 16 }}>
           <option value="">Tutti gli stati</option>
-          <option value="Active">Attivo</option>
-          <option value="Fundraising">Raccolta</option>
-          <option value="Closed">Chiuso</option>
+          <option value="active">Active</option>
+          <option value="fundraising">Fundraising</option>
+          <option value="closed">Closed</option>
         </select>
         <button
           onClick={openAddForm}
@@ -348,7 +348,7 @@ export default function PackagesManagementPage() {
                   <td style={{ padding: '1rem', textAlign: 'right' }}>{pkg.expectedReturn}%</td>
                   <td style={{ padding: '1rem', textAlign: 'center' }}>{pkg.duration}</td>
                   <td style={{ padding: '1rem', textAlign: 'center' }}>
-                    <span style={{ background: pkg.status === 'Active' ? '#bbf7d0' : pkg.status === 'Fundraising' ? '#fef3c7' : '#e0e7ff', color: pkg.status === 'Active' ? '#166534' : pkg.status === 'Fundraising' ? '#92400e' : '#3730a3', padding: '0.3rem 0.7rem', borderRadius: 8, fontWeight: 600, fontSize: 14 }}>{pkg.status}</span>
+                    <span style={{ background: pkg.status === 'active' ? '#bbf7d0' : pkg.status === 'fundraising' ? '#fef3c7' : '#e0e7ff', color: pkg.status === 'active' ? '#166534' : pkg.status === 'fundraising' ? '#92400e' : '#3730a3', padding: '0.3rem 0.7rem', borderRadius: 8, fontWeight: 600, fontSize: 14 }}>{pkg.status}</span>
                   </td>
                   <td style={{ padding: '1rem', textAlign: 'center' }}>
                     <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
@@ -397,9 +397,9 @@ export default function PackagesManagementPage() {
               </label>
               <label>Stato
                 <select name="status" value={formData.status} onChange={handleFormChange} style={inputStyle}>
-                  <option value="Active">Attivo</option>
-                  <option value="Fundraising">Raccolta</option>
-                  <option value="Closed">Chiuso</option>
+                  <option value="active">Active</option>
+                  <option value="fundraising">Fundraising</option>
+                  <option value="closed">Closed</option>
                 </select>
               </label>
               <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>

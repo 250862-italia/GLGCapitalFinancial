@@ -9,7 +9,7 @@ interface TeamMember {
   email: string;
   phone: string;
   department: string;
-  status: 'Active' | 'Inactive';
+  status: 'active' | 'inactive';
   joinDate: string;
   avatar: string;
   bio: string;
@@ -30,7 +30,7 @@ export default function TeamManagementPage() {
     email: '',
     phone: '',
     department: '',
-    status: 'Active' as 'Active' | 'Inactive',
+    status: 'active' as 'active' | 'inactive',
     bio: '',
     skills: ''
   });
@@ -113,7 +113,7 @@ export default function TeamManagementPage() {
       email: '',
       phone: '',
       department: '',
-      status: 'Active',
+      status: 'active',
       bio: '',
       skills: ''
     });
@@ -134,7 +134,7 @@ export default function TeamManagementPage() {
   };
 
   const getStatusColor = (status: string) => {
-    return status === 'Active' ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100';
+    return status === 'active' ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100';
   };
 
   const getDepartmentColor = (department: string) => {
@@ -181,7 +181,7 @@ export default function TeamManagementPage() {
             <div>
               <p className="text-sm text-gray-600">Active Members</p>
               <p className="text-2xl font-bold text-green-600">
-                {teamMembers.filter(m => m.status === 'Active').length}
+                {teamMembers.filter(m => m.status === 'active').length}
               </p>
             </div>
             <Star className="text-green-600" size={24} />
@@ -424,11 +424,11 @@ export default function TeamManagementPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                 <select
                   value={formData.status}
-                  onChange={(e) => setFormData({...formData, status: e.target.value as 'Active' | 'Inactive'})}
+                  onChange={(e) => setFormData({...formData, status: e.target.value as 'active' | 'inactive'})}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
                 </select>
               </div>
               <div className="flex gap-3 pt-4">
