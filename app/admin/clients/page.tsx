@@ -10,7 +10,7 @@ interface Client {
   email: string;
   phone: string;
   location: string;
-  status: 'Active' | 'Inactive' | 'Suspended';
+  status: 'active' | 'inactive' | 'pending';
   kycStatus: 'Verified' | 'Pending' | 'Rejected';
   joinDate: string;
   lastActivity: string;
@@ -34,12 +34,17 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Funzione per normalizzare lo status (deve essere dichiarata PRIMA dell'uso)
-const normalizeStatus = (status: string): 'Active' | 'Inactive' | 'Suspended' => {
-  if (!status) return 'Active';
-  if (status.toLowerCase() === 'active') return 'Active';
-  if (status.toLowerCase() === 'inactive') return 'Inactive';
-  if (status.toLowerCase() === 'suspended') return 'Suspended';
-  return 'Active';
+const normalizeStatus = (status: string): 'active' | 'inactive' | 'pending' => {
+  switch (status?.toLowerCase()) {
+    case 'active':
+      return 'active';
+    case 'inactive':
+      return 'inactive';
+    case 'pending':
+      return 'pending';
+    default:
+      return 'inactive';
+  }
 };
 
 // Funzione per normalizzare il metodo di pagamento preferito
@@ -69,7 +74,7 @@ export default function ClientsManagementPage() {
     email: '',
     phone: '',
     location: '',
-    status: 'Active' as 'Active' | 'Inactive' | 'Suspended',
+    status: 'active' as 'active' | 'inactive' | 'pending',
     kycStatus: 'Pending' as 'Verified' | 'Pending' | 'Rejected',
     totalPositions: '',
     activePositions: '',
@@ -135,7 +140,7 @@ export default function ClientsManagementPage() {
     const matchesSearch = client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          client.location.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || client.status.toLowerCase() === statusFilter;
+    const matchesStatus = statusFilter === 'all' || client.status === statusFilter;
     const matchesKyc = kycFilter === 'all' || client.kycStatus.toLowerCase() === kycFilter;
     return matchesSearch && matchesStatus && matchesKyc;
   });
@@ -185,7 +190,7 @@ export default function ClientsManagementPage() {
         email: formData.email,
         phone: formData.phone,
         nationality: formData.location,
-        status: normalizeStatus(formData.status).toLowerCase(),
+        status: normalizeStatus(formData.status),
         updated_at: new Date().toISOString()
       })
       .eq('id', editingClient.id);
@@ -216,7 +221,7 @@ export default function ClientsManagementPage() {
       email: '',
       phone: '',
       location: '',
-      status: 'Active',
+      status: 'active',
       kycStatus: 'Pending',
       totalPositions: '',
       activePositions: '',
@@ -251,9 +256,9 @@ export default function ClientsManagementPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Active': return { color: '#059669', background: '#d1fae5' };
-      case 'Inactive': return { color: '#6b7280', background: '#f3f4f6' };
-      case 'Suspended': return { color: '#dc2626', background: '#fee2e2' };
+      case 'active': return { color: '#059669', background: '#d1fae5' };
+      case 'inactive': return { color: '#6b7280', background: '#f3f4f6' };
+      case 'pending': return { color: '#d97706', background: '#fef3c7' };
       default: return { color: '#6b7280', background: '#f3f4f6' };
     }
   };
@@ -394,7 +399,7 @@ export default function ClientsManagementPage() {
             <div>
               <p style={{ fontSize: '0.875rem', color: 'var(--foreground)', margin: 0 }}>Active Clients</p>
               <p style={{ fontSize: '1.5rem', fontWeight: 700, color: '#10b981', margin: 0 }}>
-                {clients.filter(c => c.status === 'Active').length}
+                {clients.filter(c => c.status === 'active').length}
               </p>
             </div>
             <User style={{ color: '#10b981' }} size={24} />
@@ -463,7 +468,7 @@ export default function ClientsManagementPage() {
               <option value="all">All Status</option>
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
-              <option value="suspended">Suspended</option>
+              <option value="pending">Pending</option>
             </select>
             <select
               value={kycFilter}
@@ -739,9 +744,9 @@ export default function ClientsManagementPage() {
                     }}
                     required
                   >
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
-                    <option value="Suspended">Suspended</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="pending">Pending</option>
                   </select>
                 </div>
                 <div>
