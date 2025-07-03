@@ -2,15 +2,17 @@ import { createClient, SupabaseClient } from "@supabase/supabase-js"
 
 let supabaseClient: SupabaseClient | null = null;
 
+// WORKAROUND: Hardcode le chiavi per test immediato
+const HARDCODED_SUPABASE_URL = "https://dobjulfwktzltpvqtxbql.supabase.co"; // <-- Sostituisci con il tuo URL reale
+const HARDCODED_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvYmp1bGZ3a3psdHB2cXR4YnFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA5NTI2MjYsImV4cCI6MjA2NjUyODYyNn0.wW9zZe9gD2ARxUpbCu0kgBZfujUnuq6XkXZz42RW0zY"; // <-- Sostituisci con la tua anon key reale
+
 export const getSupabaseClient = (): SupabaseClient => {
   if (!supabaseClient) {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    
+    const supabaseUrl = HARDCODED_SUPABASE_URL;
+    const supabaseAnonKey = HARDCODED_SUPABASE_ANON_KEY;
     if (!supabaseUrl || !supabaseAnonKey) {
       throw new Error('Supabase environment variables are not configured');
     }
-    
     supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         autoRefreshToken: true,
@@ -26,13 +28,11 @@ export const getSupabaseClient = (): SupabaseClient => {
 export const supabase = getSupabaseClient();
 
 export const createServerSupabaseClient = () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseUrl = HARDCODED_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  
   if (!supabaseUrl || !serviceKey) {
     throw new Error('Supabase environment variables are not configured');
   }
-  
   return createClient(supabaseUrl, serviceKey);
 }
 
