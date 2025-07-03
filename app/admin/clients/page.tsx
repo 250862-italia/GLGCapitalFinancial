@@ -175,7 +175,9 @@ export default function ClientsManagementPage() {
   const filteredClients = clients.filter(client => {
     const matchesSearch = client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         client.location.toLowerCase().includes(searchTerm.toLowerCase());
+                         (client.nationality?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
+                         (client.city?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
+                         (client.address?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false);
     const matchesStatus = statusFilter === 'all' || client.status === statusFilter;
     const matchesKyc = kycFilter === 'all' || client.kycStatus.toLowerCase() === kycFilter;
     return matchesSearch && matchesStatus && matchesKyc;
