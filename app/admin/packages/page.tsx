@@ -20,9 +20,15 @@ export default function AdminPackagesPage() {
   const fetchPackages = async () => {
     setLoading(true);
     setError(null);
-    const { data, error } = await supabase.from('packages').select('*').order('id', { ascending: true });
-    if (error) setError(error.message);
-    else setPackages(data || []);
+    try {
+      const { data, error } = await supabase.from('packages').select('*').order('id', { ascending: true });
+      console.log('DEBUG: Risposta Supabase', { data, error });
+      if (error) setError(error.message);
+      else setPackages(data || []);
+    } catch (e) {
+      console.error('DEBUG: Errore JS fetchPackages', e);
+      setError((e as Error).message);
+    }
     setLoading(false);
   };
 
@@ -38,32 +44,37 @@ export default function AdminPackagesPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    if (editing && form.id) {
-      // Update
-      const { error } = await supabase.from('packages').update({
-        nome: form.nome,
-        descrizione: form.descrizione,
-        percentuale: form.percentuale,
-        minimo: form.minimo,
-        massimo: form.massimo
-      }).eq('id', form.id);
-      if (error) setError(error.message);
-    } else {
-      // Insert
-      const { error } = await supabase.from('packages').insert([
-        {
+    try {
+      if (editing && form.id) {
+        // Update
+        const { error } = await supabase.from('packages').update({
           nome: form.nome,
           descrizione: form.descrizione,
           percentuale: form.percentuale,
           minimo: form.minimo,
           massimo: form.massimo
-        }
-      ]);
-      if (error) setError(error.message);
+        }).eq('id', form.id);
+        if (error) setError(error.message);
+      } else {
+        // Insert
+        const { error } = await supabase.from('packages').insert([
+          {
+            nome: form.nome,
+            descrizione: form.descrizione,
+            percentuale: form.percentuale,
+            minimo: form.minimo,
+            massimo: form.massimo
+          }
+        ]);
+        if (error) setError(error.message);
+      }
+      setForm({ id: null, nome: '', descrizione: '', percentuale: '', minimo: '', massimo: '' });
+      setEditing(false);
+      await fetchPackages();
+    } catch (e) {
+      console.error('DEBUG: Errore JS handleSubmit', e);
+      setError((e as Error).message);
     }
-    setForm({ id: null, nome: '', descrizione: '', percentuale: '', minimo: '', massimo: '' });
-    setEditing(false);
-    await fetchPackages();
     setLoading(false);
   };
 
@@ -77,9 +88,14 @@ export default function AdminPackagesPage() {
   const handleDelete = async (id: number) => {
     setLoading(true);
     setError(null);
-    const { error } = await supabase.from('packages').delete().eq('id', id);
-    if (error) setError(error.message);
-    await fetchPackages();
+    try {
+      const { error } = await supabase.from('packages').delete().eq('id', id);
+      if (error) setError(error.message);
+      await fetchPackages();
+    } catch (e) {
+      console.error('DEBUG: Errore JS handleDelete', e);
+      setError((e as Error).message);
+    }
     setLoading(false);
   };
 
