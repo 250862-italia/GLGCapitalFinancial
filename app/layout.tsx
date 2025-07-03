@@ -19,6 +19,8 @@ export default function RootLayout({
   const router = useRouter()
 
   useEffect(() => {
+    console.log('🔑 SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
+    console.log('🔑 SUPABASE_KEY:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
     // Controlla se esiste un utente loggato (user o admin)
     const user = localStorage.getItem('user')
     const adminUser = localStorage.getItem('admin_user')
