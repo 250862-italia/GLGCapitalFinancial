@@ -147,7 +147,7 @@ export default function ClientsManagementPage() {
       email: formData.email,
       phone: formData.phone,
       location: formData.location,
-      status: formData.status,
+      status: normalizeStatus(formData.status),
       kycStatus: formData.kycStatus,
       joinDate: new Date().toISOString().slice(0, 10),
       lastActivity: new Date().toISOString().slice(0, 10),
@@ -185,7 +185,7 @@ export default function ClientsManagementPage() {
         email: formData.email,
         phone: formData.phone,
         nationality: formData.location,
-        status: formData.status.toLowerCase(),
+        status: normalizeStatus(formData.status).toLowerCase(),
         updated_at: new Date().toISOString()
       })
       .eq('id', editingClient.id);
