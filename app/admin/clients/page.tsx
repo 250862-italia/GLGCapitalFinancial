@@ -1,1229 +1,208 @@
 "use client";
-import { useState, useEffect } from 'react';
-import { User, DollarSign, TrendingUp, Calendar, Mail, Phone, MapPin, Eye, Edit, MessageSquare, Shield, Plus, Trash2, Search, Filter, Download, Copy, CheckCircle, Camera } from 'lucide-react';
-import { emailNotificationService } from '../../../lib/email-service';
+import { useEffect, useState } from "react";
 import { createClient } from '@supabase/supabase-js';
-import { Client } from '../../../types/user';
 
-const supabase = createClient(
-  "https://dobjulfwktzltpvqtxbql.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvYmp1bGZ3a3psdHB2cXR4YnFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA5NTI2MjYsImV4cCI6MjA2NjUyODYyNn0.wW9zZe9gD2ARxUpbCu0kgBZfujUnuq6XkXZz42RW0zY"
-);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-// Funzione per normalizzare lo status (deve essere dichiarata PRIMA dell'uso)
-const normalizeStatus = (status: string): 'active' | 'inactive' | 'pending' => {
-  switch (status?.toLowerCase()) {
-    case 'active':
-      return 'active';
-    case 'inactive':
-      return 'inactive';
-    case 'pending':
-      return 'pending';
-    default:
-      return 'inactive';
-  }
-};
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error("Le variabili d'ambiente NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY non sono settate. Controlla la configurazione su Vercel e in locale.");
+}
 
-// Funzione per normalizzare il metodo di pagamento preferito
-const normalizePaymentMethod = (method: string): 'bank' | 'usdt' | 'both' => {
-  if (!method) return 'bank';
-  if (method === 'bank' || method === 'usdt' || method === 'both') return method;
-  return 'bank';
-};
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-export default function ClientsManagementPage() {
-  const [clients, setClients] = useState<Client[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [kycFilter, setKycFilter] = useState('all');
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [editingClient, setEditingClient] = useState<Client | null>(null);
-  const [viewingClient, setViewingClient] = useState<Client | null>(null);
-
-  const [photoPreview, setPhotoPreview] = useState<string>('');
-  const [photoFile, setPhotoFile] = useState<File | null>(null);
-  const [copiedField, setCopiedField] = useState<string>('');
-
-  const [formData, setFormData] = useState({
-    name: '',
+export default function AdminClientsPage() {
+  const [clients, setClients] = useState<any[]>([]);
+  const [packages, setPackages] = useState<any[]>([]);
+  const [clientPackages, setClientPackages] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [form, setForm] = useState({
+    id: null,
+    nome: '',
     email: '',
-    phone: '',
-    company: '',
-    position: '',
-    status: 'active' as 'active' | 'inactive' | 'pending',
-    kycStatus: 'pending' as 'pending' | 'approved' | 'rejected',
-    registrationDate: '',
-    lastLogin: '',
-    totalInvested: 0,
-    currentBalance: 0,
-    totalReturns: 0,
-    activePackages: 0,
-    notes: '',
-    profilePhoto: '',
-    bankDetails: { iban: '', bic: '', accountHolder: '', bankName: '' },
-    usdtWallet: '',
-    preferredPaymentMethod: 'bank' as 'bank' | 'usdt' | 'both',
-    country: '',
-    city: '',
-    address: '',
-    dateOfBirth: '',
-    nationality: '',
-    passportNumber: '',
-    taxId: '',
-    riskProfile: 'conservative' as 'conservative' | 'moderate' | 'aggressive',
-    investmentGoals: [] as string[],
-    sourceOfFunds: 'salary' as 'salary' | 'business' | 'inheritance' | 'investment' | 'other',
-    preferredLanguage: 'en' as 'en' | 'it' | 'es' | 'fr' | 'de',
-    marketingConsent: false,
-    newsletterSubscription: false,
-    twoFactorEnabled: false,
-    lastPasswordChange: '',
-    failedLoginAttempts: 0,
-    accountLocked: false,
-    lockReason: '',
-    createdBy: '',
-    updatedBy: '',
-    createdAt: '',
-    updatedAt: '',
+    stato: '',
+    kyc: ''
   });
+  const [editing, setEditing] = useState(false);
+  const [assigning, setAssigning] = useState<{ [clientId: number]: string }>({});
 
-  useEffect(() => {
-    const fetchClients = async () => {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('clients')
-        .select('*');
-      if (!error && data) {
-        // Per ogni cliente, recupera lo stato KYC reale
-        const clientsWithKyc = await Promise.all(data.map(async (c: any) => {
-          let kycStatus: 'pending' | 'approved' | 'rejected' = 'pending';
-          // Cerca la KYC più recente per questo utente
-          const { data: kycData } = await supabase
-            .from('kyc_applications')
-            .select('verification_status')
-            .eq('user_id', c.user_id)
-            .order('submitted_at', { ascending: false })
-            .limit(1)
-            .single();
-          if (kycData && kycData.verification_status) {
-            if (kycData.verification_status === 'approved') kycStatus = 'approved';
-            else if (kycData.verification_status === 'rejected') kycStatus = 'rejected';
-            else kycStatus = 'pending';
-          }
-          return {
-            id: c.id,
-            name: c.first_name + ' ' + c.last_name,
-            email: c.email,
-            phone: c.phone,
-            company: c.company || '',
-            position: c.position || '',
-            status: normalizeStatus(c.status),
-            kycStatus,
-            registrationDate: c.created_at ? c.created_at.slice(0, 10) : '',
-            lastLogin: c.last_login || '',
-            totalInvested: c.total_invested || 0,
-            currentBalance: c.current_balance || 0,
-            totalReturns: c.total_returns || 0,
-            activePackages: c.active_packages || 0,
-            notes: c.notes || '',
-            profilePhoto: c.profile_photo || '',
-            bankDetails: {
-              iban: c.bank_details?.iban || '',
-              bic: c.bank_details?.bic || '',
-              accountHolder: c.bank_details?.accountHolder || '',
-              bankName: c.bank_details?.bankName || ''
-            },
-            usdtWallet: c.usdt_wallet || '',
-            preferredPaymentMethod: normalizePaymentMethod(c.preferredPaymentMethod),
-            country: c.country || '',
-            city: c.city || '',
-            address: c.address || '',
-            dateOfBirth: c.date_of_birth || '',
-            nationality: c.nationality || '',
-            passportNumber: c.passport_number || '',
-            taxId: c.tax_id || '',
-            riskProfile: c.risk_profile || 'conservative',
-            investmentGoals: c.investment_goals || [],
-            sourceOfFunds: c.source_of_funds || 'salary',
-            preferredLanguage: c.preferred_language || 'en',
-            marketingConsent: c.marketing_consent ?? false,
-            newsletterSubscription: c.newsletter_subscription ?? false,
-            twoFactorEnabled: c.two_factor_enabled ?? false,
-            lastPasswordChange: c.last_password_change || '',
-            failedLoginAttempts: c.failed_login_attempts || 0,
-            accountLocked: c.account_locked ?? false,
-            lockReason: c.lock_reason || '',
-            createdBy: c.created_by || '',
-            updatedBy: c.updated_by || '',
-            createdAt: c.created_at || '',
-            updatedAt: c.updated_at || '',
-          };
-        }));
-        setClients(clientsWithKyc);
-      }
-      setLoading(false);
-    };
-    fetchClients();
-  }, []);
-
-  const filteredClients = clients.filter(client => {
-    const matchesSearch = client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (client.nationality?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
-                         (client.city?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
-                         (client.address?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false);
-    const matchesStatus = statusFilter === 'all' || client.status === statusFilter;
-    const matchesKyc = kycFilter === 'all' || client.kycStatus.toLowerCase() === kycFilter;
-    return matchesSearch && matchesStatus && matchesKyc;
-  });
-
-  const handleAddClient = () => {
-    const newClient: Client = {
-      id: Date.now().toString(),
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      company: formData.company || '',
-      position: formData.position || '',
-      status: normalizeStatus(formData.status),
-      kycStatus: formData.kycStatus,
-      registrationDate: new Date().toISOString().slice(0, 10),
-      lastLogin: '',
-      totalInvested: 0,
-      currentBalance: 0,
-      totalReturns: 0,
-      activePackages: 0,
-      notes: formData.notes || '',
-      profilePhoto: formData.profilePhoto || '',
-      bankDetails: {
-        iban: formData.bankDetails.iban,
-        bic: formData.bankDetails.bic,
-        accountHolder: formData.bankDetails.accountHolder,
-        bankName: formData.bankDetails.bankName
-      },
-      usdtWallet: formData.usdtWallet || '',
-      preferredPaymentMethod: formData.preferredPaymentMethod || 'bank',
-      country: formData.country || '',
-      city: formData.city || '',
-      address: formData.address || '',
-      dateOfBirth: formData.dateOfBirth || '',
-      nationality: formData.nationality || '',
-      passportNumber: formData.passportNumber || '',
-      taxId: formData.taxId || '',
-      riskProfile: formData.riskProfile || 'conservative',
-      investmentGoals: formData.investmentGoals || [],
-      sourceOfFunds: formData.sourceOfFunds || 'salary',
-      preferredLanguage: formData.preferredLanguage || 'en',
-      marketingConsent: formData.marketingConsent ?? false,
-      newsletterSubscription: formData.newsletterSubscription ?? false,
-      twoFactorEnabled: formData.twoFactorEnabled ?? false,
-      lastPasswordChange: '',
-      failedLoginAttempts: 0,
-      accountLocked: false,
-      lockReason: '',
-      createdBy: '',
-      updatedBy: '',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    setClients([...clients, newClient]);
-    
-    // Send surveillance notification for client creation
-    emailNotificationService.notifyAdminAction(
-      { id: 'admin', name: 'Admin User' },
-      'Client Created',
-      { client: newClient, action: 'create' }
-    );
-    
-    setShowAddForm(false);
-    resetForm();
-  };
-
-  const handleEditClient = async () => {
-    if (!editingClient) return;
+  // Fetch clients, packages, and client_packages
+  const fetchAll = async () => {
     setLoading(true);
-    const { error } = await supabase
-      .from('clients')
-      .update({
-        first_name: formData.name.split(' ')[0],
-        last_name: formData.name.split(' ').slice(1).join(' '),
-        email: formData.email,
-        phone: formData.phone,
-        nationality: formData.nationality,
-        status: normalizeStatus(formData.status),
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', editingClient.id);
-    setEditingClient(null);
-    resetForm();
-    await refreshClients();
+    setError(null);
+    const [{ data: clientsData, error: clientsError }, { data: packagesData, error: packagesError }, { data: clientPackagesData, error: clientPackagesError }] = await Promise.all([
+      supabase.from('clients').select('*').order('id', { ascending: true }),
+      supabase.from('packages').select('*').order('id', { ascending: true }),
+      supabase.from('client_packages').select('*')
+    ]);
+    if (clientsError) setError(clientsError.message);
+    else setClients(clientsData || []);
+    if (packagesError) setError(packagesError.message);
+    else setPackages(packagesData || []);
+    if (clientPackagesError) setError(clientPackagesError.message);
+    else setClientPackages(clientPackagesData || []);
     setLoading(false);
   };
 
-  const handleDeleteClient = async (id: string) => {
-    const clientToDelete = clients.find(client => client.id === id);
-    if (!clientToDelete) {
-      alert('Client not found!');
-      return;
-    }
-    const confirmMessage = `Are you sure you want to delete client "${clientToDelete.name}"?\n\nThis action cannot be undone and will permanently remove all client data.`;
-    if (confirm(confirmMessage)) {
-      setLoading(true);
-      await supabase.from('clients').delete().eq('id', id);
-      await refreshClients();
-      setLoading(false);
-    }
+  useEffect(() => { fetchAll(); }, []);
+
+  // Handle form input
+  const handleChange = (e: any) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      email: '',
-      phone: '',
-      company: '',
-      position: '',
-      status: 'active',
-      kycStatus: 'pending',
-      registrationDate: '',
-      lastLogin: '',
-      totalInvested: 0,
-      currentBalance: 0,
-      totalReturns: 0,
-      activePackages: 0,
-      notes: '',
-      profilePhoto: '',
-      bankDetails: { iban: '', bic: '', accountHolder: '', bankName: '' },
-      usdtWallet: '',
-      preferredPaymentMethod: 'bank',
-      country: '',
-      city: '',
-      address: '',
-      dateOfBirth: '',
-      nationality: '',
-      passportNumber: '',
-      taxId: '',
-      riskProfile: 'conservative',
-      investmentGoals: [],
-      sourceOfFunds: 'salary',
-      preferredLanguage: 'en',
-      marketingConsent: false,
-      newsletterSubscription: false,
-      twoFactorEnabled: false,
-      lastPasswordChange: '',
-      failedLoginAttempts: 0,
-      accountLocked: false,
-      lockReason: '',
-      createdBy: '',
-      updatedBy: '',
-      createdAt: '',
-      updatedAt: '',
-    });
-  };
-
-  const openEditForm = (client: Client) => {
-    setEditingClient(client);
-    setFormData({
-      name: client.name,
-      email: client.email,
-      phone: client.phone,
-      company: client.company || '',
-      position: client.position || '',
-      status: client.status,
-      kycStatus: client.kycStatus,
-      registrationDate: client.registrationDate,
-      lastLogin: client.lastLogin || '',
-      totalInvested: client.totalInvested || 0,
-      currentBalance: client.currentBalance || 0,
-      totalReturns: client.totalReturns || 0,
-      activePackages: client.activePackages || 0,
-      notes: client.notes || '',
-      profilePhoto: client.profilePhoto || '',
-      bankDetails: {
-        iban: client.bankDetails?.iban || '',
-        bic: client.bankDetails?.bic || '',
-        accountHolder: client.bankDetails?.accountHolder || '',
-        bankName: client.bankDetails?.bankName || ''
-      },
-      usdtWallet: client.usdtWallet || '',
-      preferredPaymentMethod: client.preferredPaymentMethod || 'bank',
-      country: client.country || '',
-      city: client.city || '',
-      address: client.address || '',
-      dateOfBirth: client.dateOfBirth || '',
-      nationality: client.nationality || '',
-      passportNumber: client.passportNumber || '',
-      taxId: client.taxId || '',
-      riskProfile: client.riskProfile || 'conservative',
-      investmentGoals: client.investmentGoals || [],
-      sourceOfFunds: client.sourceOfFunds || 'salary',
-      preferredLanguage: client.preferredLanguage || 'en',
-      marketingConsent: client.marketingConsent ?? false,
-      newsletterSubscription: client.newsletterSubscription ?? false,
-      twoFactorEnabled: client.twoFactorEnabled ?? false,
-      lastPasswordChange: client.lastPasswordChange || '',
-      failedLoginAttempts: client.failedLoginAttempts || 0,
-      accountLocked: client.accountLocked ?? false,
-      lockReason: client.lockReason || '',
-      createdBy: client.createdBy || '',
-      updatedBy: client.updatedBy || '',
-      createdAt: client.createdAt || '',
-      updatedAt: client.updatedAt || '',
-    });
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return { color: '#059669', background: '#d1fae5' };
-      case 'inactive': return { color: '#6b7280', background: '#f3f4f6' };
-      case 'pending': return { color: '#d97706', background: '#fef3c7' };
-      default: return { color: '#6b7280', background: '#f3f4f6' };
-    }
-  };
-
-  const getKycStatusColor = (status: string) => {
-    switch (status) {
-      case 'Verified': return { color: '#059669', background: '#d1fae5' };
-      case 'Pending': return { color: '#d97706', background: '#fef3c7' };
-      case 'Rejected': return { color: '#dc2626', background: '#fee2e2' };
-      default: return { color: '#6b7280', background: '#f3f4f6' };
-    }
-  };
-
-  const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      if (!file.type.startsWith('image/')) {
-        alert('Please select an image file');
-        return;
-      }
-      if (file.size > 5 * 1024 * 1024) {
-        alert('Image size must be less than 5MB');
-        return;
-      }
-      setPhotoFile(file);
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        setPhotoPreview(result);
-        setFormData(prev => ({ ...prev, profilePhoto: result }));
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const removePhoto = () => {
-    setPhotoFile(null);
-    setPhotoPreview('');
-    setFormData(prev => ({ ...prev, profilePhoto: '' }));
-  };
-
-  const copyToClipboard = async (text: string, field: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopiedField(field);
-      setTimeout(() => setCopiedField(''), 2000);
-    } catch (err) {
-      console.error('Failed to copy text: ', err);
-    }
-  };
-
-  const refreshClients = async () => {
+  // Add or update client
+  const handleSubmit = async (e: any) => {
+    e.preventDefault();
     setLoading(true);
-    const { data, error } = await supabase
-      .from('clients')
-      .select('*');
-    if (!error && data) {
-      const clientsWithKyc = await Promise.all(data.map(async (c: any) => {
-        let kycStatus: 'pending' | 'approved' | 'rejected' = 'pending';
-        const { data: kycData } = await supabase
-          .from('kyc_applications')
-          .select('verification_status')
-          .eq('user_id', c.user_id)
-          .order('submitted_at', { ascending: false })
-          .limit(1)
-          .single();
-        if (kycData && kycData.verification_status) {
-          if (kycData.verification_status === 'approved') kycStatus = 'approved';
-          else if (kycData.verification_status === 'rejected') kycStatus = 'rejected';
-          else kycStatus = 'pending';
+    setError(null);
+    if (editing && form.id) {
+      // Update
+      const { error } = await supabase.from('clients').update({
+        nome: form.nome,
+        email: form.email,
+        stato: form.stato,
+        kyc: form.kyc
+      }).eq('id', form.id);
+      if (error) setError(error.message);
+    } else {
+      // Insert
+      const { error } = await supabase.from('clients').insert([
+        {
+          nome: form.nome,
+          email: form.email,
+          stato: form.stato,
+          kyc: form.kyc
         }
-        return {
-          id: c.id,
-          name: c.first_name + ' ' + c.last_name,
-          email: c.email,
-          phone: c.phone,
-          company: c.company || '',
-          position: c.position || '',
-          status: normalizeStatus(c.status),
-          kycStatus,
-          registrationDate: c.created_at ? c.created_at.slice(0, 10) : '',
-          lastLogin: c.last_login || '',
-          totalInvested: c.total_invested || 0,
-          currentBalance: c.current_balance || 0,
-          totalReturns: c.total_returns || 0,
-          activePackages: c.active_packages || 0,
-          notes: c.notes || '',
-          profilePhoto: c.profile_photo || '',
-          bankDetails: {
-            iban: c.bank_details?.iban || '',
-            bic: c.bank_details?.bic || '',
-            accountHolder: c.bank_details?.accountHolder || '',
-            bankName: c.bank_details?.bankName || ''
-          },
-          usdtWallet: c.usdt_wallet || '',
-          preferredPaymentMethod: normalizePaymentMethod(c.preferredPaymentMethod),
-          country: c.country || '',
-          city: c.city || '',
-          address: c.address || '',
-          dateOfBirth: c.date_of_birth || '',
-          nationality: c.nationality || '',
-          passportNumber: c.passport_number || '',
-          taxId: c.tax_id || '',
-          riskProfile: c.risk_profile || 'conservative',
-          investmentGoals: c.investment_goals || [],
-          sourceOfFunds: c.source_of_funds || 'salary',
-          preferredLanguage: c.preferred_language || 'en',
-          marketingConsent: c.marketing_consent ?? false,
-          newsletterSubscription: c.newsletter_subscription ?? false,
-          twoFactorEnabled: c.two_factor_enabled ?? false,
-          lastPasswordChange: c.last_password_change || '',
-          failedLoginAttempts: c.failed_login_attempts || 0,
-          accountLocked: c.account_locked ?? false,
-          lockReason: c.lock_reason || '',
-          createdBy: c.created_by || '',
-          updatedBy: c.updated_by || '',
-          createdAt: c.created_at || '',
-          updatedAt: c.updated_at || '',
-        };
-      }));
-      setClients(clientsWithKyc);
+      ]);
+      if (error) setError(error.message);
     }
+    setForm({ id: null, nome: '', email: '', stato: '', kyc: '' });
+    setEditing(false);
+    await fetchAll();
     setLoading(false);
+  };
+
+  // Edit client
+  const handleEdit = (client: any) => {
+    setForm(client);
+    setEditing(true);
+  };
+
+  // Delete client
+  const handleDelete = async (id: number) => {
+    setLoading(true);
+    setError(null);
+    const { error } = await supabase.from('clients').delete().eq('id', id);
+    if (error) setError(error.message);
+    await fetchAll();
+    setLoading(false);
+  };
+
+  // Assign package to client
+  const handleAssignPackage = async (clientId: number) => {
+    const packageId = assigning[clientId];
+    if (!packageId) return;
+    setLoading(true);
+    setError(null);
+    const { error } = await supabase.from('client_packages').insert([
+      { client_id: clientId, package_id: packageId }
+    ]);
+    if (error) setError(error.message);
+    setAssigning({ ...assigning, [clientId]: '' });
+    await fetchAll();
+    setLoading(false);
+  };
+
+  // Get packages for a client
+  const getClientPackages = (clientId: number) => {
+    const pkgs = clientPackages.filter(cp => cp.client_id === clientId).map(cp => {
+      return packages.find((p: any) => p.id === cp.package_id);
+    }).filter(Boolean);
+    return pkgs;
   };
 
   return (
-    <div style={{ padding: '1.5rem' }}>
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <div>
-          <h1 style={{ fontSize: '1.875rem', fontWeight: 700, color: 'var(--primary)', margin: 0 }}>Client Management</h1>
-          <p style={{ color: 'var(--foreground)', margin: 0 }}>Manage client relationships and data</p>
+    <div style={{ padding: 32, maxWidth: 1100, margin: '0 auto' }}>
+      <h1>Gestione Clienti</h1>
+      {loading && <div style={{ background: '#e0e7ff', color: '#3730a3', padding: 12, fontWeight: 600, marginBottom: 16 }}>Caricamento...</div>}
+      {error && <div style={{ background: '#fee', color: '#900', padding: 16, fontWeight: 700, marginBottom: 16 }}>ERRORE: {error}</div>}
+      <form onSubmit={handleSubmit} style={{ marginBottom: 32, background: '#f8fafc', padding: 16, borderRadius: 8 }}>
+        <h2>{editing ? 'Modifica Cliente' : 'Nuovo Cliente'}</h2>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+          <input name="nome" placeholder="Nome" value={form.nome} onChange={handleChange} required style={{ flex: 1 }} />
+          <input name="email" placeholder="Email" value={form.email} onChange={handleChange} required style={{ flex: 1 }} />
+          <input name="stato" placeholder="Stato" value={form.stato} onChange={handleChange} required style={{ width: 120 }} />
+          <input name="kyc" placeholder="KYC" value={form.kyc} onChange={handleChange} required style={{ width: 100 }} />
         </div>
-        <button
-          onClick={() => setShowAddForm(true)}
-          style={{
-            background: 'var(--primary)',
-            color: '#fff',
-            padding: '0.5rem 1rem',
-            borderRadius: 8,
-            border: 'none',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            fontWeight: 600,
-            cursor: 'pointer'
-          }}
-        >
-          <Plus size={16} />
-          Add Client
-        </button>
-      </div>
-
-      {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
-        <div style={{ background: '#fff', padding: '1rem', borderRadius: 8, border: '1px solid #e0e3eb' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <p style={{ fontSize: '0.875rem', color: 'var(--foreground)', margin: 0 }}>Total Clients</p>
-              <p style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--primary)', margin: 0 }}>{clients.length}</p>
-            </div>
-            <User style={{ color: 'var(--primary)' }} size={24} />
-          </div>
+        <div style={{ marginTop: 8 }}>
+          <button type="submit" style={{ background: '#2563eb', color: '#fff', padding: '8px 16px', border: 0, borderRadius: 4, fontWeight: 600 }}>
+            {editing ? 'Salva Modifiche' : 'Aggiungi Cliente'}
+          </button>
+          {editing && <button type="button" onClick={() => { setForm({ id: null, nome: '', email: '', stato: '', kyc: '' }); setEditing(false); }} style={{ marginLeft: 8 }}>Annulla</button>}
         </div>
-        <div style={{ background: '#fff', padding: '1rem', borderRadius: 8, border: '1px solid #e0e3eb' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <p style={{ fontSize: '0.875rem', color: 'var(--foreground)', margin: 0 }}>Active Clients</p>
-              <p style={{ fontSize: '1.5rem', fontWeight: 700, color: '#10b981', margin: 0 }}>
-                {clients.filter(c => c.status === 'active').length}
-              </p>
-            </div>
-            <User style={{ color: '#10b981' }} size={24} />
-          </div>
-        </div>
-        <div style={{ background: '#fff', padding: '1rem', borderRadius: 8, border: '1px solid #e0e3eb' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <p style={{ fontSize: '0.875rem', color: 'var(--foreground)', margin: 0 }}>KYC Verified</p>
-              <p style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--primary)', margin: 0 }}>
-                {clients.filter(c => c.kycStatus === 'approved').length}
-              </p>
-            </div>
-            <Shield style={{ color: 'var(--primary)' }} size={24} />
-          </div>
-        </div>
-        <div style={{ background: '#fff', padding: '1rem', borderRadius: 8, border: '1px solid #e0e3eb' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <p style={{ fontSize: '0.875rem', color: 'var(--foreground)', margin: 0 }}>Total Positions</p>
-              <p style={{ fontSize: '1.5rem', fontWeight: 700, color: '#f59e0b', margin: 0 }}>
-                ${clients.reduce((sum, c) => sum + c.totalInvested, 0).toLocaleString('en-US')}
-              </p>
-            </div>
-            <DollarSign style={{ color: '#f59e0b' }} size={24} />
-          </div>
-        </div>
-      </div>
-
-      {/* Filters and Search */}
-      <div style={{ background: '#fff', padding: '1rem', borderRadius: 8, border: '1px solid #e0e3eb', marginBottom: '1.5rem' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div style={{ flex: 1 }}>
-            <div style={{ position: 'relative' }}>
-              <Search style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} size={16} />
-              <input
-                type="text"
-                placeholder="Search clients..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={{
-                  width: '100%',
-                  paddingLeft: '2.5rem',
-                  paddingRight: '1rem',
-                  paddingTop: '0.5rem',
-                  paddingBottom: '0.5rem',
-                  border: '1px solid #d1d5db',
-                  borderRadius: 8,
-                  fontSize: '0.875rem'
-                }}
-              />
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              style={{
-                padding: '0.5rem 1rem',
-                borderRadius: 8,
-                fontSize: '0.875rem',
-                border: '1px solid #d1d5db',
-                background: '#fff'
-              }}
-            >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-              <option value="pending">Pending</option>
-            </select>
-            <select
-              value={kycFilter}
-              onChange={(e) => setKycFilter(e.target.value)}
-              style={{
-                padding: '0.5rem 1rem',
-                borderRadius: 8,
-                fontSize: '0.875rem',
-                border: '1px solid #d1d5db',
-                background: '#fff'
-              }}
-            >
-              <option value="all">All KYC Status</option>
-              <option value="approved">Approved</option>
-              <option value="pending">Pending</option>
-              <option value="rejected">Rejected</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* Clients List */}
-      <div style={{ background: '#fff', borderRadius: 8, border: '1px solid #e0e3eb', overflow: 'hidden' }}>
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%' }}>
-            <thead style={{ background: '#f9fafb' }}>
-              <tr>
-                <th style={{ padding: '0.75rem 1.5rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 500, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Client</th>
-                <th style={{ padding: '0.75rem 1.5rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 500, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Contact</th>
-                <th style={{ padding: '0.75rem 1.5rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 500, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</th>
-                <th style={{ padding: '0.75rem 1.5rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 500, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Positions</th>
-                <th style={{ padding: '0.75rem 1.5rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 500, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Performance</th>
-                <th style={{ padding: '0.75rem 1.5rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 500, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Payment</th>
-                <th style={{ padding: '0.75rem 1.5rem', textAlign: 'left', fontSize: '0.75rem', fontWeight: 500, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody style={{ background: '#fff' }}>
-              {filteredClients.map((client) => (
-                <tr key={client.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                  <td style={{ padding: '1rem 1.5rem', whiteSpace: 'nowrap' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      {client.profilePhoto ? (
-                        <img src={client.profilePhoto} alt="Profile" style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: '1px solid #e5e7eb' }} />
-                      ) : (
-                        <User style={{ width: 36, height: 36, color: '#d1d5db', borderRadius: '50%', border: '1px solid #e5e7eb', background: '#f3f4f6' }} />
-                      )}
-                      <div>
-                        <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--primary)' }}>{client.name}</div>
-                        <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Joined: {client.registrationDate}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td style={{ padding: '1rem 1.5rem', whiteSpace: 'nowrap' }}>
-                    <div>
-                      <div style={{ fontSize: '0.875rem' }}>{client.email}</div>
-                      <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>{client.phone}</div>
-                      <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>{client.country}, {client.city}</div>
-                    </div>
-                  </td>
-                  <td style={{ padding: '1rem 1.5rem', whiteSpace: 'nowrap' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                      <span style={{
-                        display: 'inline-flex',
-                        padding: '0.25rem 0.5rem',
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                        borderRadius: '9999px',
-                        ...getStatusColor(client.status)
-                      }}>
-                        {client.status}
-                      </span>
-                      <span style={{
-                        display: 'inline-flex',
-                        padding: '0.25rem 0.5rem',
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                        borderRadius: '9999px',
-                        ...getKycStatusColor(client.kycStatus)
-                      }}>
-                        {client.kycStatus}
-                      </span>
-                    </div>
-                  </td>
-                  <td style={{ padding: '1rem 1.5rem', whiteSpace: 'nowrap' }}>
-                    <div>
-                      <div style={{ fontSize: '0.875rem', fontWeight: 500 }}>
-                        ${client.totalInvested.toLocaleString('en-US')}
-                      </div>
-                    </div>
-                  </td>
-                  <td style={{ padding: '1rem 1.5rem', whiteSpace: 'nowrap' }}>
-                    <div style={{ fontSize: '0.875rem', fontWeight: 500, color: client.totalReturns > 0 ? '#10b981' : '#dc2626' }}>
-                      {client.totalReturns > 0 ? '+' : ''} {client.totalReturns.toLocaleString('en-US')}%
-                    </div>
-                  </td>
-                  <td style={{ padding: '1rem 1.5rem', whiteSpace: 'nowrap' }}>
-                    <div style={{ fontSize: '0.875rem', fontWeight: 500, color: '#6366f1' }}>
-                      {client.preferredPaymentMethod === 'usdt' ? 'USDT' : client.preferredPaymentMethod === 'bank' ? 'Bank' : client.preferredPaymentMethod === 'both' ? 'Both' : '-'}
-                    </div>
-                  </td>
-                  <td style={{ padding: '1rem 1.5rem', whiteSpace: 'nowrap' }}>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <button
-                        onClick={() => setViewingClient(client)}
-                        style={{
-                          padding: '0.25rem',
-                          background: 'none',
-                          border: 'none',
-                          cursor: 'pointer',
-                          color: '#6b7280'
-                        }}
-                        title="View Details"
-                      >
-                        <Eye size={16} />
-                      </button>
-                      <button
-                        onClick={() => openEditForm(client)}
-                        style={{
-                          padding: '0.25rem',
-                          background: 'none',
-                          border: 'none',
-                          cursor: 'pointer',
-                          color: '#6b7280'
-                        }}
-                        title="Edit Client"
-                      >
-                        <Edit size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteClient(client.id)}
-                        style={{
-                          padding: '0.5rem',
-                          background: '#fee2e2',
-                          border: '1px solid #fecaca',
-                          borderRadius: '6px',
-                          cursor: 'pointer',
-                          color: '#dc2626',
-                          transition: 'all 0.2s ease'
-                        }}
-                        onMouseOver={(e) => {
-                          e.currentTarget.style.background = '#fecaca';
-                          e.currentTarget.style.borderColor = '#fca5a5';
-                        }}
-                        onMouseOut={(e) => {
-                          e.currentTarget.style.background = '#fee2e2';
-                          e.currentTarget.style.borderColor = '#fecaca';
-                        }}
-                        title="Delete Client"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Add/Edit Client Modal */}
-      {(showAddForm || editingClient) && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 50
-        }}>
-          <div style={{
-            background: '#fff',
-            borderRadius: 8,
-            padding: '1.5rem',
-            width: '100%',
-            maxWidth: '32rem',
-            maxHeight: '90vh',
-            overflowY: 'auto'
-          }}>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem' }}>
-              {editingClient ? 'Edit Client' : 'Add New Client'}
-            </h2>
-            <form onSubmit={(e) => { e.preventDefault(); editingClient ? handleEditClient() : handleAddClient(); }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: '0.25rem' }}>Name</label>
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    style={{
-                      width: '100%',
-                      padding: '0.5rem 0.75rem',
-                      border: '1px solid #d1d5db',
-                      borderRadius: 8,
-                      fontSize: '0.875rem'
-                    }}
-                    required
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: '0.25rem' }}>Email</label>
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    style={{
-                      width: '100%',
-                      padding: '0.5rem 0.75rem',
-                      border: '1px solid #d1d5db',
-                      borderRadius: 8,
-                      fontSize: '0.875rem'
-                    }}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: '0.25rem' }}>Phone</label>
-                  <input
-                    type="tel"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                    style={{
-                      width: '100%',
-                      padding: '0.5rem 0.75rem',
-                      border: '1px solid #d1d5db',
-                      borderRadius: 8,
-                      fontSize: '0.875rem'
-                    }}
-                    required
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: '0.25rem' }}>Location</label>
-                  <input
-                    type="text"
-                    value={formData.nationality}
-                    onChange={(e) => setFormData({...formData, nationality: e.target.value})}
-                    style={{
-                      width: '100%',
-                      padding: '0.5rem 0.75rem',
-                      border: '1px solid #d1d5db',
-                      borderRadius: 8,
-                      fontSize: '0.875rem'
-                    }}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: '0.25rem' }}>Status</label>
+      </form>
+      <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff' }}>
+        <thead>
+          <tr style={{ background: '#f1f5f9' }}>
+            <th style={{ padding: 8, border: '1px solid #e5e7eb' }}>Nome</th>
+            <th style={{ padding: 8, border: '1px solid #e5e7eb' }}>Email</th>
+            <th style={{ padding: 8, border: '1px solid #e5e7eb' }}>Stato</th>
+            <th style={{ padding: 8, border: '1px solid #e5e7eb' }}>KYC</th>
+            <th style={{ padding: 8, border: '1px solid #e5e7eb' }}>Pacchetti Acquistati</th>
+            <th style={{ padding: 8, border: '1px solid #e5e7eb' }}>Azioni</th>
+          </tr>
+        </thead>
+        <tbody>
+          {clients.map((client) => (
+            <tr key={client.id}>
+              <td style={{ padding: 8, border: '1px solid #e5e7eb' }}>{client.nome}</td>
+              <td style={{ padding: 8, border: '1px solid #e5e7eb' }}>{client.email}</td>
+              <td style={{ padding: 8, border: '1px solid #e5e7eb' }}>{client.stato}</td>
+              <td style={{ padding: 8, border: '1px solid #e5e7eb' }}>{client.kyc}</td>
+              <td style={{ padding: 8, border: '1px solid #e5e7eb' }}>
+                <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
+                  {getClientPackages(client.id).map((pkg: any) => (
+                    <li key={pkg.id} style={{ marginBottom: 4 }}>
+                      <span style={{ fontWeight: 600 }}>{pkg.nome}</span> <span style={{ color: '#64748b' }}>({pkg.percentuale}%)</span>
+                    </li>
+                  ))}
+                  {getClientPackages(client.id).length === 0 && <li>Nessun pacchetto</li>}
+                </ul>
+                <div style={{ marginTop: 8 }}>
                   <select
-                    value={formData.status}
-                    onChange={(e) => setFormData({...formData, status: e.target.value as any})}
-                    style={{
-                      width: '100%',
-                      padding: '0.5rem 0.75rem',
-                      border: '1px solid #d1d5db',
-                      borderRadius: 8,
-                      fontSize: '0.875rem'
-                    }}
-                    required
+                    value={assigning[client.id] || ''}
+                    onChange={e => setAssigning({ ...assigning, [client.id]: e.target.value })}
+                    style={{ marginRight: 8 }}
                   >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                    <option value="pending">Pending</option>
+                    <option value="">Assegna pacchetto...</option>
+                    {packages.map((pkg: any) => (
+                      <option key={pkg.id} value={pkg.id}>{pkg.nome} ({pkg.percentuale}%)</option>
+                    ))}
                   </select>
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: '0.25rem' }}>KYC Status</label>
-                  <select
-                    value={formData.kycStatus}
-                    onChange={(e) => setFormData({...formData, kycStatus: e.target.value as any})}
-                    style={{
-                      width: '100%',
-                      padding: '0.5rem 0.75rem',
-                      border: '1px solid #d1d5db',
-                      borderRadius: 8,
-                      fontSize: '0.875rem'
-                    }}
-                    required
+                  <button
+                    onClick={() => handleAssignPackage(client.id)}
+                    disabled={!assigning[client.id]}
+                    style={{ background: '#22c55e', color: '#fff', padding: '4px 12px', border: 0, borderRadius: 4, fontWeight: 600 }}
                   >
-                    <option value="approved">Approved</option>
-                    <option value="pending">Pending</option>
-                    <option value="rejected">Rejected</option>
-                  </select>
+                    Assegna
+                  </button>
                 </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: '0.25rem' }}>Total Positions</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={formData.totalInvested}
-                    onChange={(e) => setFormData({...formData, totalInvested: Number(e.target.value)})}
-                    style={{
-                      width: '100%',
-                      padding: '0.5rem 0.75rem',
-                      border: '1px solid #d1d5db',
-                      borderRadius: 8,
-                      fontSize: '0.875rem'
-                    }}
-                    required
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: '0.25rem' }}>Active Positions</label>
-                  <input
-                    type="number"
-                    value={formData.activePackages}
-                    onChange={(e) => setFormData({...formData, activePackages: Number(e.target.value)})}
-                    style={{
-                      width: '100%',
-                      padding: '0.5rem 0.75rem',
-                      border: '1px solid #d1d5db',
-                      borderRadius: 8,
-                      fontSize: '0.875rem'
-                    }}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: '0.25rem' }}>Notes</label>
-                <textarea
-                  value={formData.notes}
-                  onChange={(e) => setFormData({...formData, notes: e.target.value})}
-                  style={{
-                    width: '100%',
-                    padding: '0.5rem 0.75rem',
-                    border: '1px solid #d1d5db',
-                    borderRadius: 8,
-                    fontSize: '0.875rem',
-                    minHeight: '4rem',
-                    resize: 'vertical'
-                  }}
-                  placeholder="Additional notes about the client..."
-                />
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: '0.25rem' }}>Profile Photo</label>
-                  <div style={{ border: '2px dashed #d1d5db', borderRadius: 12, padding: '1rem', textAlign: 'center', background: '#f9fafb', cursor: 'pointer', position: 'relative' }}>
-                    {formData.profilePhoto || photoPreview ? (
-                      <div>
-                        <img src={formData.profilePhoto || photoPreview} alt="Profile preview" style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', marginBottom: '0.5rem' }} />
-                        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
-                          <button type="button" onClick={() => document.getElementById('photo-upload')?.click()} style={{ background: '#3b82f6', color: 'white', border: 'none', padding: '0.25rem 1rem', borderRadius: 8, cursor: 'pointer', fontSize: 14 }}>Change</button>
-                          <button type="button" onClick={removePhoto} style={{ background: '#ef4444', color: 'white', border: 'none', padding: '0.25rem 1rem', borderRadius: 8, cursor: 'pointer', fontSize: 14 }}>Remove</button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div>
-                        <Camera style={{ width: 32, height: 32, color: '#9ca3af', marginBottom: '0.5rem' }} />
-                        <p style={{ color: '#6b7280', marginBottom: '0.5rem' }}>Click to upload</p>
-                        <p style={{ fontSize: 12, color: '#9ca3af' }}>JPG, PNG up to 5MB</p>
-                      </div>
-                    )}
-                    <input id="photo-upload" type="file" accept="image/*" onChange={handlePhotoUpload} style={{ display: 'none' }} />
-                  </div>
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: '0.25rem' }}>Bank Details</label>
-                  <input type="text" placeholder="IBAN" value={formData.bankDetails.iban} onChange={e => setFormData({ ...formData, bankDetails: { ...formData.bankDetails, iban: e.target.value } })} style={{ width: '100%', marginBottom: 4, padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: 8 }} />
-                  <input type="text" placeholder="BIC/SWIFT" value={formData.bankDetails.bic} onChange={e => setFormData({ ...formData, bankDetails: { ...formData.bankDetails, bic: e.target.value } })} style={{ width: '100%', marginBottom: 4, padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: 8 }} />
-                  <input type="text" placeholder="Account Holder" value={formData.bankDetails.accountHolder} onChange={e => setFormData({ ...formData, bankDetails: { ...formData.bankDetails, accountHolder: e.target.value } })} style={{ width: '100%', marginBottom: 4, padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: 8 }} />
-                  <input type="text" placeholder="Bank Name" value={formData.bankDetails.bankName} onChange={e => setFormData({ ...formData, bankDetails: { ...formData.bankDetails, bankName: e.target.value } })} style={{ width: '100%', marginBottom: 4, padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: 8 }} />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: '0.25rem' }}>USDT Wallet Address</label>
-                  <input type="text" placeholder="USDT Wallet Address" value={formData.usdtWallet} onChange={e => setFormData({ ...formData, usdtWallet: e.target.value })} style={{ width: '100%', marginBottom: 4, padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: 8, fontFamily: 'monospace' }} />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: '0.25rem' }}>Preferred Payment Method</label>
-                  <select value={formData.preferredPaymentMethod} onChange={e => setFormData({ ...formData, preferredPaymentMethod: e.target.value as any })} style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: 8 }}>
-                    <option value="bank">Bank Transfer</option>
-                    <option value="usdt">USDT</option>
-                    <option value="both">Both</option>
-                  </select>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', gap: '0.75rem', paddingTop: '1rem' }}>
-                <button
-                  type="button"
-                  onClick={editingClient ? handleEditClient : handleAddClient}
-                  style={{
-                    flex: 1,
-                    background: 'var(--primary)',
-                    color: '#fff',
-                    padding: '0.5rem 1rem',
-                    borderRadius: 8,
-                    border: 'none',
-                    fontWeight: 600,
-                    cursor: 'pointer'
-                  }}
-                >
-                  {editingClient ? 'Update Client' : 'Add Client'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowAddForm(false);
-                    setEditingClient(null);
-                    resetForm();
-                  }}
-                  style={{
-                    flex: 1,
-                    background: '#d1d5db',
-                    color: '#374151',
-                    padding: '0.5rem 1rem',
-                    borderRadius: 8,
-                    border: 'none',
-                    fontWeight: 600,
-                    cursor: 'pointer'
-                  }}
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* View Client Modal */}
-      {viewingClient && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 50
-        }}>
-          <div style={{
-            background: '#fff',
-            borderRadius: 8,
-            padding: '1.5rem',
-            width: '100%',
-            maxWidth: '28rem',
-            maxHeight: '90vh',
-            overflowY: 'auto'
-          }}>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '1rem' }}>Client Details</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 16 }}>
-                {viewingClient.profilePhoto ? (
-                  <img src={viewingClient.profilePhoto} alt="Profile" style={{ width: 96, height: 96, borderRadius: '50%', objectFit: 'cover', border: '2px solid #e5e7eb', marginBottom: 8 }} />
-                ) : (
-                  <User style={{ width: 96, height: 96, color: '#d1d5db', borderRadius: '50%', border: '2px solid #e5e7eb', background: '#f3f4f6', marginBottom: 8 }} />
-                )}
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151' }}>Name</label>
-                <p style={{ fontSize: '0.875rem', color: 'var(--primary)' }}>{viewingClient.name}</p>
-              </div>
-              
-              <div>
-                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151' }}>Email</label>
-                <p style={{ fontSize: '0.875rem', color: 'var(--primary)' }}>{viewingClient.email}</p>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151' }}>Phone</label>
-                  <p style={{ fontSize: '0.875rem', color: 'var(--primary)' }}>{viewingClient.phone}</p>
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151' }}>Location</label>
-                  <p style={{ fontSize: '0.875rem', color: 'var(--primary)' }}>{viewingClient.nationality}</p>
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151' }}>Status</label>
-                  <span style={{
-                    display: 'inline-flex',
-                    padding: '0.25rem 0.5rem',
-                    fontSize: '0.75rem',
-                    fontWeight: 600,
-                    borderRadius: '9999px',
-                    ...getStatusColor(viewingClient.status)
-                  }}>
-                    {viewingClient.status}
-                  </span>
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151' }}>KYC Status</label>
-                  <span style={{
-                    display: 'inline-flex',
-                    padding: '0.25rem 0.5rem',
-                    fontSize: '0.75rem',
-                    fontWeight: 600,
-                    borderRadius: '9999px',
-                    ...getKycStatusColor(viewingClient.kycStatus)
-                  }}>
-                    {viewingClient.kycStatus}
-                  </span>
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151' }}>Total Positions</label>
-                  <p style={{ fontSize: '0.875rem', color: 'var(--primary)' }}>
-                    ${viewingClient.totalInvested.toLocaleString('en-US')}
-                  </p>
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151' }}>Active Positions</label>
-                  <p style={{ fontSize: '0.875rem', color: 'var(--primary)' }}>{viewingClient.activePackages}</p>
-                </div>
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151' }}>Performance</label>
-                <p style={{ fontSize: '0.875rem', color: viewingClient.totalReturns > 0 ? '#10b981' : '#dc2626' }}>
-                  {viewingClient.totalReturns > 0 ? '+' : ''} {viewingClient.totalReturns.toLocaleString('en-US')}%
-                </p>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151' }}>Join Date</label>
-                  <p style={{ fontSize: '0.875rem', color: 'var(--primary)' }}>{viewingClient.registrationDate}</p>
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151' }}>Last Activity</label>
-                  <p style={{ fontSize: '0.875rem', color: 'var(--primary)' }}>{viewingClient.updatedAt.slice(0, 10)}</p>
-                </div>
-              </div>
-
-              {viewingClient.notes && (
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151' }}>Notes</label>
-                  <p style={{ fontSize: '0.875rem', color: 'var(--primary)' }}>{viewingClient.notes}</p>
-                </div>
-              )}
-
-              {viewingClient.bankDetails && (
-                <div style={{ marginBottom: 8 }}>
-                  <label style={{ fontWeight: 500, color: '#374151', fontSize: 14 }}>Bank Details</label>
-                  <div style={{ fontSize: 13, color: '#374151', marginTop: 2 }}>
-                    <span>IBAN: {viewingClient.bankDetails?.iban} <button onClick={() => copyToClipboard(viewingClient.bankDetails?.iban || '', 'iban')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: copiedField === 'iban' ? '#10b981' : '#6366f1' }}>{copiedField === 'iban' ? <CheckCircle size={16} /> : <Copy size={16} />}</button></span><br />
-                    <span>BIC: {viewingClient.bankDetails?.bic} <button onClick={() => copyToClipboard(viewingClient.bankDetails?.bic || '', 'bic')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: copiedField === 'bic' ? '#10b981' : '#6366f1' }}>{copiedField === 'bic' ? <CheckCircle size={16} /> : <Copy size={16} />}</button></span><br />
-                    <span>Holder: {viewingClient.bankDetails?.accountHolder}</span><br />
-                    {viewingClient.bankDetails?.bankName && <span>Bank: {viewingClient.bankDetails?.bankName}</span>}
-                  </div>
-                </div>
-              )}
-
-              {viewingClient.usdtWallet && (
-                <div style={{ marginBottom: 8 }}>
-                  <label style={{ fontWeight: 500, color: '#374151', fontSize: 14 }}>USDT Wallet</label>
-                  <div style={{ fontSize: 13, color: '#374151', marginTop: 2 }}>
-                    <span>{viewingClient.usdtWallet} <button onClick={() => copyToClipboard(viewingClient.usdtWallet || '', 'usdt')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: copiedField === 'usdt' ? '#10b981' : '#6366f1' }}>{copiedField === 'usdt' ? <CheckCircle size={16} /> : <Copy size={16} />}</button></span>
-                  </div>
-                </div>
-              )}
-
-              {viewingClient.preferredPaymentMethod && (
-                <div style={{ marginBottom: 8 }}>
-                  <label style={{ fontWeight: 500, color: '#374151', fontSize: 14 }}>Preferred Payment</label>
-                  <div style={{ fontSize: 13, color: '#6366f1', marginTop: 2 }}>{viewingClient.preferredPaymentMethod === 'usdt' ? 'USDT' : viewingClient.preferredPaymentMethod === 'bank' ? 'Bank' : viewingClient.preferredPaymentMethod === 'both' ? 'Both' : '-'}</div>
-                </div>
-              )}
-            </div>
-            <div style={{ marginTop: '1.5rem' }}>
-              <button
-                onClick={() => setViewingClient(null)}
-                style={{
-                  width: '100%',
-                  background: '#d1d5db',
-                  color: '#374151',
-                  padding: '0.5rem 1rem',
-                  borderRadius: 8,
-                  border: 'none',
-                  fontWeight: 600,
-                  cursor: 'pointer'
-                }}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+              </td>
+              <td style={{ padding: 8, border: '1px solid #e5e7eb' }}>
+                <button onClick={() => handleEdit(client)} style={{ marginRight: 8 }}>Modifica</button>
+                <button onClick={() => handleDelete(client.id)} style={{ color: '#b91c1c' }}>Elimina</button>
+              </td>
+            </tr>
+          ))}
+          {clients.length === 0 && (
+            <tr>
+              <td colSpan={6} style={{ textAlign: 'center', padding: 16 }}>Nessun cliente presente.</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
     </div>
   );
 } 

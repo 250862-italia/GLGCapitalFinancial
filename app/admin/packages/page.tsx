@@ -2,32 +2,149 @@
 import { useEffect, useState } from "react";
 import { createClient } from '@supabase/supabase-js';
 
-const HARDCODED_SUPABASE_URL = "https://dobjulfwktzltpvqtxbql.supabase.co";
-const HARDCODED_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvYmp1bGZ3a3psdHB2cXR4YnFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA5NTI2MjYsImV4cCI6MjA2NjUyODYyNn0.wW9zZe9gD2ARxUpbCu0kgBZfujUnuq6XkXZz42RW0zY";
-const supabase = createClient(HARDCODED_SUPABASE_URL, HARDCODED_SUPABASE_ANON_KEY);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-export default function PackagesDebugPage() {
-  const [data, setData] = useState<any[]>([]);
-  const [error, setError] = useState<string | null>(null);
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error("Le variabili d'ambiente NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY non sono settate. Controlla la configurazione su Vercel e in locale.");
+}
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+export default function AdminPackagesPage() {
+  const [packages, setPackages] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [form, setForm] = useState({
+    id: null,
+    nome: '',
+    descrizione: '',
+    percentuale: '',
+    minimo: '',
+    massimo: ''
+  });
+  const [editing, setEditing] = useState(false);
 
-  useEffect(() => {
+  // Fetch packages
+  const fetchPackages = async () => {
     setLoading(true);
     setError(null);
-    supabase.from('packages').select('*').then(({ data, error }) => {
+    const { data, error } = await supabase.from('packages').select('*').order('id', { ascending: true });
+    if (error) setError(error.message);
+    else setPackages(data || []);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchPackages(); }, []);
+
+  // Handle form input
+  const handleChange = (e: any) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  // Add or update package
+  const handleSubmit = async (e: any) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    if (editing && form.id) {
+      // Update
+      const { error } = await supabase.from('packages').update({
+        nome: form.nome,
+        descrizione: form.descrizione,
+        percentuale: form.percentuale,
+        minimo: form.minimo,
+        massimo: form.massimo
+      }).eq('id', form.id);
       if (error) setError(error.message);
-      else setData(data || []);
-      setLoading(false);
-    });
-  }, []);
+    } else {
+      // Insert
+      const { error } = await supabase.from('packages').insert([
+        {
+          nome: form.nome,
+          descrizione: form.descrizione,
+          percentuale: form.percentuale,
+          minimo: form.minimo,
+          massimo: form.massimo
+        }
+      ]);
+      if (error) setError(error.message);
+    }
+    setForm({ id: null, nome: '', descrizione: '', percentuale: '', minimo: '', massimo: '' });
+    setEditing(false);
+    await fetchPackages();
+    setLoading(false);
+  };
+
+  // Edit package
+  const handleEdit = (pkg: any) => {
+    setForm(pkg);
+    setEditing(true);
+  };
+
+  // Delete package
+  const handleDelete = async (id: number) => {
+    setLoading(true);
+    setError(null);
+    const { error } = await supabase.from('packages').delete().eq('id', id);
+    if (error) setError(error.message);
+    await fetchPackages();
+    setLoading(false);
+  };
 
   return (
-    <div style={{ padding: 32 }}>
-      <h1>DEBUG PACCHETTI SUPABASE</h1>
-      {loading && <div style={{ background: '#e0e7ff', color: '#3730a3', padding: 12, fontWeight: 600, marginBottom: 16 }}>Caricamento pacchetti da Supabase...</div>}
-      {error && <div style={{ background: '#fee', color: '#900', padding: 16, fontWeight: 700, marginBottom: 16 }}>ERRORE FETCH SUPABASE: {error}</div>}
-      {data.length > 0 && <pre style={{ background: '#f0fdf4', color: '#166534', padding: 12, fontWeight: 600, marginBottom: 16 }}>{JSON.stringify(data, null, 2)}</pre>}
-      {data.length === 0 && !loading && !error && <div>Nessun pacchetto trovato.</div>}
+    <div style={{ padding: 32, maxWidth: 900, margin: '0 auto' }}>
+      <h1>Gestione Pacchetti</h1>
+      {loading && <div style={{ background: '#e0e7ff', color: '#3730a3', padding: 12, fontWeight: 600, marginBottom: 16 }}>Caricamento...</div>}
+      {error && <div style={{ background: '#fee', color: '#900', padding: 16, fontWeight: 700, marginBottom: 16 }}>ERRORE: {error}</div>}
+      <form onSubmit={handleSubmit} style={{ marginBottom: 32, background: '#f8fafc', padding: 16, borderRadius: 8 }}>
+        <h2>{editing ? 'Modifica Pacchetto' : 'Nuovo Pacchetto'}</h2>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+          <input name="nome" placeholder="Nome" value={form.nome} onChange={handleChange} required style={{ flex: 1 }} />
+          <input name="percentuale" placeholder="%" value={form.percentuale} onChange={handleChange} required style={{ width: 80 }} />
+          <input name="minimo" placeholder="Minimo" value={form.minimo} onChange={handleChange} required style={{ width: 100 }} />
+          <input name="massimo" placeholder="Massimo" value={form.massimo} onChange={handleChange} required style={{ width: 100 }} />
+        </div>
+        <textarea name="descrizione" placeholder="Descrizione" value={form.descrizione} onChange={handleChange} required style={{ width: '100%', marginTop: 8 }} />
+        <div style={{ marginTop: 8 }}>
+          <button type="submit" style={{ background: '#2563eb', color: '#fff', padding: '8px 16px', border: 0, borderRadius: 4, fontWeight: 600 }}>
+            {editing ? 'Salva Modifiche' : 'Aggiungi Pacchetto'}
+          </button>
+          {editing && <button type="button" onClick={() => { setForm({ id: null, nome: '', descrizione: '', percentuale: '', minimo: '', massimo: '' }); setEditing(false); }} style={{ marginLeft: 8 }}>Annulla</button>}
+        </div>
+      </form>
+      <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff' }}>
+        <thead>
+          <tr style={{ background: '#f1f5f9' }}>
+            <th style={{ padding: 8, border: '1px solid #e5e7eb' }}>Nome</th>
+            <th style={{ padding: 8, border: '1px solid #e5e7eb' }}>Descrizione</th>
+            <th style={{ padding: 8, border: '1px solid #e5e7eb' }}>%</th>
+            <th style={{ padding: 8, border: '1px solid #e5e7eb' }}>Minimo</th>
+            <th style={{ padding: 8, border: '1px solid #e5e7eb' }}>Massimo</th>
+            <th style={{ padding: 8, border: '1px solid #e5e7eb' }}>Azioni</th>
+          </tr>
+        </thead>
+        <tbody>
+          {packages.map((pkg) => (
+            <tr key={pkg.id}>
+              <td style={{ padding: 8, border: '1px solid #e5e7eb' }}>{pkg.nome}</td>
+              <td style={{ padding: 8, border: '1px solid #e5e7eb' }}>{pkg.descrizione}</td>
+              <td style={{ padding: 8, border: '1px solid #e5e7eb' }}>{pkg.percentuale}</td>
+              <td style={{ padding: 8, border: '1px solid #e5e7eb' }}>{pkg.minimo}</td>
+              <td style={{ padding: 8, border: '1px solid #e5e7eb' }}>{pkg.massimo}</td>
+              <td style={{ padding: 8, border: '1px solid #e5e7eb' }}>
+                <button onClick={() => handleEdit(pkg)} style={{ marginRight: 8 }}>Modifica</button>
+                <button onClick={() => handleDelete(pkg.id)} style={{ color: '#b91c1c' }}>Elimina</button>
+              </td>
+            </tr>
+          ))}
+          {packages.length === 0 && (
+            <tr>
+              <td colSpan={6} style={{ textAlign: 'center', padding: 16 }}>Nessun pacchetto presente.</td>
+            </tr>
+          )}
+        </tbody>
+      </table>
     </div>
   );
 } 
