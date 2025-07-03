@@ -5,9 +5,10 @@ import { emailNotificationService } from '../../../lib/email-service';
 import { createClient } from '@supabase/supabase-js';
 import { Client } from '../../../types/user';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const supabase = createClient(
+  "https://dobjulfwktzltpvqtxbql.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvYmp1bGZ3a3psdHB2cXR4YnFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA5NTI2MjYsImV4cCI6MjA2NjUyODYyNn0.wW9zZe9gD2ARxUpbCu0kgBZfujUnuq6XkXZz42RW0zY"
+);
 
 // Funzione per normalizzare lo status (deve essere dichiarata PRIMA dell'uso)
 const normalizeStatus = (status: string): 'active' | 'inactive' | 'pending' => {
