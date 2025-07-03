@@ -102,7 +102,7 @@ export default function ClientsManagementPage() {
       if (!error && data) {
         // Per ogni cliente, recupera lo stato KYC reale
         const clientsWithKyc = await Promise.all(data.map(async (c: any) => {
-          let kycStatus: 'Verified' | 'Pending' | 'Rejected' = 'Pending';
+          let kycStatus: 'pending' | 'approved' | 'rejected' = 'pending';
           // Cerca la KYC più recente per questo utente
           const { data: kycData } = await supabase
             .from('kyc_applications')
@@ -112,9 +112,9 @@ export default function ClientsManagementPage() {
             .limit(1)
             .single();
           if (kycData && kycData.verification_status) {
-            if (kycData.verification_status === 'approved') kycStatus = 'Verified';
-            else if (kycData.verification_status === 'rejected') kycStatus = 'Rejected';
-            else kycStatus = 'Pending';
+            if (kycData.verification_status === 'approved') kycStatus = 'approved';
+            else if (kycData.verification_status === 'rejected') kycStatus = 'rejected';
+            else kycStatus = 'pending';
           }
           return {
             id: c.id,
@@ -444,7 +444,7 @@ export default function ClientsManagementPage() {
       .select('*');
     if (!error && data) {
       const clientsWithKyc = await Promise.all(data.map(async (c: any) => {
-        let kycStatus: 'Verified' | 'Pending' | 'Rejected' = 'Pending';
+        let kycStatus: 'pending' | 'approved' | 'rejected' = 'pending';
         const { data: kycData } = await supabase
           .from('kyc_applications')
           .select('verification_status')
@@ -453,9 +453,9 @@ export default function ClientsManagementPage() {
           .limit(1)
           .single();
         if (kycData && kycData.verification_status) {
-          if (kycData.verification_status === 'approved') kycStatus = 'Verified';
-          else if (kycData.verification_status === 'rejected') kycStatus = 'Rejected';
-          else kycStatus = 'Pending';
+          if (kycData.verification_status === 'approved') kycStatus = 'approved';
+          else if (kycData.verification_status === 'rejected') kycStatus = 'rejected';
+          else kycStatus = 'pending';
         }
         return {
           id: c.id,
@@ -566,7 +566,7 @@ export default function ClientsManagementPage() {
             <div>
               <p style={{ fontSize: '0.875rem', color: 'var(--foreground)', margin: 0 }}>KYC Verified</p>
               <p style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--primary)', margin: 0 }}>
-                {clients.filter(c => c.kycStatus === 'Verified').length}
+                {clients.filter(c => c.kycStatus === 'approved').length}
               </p>
             </div>
             <Shield style={{ color: 'var(--primary)' }} size={24} />
@@ -638,7 +638,7 @@ export default function ClientsManagementPage() {
               }}
             >
               <option value="all">All KYC Status</option>
-              <option value="verified">Verified</option>
+              <option value="approved">Approved</option>
               <option value="pending">Pending</option>
               <option value="rejected">Rejected</option>
             </select>
@@ -919,9 +919,9 @@ export default function ClientsManagementPage() {
                     }}
                     required
                   >
-                    <option value="Verified">Verified</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Rejected">Rejected</option>
+                    <option value="approved">Approved</option>
+                    <option value="pending">Pending</option>
+                    <option value="rejected">Rejected</option>
                   </select>
                 </div>
               </div>
