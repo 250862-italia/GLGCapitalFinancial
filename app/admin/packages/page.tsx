@@ -85,6 +85,16 @@ export default function PackagesManagementPage() {
   const [riskFilter, setRiskFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [selectedPackage, setSelectedPackage] = useState<InvestmentPackage | null>(null);
+  const [env, setEnv] = useState({ url: '', key: '' });
+
+  useEffect(() => {
+    setEnv({
+      url: process.env.NEXT_PUBLIC_SUPABASE_URL || 'undefined',
+      key: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'undefined',
+    });
+  }, []);
+
+  const isDebug = process.env.NODE_ENV !== 'production' || env.url === 'undefined' || env.key === 'undefined';
 
   // Debug: monitor packages changes
   useEffect(() => {
@@ -259,158 +269,166 @@ export default function PackagesManagementPage() {
   }
 
   return (
-    <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 4px 24px rgba(10,37,64,0.10)', padding: '2rem', maxWidth: 1200, margin: '0 auto' }}>
-      <section style={{ marginBottom: '2.5rem', display: 'flex', gap: 32 }}>
-        <div style={{ flex: 2 }}>
-          <h1 style={{ color: 'var(--primary)', fontSize: 32, fontWeight: 900, margin: 0 }}>Gestione Pacchetti</h1>
-          <p style={{ color: '#64748b', fontSize: 18, margin: '8px 0 0 0' }}>Crea, modifica e analizza i pacchetti di investimento disponibili.</p>
+    <div>
+      {isDebug && (
+        <div style={{ background: '#fee', color: '#900', padding: 8, marginBottom: 16, fontSize: 14 }}>
+          <div>SUPABASE_URL: {env.url}</div>
+          <div>SUPABASE_KEY: {env.key}</div>
         </div>
-        <div style={{ flex: 1, minWidth: 260, background: '#f8fafc', borderRadius: 12, padding: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-          <h3 style={{ color: '#0a2540', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>Distribuzione Rischio</h3>
-          <ResponsiveContainer width="100%" height={180}>
-            <PieChart>
-              <Pie data={riskData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={60} label>
-                {riskData.map((entry, idx) => (
-                  <Cell key={`cell-${idx}`} fill={riskColors[idx % riskColors.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-      </section>
-      <section style={{ marginBottom: '1.5rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
-        <input
-          type="text"
-          placeholder="Cerca per nome o categoria..."
-          value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
-          style={{ flex: 2, padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 16 }}
-        />
-        <select value={riskFilter} onChange={e => setRiskFilter(e.target.value)} style={{ flex: 1, padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 16 }}>
-          <option value="">Tutti i rischi</option>
-          <option value="low">Basso</option>
-          <option value="medium">Medio</option>
-          <option value="high">Alto</option>
-        </select>
-        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{ flex: 1, padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 16 }}>
-          <option value="">Tutti gli stati</option>
-          <option value="active">Active</option>
-          <option value="fundraising">Fundraising</option>
-          <option value="closed">Closed</option>
-        </select>
-        <button
-          onClick={openAddForm}
-          style={{ background: 'var(--accent)', color: 'var(--primary)', border: 'none', padding: '0.75rem 1.5rem', borderRadius: 8, fontSize: 16, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-        >
-          <Plus size={20} /> Nuovo Pacchetto
-        </button>
-      </section>
-
-      {/* Success/Error/Loading feedback qui, tabella CRUD moderna, modale conferma eliminazione, form elegante come per investimenti... */}
-      {successMessage && (
-        <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, padding: '1rem', marginBottom: '2rem', color: '#16a34a', fontWeight: 600 }}>{successMessage}</div>
       )}
-      {error && (
-        <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '1rem', marginBottom: '2rem', color: '#dc2626', fontWeight: 600 }}>{error}</div>
-      )}
-      <div style={{ overflowX: 'auto', marginBottom: 32 }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr style={{ borderBottom: '2px solid #e0e3eb' }}>
-              <th style={{ textAlign: 'left', padding: '1rem' }}>Nome</th>
-              <th style={{ textAlign: 'left', padding: '1rem' }}>Categoria</th>
-              <th style={{ textAlign: 'center', padding: '1rem' }}>Rischio</th>
-              <th style={{ textAlign: 'right', padding: '1rem' }}>Min</th>
-              <th style={{ textAlign: 'right', padding: '1rem' }}>Max</th>
-              <th style={{ textAlign: 'right', padding: '1rem' }}>Rendimento (%)</th>
-              <th style={{ textAlign: 'center', padding: '1rem' }}>Durata (mesi)</th>
-              <th style={{ textAlign: 'center', padding: '1rem' }}>Stato</th>
-              <th style={{ textAlign: 'center', padding: '1rem' }}>Azioni</th>
-            </tr>
-          </thead>
-          <tbody>
-            {packages
-              .filter(pkg =>
-                (!searchQuery || pkg.name.toLowerCase().includes(searchQuery.toLowerCase()) || pkg.category.toLowerCase().includes(searchQuery.toLowerCase())) &&
-                (!riskFilter || pkg.riskLevel === riskFilter) &&
-                (!statusFilter || pkg.status === statusFilter)
-              )
-              .map(pkg => (
-                <tr key={pkg.id} style={{ borderBottom: '1px solid #e0e3eb' }}>
-                  <td style={{ padding: '1rem', fontWeight: 600, color: '#0a2540' }}>{pkg.name}</td>
-                  <td style={{ padding: '1rem', color: '#64748b' }}>{pkg.category}</td>
-                  <td style={{ padding: '1rem', textAlign: 'center' }}>
-                    <span style={{ background: pkg.riskLevel === 'low' ? '#bbf7d0' : pkg.riskLevel === 'medium' ? '#fef3c7' : '#fee2e2', color: pkg.riskLevel === 'low' ? '#166534' : pkg.riskLevel === 'medium' ? '#92400e' : '#991b1b', padding: '0.3rem 0.7rem', borderRadius: 8, fontWeight: 600, fontSize: 14, textTransform: 'capitalize' }}>{pkg.riskLevel}</span>
-                  </td>
-                  <td style={{ padding: '1rem', textAlign: 'right' }}>€{pkg.minInvestment != null ? pkg.minInvestment.toLocaleString() : '-'}</td>
-                  <td style={{ padding: '1rem', textAlign: 'right' }}>€{pkg.maxInvestment != null ? pkg.maxInvestment.toLocaleString() : '-'}</td>
-                  <td style={{ padding: '1rem', textAlign: 'right' }}>{pkg.expectedReturn}%</td>
-                  <td style={{ padding: '1rem', textAlign: 'center' }}>{pkg.duration}</td>
-                  <td style={{ padding: '1rem', textAlign: 'center' }}>
-                    <span style={{ background: pkg.status.toLowerCase() === 'active' ? '#bbf7d0' : pkg.status.toLowerCase() === 'fundraising' ? '#fef3c7' : '#e0e7ff', color: pkg.status.toLowerCase() === 'active' ? '#166534' : pkg.status.toLowerCase() === 'fundraising' ? '#92400e' : '#3730a3', padding: '0.3rem 0.7rem', borderRadius: 8, fontWeight: 600, fontSize: 14 }}>{pkg.status}</span>
-                  </td>
-                  <td style={{ padding: '1rem', textAlign: 'center' }}>
-                    <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
-                      <button onClick={() => openEditForm(pkg)} style={{ background: '#3b82f6', color: 'white', border: 'none', padding: '0.5rem', borderRadius: 6, cursor: 'pointer' }} title="Modifica"><Edit size={16} /></button>
-                      <button onClick={() => handleDelete(pkg.id)} style={{ background: '#dc2626', color: 'white', border: 'none', padding: '0.5rem', borderRadius: 6, cursor: 'pointer' }} title="Elimina"><Trash2 size={16} /></button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-          </tbody>
-        </table>
-      </div>
-      {/* Form elegante per aggiunta/modifica pacchetto */}
-      {showForm && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ background: 'white', borderRadius: 16, padding: '2rem', width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto' }}>
-            <h2 style={{ color: 'var(--primary)', fontSize: 24, fontWeight: 700, marginBottom: 24 }}>{isEdit ? 'Modifica Pacchetto' : 'Nuovo Pacchetto'}</h2>
-            <form onSubmit={handleFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <label>Nome*
-                <input name="name" value={formData.name} onChange={handleFormChange} style={inputStyle} required />
-              </label>
-              <label>Descrizione
-                <textarea name="description" value={formData.description} onChange={handleFormChange} style={{ ...inputStyle, minHeight: 60 }} />
-              </label>
-              <label>Categoria*
-                <input name="category" value={formData.category} onChange={handleFormChange} style={inputStyle} required />
-              </label>
-              <label>Min Investimento (€)*
-                <input name="minInvestment" type="number" value={formData.minInvestment} onChange={handleFormChange} style={inputStyle} required />
-              </label>
-              <label>Max Investimento (€)*
-                <input name="maxInvestment" type="number" value={formData.maxInvestment} onChange={handleFormChange} style={inputStyle} required />
-              </label>
-              <label>Rendimento Atteso (%)
-                <input name="expectedReturn" type="number" value={formData.expectedReturn} onChange={handleFormChange} style={inputStyle} />
-              </label>
-              <label>Durata (mesi)
-                <input name="duration" type="number" value={formData.duration} onChange={handleFormChange} style={inputStyle} />
-              </label>
-              <label>Rischio
-                <select name="riskLevel" value={formData.riskLevel} onChange={handleFormChange} style={inputStyle}>
-                  <option value="low">Basso</option>
-                  <option value="medium">Medio</option>
-                  <option value="high">Alto</option>
-                </select>
-              </label>
-              <label>Stato
-                <select name="status" value={formData.status} onChange={handleFormChange} style={inputStyle}>
-                  <option value="active">Active</option>
-                  <option value="fundraising">Fundraising</option>
-                  <option value="closed">Closed</option>
-                </select>
-              </label>
-              <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
-                <button type="submit" disabled={isSubmitting} style={{ background: '#059669', color: 'white', border: 'none', borderRadius: 8, padding: '0.75rem 1.5rem', fontWeight: 700, fontSize: 16, cursor: 'pointer', flex: 1 }}>{isEdit ? 'Salva Modifiche' : 'Crea Pacchetto'}</button>
-                <button type="button" onClick={() => setShowForm(false)} style={{ background: '#6b7280', color: 'white', border: 'none', borderRadius: 8, padding: '0.75rem 1.5rem', fontWeight: 600, fontSize: 16, cursor: 'pointer', flex: 1 }}>Annulla</button>
-              </div>
-            </form>
+      <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 4px 24px rgba(10,37,64,0.10)', padding: '2rem', maxWidth: 1200, margin: '0 auto' }}>
+        <section style={{ marginBottom: '2.5rem', display: 'flex', gap: 32 }}>
+          <div style={{ flex: 2 }}>
+            <h1 style={{ color: 'var(--primary)', fontSize: 32, fontWeight: 900, margin: 0 }}>Gestione Pacchetti</h1>
+            <p style={{ color: '#64748b', fontSize: 18, margin: '8px 0 0 0' }}>Crea, modifica e analizza i pacchetti di investimento disponibili.</p>
           </div>
+          <div style={{ flex: 1, minWidth: 260, background: '#f8fafc', borderRadius: 12, padding: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <h3 style={{ color: '#0a2540', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>Distribuzione Rischio</h3>
+            <ResponsiveContainer width="100%" height={180}>
+              <PieChart>
+                <Pie data={riskData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={60} label>
+                  {riskData.map((entry, idx) => (
+                    <Cell key={`cell-${idx}`} fill={riskColors[idx % riskColors.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </section>
+        <section style={{ marginBottom: '1.5rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <input
+            type="text"
+            placeholder="Cerca per nome o categoria..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            style={{ flex: 2, padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 16 }}
+          />
+          <select value={riskFilter} onChange={e => setRiskFilter(e.target.value)} style={{ flex: 1, padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 16 }}>
+            <option value="">Tutti i rischi</option>
+            <option value="low">Basso</option>
+            <option value="medium">Medio</option>
+            <option value="high">Alto</option>
+          </select>
+          <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{ flex: 1, padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 16 }}>
+            <option value="">Tutti gli stati</option>
+            <option value="active">Active</option>
+            <option value="fundraising">Fundraising</option>
+            <option value="closed">Closed</option>
+          </select>
+          <button
+            onClick={openAddForm}
+            style={{ background: 'var(--accent)', color: 'var(--primary)', border: 'none', padding: '0.75rem 1.5rem', borderRadius: 8, fontSize: 16, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+          >
+            <Plus size={20} /> Nuovo Pacchetto
+          </button>
+        </section>
+
+        {/* Success/Error/Loading feedback qui, tabella CRUD moderna, modale conferma eliminazione, form elegante come per investimenti... */}
+        {successMessage && (
+          <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, padding: '1rem', marginBottom: '2rem', color: '#16a34a', fontWeight: 600 }}>{successMessage}</div>
+        )}
+        {error && (
+          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '1rem', marginBottom: '2rem', color: '#dc2626', fontWeight: 600 }}>{error}</div>
+        )}
+        <div style={{ overflowX: 'auto', marginBottom: 32 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ borderBottom: '2px solid #e0e3eb' }}>
+                <th style={{ textAlign: 'left', padding: '1rem' }}>Nome</th>
+                <th style={{ textAlign: 'left', padding: '1rem' }}>Categoria</th>
+                <th style={{ textAlign: 'center', padding: '1rem' }}>Rischio</th>
+                <th style={{ textAlign: 'right', padding: '1rem' }}>Min</th>
+                <th style={{ textAlign: 'right', padding: '1rem' }}>Max</th>
+                <th style={{ textAlign: 'right', padding: '1rem' }}>Rendimento (%)</th>
+                <th style={{ textAlign: 'center', padding: '1rem' }}>Durata (mesi)</th>
+                <th style={{ textAlign: 'center', padding: '1rem' }}>Stato</th>
+                <th style={{ textAlign: 'center', padding: '1rem' }}>Azioni</th>
+              </tr>
+            </thead>
+            <tbody>
+              {packages
+                .filter(pkg =>
+                  (!searchQuery || pkg.name.toLowerCase().includes(searchQuery.toLowerCase()) || pkg.category.toLowerCase().includes(searchQuery.toLowerCase())) &&
+                  (!riskFilter || pkg.riskLevel === riskFilter) &&
+                  (!statusFilter || pkg.status === statusFilter)
+                )
+                .map(pkg => (
+                  <tr key={pkg.id} style={{ borderBottom: '1px solid #e0e3eb' }}>
+                    <td style={{ padding: '1rem', fontWeight: 600, color: '#0a2540' }}>{pkg.name}</td>
+                    <td style={{ padding: '1rem', color: '#64748b' }}>{pkg.category}</td>
+                    <td style={{ padding: '1rem', textAlign: 'center' }}>
+                      <span style={{ background: pkg.riskLevel === 'low' ? '#bbf7d0' : pkg.riskLevel === 'medium' ? '#fef3c7' : '#fee2e2', color: pkg.riskLevel === 'low' ? '#166534' : pkg.riskLevel === 'medium' ? '#92400e' : '#991b1b', padding: '0.3rem 0.7rem', borderRadius: 8, fontWeight: 600, fontSize: 14, textTransform: 'capitalize' }}>{pkg.riskLevel}</span>
+                    </td>
+                    <td style={{ padding: '1rem', textAlign: 'right' }}>€{pkg.minInvestment != null ? pkg.minInvestment.toLocaleString() : '-'}</td>
+                    <td style={{ padding: '1rem', textAlign: 'right' }}>€{pkg.maxInvestment != null ? pkg.maxInvestment.toLocaleString() : '-'}</td>
+                    <td style={{ padding: '1rem', textAlign: 'right' }}>{pkg.expectedReturn}%</td>
+                    <td style={{ padding: '1rem', textAlign: 'center' }}>{pkg.duration}</td>
+                    <td style={{ padding: '1rem', textAlign: 'center' }}>
+                      <span style={{ background: pkg.status.toLowerCase() === 'active' ? '#bbf7d0' : pkg.status.toLowerCase() === 'fundraising' ? '#fef3c7' : '#e0e7ff', color: pkg.status.toLowerCase() === 'active' ? '#166534' : pkg.status.toLowerCase() === 'fundraising' ? '#92400e' : '#3730a3', padding: '0.3rem 0.7rem', borderRadius: 8, fontWeight: 600, fontSize: 14 }}>{pkg.status}</span>
+                    </td>
+                    <td style={{ padding: '1rem', textAlign: 'center' }}>
+                      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+                        <button onClick={() => openEditForm(pkg)} style={{ background: '#3b82f6', color: 'white', border: 'none', padding: '0.5rem', borderRadius: 6, cursor: 'pointer' }} title="Modifica"><Edit size={16} /></button>
+                        <button onClick={() => handleDelete(pkg.id)} style={{ background: '#dc2626', color: 'white', border: 'none', padding: '0.5rem', borderRadius: 6, cursor: 'pointer' }} title="Elimina"><Trash2 size={16} /></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
         </div>
-      )}
+        {/* Form elegante per aggiunta/modifica pacchetto */}
+        {showForm && (
+          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+            <div style={{ background: 'white', borderRadius: 16, padding: '2rem', width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto' }}>
+              <h2 style={{ color: 'var(--primary)', fontSize: 24, fontWeight: 700, marginBottom: 24 }}>{isEdit ? 'Modifica Pacchetto' : 'Nuovo Pacchetto'}</h2>
+              <form onSubmit={handleFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <label>Nome*
+                  <input name="name" value={formData.name} onChange={handleFormChange} style={inputStyle} required />
+                </label>
+                <label>Descrizione
+                  <textarea name="description" value={formData.description} onChange={handleFormChange} style={{ ...inputStyle, minHeight: 60 }} />
+                </label>
+                <label>Categoria*
+                  <input name="category" value={formData.category} onChange={handleFormChange} style={inputStyle} required />
+                </label>
+                <label>Min Investimento (€)*
+                  <input name="minInvestment" type="number" value={formData.minInvestment} onChange={handleFormChange} style={inputStyle} required />
+                </label>
+                <label>Max Investimento (€)*
+                  <input name="maxInvestment" type="number" value={formData.maxInvestment} onChange={handleFormChange} style={inputStyle} required />
+                </label>
+                <label>Rendimento Atteso (%)
+                  <input name="expectedReturn" type="number" value={formData.expectedReturn} onChange={handleFormChange} style={inputStyle} />
+                </label>
+                <label>Durata (mesi)
+                  <input name="duration" type="number" value={formData.duration} onChange={handleFormChange} style={inputStyle} />
+                </label>
+                <label>Rischio
+                  <select name="riskLevel" value={formData.riskLevel} onChange={handleFormChange} style={inputStyle}>
+                    <option value="low">Basso</option>
+                    <option value="medium">Medio</option>
+                    <option value="high">Alto</option>
+                  </select>
+                </label>
+                <label>Stato
+                  <select name="status" value={formData.status} onChange={handleFormChange} style={inputStyle}>
+                    <option value="active">Active</option>
+                    <option value="fundraising">Fundraising</option>
+                    <option value="closed">Closed</option>
+                  </select>
+                </label>
+                <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
+                  <button type="submit" disabled={isSubmitting} style={{ background: '#059669', color: 'white', border: 'none', borderRadius: 8, padding: '0.75rem 1.5rem', fontWeight: 700, fontSize: 16, cursor: 'pointer', flex: 1 }}>{isEdit ? 'Salva Modifiche' : 'Crea Pacchetto'}</button>
+                  <button type="button" onClick={() => setShowForm(false)} style={{ background: '#6b7280', color: 'white', border: 'none', borderRadius: 8, padding: '0.75rem 1.5rem', fontWeight: 600, fontSize: 16, cursor: 'pointer', flex: 1 }}>Annulla</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 } 
