@@ -6,6 +6,7 @@ import { usePackages, InvestmentPackage } from '../../../lib/package-context';
 import { emailNotificationService } from '../../../lib/email-service';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import React from 'react';
+import { createClient } from '@supabase/supabase-js';
 
 interface Package {
   id: string;
@@ -63,6 +64,10 @@ const initialPackages: Package[] = [
   }
 ];
 
+const HARDCODED_SUPABASE_URL = "https://dobjulfwktzltpvqtxbql.supabase.co";
+const HARDCODED_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvYmp1bGZ3a3psdHB2cXR4YnFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA5NTI2MjYsImV4cCI6MjA2NjUyODYyNn0.wW9zZe9gD2ARxUpbCu0kgBZfujUnuq6XkXZz42RW0zY";
+const directSupabase = createClient(HARDCODED_SUPABASE_URL, HARDCODED_SUPABASE_ANON_KEY);
+
 // ErrorBoundary semplice
 class SimpleErrorBoundary extends React.Component<any, { hasError: boolean, error: any }> {
   constructor(props: any) {
@@ -108,6 +113,9 @@ export default function PackagesManagementPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [selectedPackage, setSelectedPackage] = useState<InvestmentPackage | null>(null);
   const [env, setEnv] = useState({ url: '', key: '' });
+  const [directPackages, setDirectPackages] = useState<any[]>([]);
+  const [directError, setDirectError] = useState<string | null>(null);
+  const [directLoading, setDirectLoading] = useState(false);
 
   // DEBUG: Mostra env a schermo (solo non production)
   const isProd = process.env.NODE_ENV === 'production';
@@ -127,6 +135,20 @@ export default function PackagesManagementPage() {
   useEffect(() => {
     console.log('Packages updated:', packages);
   }, [packages]);
+
+  useEffect(() => {
+    setDirectLoading(true);
+    setDirectError(null);
+    directSupabase.from('packages').select('*').then(({ data, error }) => {
+      if (error) {
+        setDirectError(error.message);
+        setDirectPackages([]);
+      } else {
+        setDirectPackages(data || []);
+      }
+      setDirectLoading(false);
+    });
+  }, []);
 
   const resetForm = () => {
     setFormData({
@@ -466,6 +488,25 @@ export default function PackagesManagementPage() {
                   </div>
                 </form>
               </div>
+            </div>
+          )}
+          {/* Overlay di errore fetch diretto */}
+          {directError && (
+            <div style={{ background: '#fee', color: '#900', padding: 16, fontWeight: 700, marginBottom: 16 }}>
+              ERRORE FETCH DIRETTO SUPABASE: {directError}
+            </div>
+          )}
+          {/* Overlay di stato fetch diretto */}
+          {directLoading && (
+            <div style={{ background: '#e0e7ff', color: '#3730a3', padding: 12, fontWeight: 600, marginBottom: 16 }}>
+              Caricamento pacchetti da Supabase...
+            </div>
+          )}
+          {/* Mostra pacchetti fetchati direttamente */}
+          {directPackages.length > 0 && (
+            <div style={{ background: '#f0fdf4', color: '#166534', padding: 12, fontWeight: 600, marginBottom: 16 }}>
+              <div>Pacchetti caricati direttamente da Supabase:</div>
+              <pre style={{ fontSize: 12 }}>{JSON.stringify(directPackages, null, 2)}</pre>
             </div>
           )}
         </div>
