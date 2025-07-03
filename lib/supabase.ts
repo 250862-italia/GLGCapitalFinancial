@@ -50,3 +50,5 @@ export const signInWithEmail = async (email: string, password: string) => {
   if (password === "password123") return { user: data }
   throw new Error("Invalid credentials")
 }
+
+export const supabase = getSupabase();
