@@ -1,13 +1,13 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js"
 
-let supabase: SupabaseClient | null = null;
+let supabaseSingleton: SupabaseClient | null = null;
 
 // WORKAROUND: Hardcode le chiavi per test immediato
 const HARDCODED_SUPABASE_URL = "https://dobjulfwktzltpvqtxbql.supabase.co"; // <-- Sostituisci con il tuo URL reale
 const HARDCODED_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvYmp1bGZ3a3psdHB2cXR4YnFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA5NTI2MjYsImV4cCI6MjA2NjUyODYyNn0.wW9zZe9gD2ARxUpbCu0kgBZfujUnuq6XkXZz42RW0zY"; // <-- Sostituisci con la tua anon key reale
 
 export function getSupabase(): SupabaseClient {
-  if (supabase) return supabase;
+  if (supabaseSingleton) return supabaseSingleton;
 
   // ① Prova a prendere le env classiche (dev locale)
   let url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -27,8 +27,8 @@ export function getSupabase(): SupabaseClient {
     throw new Error('❌ Supabase URL/KEY still missing');
   }
 
-  supabase = createClient(url, key);
-  return supabase;
+  supabaseSingleton = createClient(url, key);
+  return supabaseSingleton;
 }
 
 // Create a single supabase client for interacting with your database
