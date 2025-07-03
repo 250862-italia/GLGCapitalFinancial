@@ -15,10 +15,8 @@ export function getSupabase(): SupabaseClient {
 
   // ② Se undefined (preview/prod Vercel), leggi dai meta tag
   if ((!url || !key) && typeof window !== 'undefined') {
-    const metaUrl = document
-      .querySelector('meta[name="supabase-url"]')?.content;
-    const metaKey = document
-      .querySelector('meta[name="supabase-key"]')?.content;
+    const metaUrl = (document.querySelector('meta[name="supabase-url"]') as HTMLMetaElement | null)?.content;
+    const metaKey = (document.querySelector('meta[name="supabase-key"]') as HTMLMetaElement | null)?.content;
     url = url || metaUrl || '';
     key = key || metaKey || '';
   }
