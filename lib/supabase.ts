@@ -1,31 +1,38 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js"
 
-let supabaseClient: SupabaseClient | null = null;
+let supabase: SupabaseClient | null = null;
 
 // WORKAROUND: Hardcode le chiavi per test immediato
 const HARDCODED_SUPABASE_URL = "https://dobjulfwktzltpvqtxbql.supabase.co"; // <-- Sostituisci con il tuo URL reale
 const HARDCODED_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvYmp1bGZ3a3psdHB2cXR4YnFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA5NTI2MjYsImV4cCI6MjA2NjUyODYyNn0.wW9zZe9gD2ARxUpbCu0kgBZfujUnuq6XkXZz42RW0zY"; // <-- Sostituisci con la tua anon key reale
 
-export const getSupabaseClient = (): SupabaseClient => {
-  if (!supabaseClient) {
-    const supabaseUrl = HARDCODED_SUPABASE_URL;
-    const supabaseAnonKey = HARDCODED_SUPABASE_ANON_KEY;
-    if (!supabaseUrl || !supabaseAnonKey) {
-      throw new Error('Supabase environment variables are not configured');
-    }
-    supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        autoRefreshToken: true,
-        persistSession: true,
-        detectSessionInUrl: true
-      }
-    });
+export function getSupabase(): SupabaseClient {
+  if (supabase) return supabase;
+
+  // ① Prova a prendere le env classiche (dev locale)
+  let url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  let key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  // ② Se undefined (preview/prod Vercel), leggi dai meta tag
+  if ((!url || !key) && typeof window !== 'undefined') {
+    const metaUrl = document
+      .querySelector('meta[name="supabase-url"]')?.content;
+    const metaKey = document
+      .querySelector('meta[name="supabase-key"]')?.content;
+    url = url || metaUrl || '';
+    key = key || metaKey || '';
   }
-  return supabaseClient;
-};
+
+  if (!url || !key) {
+    throw new Error('❌ Supabase URL/KEY still missing');
+  }
+
+  supabase = createClient(url, key);
+  return supabase;
+}
 
 // Create a single supabase client for interacting with your database
-export const supabase = getSupabaseClient();
+export const supabaseClient = getSupabase();
 
 export const createServerSupabaseClient = () => {
   const supabaseUrl = HARDCODED_SUPABASE_URL;
@@ -37,7 +44,7 @@ export const createServerSupabaseClient = () => {
 }
 
 export const signInWithEmail = async (email: string, password: string) => {
-  const client = getSupabaseClient();
+  const client = getSupabase();
   const { data, error } = await client.from("users").select("*").eq("email", email).single()
   if (error || !data) throw new Error("Invalid credentials")
   if (password === "password123") return { user: data }
