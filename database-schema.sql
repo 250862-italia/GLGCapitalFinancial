@@ -709,7 +709,7 @@ VALUES (
   true,
   'low',
   'Conservative',
-  'Active',
+  'active',
   NOW(),
   NOW(),
   1000,

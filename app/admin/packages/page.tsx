@@ -116,7 +116,7 @@ export default function PackagesManagementPage() {
 
   const openEditForm = (pkg: InvestmentPackage) => {
     console.log('Opening edit form for package:', pkg);
-    setFormData(pkg);
+    setFormData({ ...pkg, status: pkg.status.toLowerCase() as 'active' | 'fundraising' | 'closed' });
     setIsEdit(true);
     setShowForm(true);
   };
@@ -167,6 +167,7 @@ export default function PackagesManagementPage() {
       if (isEdit && formData.id) {
         await updatePackage(formData.id, {
           ...formData,
+          status: (formData.status ? formData.status.charAt(0).toUpperCase() + formData.status.slice(1) : 'Active') as 'Active' | 'Fundraising' | 'Closed',
           expectedReturn: formData.expectedReturn ?? 0,
           isActive: true,
           features: [],
@@ -348,7 +349,7 @@ export default function PackagesManagementPage() {
                   <td style={{ padding: '1rem', textAlign: 'right' }}>{pkg.expectedReturn}%</td>
                   <td style={{ padding: '1rem', textAlign: 'center' }}>{pkg.duration}</td>
                   <td style={{ padding: '1rem', textAlign: 'center' }}>
-                    <span style={{ background: pkg.status === 'active' ? '#bbf7d0' : pkg.status === 'fundraising' ? '#fef3c7' : '#e0e7ff', color: pkg.status === 'active' ? '#166534' : pkg.status === 'fundraising' ? '#92400e' : '#3730a3', padding: '0.3rem 0.7rem', borderRadius: 8, fontWeight: 600, fontSize: 14 }}>{pkg.status}</span>
+                    <span style={{ background: pkg.status.toLowerCase() === 'active' ? '#bbf7d0' : pkg.status.toLowerCase() === 'fundraising' ? '#fef3c7' : '#e0e7ff', color: pkg.status.toLowerCase() === 'active' ? '#166534' : pkg.status.toLowerCase() === 'fundraising' ? '#92400e' : '#3730a3', padding: '0.3rem 0.7rem', borderRadius: 8, fontWeight: 600, fontSize: 14 }}>{pkg.status}</span>
                   </td>
                   <td style={{ padding: '1rem', textAlign: 'center' }}>
                     <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>

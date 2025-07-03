@@ -86,11 +86,6 @@ export default function ClientsManagementPage() {
     updatedBy: '',
     createdAt: '',
     updatedAt: '',
-    joinDate: '',
-    lastActivity: '',
-    totalPositions: 0,
-    activePositions: 0,
-    performance: '',
   });
 
   useEffect(() => {
@@ -133,7 +128,12 @@ export default function ClientsManagementPage() {
             activePackages: c.active_packages || 0,
             notes: c.notes || '',
             profilePhoto: c.profile_photo || '',
-            bankDetails: c.bank_details || { iban: '', bic: '', accountHolder: '', bankName: '' },
+            bankDetails: {
+              iban: c.bank_details?.iban || '',
+              bic: c.bank_details?.bic || '',
+              accountHolder: c.bank_details?.accountHolder || '',
+              bankName: c.bank_details?.bankName || ''
+            },
             usdtWallet: c.usdt_wallet || '',
             preferredPaymentMethod: normalizePaymentMethod(c.preferredPaymentMethod),
             country: c.country || '',
@@ -158,11 +158,6 @@ export default function ClientsManagementPage() {
             updatedBy: c.updated_by || '',
             createdAt: c.created_at || '',
             updatedAt: c.updated_at || '',
-            joinDate: c.created_at ? c.created_at.slice(0, 10) : '',
-            lastActivity: c.updated_at ? c.updated_at.slice(0, 10) : '',
-            totalPositions: 0,
-            activePositions: 0,
-            performance: '',
           };
         }));
         setClients(clientsWithKyc);
@@ -201,7 +196,12 @@ export default function ClientsManagementPage() {
       activePackages: 0,
       notes: formData.notes || '',
       profilePhoto: formData.profilePhoto || '',
-      bankDetails: formData.bankDetails || { iban: '', bic: '', accountHolder: '', bankName: '' },
+      bankDetails: {
+        iban: formData.bankDetails.iban,
+        bic: formData.bankDetails.bic,
+        accountHolder: formData.bankDetails.accountHolder,
+        bankName: formData.bankDetails.bankName
+      },
       usdtWallet: formData.usdtWallet || '',
       preferredPaymentMethod: formData.preferredPaymentMethod || 'bank',
       country: formData.country || '',
@@ -226,11 +226,6 @@ export default function ClientsManagementPage() {
       updatedBy: '',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      joinDate: new Date().toISOString().slice(0, 10),
-      lastActivity: new Date().toISOString().slice(0, 10),
-      totalPositions: 0,
-      activePositions: 0,
-      performance: '',
     };
 
     setClients([...clients, newClient]);
@@ -256,7 +251,7 @@ export default function ClientsManagementPage() {
         last_name: formData.name.split(' ').slice(1).join(' '),
         email: formData.email,
         phone: formData.phone,
-        nationality: formData.location,
+        nationality: formData.nationality,
         status: normalizeStatus(formData.status),
         updated_at: new Date().toISOString()
       })
@@ -324,11 +319,6 @@ export default function ClientsManagementPage() {
       updatedBy: '',
       createdAt: '',
       updatedAt: '',
-      joinDate: '',
-      lastActivity: '',
-      totalPositions: 0,
-      activePositions: 0,
-      performance: '',
     });
   };
 
@@ -343,14 +333,19 @@ export default function ClientsManagementPage() {
       status: client.status,
       kycStatus: client.kycStatus,
       registrationDate: client.registrationDate,
-      lastLogin: client.lastLogin,
+      lastLogin: client.lastLogin || '',
       totalInvested: client.totalInvested || 0,
       currentBalance: client.currentBalance || 0,
       totalReturns: client.totalReturns || 0,
       activePackages: client.activePackages || 0,
       notes: client.notes || '',
       profilePhoto: client.profilePhoto || '',
-      bankDetails: client.bankDetails || { iban: '', bic: '', accountHolder: '', bankName: '' },
+      bankDetails: {
+        iban: client.bankDetails?.iban || '',
+        bic: client.bankDetails?.bic || '',
+        accountHolder: client.bankDetails?.accountHolder || '',
+        bankName: client.bankDetails?.bankName || ''
+      },
       usdtWallet: client.usdtWallet || '',
       preferredPaymentMethod: client.preferredPaymentMethod || 'bank',
       country: client.country || '',
@@ -375,11 +370,6 @@ export default function ClientsManagementPage() {
       updatedBy: client.updatedBy || '',
       createdAt: client.createdAt || '',
       updatedAt: client.updatedAt || '',
-      joinDate: client.joinDate || '',
-      lastActivity: client.lastActivity || '',
-      totalPositions: client.totalPositions || 0,
-      activePositions: client.activePositions || 0,
-      performance: client.performance || '',
     });
   };
 
@@ -476,7 +466,12 @@ export default function ClientsManagementPage() {
           activePackages: c.active_packages || 0,
           notes: c.notes || '',
           profilePhoto: c.profile_photo || '',
-          bankDetails: c.bank_details || { iban: '', bic: '', accountHolder: '', bankName: '' },
+          bankDetails: {
+            iban: c.bank_details?.iban || '',
+            bic: c.bank_details?.bic || '',
+            accountHolder: c.bank_details?.accountHolder || '',
+            bankName: c.bank_details?.bankName || ''
+          },
           usdtWallet: c.usdt_wallet || '',
           preferredPaymentMethod: normalizePaymentMethod(c.preferredPaymentMethod),
           country: c.country || '',
@@ -501,11 +496,6 @@ export default function ClientsManagementPage() {
           updatedBy: c.updated_by || '',
           createdAt: c.created_at || '',
           updatedAt: c.updated_at || '',
-          joinDate: c.created_at ? c.created_at.slice(0, 10) : '',
-          lastActivity: c.updated_at ? c.updated_at.slice(0, 10) : '',
-          totalPositions: 0,
-          activePositions: 0,
-          performance: '',
         };
       }));
       setClients(clientsWithKyc);
@@ -579,7 +569,7 @@ export default function ClientsManagementPage() {
             <div>
               <p style={{ fontSize: '0.875rem', color: 'var(--foreground)', margin: 0 }}>Total Positions</p>
               <p style={{ fontSize: '1.5rem', fontWeight: 700, color: '#f59e0b', margin: 0 }}>
-                ${clients.reduce((sum, c) => sum + c.totalPositions, 0).toLocaleString('en-US')}
+                ${clients.reduce((sum, c) => sum + c.totalInvested, 0).toLocaleString('en-US')}
               </p>
             </div>
             <DollarSign style={{ color: '#f59e0b' }} size={24} />
@@ -675,7 +665,7 @@ export default function ClientsManagementPage() {
                       )}
                       <div>
                         <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--primary)' }}>{client.name}</div>
-                        <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Joined: {client.joinDate}</div>
+                        <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>Joined: {client.registrationDate}</div>
                       </div>
                     </div>
                   </td>
@@ -683,7 +673,7 @@ export default function ClientsManagementPage() {
                     <div>
                       <div style={{ fontSize: '0.875rem' }}>{client.email}</div>
                       <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>{client.phone}</div>
-                      <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>{client.location}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>{client.country}, {client.city}</div>
                     </div>
                   </td>
                   <td style={{ padding: '1rem 1.5rem', whiteSpace: 'nowrap' }}>
@@ -713,16 +703,13 @@ export default function ClientsManagementPage() {
                   <td style={{ padding: '1rem 1.5rem', whiteSpace: 'nowrap' }}>
                     <div>
                       <div style={{ fontSize: '0.875rem', fontWeight: 500 }}>
-                        ${client.totalPositions.toLocaleString('en-US')}
-                      </div>
-                      <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                        {client.activePositions} active
+                        ${client.totalInvested.toLocaleString('en-US')}
                       </div>
                     </div>
                   </td>
                   <td style={{ padding: '1rem 1.5rem', whiteSpace: 'nowrap' }}>
-                    <div style={{ fontSize: '0.875rem', fontWeight: 500, color: client.performance.startsWith('+') ? '#10b981' : '#dc2626' }}>
-                      {client.performance}
+                    <div style={{ fontSize: '0.875rem', fontWeight: 500, color: client.totalReturns > 0 ? '#10b981' : '#dc2626' }}>
+                      {client.totalReturns > 0 ? '+' : ''} {client.totalReturns.toLocaleString('en-US')}%
                     </div>
                   </td>
                   <td style={{ padding: '1rem 1.5rem', whiteSpace: 'nowrap' }}>
@@ -873,8 +860,8 @@ export default function ClientsManagementPage() {
                   <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: '0.25rem' }}>Location</label>
                   <input
                     type="text"
-                    value={formData.location}
-                    onChange={(e) => setFormData({...formData, location: e.target.value})}
+                    value={formData.nationality}
+                    onChange={(e) => setFormData({...formData, nationality: e.target.value})}
                     style={{
                       width: '100%',
                       padding: '0.5rem 0.75rem',
@@ -934,8 +921,8 @@ export default function ClientsManagementPage() {
                   <input
                     type="number"
                     step="0.01"
-                    value={formData.totalPositions}
-                    onChange={(e) => setFormData({...formData, totalPositions: e.target.value})}
+                    value={formData.totalInvested}
+                    onChange={(e) => setFormData({...formData, totalInvested: Number(e.target.value)})}
                     style={{
                       width: '100%',
                       padding: '0.5rem 0.75rem',
@@ -950,8 +937,8 @@ export default function ClientsManagementPage() {
                   <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: '0.25rem' }}>Active Positions</label>
                   <input
                     type="number"
-                    value={formData.activePositions}
-                    onChange={(e) => setFormData({...formData, activePositions: e.target.value})}
+                    value={formData.activePackages}
+                    onChange={(e) => setFormData({...formData, activePackages: Number(e.target.value)})}
                     style={{
                       width: '100%',
                       padding: '0.5rem 0.75rem',
@@ -962,23 +949,6 @@ export default function ClientsManagementPage() {
                     required
                   />
                 </div>
-              </div>
-
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151', marginBottom: '0.25rem' }}>Performance</label>
-                <input
-                  type="text"
-                  value={formData.performance}
-                  onChange={(e) => setFormData({...formData, performance: e.target.value})}
-                  style={{
-                    width: '100%',
-                    padding: '0.5rem 0.75rem',
-                    border: '1px solid #d1d5db',
-                    borderRadius: 8,
-                    fontSize: '0.875rem'
-                  }}
-                  placeholder="e.g., +12.5%"
-                />
               </div>
 
               <div style={{ marginBottom: '1rem' }}>
@@ -1134,7 +1104,7 @@ export default function ClientsManagementPage() {
                 </div>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151' }}>Location</label>
-                  <p style={{ fontSize: '0.875rem', color: 'var(--primary)' }}>{viewingClient.location}</p>
+                  <p style={{ fontSize: '0.875rem', color: 'var(--primary)' }}>{viewingClient.nationality}</p>
                 </div>
               </div>
 
@@ -1171,30 +1141,30 @@ export default function ClientsManagementPage() {
                 <div>
                   <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151' }}>Total Positions</label>
                   <p style={{ fontSize: '0.875rem', color: 'var(--primary)' }}>
-                    ${viewingClient.totalPositions.toLocaleString('en-US')}
+                    ${viewingClient.totalInvested.toLocaleString('en-US')}
                   </p>
                 </div>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151' }}>Active Positions</label>
-                  <p style={{ fontSize: '0.875rem', color: 'var(--primary)' }}>{viewingClient.activePositions}</p>
+                  <p style={{ fontSize: '0.875rem', color: 'var(--primary)' }}>{viewingClient.activePackages}</p>
                 </div>
               </div>
 
               <div>
                 <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151' }}>Performance</label>
-                <p style={{ fontSize: '0.875rem', color: viewingClient.performance.startsWith('+') ? '#10b981' : '#dc2626' }}>
-                  {viewingClient.performance}
+                <p style={{ fontSize: '0.875rem', color: viewingClient.totalReturns > 0 ? '#10b981' : '#dc2626' }}>
+                  {viewingClient.totalReturns > 0 ? '+' : ''} {viewingClient.totalReturns.toLocaleString('en-US')}%
                 </p>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151' }}>Join Date</label>
-                  <p style={{ fontSize: '0.875rem', color: 'var(--primary)' }}>{viewingClient.joinDate}</p>
+                  <p style={{ fontSize: '0.875rem', color: 'var(--primary)' }}>{viewingClient.registrationDate}</p>
                 </div>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, color: '#374151' }}>Last Activity</label>
-                  <p style={{ fontSize: '0.875rem', color: 'var(--primary)' }}>{viewingClient.lastActivity}</p>
+                  <p style={{ fontSize: '0.875rem', color: 'var(--primary)' }}>{viewingClient.updatedAt.slice(0, 10)}</p>
                 </div>
               </div>
 
