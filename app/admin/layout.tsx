@@ -91,6 +91,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
+  if (!isAuthenticated) {
+    if (typeof window !== "undefined") {
+      window.location.href = "/admin/login";
+    }
+    return null;
+  }
+
   // DISABILITATO controllo autenticazione e ruolo per sviluppo
   // if (!isAuthenticated) { ... }
   // if (!isSuperAdmin) { ... }
