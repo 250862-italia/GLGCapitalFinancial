@@ -3,31 +3,7 @@ import { useState, useEffect } from 'react';
 import { User, DollarSign, TrendingUp, Calendar, Mail, Phone, MapPin, Eye, Edit, MessageSquare, Shield, Plus, Trash2, Search, Filter, Download, Copy, CheckCircle, Camera } from 'lucide-react';
 import { emailNotificationService } from '../../../lib/email-service';
 import { createClient } from '@supabase/supabase-js';
-
-interface Client {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  location: string;
-  status: 'active' | 'inactive' | 'pending';
-  kycStatus: 'Verified' | 'Pending' | 'Rejected';
-  joinDate: string;
-  lastActivity: string;
-  totalPositions: number;
-  activePositions: number;
-  performance: string;
-  notes: string;
-  profilePhoto?: string;
-  bankDetails: {
-    iban: string;
-    bic: string;
-    accountHolder: string;
-    bankName: string;
-  };
-  usdtWallet?: string;
-  preferredPaymentMethod?: 'bank' | 'usdt' | 'both';
-}
+import { Client } from '../../../types/user';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
