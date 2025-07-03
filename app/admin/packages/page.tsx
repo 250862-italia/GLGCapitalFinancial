@@ -87,6 +87,11 @@ export default function PackagesManagementPage() {
   const [selectedPackage, setSelectedPackage] = useState<InvestmentPackage | null>(null);
   const [env, setEnv] = useState({ url: '', key: '' });
 
+  // DEBUG: Mostra env a schermo (solo non production)
+  const isProd = process.env.NODE_ENV === 'production';
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
   useEffect(() => {
     setEnv({
       url: process.env.NEXT_PUBLIC_SUPABASE_URL || 'undefined',
@@ -270,10 +275,22 @@ export default function PackagesManagementPage() {
 
   return (
     <div>
-      {isDebug && (
-        <div style={{ background: '#fee', color: '#900', padding: 8, marginBottom: 16, fontSize: 14 }}>
-          <div>SUPABASE_URL: {env.url}</div>
-          <div>SUPABASE_KEY: {env.key}</div>
+      {/* DEBUG OVERLAY: Mostra env solo se non production */}
+      {!isProd && (
+        <div style={{
+          background: '#fffae6',
+          color: '#b45309',
+          padding: '1rem',
+          border: '2px solid #f59e42',
+          borderRadius: '8px',
+          marginBottom: '2rem',
+          fontFamily: 'monospace',
+          zIndex: 9999
+        }}>
+          <strong>DEBUG ENV:</strong><br />
+          NEXT_PUBLIC_SUPABASE_URL: <span>{String(supabaseUrl)}</span><br />
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: <span>{String(supabaseKey)}</span><br />
+          NODE_ENV: <span>{String(process.env.NODE_ENV)}</span>
         </div>
       )}
       <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 4px 24px rgba(10,37,64,0.10)', padding: '2rem', maxWidth: 1200, margin: '0 auto' }}>
