@@ -6,6 +6,6 @@ export default function handler(
 ) {
   res.status(200).json({
     url: process.env.NEXT_PUBLIC_SUPABASE_URL,
-    key: process.env.NEXT_PUBLIC_SUPABASE_KEY,
+    key: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   });
 } 
