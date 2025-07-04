@@ -182,10 +182,11 @@ export function PackageProvider({ children }: { children: ReactNode }) {
   // On mount, fetch packages e attiva realtime
   useEffect(() => {
     fetchPackages();
-    // Realtime subscription
+    // Realtime subscription con log di debug
     const subscription = supabase
       .channel('public:packages')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'packages' }, (payload) => {
+        console.log('Realtime update:', payload);
         fetchPackages();
       })
       .subscribe();
