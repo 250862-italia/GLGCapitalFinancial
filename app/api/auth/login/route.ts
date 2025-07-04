@@ -1,1 +1,54 @@
- 
+import { NextRequest, NextResponse } from "next/server";
+import { localAuthService } from "../../../../lib/auth-local";
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { email, password } = body;
+
+    if (!email || !password) {
+      return NextResponse.json(
+        { error: "Email and password are required" },
+        { status: 400 }
+      );
+    }
+
+    const result = await localAuthService.login(email, password);
+
+    if (result.success && result.user) {
+      console.log("✅ User logged in successfully:", result.user.email);
+      const response = NextResponse.json(
+        {
+          message: "Login successful",
+          user: {
+            id: result.user.id,
+            email: result.user.email,
+            name: result.user.name,
+            role: result.user.role
+          }
+        },
+        { status: 200 }
+      );
+      response.cookies.set("auth-token", "token-here", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 7 * 24 * 60 * 60,
+        path: "/"
+      });
+      return response;
+    } else {
+      console.log("❌ Login failed:", result.error);
+      return NextResponse.json(
+        { error: result.error || "Invalid credentials" },
+        { status: 401 }
+      );
+    }
+  } catch (error) {
+    console.error("Login error:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+} 
