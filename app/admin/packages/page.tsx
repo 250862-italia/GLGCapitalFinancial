@@ -258,7 +258,7 @@ const actionBtnStyle = {
 };
 
 const modalOverlayStyle = {
-  position: 'fixed',
+  position: 'fixed' as const,
   top: 0,
   left: 0,
   width: '100vw',
