@@ -21,35 +21,80 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get client_id from user_id
-    const { data: clientData, error: clientError } = await supabase
+    // Get client_id from user_id or email
+    let clientData = null;
+    let clientError = null;
+
+    // First try to find by user_id
+    const { data: clientByUserId, error: errorByUserId } = await supabase
       .from('clients')
       .select('id')
       .eq('user_id', userId)
       .single();
 
+    if (clientByUserId) {
+      clientData = clientByUserId;
+    } else {
+      // If not found by user_id, try to find by email
+      const { data: clientByEmail, error: errorByEmail } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('email', personalInfo.email)
+        .single();
+
+      if (clientByEmail) {
+        clientData = clientByEmail;
+      } else {
+        clientError = errorByEmail || errorByUserId;
+      }
+    }
+
     if (clientError || !clientData) {
       console.error('Client lookup error:', clientError);
-      return NextResponse.json(
-        { error: 'Client not found' },
-        { status: 404 }
-      )
+      console.error('Tried to find client with userId:', userId, 'and email:', personalInfo.email);
+      
+      // Try to create a client if not found
+      console.log('Attempting to create client for email:', personalInfo.email);
+      const { data: newClient, error: createError } = await supabase
+        .from('clients')
+        .insert({
+          user_id: userId,
+          email: personalInfo.email,
+          first_name: personalInfo.firstName,
+          last_name: personalInfo.lastName,
+          phone: personalInfo.phone,
+          date_of_birth: personalInfo.dateOfBirth,
+          nationality: personalInfo.nationality,
+          status: 'active',
+          kycStatus: 'pending'
+        })
+        .select('id')
+        .single();
+
+      if (createError || !newClient) {
+        console.error('Client creation error:', createError);
+        return NextResponse.json(
+          { error: 'Failed to create client record. Please try registering again.' },
+          { status: 500 }
+        )
+      }
+
+      clientData = newClient;
+      console.log('Created new client with ID:', newClient.id);
     }
 
     // Save KYC records for each document type
     const kycRecords = [];
 
-    // Personal Information KYC Record
-    if (personalInfo.idDocument) {
-      kycRecords.push({
-        client_id: clientData.id,
-        document_type: 'ID_DOCUMENT',
-        document_number: personalInfo.idDocument,
-        document_image_url: personalInfo.idDocument, // For now, using the filename as URL
-        status: 'pending',
-        notes: `Personal Info: ${personalInfo.firstName} ${personalInfo.lastName}, DOB: ${personalInfo.dateOfBirth}, Nationality: ${personalInfo.nationality}`
-      });
-    }
+    // Personal Information KYC Record (always create this one)
+    kycRecords.push({
+      client_id: clientData.id,
+      document_type: 'PERSONAL_INFO',
+      document_number: `ID: ${personalInfo.idDocument || 'Not provided'}`,
+      document_image_url: personalInfo.idDocument || null,
+      status: 'pending',
+      notes: `Personal Info: ${personalInfo.firstName} ${personalInfo.lastName}, DOB: ${personalInfo.dateOfBirth}, Nationality: ${personalInfo.nationality}, Address: ${personalInfo.address}, ${personalInfo.city}, ${personalInfo.country}`
+    });
 
     // Proof of Address KYC Record
     if (documents.proofOfAddress) {
@@ -75,19 +120,18 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Insert KYC records
-    if (kycRecords.length > 0) {
-      const { error: kycError } = await supabase
-        .from('kyc_records')
-        .insert(kycRecords);
+    // Insert KYC records (we always have at least the personal info record)
+    console.log('Inserting KYC records:', kycRecords.length, 'records');
+    const { error: kycError } = await supabase
+      .from('kyc_records')
+      .insert(kycRecords);
 
-      if (kycError) {
-        console.error('KYC records creation error:', kycError);
-        return NextResponse.json(
-          { error: 'Error saving KYC records', details: kycError.message },
-          { status: 500 }
-        )
-      }
+    if (kycError) {
+      console.error('KYC records creation error:', kycError);
+      return NextResponse.json(
+        { error: 'Error saving KYC records', details: kycError.message },
+        { status: 500 }
+      )
     }
 
     // Update client KYC status
