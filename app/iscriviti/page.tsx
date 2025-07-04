@@ -52,7 +52,7 @@ export default function IscrivitiPage() {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch("/api/auth/register", {
+      const response = await fetch("/api/test-register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
