@@ -304,12 +304,17 @@ export default function ClientDashboard() {
                   padding: '1.5rem',
                   background: 'white',
                   transition: 'all 0.2s ease',
-                  cursor: 'pointer',
-                  ':hover': {
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                    transform: 'translateY(-2px)'
-                  }
-                }}>
+                  cursor: 'pointer'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = 'none';
+                  e.currentTarget.style.transform = 'none';
+                }}
+                >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
                     <div>
                       <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#1f2937', margin: '0 0 0.5rem 0' }}>
