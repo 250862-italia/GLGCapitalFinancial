@@ -35,7 +35,7 @@ export default function KYCPage() {
         background: '#f9fafb'
       }}>
         <div style={{ textAlign: 'center' }}>
-          <p>Caricamento...</p>
+          <p>Loading...</p>
         </div>
       </div>
     );
@@ -60,13 +60,13 @@ export default function KYCPage() {
         }}>
           <CheckCircle size={64} color="#059669" style={{ marginBottom: '1rem' }} />
           <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#1f2937', marginBottom: '1rem' }}>
-            KYC Completata!
+            KYC Completed!
           </h1>
           <p style={{ color: '#6b7280', marginBottom: '2rem' }}>
-            La tua verifica KYC è stata inviata con successo. Riceverai una notifica quando sarà completata la revisione.
+            Your KYC verification has been submitted successfully. You will receive a notification when the review is complete.
           </p>
           <p style={{ color: '#059669', fontWeight: 600 }}>
-            Reindirizzamento alla dashboard...
+            Redirecting to dashboard...
           </p>
         </div>
       </div>
@@ -101,10 +101,10 @@ export default function KYCPage() {
           </button>
           <div>
             <h1 style={{ fontSize: '32px', fontWeight: 800, color: '#1f2937', margin: 0 }}>
-              Verifica KYC
+              KYC Verification
             </h1>
             <p style={{ fontSize: '16px', color: '#6b7280', margin: 0 }}>
-              Completa la verifica per iniziare a investire
+              Complete verification to start investing
             </p>
           </div>
         </div>
@@ -127,7 +127,7 @@ export default function KYCPage() {
               Know Your Customer (KYC)
             </h2>
             <p style={{ margin: 0, opacity: 0.9 }}>
-              La verifica KYC è obbligatoria per garantire la sicurezza e la conformità normativa
+              KYC verification is mandatory to ensure security and regulatory compliance
             </p>
           </div>
           
@@ -145,25 +145,25 @@ export default function KYCPage() {
           marginTop: '2rem'
         }}>
           <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#1e40af', marginBottom: '1rem' }}>
-            Perché è necessaria la KYC?
+            Why is KYC required?
           </h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
             <div>
-              <strong style={{ color: '#1e40af' }}>Sicurezza:</strong>
+              <strong style={{ color: '#1e40af' }}>Security:</strong>
               <p style={{ color: '#374151', margin: '0.5rem 0 0 0', fontSize: '14px' }}>
-                Proteggiamo i nostri clienti da frodi e attività illegali
+                We protect our clients from fraud and illegal activities
               </p>
             </div>
             <div>
-              <strong style={{ color: '#1e40af' }}>Conformità:</strong>
+              <strong style={{ color: '#1e40af' }}>Compliance:</strong>
               <p style={{ color: '#374151', margin: '0.5rem 0 0 0', fontSize: '14px' }}>
-                Rispettiamo le normative anti-riciclaggio (AML)
+                We comply with anti-money laundering (AML) regulations
               </p>
             </div>
             <div>
-              <strong style={{ color: '#1e40af' }}>Trasparenza:</strong>
+              <strong style={{ color: '#1e40af' }}>Transparency:</strong>
               <p style={{ color: '#374151', margin: '0.5rem 0 0 0', fontSize: '14px' }}>
-                Garantiamo un ambiente di investimento sicuro e trasparente
+                We ensure a safe and transparent investment environment
               </p>
             </div>
           </div>

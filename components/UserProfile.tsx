@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { 
   User, 
   Shield, 
@@ -35,6 +36,7 @@ interface KYCStatus {
 
 export default function UserProfile({ onKycComplete }: UserProfileProps) {
   const { user } = useAuth();
+  const router = useRouter();
   const [kycStatus, setKycStatus] = useState<KYCStatus>({
     status: 'not_started',
     documents: {
@@ -110,15 +112,15 @@ export default function UserProfile({ onKycComplete }: UserProfileProps) {
   const getKycStatusText = () => {
     switch (kycStatus.status) {
       case 'approved':
-        return 'KYC Approvata';
+        return 'KYC Approved';
       case 'rejected':
-        return 'KYC Rifiutata';
+        return 'KYC Rejected';
       case 'in_review':
-        return 'KYC in Revisione';
+        return 'KYC Under Review';
       case 'pending':
-        return 'KYC Incompleta';
+        return 'KYC Incomplete';
       default:
-        return 'KYC Non Iniziata';
+        return 'KYC Not Started';
     }
   };
 
@@ -153,7 +155,7 @@ export default function UserProfile({ onKycComplete }: UserProfileProps) {
         textAlign: 'center'
       }}>
         <div style={{ animation: 'spin 1s linear infinite' }}>⏳</div>
-        <p>Caricamento profilo...</p>
+        <p>Loading profile...</p>
       </div>
     );
   }
@@ -192,7 +194,7 @@ export default function UserProfile({ onKycComplete }: UserProfileProps) {
           </div>
           <div>
             <h2 style={{ fontSize: '24px', fontWeight: 700, color: '#1f2937', margin: 0 }}>
-              {user?.name || 'Utente'}
+              {user?.name || 'User'}
             </h2>
             <p style={{ color: '#6b7280', margin: 0 }}>
               {user?.email || 'email@example.com'}
@@ -222,11 +224,11 @@ export default function UserProfile({ onKycComplete }: UserProfileProps) {
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
           <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#1f2937', margin: 0 }}>
-            Stato Verifica KYC
+            KYC Verification Status
           </h3>
           {kycStatus.status !== 'approved' && (
             <button
-              onClick={() => window.location.href = '/kyc'}
+              onClick={() => router.push('/kyc')}
               style={{
                 background: '#3b82f6',
                 color: 'white',
@@ -242,7 +244,7 @@ export default function UserProfile({ onKycComplete }: UserProfileProps) {
               }}
             >
               <Edit size={16} />
-              {kycStatus.status === 'not_started' ? 'Inizia KYC' : 'Completa KYC'}
+              {kycStatus.status === 'not_started' ? 'Start KYC' : 'Complete KYC'}
             </button>
           )}
         </div>
@@ -256,10 +258,10 @@ export default function UserProfile({ onKycComplete }: UserProfileProps) {
             marginBottom: '0.5rem'
           }}>
             <span style={{ fontSize: '14px', color: '#6b7280' }}>
-              Completamento: {getCompletionPercentage()}%
+              Completion: {getCompletionPercentage()}%
             </span>
             <span style={{ fontSize: '14px', color: '#6b7280' }}>
-              {Object.values(kycStatus.documents).filter(Boolean).length}/3 documenti
+              {Object.values(kycStatus.documents).filter(Boolean).length}/3 documents
             </span>
           </div>
           <div style={{
@@ -281,9 +283,9 @@ export default function UserProfile({ onKycComplete }: UserProfileProps) {
         {/* Document Status */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
           {[
-            { key: 'idDocument', label: 'Documento d\'Identità', icon: FileText },
-            { key: 'proofOfAddress', label: 'Prova di Residenza', icon: MapPin },
-            { key: 'bankStatement', label: 'Estratto Conto', icon: CreditCard }
+            { key: 'idDocument', label: 'Identity Document', icon: FileText },
+            { key: 'proofOfAddress', label: 'Proof of Address', icon: MapPin },
+            { key: 'bankStatement', label: 'Bank Statement', icon: CreditCard }
           ].map(({ key, label, icon: Icon }) => (
             <div key={key} style={{
               display: 'flex',
@@ -303,7 +305,7 @@ export default function UserProfile({ onKycComplete }: UserProfileProps) {
                   fontSize: '12px', 
                   color: kycStatus.documents[key as keyof typeof kycStatus.documents] ? '#059669' : '#6b7280'
                 }}>
-                  {kycStatus.documents[key as keyof typeof kycStatus.documents] ? 'Caricato' : 'Non caricato'}
+                  {kycStatus.documents[key as keyof typeof kycStatus.documents] ? 'Uploaded' : 'Not uploaded'}
                 </div>
               </div>
             </div>
@@ -321,7 +323,7 @@ export default function UserProfile({ onKycComplete }: UserProfileProps) {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#92400e' }}>
               <AlertCircle size={16} />
-              <strong>Attenzione:</strong> Per iniziare a investire, devi completare la verifica KYC.
+              <strong>Attention:</strong> To start investing, you must complete KYC verification.
             </div>
           </div>
         )}
@@ -336,7 +338,7 @@ export default function UserProfile({ onKycComplete }: UserProfileProps) {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#1e40af' }}>
               <Clock size={16} />
-              <strong>In Revisione:</strong> I tuoi documenti sono in fase di verifica. Riceverai una notifica quando il processo sarà completato.
+              <strong>Under Review:</strong> Your documents are being verified. You will receive a notification when the process is complete.
             </div>
           </div>
         )}
@@ -351,7 +353,7 @@ export default function UserProfile({ onKycComplete }: UserProfileProps) {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#991b1b' }}>
               <XCircle size={16} />
-              <strong>Rifiutata:</strong> La tua KYC è stata rifiutata. Contatta il supporto per maggiori dettagli.
+              <strong>Rejected:</strong> Your KYC has been rejected. Contact support for more details.
             </div>
           </div>
         )}
@@ -366,7 +368,7 @@ export default function UserProfile({ onKycComplete }: UserProfileProps) {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#166534' }}>
               <CheckCircle size={16} />
-              <strong>Approvata:</strong> La tua KYC è stata approvata! Ora puoi operare liberamente.
+              <strong>Approved:</strong> Your KYC has been approved! You can now operate freely.
             </div>
           </div>
         )}
@@ -375,20 +377,20 @@ export default function UserProfile({ onKycComplete }: UserProfileProps) {
       {/* User Info */}
       <div>
         <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#1f2937', marginBottom: '1rem' }}>
-          Informazioni Personali
+          Personal Information
         </h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <Mail size={16} color="#6b7280" />
-            <span style={{ color: '#374151' }}>{user?.email || 'Non specificato'}</span>
+            <span style={{ color: '#374151' }}>{user?.email || 'Not specified'}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <User size={16} color="#6b7280" />
-            <span style={{ color: '#374151' }}>{user?.name || 'Non specificato'}</span>
+            <span style={{ color: '#374151' }}>{user?.name || 'Not specified'}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <Shield size={16} color="#6b7280" />
-            <span style={{ color: '#374151' }}>Ruolo: {user?.role || 'Cliente'}</span>
+            <span style={{ color: '#374151' }}>Role: {user?.role || 'Client'}</span>
           </div>
         </div>
       </div>
