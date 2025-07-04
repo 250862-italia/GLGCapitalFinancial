@@ -173,7 +173,7 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
     return mockUrl;
   };
 
-  // Modifica handleFileUpload per upload reale
+  // Modify handleFileUpload for real upload
   const handleFileUpload = async (field: string, file: File | null) => {
     if (!file) {
       setKycData(prev => ({
@@ -182,7 +182,7 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
       }));
       return;
     }
-    // Upload reale
+    // Real upload
     const url = await uploadDocument(field, file);
     setKycData(prev => ({
       ...prev,

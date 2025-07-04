@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
 
     if (existingUser) {
       return NextResponse.json(
-        { error: 'Email già registrata' },
+        { error: 'Email already registered' },
         { status: 400 }
       )
     }
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Registrazione completata con successo',
+      message: 'Registration completed successfully',
       user_id: userData.id,
       client_id: clientData.id,
       user: {

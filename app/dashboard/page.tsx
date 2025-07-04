@@ -50,7 +50,7 @@ export default function ClientDashboard() {
   const router = useRouter();
 
   useEffect(() => {
-    // Carica investimenti acquistati e dati bancari
+    // Load purchased investments and bank data
     const loadMyInvestments = () => {
       const stored = localStorage.getItem('myInvestments');
       setMyInvestments(stored ? JSON.parse(stored) : []);
@@ -61,7 +61,7 @@ export default function ClientDashboard() {
     };
     loadMyInvestments();
     loadBankDetails();
-    // Sincronizzazione real-time tra tab
+    // Real-time synchronization between tabs
     const onStorage = (e: StorageEvent) => {
       if (e.key === 'myInvestments') loadMyInvestments();
       if (e.key === 'bankDetails') loadBankDetails();
@@ -71,7 +71,7 @@ export default function ClientDashboard() {
     return () => window.removeEventListener('storage', onStorage);
   }, []);
 
-  // Funzione di normalizzazione pacchetti
+  // Package normalization function
   function normalizePackage(pkg: any): any {
     return {
       id: pkg.id || pkg.ID || String(Date.now()),
@@ -84,19 +84,19 @@ export default function ClientDashboard() {
     };
   }
 
-  // Pacchetti attivi per tutti i clienti
+  // Active packages for all clients
   const activeInvestments = availablePackages.filter(pkg => pkg.isActive);
 
-  // Pacchetti da mostrare: tutti quelli presenti in localStorage
+  // Packages to show: all those present in localStorage
   const allPackages = availablePackages;
 
-  // Funzione per acquistare un pacchetto
+  // Function to purchase a package
   const handleBuy = (pkg: any) => {
     setSelectedPackage(pkg);
     setShowBankModal(true);
   };
 
-  // Funzione di conferma acquisto
+  // Purchase confirmation function
   const confirmBuy = () => {
     if (!selectedPackage) return;
     if (myInvestments.some(inv => inv.packageName === selectedPackage.name)) return;
@@ -120,7 +120,7 @@ export default function ClientDashboard() {
     setSelectedPackage(null);
   };
 
-  // Stats calcolate solo sugli investimenti acquistati
+  // Stats calculated only on purchased investments
   const stats = {
     totalInvested: myInvestments.reduce((sum, inv) => sum + inv.amount, 0),
     totalEarned: myInvestments.reduce((sum, inv) => sum + inv.totalEarned, 0),
@@ -160,8 +160,8 @@ export default function ClientDashboard() {
     }
   };
 
-  // --- GRAFICO DISTRIBUZIONE RISCHIO ---
-  // TEST: dati statici per PieChart
+  // --- RISK DISTRIBUTION CHART ---
+  // TEST: static data for PieChart
   const riskData = [
     { name: 'Low', value: 1 },
     { name: 'Medium', value: 2 },
@@ -169,7 +169,7 @@ export default function ClientDashboard() {
   ];
   const riskColors = ['#10b981', '#f59e0b', '#ef4444'];
 
-  // Controlla stato KYC e mostra toast se necessario
+  // Check KYC status and show toast if necessary
   useEffect(() => {
     if (!user) return;
     const checkKycStatus = async () => {
@@ -186,8 +186,8 @@ export default function ClientDashboard() {
       if ((status === 'approved' || status === 'rejected') && lastNotified !== status) {
         setKycToastMsg(
           status === 'approved'
-            ? 'La tua KYC è stata APPROVATA! Ora puoi operare liberamente.'
-            : 'La tua KYC è stata RIFIUTATA. Contatta il supporto per dettagli.'
+            ? 'Your KYC has been APPROVED! You can now operate freely.'
+            : 'Your KYC has been REJECTED. Contact support for details.'
         );
         setShowKycToast(true);
         localStorage.setItem('kyc-last-notified', status);

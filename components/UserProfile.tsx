@@ -57,7 +57,7 @@ export default function UserProfile({ onKycComplete }: UserProfileProps) {
     if (!user) return;
     
     try {
-      // Controlla se esistono record KYC per questo utente
+      // Check if KYC records exist for this user
       const { data, error } = await supabase
         .from('kyc_records')
         .select('*')
@@ -70,11 +70,11 @@ export default function UserProfile({ onKycComplete }: UserProfileProps) {
       }
 
       if (data && data.length > 0) {
-        // Determina lo stato generale
+        // Determine the general status
         const latestRecord = data[0];
         const status = latestRecord.status as KYCStatus['status'];
         
-        // Controlla quali documenti sono stati caricati
+        // Check which documents have been uploaded
         const documents = {
           idDocument: data.some(d => d.document_type === 'idDocument'),
           proofOfAddress: data.some(d => d.document_type === 'proofOfAddress'),

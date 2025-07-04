@@ -20,7 +20,7 @@ export default function IscrivitiPage() {
   const [error, setError] = useState("");
   const [isRegistered, setIsRegistered] = useState(false);
 
-  // Controlla se già registrato
+  // Check if already registered
   useEffect(() => {
     setIsRegistered(!!user);
   }, [user]);
@@ -57,11 +57,11 @@ export default function IscrivitiPage() {
     e.preventDefault();
     if (!validate()) {
       if (!form.name || !form.email || !form.phone || !form.password || !form.confirmPassword) {
-        setError("Compila tutti i campi obbligatori");
+        setError("Please fill in all required fields");
       } else if (form.password !== form.confirmPassword) {
-        setError("Le password non coincidono");
+        setError("Passwords do not match");
       } else if (form.password.length < 6) {
-        setError("La password deve essere di almeno 6 caratteri");
+        setError("Password must be at least 6 characters long");
       }
       return;
     }
@@ -82,7 +82,7 @@ export default function IscrivitiPage() {
       const data = await response.json();
       if (response.ok && data.success) {
         setSuccess(true);
-        // Salva i dati base in kycData
+        // Save basic data in kycData
         localStorage.setItem("kycData", JSON.stringify({
           firstName: form.name.split(" ")[0] || form.name,
           lastName: form.name.split(" ").slice(1).join(" ") || form.name,
@@ -90,26 +90,26 @@ export default function IscrivitiPage() {
           phone: form.phone
         }));
         
-        // Login automatico dopo la registrazione
+        // Auto login after registration
         if (data.user) {
-          // Usa il login diretto per bypassare l'API
+          // Use direct login to bypass API
           const loginResult = await loginDirect(data.user);
           if (loginResult.success) {
             router.push("/dashboard");
           } else {
-            // Se il login automatico fallisce, vai alla pagina di login
+            // If auto login fails, go to login page
             router.push("/login");
           }
         } else {
-          // Fallback: vai alla pagina di login
+          // Fallback: go to login page
           router.push("/login");
         }
       } else {
-        setError(data.error || data.message || "Errore durante la registrazione");
+        setError(data.error || data.message || "Error during registration");
       }
     } catch (err) {
       console.error("Registration error:", err);
-      setError("Errore di rete. Riprova.");
+      setError("Network error. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -118,7 +118,7 @@ export default function IscrivitiPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!loginForm.email || !loginForm.password) {
-      setError("Inserisci email e password");
+      setError("Please enter email and password");
       return;
     }
     setLoading(true);
@@ -129,10 +129,10 @@ export default function IscrivitiPage() {
         setSuccess(true);
         router.push("/dashboard");
       } else {
-        setError(loginResult.error || "Login fallito");
+        setError(loginResult.error || "Login failed");
       }
     } catch {
-      setError("Errore di rete. Riprova.");
+      setError("Network error. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -140,11 +140,11 @@ export default function IscrivitiPage() {
 
   return (
     <main style={{ maxWidth: 600, margin: "0 auto", padding: "2rem 1rem", background: "#fff", borderRadius: 16, boxShadow: "0 4px 24px rgba(10,37,64,0.10)" }}>
-      <h1 style={{ textAlign: "center", fontSize: 32, fontWeight: 800, marginBottom: 24 }}>Registrazione Cliente</h1>
+      <h1 style={{ textAlign: "center", fontSize: 32, fontWeight: 800, marginBottom: 24 }}>Client Registration</h1>
       {error && <div style={{ background: "#fef2f2", color: "#dc2626", borderRadius: 8, padding: 12, marginBottom: 16 }}>{error}</div>}
       {success ? (
         <div style={{ textAlign: "center", color: "#16a34a", fontWeight: 700, fontSize: 20 }}>
-          {isRegistered ? "Login effettuato!" : "Registrazione completata!"}<br />Riceverai una mail di conferma.
+          {isRegistered ? "Login successful!" : "Registration completed!"}<br />You will receive a confirmation email.
         </div>
       ) : isRegistered ? (
         <form onSubmit={handleLogin}>
@@ -155,25 +155,25 @@ export default function IscrivitiPage() {
             <input name="password" type="password" value={loginForm.password} onChange={handleLoginChange} style={inputStyle} required />
           </div>
           <div style={{ display: "flex", justifyContent: "center", marginTop: 24 }}>
-            <button type="submit" style={buttonStyle} disabled={loading}>{loading ? "Attendi..." : "Accedi"}</button>
+            <button type="submit" style={buttonStyle} disabled={loading}>{loading ? "Please wait..." : "Login"}</button>
           </div>
         </form>
       ) : (
         <form onSubmit={handleSubmit}>
           <div>
-            <label>Nome e Cognome*</label>
+            <label>Full Name*</label>
             <input name="name" value={form.name} onChange={handleChange} style={inputStyle} required />
             <label>Email*</label>
             <input name="email" type="email" value={form.email} onChange={handleChange} style={inputStyle} required />
-            <label>Telefono*</label>
+            <label>Phone Number*</label>
             <input name="phone" value={form.phone} onChange={handleChange} style={inputStyle} required />
             <label>Password*</label>
             <input name="password" type="password" value={form.password} onChange={handleChange} style={inputStyle} required minLength={6} />
-            <label>Conferma Password*</label>
+            <label>Confirm Password*</label>
             <input name="confirmPassword" type="password" value={form.confirmPassword} onChange={handleChange} style={inputStyle} required minLength={6} />
           </div>
           <div style={{ display: "flex", justifyContent: "center", marginTop: 24 }}>
-            <button type="submit" style={buttonStyle} disabled={loading}>{loading ? "Attendi..." : "Registrati"}</button>
+            <button type="submit" style={buttonStyle} disabled={loading}>{loading ? "Please wait..." : "Register"}</button>
           </div>
         </form>
       )}

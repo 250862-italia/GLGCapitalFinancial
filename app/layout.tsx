@@ -21,7 +21,7 @@ export default function RootLayout({
   useEffect(() => {
     console.log('🔑 SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
     console.log('🔑 SUPABASE_KEY:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-    // Controlla se esiste un utente loggato (user o admin)
+    // Check if there is a logged in user (user or admin)
     const user = localStorage.getItem('user')
     const adminUser = localStorage.getItem('admin_user')
     setIsLoggedIn(!!user || !!adminUser)
