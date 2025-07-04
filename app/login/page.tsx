@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Eye, EyeOff, Lock, Mail, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from '../../hooks/use-auth';
 
@@ -224,13 +225,13 @@ export default function LoginPage() {
               />
               Remember me
             </label>
-            <a href="/forgot-password" style={{
+            <Link href="/forgot-password" style={{
               fontSize: 14,
               color: '#059669',
               textDecoration: 'underline'
             }}>
               Forgot password?
-            </a>
+            </Link>
           </div>
         </div>
 
@@ -258,9 +259,9 @@ export default function LoginPage() {
         <div style={{ textAlign: 'center' }}>
           <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>
             Don't have an account?{' '}
-            <a href="/iscriviti" style={{ color: '#059669', textDecoration: 'underline', fontWeight: 600 }}>
+            <Link href="/iscriviti" style={{ color: '#059669', textDecoration: 'underline', fontWeight: 600 }}>
               Sign up here
-            </a>
+            </Link>
           </p>
         </div>
       </div>
