@@ -29,7 +29,10 @@ CREATE TABLE clients (
   email VARCHAR(255) UNIQUE NOT NULL,
   first_name VARCHAR(100) NOT NULL,
   last_name VARCHAR(100) NOT NULL,
+  name VARCHAR(255),
   phone VARCHAR(20),
+  company VARCHAR(255),
+  position VARCHAR(255),
   date_of_birth DATE,
   nationality VARCHAR(100),
   photo_url TEXT,
@@ -38,6 +41,8 @@ CREATE TABLE clients (
   account_holder VARCHAR(255),
   usdt_wallet VARCHAR(255),
   status VARCHAR(50) DEFAULT 'active',
+  kycStatus VARCHAR(50) DEFAULT 'pending',
+  registrationdate DATE DEFAULT CURRENT_DATE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

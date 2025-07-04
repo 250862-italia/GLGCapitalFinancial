@@ -7,7 +7,7 @@ import { InvestmentFormData } from "@/types/investment";
 
 // Tipo per investimenti con join
 interface InvestmentWithJoin extends InvestmentFormData {
-  client?: { first_name?: string; last_name?: string; email?: string };
+  client?: { name?: string; email?: string };
   package?: { name?: string };
 }
 
@@ -195,7 +195,7 @@ export default function AdminInvestmentsPage() {
             <tbody>
               {filtered.map((inv) => (
                 <tr key={inv.id} style={{ borderBottom: "1px solid #e0e3eb" }}>
-                  <td style={{ padding: "1rem" }}>{inv.client?.first_name || ''} {inv.client?.last_name || ''}</td>
+                  <td style={{ padding: "1rem" }}>{inv.client?.name || ''}</td>
                   <td style={{ padding: "1rem" }}>{inv.client?.email || ''}</td>
                   <td style={{ padding: "1rem" }}>{inv.package?.name || ''}</td>
                   <td style={{ padding: "1rem", textAlign: "right" }}>{inv.amount?.toLocaleString() || '-'}</td>

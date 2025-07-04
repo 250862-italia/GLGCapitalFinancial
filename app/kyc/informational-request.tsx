@@ -19,7 +19,7 @@ export default function InformationalRequestForm() {
   React.useEffect(() => {
     if (typeof window !== "undefined") {
       const user = JSON.parse(localStorage.getItem("user") || "null");
-      if (user) setForm(f => ({ ...f, name: user.first_name + " " + user.last_name, email: user.email }));
+      if (user) setForm(f => ({ ...f, name: user.name || (user.first_name + " " + user.last_name), email: user.email }));
     }
   }, []);
 

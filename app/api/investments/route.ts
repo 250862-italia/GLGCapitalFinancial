@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     // Lista con join su clients e packages
     const { data, error } = await supabase
       .from('investments')
-      .select(`*, client:clientId (first_name, last_name, email), package:packageId (name)`) // join
+      .select(`*, client:clientId (name, email), package:packageId (name)`) // join
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
     return NextResponse.json(data);
   }
@@ -45,13 +45,13 @@ export async function PUT(request: NextRequest) {
     // Recupera dati cliente e pacchetto
     const { data: inv, error: errInv } = await supabase
       .from('investments')
-      .select('*, client:clientId (first_name, last_name, email), package:packageId (name)')
+      .select('*, client:clientId (name, email), package:packageId (name)')
       .eq('id', id)
       .single();
     if (!errInv && inv && inv.client && inv.package) {
       const userData = {
-        firstName: inv.client.first_name,
-        lastName: inv.client.last_name,
+        firstName: inv.client.name?.split(' ')[0] || '',
+        lastName: inv.client.name?.split(' ').slice(1).join(' ') || '',
         email: inv.client.email,
         id: inv.clientId
       };
