@@ -10,6 +10,8 @@ export default function IscrivitiPage() {
     name: "",
     email: "",
     phone: "",
+    password: "",
+    confirmPassword: ""
   });
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
@@ -38,13 +40,28 @@ export default function IscrivitiPage() {
   };
 
   const validate = () => {
-    return form.name && form.email && form.phone;
+    if (!form.name || !form.email || !form.phone || !form.password || !form.confirmPassword) {
+      return false;
+    }
+    if (form.password !== form.confirmPassword) {
+      return false;
+    }
+    if (form.password.length < 6) {
+      return false;
+    }
+    return true;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) {
-      setError("Compila tutti i campi obbligatori");
+      if (!form.name || !form.email || !form.phone || !form.password || !form.confirmPassword) {
+        setError("Compila tutti i campi obbligatori");
+      } else if (form.password !== form.confirmPassword) {
+        setError("Le password non coincidono");
+      } else if (form.password.length < 6) {
+        setError("La password deve essere di almeno 6 caratteri");
+      }
       return;
     }
     setLoading(true);
@@ -58,7 +75,7 @@ export default function IscrivitiPage() {
           lastName: form.name.split(" ").slice(1).join(" ") || form.name,
           email: form.email,
           phone: form.phone,
-          password: "TempPassword!2024"
+          password: form.password
         })
       });
       const data = await response.json();
@@ -149,6 +166,10 @@ export default function IscrivitiPage() {
             <input name="email" type="email" value={form.email} onChange={handleChange} style={inputStyle} required />
             <label>Telefono*</label>
             <input name="phone" value={form.phone} onChange={handleChange} style={inputStyle} required />
+            <label>Password*</label>
+            <input name="password" type="password" value={form.password} onChange={handleChange} style={inputStyle} required minLength={6} />
+            <label>Conferma Password*</label>
+            <input name="confirmPassword" type="password" value={form.confirmPassword} onChange={handleChange} style={inputStyle} required minLength={6} />
           </div>
           <div style={{ display: "flex", justifyContent: "center", marginTop: 24 }}>
             <button type="submit" style={buttonStyle} disabled={loading}>{loading ? "Attendi..." : "Registrati"}</button>
