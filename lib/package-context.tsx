@@ -19,6 +19,9 @@ export interface InvestmentPackage {
   terms: string;
   status: 'Active' | 'Fundraising' | 'Closed';
   createdAt: string;
+  price?: number;
+  daily_return?: number;
+  currency?: string;
 }
 
 interface PackageContextType {
@@ -33,6 +36,7 @@ interface PackageContextType {
   updatePackage: (id: string, pkg: Partial<InvestmentPackage>) => Promise<void>;
   deletePackage: (id: string) => Promise<void>;
   saveToStorage: () => void;
+  lastUpdated: Date | null;
 }
 
 const defaultContext: PackageContextType = {
@@ -40,17 +44,18 @@ const defaultContext: PackageContextType = {
   loading: false,
   error: null,
   selectedPackage: null,
-  setSelectedPackage: () => { console.warn('setSelectedPackage chiamato fuori da PackageProvider'); },
-  setPackages: () => { console.warn('setPackages chiamato fuori da PackageProvider'); },
-  fetchPackages: async () => { console.warn('fetchPackages chiamato fuori da PackageProvider'); },
-  createPackage: async () => { console.warn('createPackage chiamato fuori da PackageProvider'); },
-  updatePackage: async () => { console.warn('updatePackage chiamato fuori da PackageProvider'); },
-  deletePackage: async () => { console.warn('deletePackage chiamato fuori da PackageProvider'); },
-  saveToStorage: () => { console.warn('saveToStorage chiamato fuori da PackageProvider'); },
+  setSelectedPackage: () => { console.warn('setSelectedPackage called outside PackageProvider'); },
+  setPackages: () => { console.warn('setPackages called outside PackageProvider'); },
+  fetchPackages: async () => { console.warn('fetchPackages called outside PackageProvider'); },
+  createPackage: async () => { console.warn('createPackage called outside PackageProvider'); },
+  updatePackage: async () => { console.warn('updatePackage called outside PackageProvider'); },
+  deletePackage: async () => { console.warn('deletePackage called outside PackageProvider'); },
+  saveToStorage: () => { console.warn('saveToStorage called outside PackageProvider'); },
+  lastUpdated: null,
 };
 const PackageContext = createContext<PackageContextType>(defaultContext);
 
-// Mock data for development
+// Mock data for offline mode
 const mockPackages: InvestmentPackage[] = [
   {
     id: '1',
@@ -66,7 +71,10 @@ const mockPackages: InvestmentPackage[] = [
     features: ['Diversified portfolio', 'Monthly reports', 'Capital protection'],
     terms: 'Minimum 12-month commitment',
     status: 'Active',
-    createdAt: '2024-01-15'
+    createdAt: '2024-01-15',
+    price: 1000,
+    daily_return: 0.015,
+    currency: 'USD'
   },
   {
     id: '2',
@@ -82,7 +90,10 @@ const mockPackages: InvestmentPackage[] = [
     features: ['Mixed asset allocation', 'Quarterly rebalancing', 'Professional management'],
     terms: 'Minimum 18-month commitment',
     status: 'Active',
-    createdAt: '2024-01-20'
+    createdAt: '2024-01-20',
+    price: 5000,
+    daily_return: 0.022,
+    currency: 'USD'
   },
   {
     id: '3',
@@ -98,11 +109,37 @@ const mockPackages: InvestmentPackage[] = [
     features: ['Growth-focused assets', 'Active management', 'Higher potential returns'],
     terms: 'Minimum 24-month commitment',
     status: 'Active',
-    createdAt: '2024-02-01'
+    createdAt: '2024-02-01',
+    price: 10000,
+    daily_return: 0.034,
+    currency: 'USD'
   }
 ];
 
 const STORAGE_KEY = 'glg-investment-packages';
+
+// Function to transform database package to InvestmentPackage
+function transformPackage(dbPackage: any): InvestmentPackage {
+  return {
+    id: dbPackage.id,
+    name: dbPackage.name,
+    description: dbPackage.description || '',
+    minInvestment: dbPackage.min_investment || dbPackage.minAmount || 1000,
+    maxInvestment: dbPackage.max_investment || dbPackage.maxAmount || 50000,
+    expectedReturn: dbPackage.expectedReturn || dbPackage.daily_return || 5.0,
+    duration: dbPackage.duration || 12,
+    riskLevel: dbPackage.riskLevel || 'medium',
+    category: dbPackage.category || 'General',
+    isActive: dbPackage.is_active !== undefined ? dbPackage.is_active : true,
+    features: dbPackage.features || [],
+    terms: dbPackage.terms || '',
+    status: dbPackage.status || 'Active',
+    createdAt: dbPackage.created_at || new Date().toISOString(),
+    price: dbPackage.price,
+    daily_return: dbPackage.daily_return,
+    currency: dbPackage.currency || 'USD'
+  };
+}
 
 export function PackageProvider({ children }: { children: ReactNode }) {
   const [packages, setPackages] = useState<InvestmentPackage[]>([]);
@@ -110,6 +147,7 @@ export function PackageProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [selectedPackage, setSelectedPackage] = useState<InvestmentPackage | null>(null);
   const [showToast, setShowToast] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   // Fetch packages from Supabase
   const fetchPackages = async () => {
@@ -120,10 +158,26 @@ export function PackageProvider({ children }: { children: ReactNode }) {
         .from('packages')
         .select('*')
         .order('created_at', { ascending: false });
-      if (error) throw error;
-      setPackages(data || []);
+      
+      if (error) {
+        console.log('Supabase connection failed, using offline mode');
+        // Use mock data in offline mode
+        setPackages(mockPackages);
+        return;
+      }
+      
+      // Transform database packages to InvestmentPackage format
+      const transformedPackages = (data || []).map(transformPackage);
+      setPackages(transformedPackages);
+      setLastUpdated(new Date());
+      
+      // Save to localStorage for offline access
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(transformedPackages));
+      
     } catch (err: any) {
-      setError(err.message || 'Failed to fetch packages');
+      console.log('Error fetching packages, using offline mode:', err);
+      setPackages(mockPackages);
+      setLastUpdated(new Date());
     } finally {
       setLoading(false);
     }
@@ -135,10 +189,25 @@ export function PackageProvider({ children }: { children: ReactNode }) {
     try {
       const { data, error } = await supabase
         .from('packages')
-        .insert([{ ...pkg }])
+        .insert([{
+          name: pkg.name,
+          description: pkg.description,
+          min_investment: pkg.minInvestment,
+          max_investment: pkg.maxInvestment,
+          daily_return: pkg.expectedReturn,
+          duration: pkg.duration,
+          category: pkg.category,
+          is_active: pkg.isActive,
+          currency: pkg.currency || 'USD',
+          price: pkg.price || pkg.minInvestment
+        }])
         .select();
+      
       if (error) throw error;
-      setPackages(prev => [ ...(data || []), ...prev ]);
+      
+      const newPackage = transformPackage(data?.[0]);
+      setPackages(prev => [newPackage, ...prev]);
+      
     } catch (err: any) {
       console.error('CREATE PACKAGE ERROR:', err);
       setError(err.message || 'Failed to create package');
@@ -152,11 +221,26 @@ export function PackageProvider({ children }: { children: ReactNode }) {
     try {
       const { data, error } = await supabase
         .from('packages')
-        .update({ ...pkg })
+        .update({
+          name: pkg.name,
+          description: pkg.description,
+          min_investment: pkg.minInvestment,
+          max_investment: pkg.maxInvestment,
+          daily_return: pkg.expectedReturn,
+          duration: pkg.duration,
+          category: pkg.category,
+          is_active: pkg.isActive,
+          currency: pkg.currency,
+          price: pkg.price
+        })
         .eq('id', id)
         .select();
+      
       if (error) throw error;
-      setPackages(prev => prev.map(p => p.id === id ? { ...p, ...pkg } : p));
+      
+      const updatedPackage = transformPackage(data?.[0]);
+      setPackages(prev => prev.map(p => p.id === id ? updatedPackage : p));
+      
     } catch (err: any) {
       setError(err.message || 'Failed to update package');
       throw err;
@@ -171,29 +255,43 @@ export function PackageProvider({ children }: { children: ReactNode }) {
         .from('packages')
         .delete()
         .eq('id', id);
+      
       if (error) throw error;
+      
       setPackages(prev => prev.filter(p => p.id !== id));
+      
     } catch (err: any) {
       setError(err.message || 'Failed to delete package');
       throw err;
     }
   };
 
-  // On mount, fetch packages e attiva realtime
+  // Save packages to localStorage
+  const saveToStorage = () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(packages));
+  };
+
+  // On mount, fetch packages and activate realtime
   useEffect(() => {
     fetchPackages();
-    // Realtime subscription con log di debug
-    const subscription = supabase
-      .channel('public:packages')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'packages' }, (payload) => {
-        console.log('Realtime update:', payload);
-        window.dispatchEvent(new CustomEvent('admin-log', { detail: `Realtime update: ${JSON.stringify(payload)}` }));
-        fetchPackages();
-      })
-      .subscribe();
-    return () => {
-      supabase.removeChannel(subscription);
-    };
+    
+    // Try to set up realtime subscription
+    try {
+      const subscription = supabase
+        .channel('public:packages')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'packages' }, (payload) => {
+          console.log('Realtime package update:', payload);
+          // Refresh packages when changes occur
+          fetchPackages();
+        })
+        .subscribe();
+      
+      return () => {
+        supabase.removeChannel(subscription);
+      };
+    } catch (error) {
+      console.log('Realtime subscription failed, continuing without realtime updates');
+    }
   }, []);
 
   const value: PackageContextType = {
@@ -207,22 +305,28 @@ export function PackageProvider({ children }: { children: ReactNode }) {
     createPackage,
     updatePackage,
     deletePackage,
-    saveToStorage: () => {}, // deprecato
+    saveToStorage,
+    lastUpdated
   };
 
   return (
     <PackageContext.Provider value={value}>
       {children}
-      <Toast
-        message="Pacchetti aggiornati in background"
-        visible={showToast}
-        onClose={() => setShowToast(false)}
-        duration={3000}
-      />
+      {showToast && (
+        <Toast
+          message={error || 'Operation completed successfully'}
+          type={error ? 'error' : 'success'}
+          onClose={() => setShowToast(false)}
+        />
+      )}
     </PackageContext.Provider>
   );
 }
 
 export function usePackages() {
-  return useContext(PackageContext);
+  const context = useContext(PackageContext);
+  if (context === undefined) {
+    throw new Error('usePackages must be used within a PackageProvider');
+  }
+  return context;
 } 

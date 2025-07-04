@@ -38,7 +38,7 @@ interface PortfolioStats {
 
 export default function ClientDashboard() {
   const { user } = useAuth();
-  const { packages: availablePackages, loading: packagesLoading, error: packagesError } = usePackages();
+  const { packages: availablePackages, loading: packagesLoading, error: packagesError, lastUpdated } = usePackages();
   const [myInvestments, setMyInvestments] = useState<Investment[]>([]);
   const [selectedTimeframe, setSelectedTimeframe] = useState<'1d' | '7d' | '30d' | '90d'>('30d');
   const [isLoading, setIsLoading] = useState(true);
@@ -76,11 +76,16 @@ export default function ClientDashboard() {
     return {
       id: pkg.id || pkg.ID || String(Date.now()),
       name: pkg.name || pkg.packageName || '',
-      minAmount: pkg.minAmount || pkg.amount || 1000,
-      dailyReturn: pkg.dailyReturn || pkg.expectedReturn || 1.0,
+      minAmount: pkg.minInvestment || pkg.minAmount || pkg.amount || 1000,
+      dailyReturn: pkg.expectedReturn || pkg.dailyReturn || 1.0,
       duration: pkg.duration || 30,
       isActive: pkg.isActive !== undefined ? pkg.isActive : (pkg.status === 'Active'),
-      // altri campi se servono
+      category: pkg.category || 'General',
+      riskLevel: pkg.riskLevel || 'medium',
+      description: pkg.description || '',
+      maxInvestment: pkg.maxInvestment || pkg.maxAmount || 50000,
+      price: pkg.price || pkg.minInvestment || 1000,
+      currency: pkg.currency || 'USD'
     };
   }
 
@@ -103,8 +108,8 @@ export default function ClientDashboard() {
     const newInvestment: Investment = {
       id: selectedPackage.id || String(Date.now()),
       packageName: selectedPackage.name,
-      amount: selectedPackage.minAmount || 1000,
-      dailyReturn: selectedPackage.dailyReturn || 1.0,
+      amount: selectedPackage.minInvestment || selectedPackage.minAmount || 1000,
+      dailyReturn: selectedPackage.expectedReturn || selectedPackage.dailyReturn || 1.0,
       duration: selectedPackage.duration || 30,
       startDate: new Date().toISOString().split('T')[0],
       endDate: new Date(Date.now() + (selectedPackage.duration || 30) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -241,24 +246,176 @@ export default function ClientDashboard() {
           )}
         </div>
 
-        {/* Pacchetti & Analisi Rischio - SPOSTATO IN ALTO */}
+        {/* Pacchetti Disponibili per l'Acquisto */}
+        <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 4px 24px rgba(10,37,64,0.10)', padding: '2rem', margin: '2.5rem 0' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <div>
+              <h2 style={{ color: 'var(--primary)', fontSize: 28, fontWeight: 900, margin: '0 0 0.5rem 0' }}>Investment Packages Available</h2>
+              <p style={{ color: '#64748b', fontSize: 16, margin: 0 }}>Choose from our selection of investment packages. All packages are managed by our expert team.</p>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              {lastUpdated && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: '#6b7280' }}>
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981', animation: 'pulse 2s infinite' }}></div>
+                  <span>Last updated: {lastUpdated.toLocaleTimeString()}</span>
+                </div>
+              )}
+              <button
+                onClick={() => window.location.reload()}
+                style={{
+                  background: '#f3f4f6',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '6px',
+                  padding: '0.5rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.25rem',
+                  fontSize: '0.875rem',
+                  color: '#6b7280'
+                }}
+                title="Refresh packages"
+              >
+                <RefreshCw size={16} />
+                Refresh
+              </button>
+            </div>
+          </div>
+          
+          {packagesLoading ? (
+            <div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
+              <RefreshCw size={32} style={{ animation: 'spin 1s linear infinite', marginBottom: '1rem' }} />
+              <p>Loading available packages...</p>
+            </div>
+          ) : packagesError ? (
+            <div style={{ background: '#fef2f2', color: '#dc2626', padding: '1rem', borderRadius: 8, textAlign: 'center' }}>
+              Error loading packages: {packagesError}
+            </div>
+          ) : (
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', 
+              gap: '1.5rem' 
+            }}>
+              {availablePackages.filter(pkg => pkg.isActive).map(pkg => (
+                <div key={pkg.id} style={{
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '12px',
+                  padding: '1.5rem',
+                  background: 'white',
+                  transition: 'all 0.2s ease',
+                  cursor: 'pointer',
+                  ':hover': {
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                    transform: 'translateY(-2px)'
+                  }
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                    <div>
+                      <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#1f2937', margin: '0 0 0.5rem 0' }}>
+                        {pkg.name}
+                      </h3>
+                      <p style={{ color: '#6b7280', fontSize: '0.875rem', margin: 0 }}>
+                        {pkg.description}
+                      </p>
+                    </div>
+                    <span style={{
+                      background: pkg.riskLevel === 'low' ? '#bbf7d0' : pkg.riskLevel === 'medium' ? '#fef3c7' : '#fee2e2',
+                      color: pkg.riskLevel === 'low' ? '#166534' : pkg.riskLevel === 'medium' ? '#92400e' : '#991b1b',
+                      padding: '0.25rem 0.75rem',
+                      borderRadius: '6px',
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      textTransform: 'capitalize'
+                    }}>
+                      {pkg.riskLevel}
+                    </span>
+                  </div>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                    <div>
+                      <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>Min Investment</div>
+                      <div style={{ fontSize: '1.125rem', fontWeight: 700, color: '#1f2937' }}>
+                        {formatCurrency(pkg.minInvestment)}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>Expected Return</div>
+                      <div style={{ fontSize: '1.125rem', fontWeight: 700, color: '#059669' }}>
+                        {pkg.expectedReturn}%
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>Duration</div>
+                      <div style={{ fontSize: '1.125rem', fontWeight: 700, color: '#1f2937' }}>
+                        {pkg.duration} months
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>Category</div>
+                      <div style={{ fontSize: '1.125rem', fontWeight: 700, color: '#1f2937' }}>
+                        {pkg.category}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <button
+                    onClick={() => handleBuy(pkg)}
+                    disabled={myInvestments.some(inv => inv.packageName === pkg.name)}
+                    style={{
+                      width: '100%',
+                      background: myInvestments.some(inv => inv.packageName === pkg.name) ? '#d1d5db' : '#059669',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      padding: '0.75rem',
+                      fontSize: '1rem',
+                      fontWeight: 600,
+                      cursor: myInvestments.some(inv => inv.packageName === pkg.name) ? 'not-allowed' : 'pointer',
+                      transition: 'background 0.2s ease'
+                    }}
+                  >
+                    {myInvestments.some(inv => inv.packageName === pkg.name) ? 'Already Invested' : 'Invest Now'}
+                  </button>
+                </div>
+              ))}
+              
+              {availablePackages.filter(pkg => pkg.isActive).length === 0 && (
+                <div style={{ 
+                  gridColumn: '1 / -1', 
+                  textAlign: 'center', 
+                  padding: '3rem', 
+                  color: '#6b7280' 
+                }}>
+                  <DollarSign size={48} style={{ marginBottom: '1rem', opacity: 0.5 }} />
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.5rem' }}>
+                    No Investment Packages Available
+                  </h3>
+                  <p>Check back later for new investment opportunities.</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Analisi Rischio */}
         <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 4px 24px rgba(10,37,64,0.10)', padding: '2rem', margin: '2.5rem 0' }}>
           <div style={{ display: 'flex', gap: 32, flexWrap: 'wrap' }}>
             <div style={{ flex: 2, minWidth: 320 }}>
-              <h2 style={{ color: 'var(--primary)', fontSize: 28, fontWeight: 900, margin: 0 }}>Pacchetti di Investimento</h2>
-              <p style={{ color: '#64748b', fontSize: 16, margin: '8px 0 1.5rem 0' }}>Tutti i pacchetti disponibili e le loro caratteristiche principali.</p>
+              <h2 style={{ color: 'var(--primary)', fontSize: 28, fontWeight: 900, margin: 0 }}>Investment Packages Overview</h2>
+              <p style={{ color: '#64748b', fontSize: 16, margin: '8px 0 1.5rem 0' }}>All available packages and their main characteristics.</p>
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr style={{ borderBottom: '2px solid #e0e3eb' }}>
-                      <th style={{ textAlign: 'left', padding: '1rem' }}>Nome</th>
-                      <th style={{ textAlign: 'left', padding: '1rem' }}>Categoria</th>
-                      <th style={{ textAlign: 'center', padding: '1rem' }}>Rischio</th>
+                      <th style={{ textAlign: 'left', padding: '1rem' }}>Name</th>
+                      <th style={{ textAlign: 'left', padding: '1rem' }}>Category</th>
+                      <th style={{ textAlign: 'center', padding: '1rem' }}>Risk</th>
                       <th style={{ textAlign: 'right', padding: '1rem' }}>Min</th>
                       <th style={{ textAlign: 'right', padding: '1rem' }}>Max</th>
-                      <th style={{ textAlign: 'right', padding: '1rem' }}>Rendimento (%)</th>
-                      <th style={{ textAlign: 'center', padding: '1rem' }}>Durata (mesi)</th>
-                      <th style={{ textAlign: 'center', padding: '1rem' }}>Stato</th>
+                      <th style={{ textAlign: 'right', padding: '1rem' }}>Return (%)</th>
+                      <th style={{ textAlign: 'center', padding: '1rem' }}>Duration (months)</th>
+                      <th style={{ textAlign: 'center', padding: '1rem' }}>Status</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -269,12 +426,14 @@ export default function ClientDashboard() {
                         <td style={{ padding: '1rem', textAlign: 'center' }}>
                           <span style={{ background: pkg.riskLevel === 'low' ? '#bbf7d0' : pkg.riskLevel === 'medium' ? '#fef3c7' : '#fee2e2', color: pkg.riskLevel === 'low' ? '#166534' : pkg.riskLevel === 'medium' ? '#92400e' : '#991b1b', padding: '0.3rem 0.7rem', borderRadius: 8, fontWeight: 600, fontSize: 14, textTransform: 'capitalize' }}>{pkg.riskLevel}</span>
                         </td>
-                        <td style={{ padding: '1rem', textAlign: 'right' }}>€{pkg.minInvestment != null ? pkg.minInvestment.toLocaleString() : '-'}</td>
-                        <td style={{ padding: '1rem', textAlign: 'right' }}>€{pkg.maxInvestment != null ? pkg.maxInvestment.toLocaleString() : '-'}</td>
-                        <td style={{ padding: '1rem', textAlign: 'right' }}>{pkg.expectedReturn ?? '-'}%</td>
+                        <td style={{ padding: '1rem', textAlign: 'right' }}>{formatCurrency(pkg.minInvestment)}</td>
+                        <td style={{ padding: '1rem', textAlign: 'right' }}>{formatCurrency(pkg.maxInvestment)}</td>
+                        <td style={{ padding: '1rem', textAlign: 'right' }}>{pkg.expectedReturn}%</td>
                         <td style={{ padding: '1rem', textAlign: 'center' }}>{pkg.duration}</td>
                         <td style={{ padding: '1rem', textAlign: 'center' }}>
-                          <span style={{ background: pkg.status === 'Active' ? '#bbf7d0' : pkg.status === 'Fundraising' ? '#fef3c7' : '#e0e7ff', color: pkg.status === 'Active' ? '#166534' : pkg.status === 'Fundraising' ? '#92400e' : '#3730a3', padding: '0.3rem 0.7rem', borderRadius: 8, fontWeight: 600, fontSize: 14 }}>{pkg.status}</span>
+                          <span style={{ background: pkg.isActive ? '#bbf7d0' : '#fee2e2', color: pkg.isActive ? '#166534' : '#991b1b', padding: '0.3rem 0.7rem', borderRadius: 8, fontWeight: 600, fontSize: 14 }}>
+                            {pkg.isActive ? 'Active' : 'Inactive'}
+                          </span>
                         </td>
                       </tr>
                     ))}
@@ -283,7 +442,7 @@ export default function ClientDashboard() {
               </div>
             </div>
             <div style={{ flex: 1, minWidth: 260, background: 'var(--secondary)', borderRadius: 12, padding: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', marginTop: 24 }}>
-              <h3 style={{ color: '#0a2540', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>Distribuzione Rischio</h3>
+              <h3 style={{ color: '#0a2540', fontWeight: 700, fontSize: 18, marginBottom: 8 }}>Risk Distribution</h3>
               {riskData && riskData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={180}>
                   <PieChart>
@@ -295,7 +454,7 @@ export default function ClientDashboard() {
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <div style={{ color: '#64748b', fontSize: 16, marginTop: 32, textAlign: 'center' }}>Nessun dato rischio disponibile</div>
+                <div style={{ color: '#64748b', fontSize: 16, marginTop: 32, textAlign: 'center' }}>No risk data available</div>
               )}
             </div>
           </div>
