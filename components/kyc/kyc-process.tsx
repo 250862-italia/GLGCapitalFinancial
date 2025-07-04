@@ -203,13 +203,32 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      // Simulate saving KYC records (temporary solution)
       console.log('📋 Saving KYC data:', kycData);
       
-      // Simulate database delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Submit KYC data to API
+      const response = await fetch('/api/kyc/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId,
+          personalInfo: kycData.personalInfo,
+          financialProfile: kycData.financialProfile,
+          documents: kycData.documents,
+          verification: kycData.verification
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to submit KYC data');
+      }
+
+      console.log('✅ KYC submission completed successfully:', result);
       
-      // For now, just mark as completed without database save
+      // Update local state
       setKycData(prev => ({
         ...prev,
         verification: {
@@ -220,7 +239,6 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
         }
       }));
       
-      console.log('✅ KYC submission completed successfully');
       onComplete('in_review');
     } catch (error) {
       console.error('KYC submission error:', error);

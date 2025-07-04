@@ -14,6 +14,14 @@ interface KYCRecord {
   verified_at?: string;
   created_at: string;
   updated_at: string;
+  clients?: {
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone: string;
+    date_of_birth: string;
+    nationality: string;
+  };
 }
 
 export default function AdminKYCPage() {
@@ -28,7 +36,17 @@ export default function AdminKYCPage() {
       try {
         const { data, error } = await supabase
           .from('kyc_records')
-          .select('*')
+          .select(`
+            *,
+            clients (
+              first_name,
+              last_name,
+              email,
+              phone,
+              date_of_birth,
+              nationality
+            )
+          `)
           .order('created_at', { ascending: false });
         if (error) throw error;
         setRecords(data || []);
@@ -71,10 +89,11 @@ export default function AdminKYCPage() {
         <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff', borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
           <thead>
             <tr style={{ background: '#f3f4f6' }}>
-              <th style={{ padding: 12, borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Client ID</th>
+              <th style={{ padding: 12, borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Client</th>
               <th style={{ padding: 12, borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Document Type</th>
               <th style={{ padding: 12, borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Document Number</th>
               <th style={{ padding: 12, borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Status</th>
+              <th style={{ padding: 12, borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Notes</th>
               <th style={{ padding: 12, borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Document</th>
               <th style={{ padding: 12, borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Actions</th>
             </tr>
@@ -82,24 +101,57 @@ export default function AdminKYCPage() {
           <tbody>
             {records.map(app => (
               <tr key={app.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                <td style={{ padding: 12 }}>{app.client_id}</td>
+                <td style={{ padding: 12 }}>
+                  <div>
+                    <strong>{app.clients?.first_name} {app.clients?.last_name}</strong>
+                    <br />
+                    <small style={{ color: '#6b7280' }}>{app.clients?.email}</small>
+                    <br />
+                    <small style={{ color: '#6b7280' }}>{app.clients?.phone}</small>
+                  </div>
+                </td>
                 <td style={{ padding: 12 }}>{app.document_type}</td>
                 <td style={{ padding: 12 }}>{app.document_number}</td>
-                <td style={{ padding: 12 }}>{app.status}</td>
+                <td style={{ padding: 12 }}>
+                  <span style={{
+                    background: app.status === 'approved' ? '#bbf7d0' : 
+                               app.status === 'rejected' ? '#fee2e2' : '#fef3c7',
+                    color: app.status === 'approved' ? '#16a34a' : 
+                          app.status === 'rejected' ? '#dc2626' : '#b45309',
+                    padding: '4px 8px',
+                    borderRadius: 4,
+                    fontSize: 12,
+                    fontWeight: 600
+                  }}>
+                    {app.status}
+                  </span>
+                </td>
+                <td style={{ padding: 12, maxWidth: 200 }}>
+                  <div style={{ fontSize: 12, color: '#6b7280' }}>
+                    {app.notes ? (
+                      <div style={{ wordBreak: 'break-word' }}>
+                        {app.notes.length > 100 ? 
+                          `${app.notes.substring(0, 100)}...` : 
+                          app.notes
+                        }
+                      </div>
+                    ) : '-'}
+                  </div>
+                </td>
                 <td style={{ padding: 12 }}>
                   {app.document_image_url ? (
-                    <a href={app.document_image_url} target="_blank" rel="noopener noreferrer">View</a>
+                    <a href={app.document_image_url} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline' }}>View</a>
                   ) : '-' }
                 </td>
                 <td style={{ padding: 12 }}>
                   {app.status === 'pending' && (
                     <>
-                      <button onClick={() => updateStatus(app.id, 'approved')} style={{ background: '#10b981', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1rem', marginRight: 8, cursor: 'pointer', fontWeight: 600 }}>Approva</button>
-                      <button onClick={() => updateStatus(app.id, 'rejected')} style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1rem', cursor: 'pointer', fontWeight: 600 }}>Rifiuta</button>
+                      <button onClick={() => updateStatus(app.id, 'approved')} style={{ background: '#10b981', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1rem', marginRight: 8, cursor: 'pointer', fontWeight: 600 }}>Approve</button>
+                      <button onClick={() => updateStatus(app.id, 'rejected')} style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: 6, padding: '0.5rem 1rem', cursor: 'pointer', fontWeight: 600 }}>Reject</button>
                     </>
                   )}
-                  {app.status === 'approved' && <span style={{ color: '#10b981', fontWeight: 700 }}>Approvata</span>}
-                  {app.status === 'rejected' && <span style={{ color: '#ef4444', fontWeight: 700 }}>Rifiutata</span>}
+                  {app.status === 'approved' && <span style={{ color: '#10b981', fontWeight: 700 }}>Approved</span>}
+                  {app.status === 'rejected' && <span style={{ color: '#ef4444', fontWeight: 700 }}>Rejected</span>}
                 </td>
               </tr>
             ))}

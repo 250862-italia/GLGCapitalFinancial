@@ -8,6 +8,9 @@ interface Client {
   last_name: string;
   email: string;
   phone: string;
+  date_of_birth?: string;
+  nationality?: string;
+  kycStatus?: string;
   status: 'active' | 'inactive' | 'pending';
   created_at: string;
 }
@@ -38,7 +41,18 @@ export default function AdminClientsPage() {
   async function fetchClients() {
     setLoading(true);
     setError(null);
-    const { data, error } = await supabase.from('clients').select('*').order('created_at', { ascending: false });
+    const { data, error } = await supabase
+      .from('clients')
+      .select(`
+        *,
+        kyc_records (
+          id,
+          document_type,
+          status,
+          created_at
+        )
+      `)
+      .order('created_at', { ascending: false });
     if (error) setError(error.message);
     else setClients(data || []);
     setLoading(false);
@@ -117,10 +131,10 @@ export default function AdminClientsPage() {
     <div style={{ maxWidth: 1200, margin: '0 auto', padding: '2rem 1rem' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>
         <div>
-          <h1 style={{ fontSize: 32, fontWeight: 800, color: '#1e293b', margin: 0 }}>Gestione Clienti</h1>
-          <p style={{ color: '#64748b', marginTop: 8 }}>Visualizza, aggiungi, modifica o elimina i clienti.</p>
+          <h1 style={{ fontSize: 32, fontWeight: 800, color: '#1e293b', margin: 0 }}>Client Management</h1>
+          <p style={{ color: '#64748b', marginTop: 8 }}>View, add, edit or delete clients.</p>
         </div>
-        <button onClick={openAdd} style={{ background: '#2563eb', color: '#fff', padding: '12px 24px', border: 0, borderRadius: 8, fontWeight: 700, fontSize: 16, boxShadow: '0 2px 8px rgba(37,99,235,0.08)' }}>+ Aggiungi Cliente</button>
+        <button onClick={openAdd} style={{ background: '#2563eb', color: '#fff', padding: '12px 24px', border: 0, borderRadius: 8, fontWeight: 700, fontSize: 16, boxShadow: '0 2px 8px rgba(37,99,235,0.08)' }}>+ Add Client</button>
       </div>
       {error && <div style={{ background: '#fee2e2', color: '#b91c1c', padding: 16, borderRadius: 8, marginBottom: 24, fontWeight: 600 }}>{error}</div>}
       {loading ? (
@@ -130,25 +144,68 @@ export default function AdminClientsPage() {
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 900 }}>
             <thead>
               <tr style={{ background: '#f1f5f9', color: '#1e293b', position: 'sticky' as const, top: 0, zIndex: 1 }}>
-                <th style={thStyle}>Nome</th>
+                <th style={thStyle}>Name</th>
                 <th style={thStyle}>Email</th>
-                <th style={thStyle}>Telefono</th>
-                <th style={thStyle}>Stato</th>
-                <th style={thStyle}>Creato il</th>
-                <th style={thStyle}>Azioni</th>
+                <th style={thStyle}>Phone</th>
+                <th style={thStyle}>KYC Status</th>
+                <th style={thStyle}>Status</th>
+                <th style={thStyle}>Created</th>
+                <th style={thStyle}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {clients.map(client => (
                 <tr key={client.id} style={{ background: '#fff', borderBottom: '1px solid #e5e7eb', transition: 'background 0.2s' }}>
-                  <td style={tdStyle}>{client.first_name} {client.last_name}</td>
+                  <td style={tdStyle}>
+                    <div>
+                      <strong>{client.first_name} {client.last_name}</strong>
+                      {client.date_of_birth && (
+                        <div style={{ fontSize: 12, color: '#6b7280' }}>
+                          DOB: {new Date(client.date_of_birth).toLocaleDateString()}
+                        </div>
+                      )}
+                      {client.nationality && (
+                        <div style={{ fontSize: 12, color: '#6b7280' }}>
+                          {client.nationality}
+                        </div>
+                      )}
+                    </div>
+                  </td>
                   <td style={tdStyle}>{client.email}</td>
                   <td style={tdStyle}>{client.phone}</td>
-                  <td style={tdStyle}><span style={{ background: client.status === 'active' ? '#bbf7d0' : client.status === 'pending' ? '#fef3c7' : '#fee2e2', color: client.status === 'active' ? '#16a34a' : client.status === 'pending' ? '#b45309' : '#b91c1c', borderRadius: 6, padding: '2px 10px', fontWeight: 700 }}>{client.status}</span></td>
-                  <td style={tdStyle}>{new Date(client.created_at).toLocaleDateString('it-IT')}</td>
                   <td style={tdStyle}>
-                    <button onClick={() => openEdit(client)} style={actionBtnStyle}>Modifica</button>
-                    <button onClick={() => handleDelete(client.id)} style={{ ...actionBtnStyle, background: '#dc2626', color: '#fff', marginLeft: 8 }}>Elimina</button>
+                    <span style={{
+                      background: client.kycStatus === 'approved' ? '#bbf7d0' : 
+                                 client.kycStatus === 'rejected' ? '#fee2e2' : 
+                                 client.kycStatus === 'pending' ? '#fef3c7' : '#f3f4f6',
+                      color: client.kycStatus === 'approved' ? '#16a34a' : 
+                            client.kycStatus === 'rejected' ? '#dc2626' : 
+                            client.kycStatus === 'pending' ? '#b45309' : '#6b7280',
+                      borderRadius: 6,
+                      padding: '2px 10px',
+                      fontWeight: 700,
+                      fontSize: 12
+                    }}>
+                      {client.kycStatus || 'Not Started'}
+                    </span>
+                  </td>
+                  <td style={tdStyle}>
+                    <span style={{
+                      background: client.status === 'active' ? '#bbf7d0' : 
+                                 client.status === 'pending' ? '#fef3c7' : '#fee2e2',
+                      color: client.status === 'active' ? '#16a34a' : 
+                            client.status === 'pending' ? '#b45309' : '#b91c1c',
+                      borderRadius: 6,
+                      padding: '2px 10px',
+                      fontWeight: 700
+                    }}>
+                      {client.status}
+                    </span>
+                  </td>
+                  <td style={tdStyle}>{new Date(client.created_at).toLocaleDateString()}</td>
+                  <td style={tdStyle}>
+                    <button onClick={() => openEdit(client)} style={actionBtnStyle}>Edit</button>
+                    <button onClick={() => handleDelete(client.id)} style={{ ...actionBtnStyle, background: '#dc2626', color: '#fff', marginLeft: 8 }}>Delete</button>
                   </td>
                 </tr>
               ))}
