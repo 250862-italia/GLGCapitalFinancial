@@ -67,6 +67,11 @@ export default function AdminPackagesPage() {
 
   async function handleSave(e: any) {
     e.preventDefault();
+    if (!supabaseUrl || !supabaseAnonKey) {
+      setError("Variabili d'ambiente Supabase mancanti.");
+      setSaving(false);
+      return;
+    }
     setSaving(true);
     setError(null);
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -108,6 +113,11 @@ export default function AdminPackagesPage() {
 
   async function handleDelete(id: string) {
     if (!window.confirm('Sei sicuro di voler eliminare questo pacchetto?')) return;
+    if (!supabaseUrl || !supabaseAnonKey) {
+      setError("Variabili d'ambiente Supabase mancanti.");
+      setSaving(false);
+      return;
+    }
     setSaving(true);
     setError(null);
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
