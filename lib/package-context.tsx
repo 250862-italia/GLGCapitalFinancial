@@ -187,6 +187,7 @@ export function PackageProvider({ children }: { children: ReactNode }) {
       .channel('public:packages')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'packages' }, (payload) => {
         console.log('Realtime update:', payload);
+        window.dispatchEvent(new CustomEvent('admin-log', { detail: `Realtime update: ${JSON.stringify(payload)}` }));
         fetchPackages();
       })
       .subscribe();
