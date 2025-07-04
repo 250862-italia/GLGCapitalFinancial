@@ -42,7 +42,7 @@ export default function AdminPackagesPage() {
     }
     setLoading(true);
     setError(null);
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    const supabase = createClient(supabaseUrl as string, supabaseAnonKey as string);
     const { data, error } = await supabase.from('packages').select('*').order('created_at', { ascending: false });
     if (error) setError(error.message);
     else setPackages(data || []);
@@ -74,7 +74,7 @@ export default function AdminPackagesPage() {
     }
     setSaving(true);
     setError(null);
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    const supabase = createClient(supabaseUrl as string, supabaseAnonKey as string);
     let res;
     if (isEdit && form.id) {
       res = await supabase.from('packages').update({
@@ -120,7 +120,7 @@ export default function AdminPackagesPage() {
     }
     setSaving(true);
     setError(null);
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    const supabase = createClient(supabaseUrl as string, supabaseAnonKey as string);
     const { error } = await supabase.from('packages').delete().eq('id', id);
     if (error) setError(error.message);
     setSaving(false);
