@@ -1,23 +1,27 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js"
 
-let supabaseSingleton: SupabaseClient | null = null;
+const url =
+  process.env.NEXT_PUBLIC_SUPABASE_URL ||
+  (typeof document !== 'undefined'
+    ? document.querySelector<HTMLMetaElement>('meta[name="supabase-url"]')?.content
+    : '') ||
+  '';
+const key =
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  (typeof document !== 'undefined'
+    ? document.querySelector<HTMLMetaElement>('meta[name="supabase-key"]')?.content
+    : '') ||
+  '';
 
-export function getSupabase(): SupabaseClient {
-  if (supabaseSingleton) return supabaseSingleton;
+if (!url || !key)
+  throw new Error('❌ Supabase credentials mancanti anche dopo il meta-hack');
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!url || !key) {
-    throw new Error('❌ Supabase URL/KEY still missing. Controlla le variabili d\'ambiente NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY.');
-  }
-
-  supabaseSingleton = createClient(url, key);
-  return supabaseSingleton;
-}
+const g = globalThis as any;
+export const supabase: SupabaseClient =
+  g.__supabaseClient || (g.__supabaseClient = createClient(url, key));
 
 // Create a single supabase client for interacting with your database
-export const supabaseClient = getSupabase();
+export const supabaseClient = supabase;
 
 export const createServerSupabaseClient = () => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -29,11 +33,9 @@ export const createServerSupabaseClient = () => {
 }
 
 export const signInWithEmail = async (email: string, password: string) => {
-  const client = getSupabase();
+  const client = supabase;
   const { data, error } = await client.from("users").select("*").eq("email", email).single()
   if (error || !data) throw new Error("Invalid credentials")
   if (password === "password123") return { user: data }
   throw new Error("Invalid credentials")
 }
-
-export const supabase = getSupabase();

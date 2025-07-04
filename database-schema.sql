@@ -144,17 +144,6 @@ CREATE TABLE client_packages (
   UNIQUE(client_id, package_id)
 );
 
--- 9. KYC APPLICATIONS TABLE
-CREATE TABLE IF NOT EXISTS kyc_applications (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  personal_info JSONB,
-  financial_profile JSONB,
-  documents JSONB,
-  verification_status VARCHAR(20) DEFAULT 'pending',
-  submitted_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
 -- NOTIFICATIONS TABLE (log invio email/notifiche)
 CREATE TABLE notifications (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -205,7 +194,6 @@ ALTER TABLE news_articles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE team_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE partnerships ENABLE ROW LEVEL SECURITY;
 ALTER TABLE client_packages ENABLE ROW LEVEL SECURITY;
-ALTER TABLE kyc_applications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 
 -- Create RLS policies (basic - allow all for now, customize later)
@@ -218,7 +206,6 @@ CREATE POLICY "Allow all operations on news_articles" ON news_articles FOR ALL U
 CREATE POLICY "Allow all operations on team_members" ON team_members FOR ALL USING (true);
 CREATE POLICY "Allow all operations on partnerships" ON partnerships FOR ALL USING (true);
 CREATE POLICY "Allow all operations on client_packages" ON client_packages FOR ALL USING (true);
-CREATE POLICY "Allow all for admin" ON kyc_applications FOR ALL USING (true);
 CREATE POLICY "Allow insert for all" ON users FOR INSERT USING (true);
 
 -- Insert default super admin user (password: SuperAdmin123!)
@@ -634,88 +621,6 @@ UPDATE packages SET "riskLevel" = 'medium' WHERE name ILIKE '%growth%';
 UPDATE packages SET "riskLevel" = 'high' WHERE name ILIKE '%premium%';
 
 SELECT id, name, riskLevel FROM packages;
-
-CREATE POLICY "User can view own KYC" ON kyc_applications
-FOR SELECT
-USING (auth.uid() = user_id);
-
-CREATE POLICY "Admin can modify KYC" ON kyc_applications
-FOR UPDATE
-USING (
-  EXISTS (
-    SELECT 1 FROM users WHERE id = auth.uid() AND role IN ('admin', 'super_admin')
-  )
-);
-
-CREATE POLICY "Admin can delete KYC" ON kyc_applications
-FOR DELETE
-USING (
-  EXISTS (
-    SELECT 1 FROM users WHERE id = auth.uid() AND role IN ('admin', 'super_admin')
-  )
-);
-
-CREATE POLICY "User can insert own KYC" ON kyc_applications
-FOR INSERT
-WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Admin can view all KYC" ON kyc_applications
-FOR SELECT
-USING (
-  EXISTS (
-    SELECT 1 FROM users WHERE id = auth.uid() AND role IN ('admin', 'super_admin')
-  ) OR auth.uid() = user_id
-);
-
-INSERT INTO users (email, passwordHash, firstName, lastName, role, isActive, emailVerified)
-VALUES ('test@example.com', 'hashfinto', 'Test', 'User', 'user', true, false);
-
-SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'users';
-
--- RINOMINA COLONNE IN camelCase (esegui solo se non sono già così)
-ALTER TABLE packages RENAME COLUMN min_investment TO "minInvestment";
-ALTER TABLE packages RENAME COLUMN max_investment TO "maxInvestment";
-ALTER TABLE packages RENAME COLUMN expected_return TO "expectedReturn";
-ALTER TABLE packages RENAME COLUMN daily_return TO "dailyReturn";
-ALTER TABLE packages RENAME COLUMN is_active TO "isActive";
-ALTER TABLE packages RENAME COLUMN created_at TO "createdAt";
-ALTER TABLE packages RENAME COLUMN updated_at TO "updatedAt";
-
--- AGGIUNGI COLONNE MANCANTI (se necessario, ignora errori se già esistono)
-ALTER TABLE packages ADD COLUMN IF NOT EXISTS "riskLevel" VARCHAR(20);
-ALTER TABLE packages ADD COLUMN IF NOT EXISTS "category" VARCHAR(100);
-
--- ABILITA RLS E POLICY DI LETTURA
-ALTER TABLE packages ENABLE ROW LEVEL SECURITY;
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies WHERE tablename = 'packages' AND policyname = 'Allow read'
-  ) THEN
-    CREATE POLICY "Allow read" ON packages FOR SELECT USING (true);
-  END IF;
-END $$;
-
--- INSERISCI UN PACCHETTO DI TEST
-INSERT INTO packages (id, name, description, "minInvestment", "maxInvestment", "expectedReturn", "dailyReturn", "isActive", "riskLevel", "category", status, "createdAt", "updatedAt", price, duration)
-VALUES (
-  gen_random_uuid(),
-  'Test Package',
-  'Pacchetto di test per debug',
-  1000,
-  10000,
-  8.5,
-  0.00023,
-  true,
-  'low',
-  'Conservative',
-  'active',
-  NOW(),
-  NOW(),
-  1000,
-  12
-)
-ON CONFLICT DO NOTHING;
 
 -- =========================
 -- SISTEMA TABELLA CLIENTS

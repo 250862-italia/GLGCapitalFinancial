@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 
 interface Client {
   id: string;
@@ -11,7 +11,7 @@ interface Client {
   position?: string;
   status: 'active' | 'inactive' | 'pending';
   kycStatus: 'pending' | 'approved' | 'rejected';
-  registrationDate: string;
+  registrationdate: string;
 }
 
 const emptyClient = (): Partial<Client> => ({
@@ -22,12 +22,10 @@ const emptyClient = (): Partial<Client> => ({
   position: '',
   status: 'active',
   kycStatus: 'pending',
-  registrationDate: new Date().toISOString().split('T')[0],
+  registrationdate: new Date().toISOString().split('T')[0],
 });
 
 export default function AdminClientsPage() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,22 +33,17 @@ export default function AdminClientsPage() {
   const [form, setForm] = useState<Partial<Client>>(emptyClient());
   const [isEdit, setIsEdit] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   useEffect(() => {
     fetchClients();
     // eslint-disable-next-line
-  }, [supabaseUrl, supabaseAnonKey]);
+  }, []);
 
   async function fetchClients() {
-    if (!supabaseUrl || !supabaseAnonKey) {
-      setError("Variabili d'ambiente Supabase mancanti.");
-      setLoading(false);
-      return;
-    }
     setLoading(true);
     setError(null);
-    const supabase = createClient(supabaseUrl as string, supabaseAnonKey as string);
-    const { data, error } = await supabase.from('clients').select('*').order('registrationDate', { ascending: false });
+    const { data, error } = await supabase.from('clients').select('*').order('registrationdate', { ascending: false });
     if (error) setError(error.message);
     else setClients(data || []);
     setLoading(false);
@@ -74,14 +67,14 @@ export default function AdminClientsPage() {
 
   async function handleSave(e: any) {
     e.preventDefault();
-    if (!supabaseUrl || !supabaseAnonKey) {
-      setError("Variabili d'ambiente Supabase mancanti.");
+    setSaving(true);
+    setError(null);
+    setSuccessMsg(null);
+    if (!isEdit && clients.some(c => c.email === form.email)) {
+      setError("Esiste già un cliente con questa email.");
       setSaving(false);
       return;
     }
-    setSaving(true);
-    setError(null);
-    const supabase = createClient(supabaseUrl as string, supabaseAnonKey as string);
     let res;
     if (isEdit && form.id) {
       res = await supabase.from('clients').update({
@@ -92,7 +85,7 @@ export default function AdminClientsPage() {
         position: form.position,
         status: form.status,
         kycStatus: form.kycStatus,
-        registrationDate: form.registrationDate
+        registrationdate: form.registrationdate
       }).eq('id', form.id);
     } else {
       res = await supabase.from('clients').insert([
@@ -104,26 +97,27 @@ export default function AdminClientsPage() {
           position: form.position,
           status: form.status,
           kycStatus: form.kycStatus,
-          registrationDate: form.registrationDate
+          registrationdate: form.registrationdate
         }
       ]);
     }
-    if (res.error) setError(res.error.message);
-    else closeModal();
+    if (res.error) {
+      setError(res.error.message);
+      setSaving(false);
+      console.error('Errore inserimento cliente:', res.error);
+      return;
+    } else {
+      setSuccessMsg(isEdit ? 'Cliente aggiornato con successo!' : 'Cliente aggiunto con successo!');
+      closeModal();
+      fetchClients();
+    }
     setSaving(false);
-    fetchClients();
   }
 
   async function handleDelete(id: string) {
     if (!window.confirm('Sei sicuro di voler eliminare questo cliente?')) return;
-    if (!supabaseUrl || !supabaseAnonKey) {
-      setError("Variabili d'ambiente Supabase mancanti.");
-      setSaving(false);
-      return;
-    }
     setSaving(true);
     setError(null);
-    const supabase = createClient(supabaseUrl as string, supabaseAnonKey as string);
     const { error } = await supabase.from('clients').delete().eq('id', id);
     if (error) setError(error.message);
     setSaving(false);
@@ -168,7 +162,7 @@ export default function AdminClientsPage() {
                   <td style={tdStyle}>{client.position}</td>
                   <td style={tdStyle}><span style={{ background: client.status === 'active' ? '#bbf7d0' : client.status === 'pending' ? '#fef3c7' : '#fee2e2', color: client.status === 'active' ? '#16a34a' : client.status === 'pending' ? '#b45309' : '#b91c1c', borderRadius: 6, padding: '2px 10px', fontWeight: 700 }}>{client.status}</span></td>
                   <td style={tdStyle}><span style={{ background: client.kycStatus === 'approved' ? '#bbf7d0' : client.kycStatus === 'pending' ? '#fef3c7' : '#fee2e2', color: client.kycStatus === 'approved' ? '#16a34a' : client.kycStatus === 'pending' ? '#b45309' : '#b91c1c', borderRadius: 6, padding: '2px 10px', fontWeight: 700 }}>{client.kycStatus}</span></td>
-                  <td style={tdStyle}>{client.registrationDate}</td>
+                  <td style={tdStyle}>{client.registrationdate}</td>
                   <td style={tdStyle}>
                     <button onClick={() => openEdit(client)} style={actionBtnStyle}>Modifica</button>
                     <button onClick={() => handleDelete(client.id)} style={{ ...actionBtnStyle, background: '#dc2626', color: '#fff', marginLeft: 8 }}>Elimina</button>
@@ -188,6 +182,7 @@ export default function AdminClientsPage() {
         <div style={modalOverlayStyle}>
           <div style={modalStyle}>
             <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 16 }}>{isEdit ? 'Modifica Cliente' : 'Nuovo Cliente'}</h2>
+            {error && <div style={{ background: '#fee2e2', color: '#b91c1c', padding: 10, borderRadius: 6, marginBottom: 10, fontWeight: 600 }}>{error}</div>}
             <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <input required placeholder="Nome" value={form.name || ''} onChange={e => setForm({ ...form, name: e.target.value })} style={inputStyle} />
               <input required type="email" placeholder="Email" value={form.email || ''} onChange={e => setForm({ ...form, email: e.target.value })} style={inputStyle} />
@@ -204,12 +199,13 @@ export default function AdminClientsPage() {
                 <option value="approved">KYC approvato</option>
                 <option value="rejected">KYC rifiutato</option>
               </select>
-              <input required type="date" placeholder="Data registrazione" value={form.registrationDate || ''} onChange={e => setForm({ ...form, registrationDate: e.target.value })} style={inputStyle} />
+              <input required type="date" placeholder="Data registrazione" value={form.registrationdate || ''} onChange={e => setForm({ ...form, registrationdate: e.target.value })} style={inputStyle} />
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 16 }}>
                 <button type="button" onClick={closeModal} style={{ ...actionBtnStyle, background: '#e5e7eb', color: '#1e293b' }}>Annulla</button>
                 <button type="submit" disabled={saving} style={{ ...actionBtnStyle, background: '#2563eb', color: '#fff' }}>{saving ? 'Salvataggio...' : isEdit ? 'Salva Modifiche' : 'Aggiungi Cliente'}</button>
               </div>
             </form>
+            {successMsg && <div style={{ background: '#bbf7d0', color: '#166534', padding: 14, borderRadius: 8, margin: '18px 0', fontWeight: 700, textAlign: 'center' }}>{successMsg}</div>}
           </div>
         </div>
       )}

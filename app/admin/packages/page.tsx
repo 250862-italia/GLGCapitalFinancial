@@ -1,10 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 
 export default function AdminPackagesPage() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const [packages, setPackages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,17 +30,11 @@ export default function AdminPackagesPage() {
   useEffect(() => {
     fetchPackages();
     // eslint-disable-next-line
-  }, [supabaseUrl, supabaseAnonKey]);
+  }, []);
 
   async function fetchPackages() {
-    if (!supabaseUrl || !supabaseAnonKey) {
-      setError("Variabili d'ambiente Supabase mancanti.");
-      setLoading(false);
-      return;
-    }
     setLoading(true);
     setError(null);
-    const supabase = createClient(supabaseUrl as string, supabaseAnonKey as string);
     const { data, error } = await supabase.from('packages').select('*').order('created_at', { ascending: false });
     if (error) setError(error.message);
     else setPackages(data || []);
@@ -67,14 +59,8 @@ export default function AdminPackagesPage() {
 
   async function handleSave(e: any) {
     e.preventDefault();
-    if (!supabaseUrl || !supabaseAnonKey) {
-      setError("Variabili d'ambiente Supabase mancanti.");
-      setSaving(false);
-      return;
-    }
     setSaving(true);
     setError(null);
-    const supabase = createClient(supabaseUrl as string, supabaseAnonKey as string);
     let res;
     if (isEdit && form.id) {
       res = await supabase.from('packages').update({
@@ -113,14 +99,8 @@ export default function AdminPackagesPage() {
 
   async function handleDelete(id: string) {
     if (!window.confirm('Sei sicuro di voler eliminare questo pacchetto?')) return;
-    if (!supabaseUrl || !supabaseAnonKey) {
-      setError("Variabili d'ambiente Supabase mancanti.");
-      setSaving(false);
-      return;
-    }
     setSaving(true);
     setError(null);
-    const supabase = createClient(supabaseUrl as string, supabaseAnonKey as string);
     const { error } = await supabase.from('packages').delete().eq('id', id);
     if (error) setError(error.message);
     setSaving(false);

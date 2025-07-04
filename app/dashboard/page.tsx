@@ -173,14 +173,14 @@ export default function ClientDashboard() {
     if (!user) return;
     const checkKycStatus = async () => {
       const { data, error } = await supabase
-        .from('kyc_applications')
-        .select('verification_status')
-        .eq('user_id', user.id)
-        .order('submitted_at', { ascending: false })
+        .from('kyc_records')
+        .select('status')
+        .eq('client_id', user.id)
+        .order('created_at', { ascending: false })
         .limit(1)
         .single();
       if (error || !data) return;
-      const status = data.verification_status;
+      const status = data.status;
       const lastNotified = localStorage.getItem('kyc-last-notified');
       if ((status === 'approved' || status === 'rejected') && lastNotified !== status) {
         setKycToastMsg(

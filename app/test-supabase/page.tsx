@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,15 +27,6 @@ export default function TestSupabase() {
     async function testConnection() {
       try {
         setStatus('Testing connection...');
-        const { createClient } = await import('@supabase/supabase-js');
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-        const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-        if (!supabaseUrl || !supabaseAnonKey) {
-          setError('Supabase environment variables are not configured');
-          setStatus('❌ Errore Supabase');
-          return;
-        }
-        const supabase = createClient(supabaseUrl, supabaseAnonKey);
         const { data: testData, error } = await supabase
           .from('notes')
           .select('*')

@@ -23,11 +23,13 @@ import {
 import Image from 'next/image';
 import Link from 'next/link';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import AdminConsole from '@/components/admin/AdminConsole';
 
 export default function AdminDashboardPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('overview');
   const [adminUser, setAdminUser] = useState<any>(null);
+  const [logs, setLogs] = useState<string[]>([]);
 
   // For access without login, set a fake admin user
   useEffect(() => {
@@ -37,6 +39,19 @@ export default function AdminDashboardPage() {
       email: 'admin@glgcapital.com',
       role: 'superadmin'
     });
+  }, []);
+
+  // Funzione per aggiungere log
+  const addLog = (msg: string) => setLogs(logs => [...logs, `[${new Date().toLocaleTimeString()}] ${msg}`]);
+  const clearLogs = () => setLogs([]);
+
+  // Listener globale per log (window.dispatchEvent(new CustomEvent('admin-log', { detail: 'messaggio' })))
+  useEffect(() => {
+    const handler = (e: any) => {
+      if (e.detail) addLog(e.detail);
+    };
+    window.addEventListener('admin-log', handler);
+    return () => window.removeEventListener('admin-log', handler);
   }, []);
 
   const stats = [
@@ -449,6 +464,7 @@ export default function AdminDashboardPage() {
         )}
 
       </div>
+      <AdminConsole logs={logs} onClear={clearLogs} />
     </>
   );
 } 

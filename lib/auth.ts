@@ -1,10 +1,5 @@
 import bcrypt from 'bcryptjs';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  "https://dobjulfwktzltpvqtxbql.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvYmp1bGZ3a3psdHB2cXR4YnFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA5NTI2MjYsImV4cCI6MjA2NjUyODYyNn0.wW9zZe9gD2ARxUpbCu0kgBZfujUnuq6XkXZz42RW0zY"
-);
+import { supabase } from '@/lib/supabase';
 
 export interface User {
   id: string;

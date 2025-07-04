@@ -52,7 +52,7 @@ export default function IscrivitiPage() {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch("/api/auth/register", {
+      const response = await fetch("https://dobjulfwkzltpvqtxbql.supabase.co/functions/v1/register-simple", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -60,10 +60,7 @@ export default function IscrivitiPage() {
           lastName: form.name.split(" ").slice(1).join(" ") || form.name,
           email: form.email,
           phone: form.phone,
-          password: "TempPassword!2024", // oppure chiedi la password all'utente
-          acceptTerms: true,
-          acceptPrivacy: true,
-          acceptMarketing: false
+          password: "TempPassword!2024" // oppure chiedi la password all'utente
         })
       });
       const data = await response.json();

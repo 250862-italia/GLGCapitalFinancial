@@ -1,6 +1,6 @@
 "use client";
 
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 
 // Email notification service for system surveillance
 export interface NotificationData {
@@ -283,12 +283,6 @@ If you have any questions about your KYC status, please contact our support team
     this.config = config;
   }
 
-  // Configura client Supabase per logging notifiche lato server
-  private supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-
   // Send email
   async sendEmail(emailData: EmailData): Promise<boolean> {
     try {
@@ -333,7 +327,7 @@ If you have any questions about your KYC status, please contact our support team
 
       // Log in tabella notifications
       try {
-        await this.supabaseAdmin.from('notifications').insert({
+        await supabase.from('notifications').insert({
           email: emailData.to,
           type: emailData.template || emailData.subject || 'custom',
           title: emailData.subject || emailData.template,

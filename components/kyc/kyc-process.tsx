@@ -203,17 +203,27 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      // Salva la KYC application su Supabase
-      const { error } = await supabase.from('kyc_applications').insert([
-        {
-          user_id: userId,
-          personal_info: kycData.personalInfo,
-          financial_profile: kycData.financialProfile,
-          documents: kycData.documents, // ora contiene URL
-          verification_status: 'pending',
+      // Salva ogni documento come record separato in kyc_records
+      const docs = [
+        { type: 'idDocument', url: kycData.documents.idDocument },
+        { type: 'proofOfAddress', url: kycData.documents.proofOfAddress },
+        { type: 'bankStatement', url: kycData.documents.bankStatement }
+      ];
+      for (const doc of docs) {
+        if (doc.url) {
+          const { error } = await supabase.from('kyc_records').insert([
+            {
+              client_id: userId,
+              document_type: doc.type,
+              document_image_url: doc.url,
+              status: 'pending',
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            }
+          ]);
+          if (error) throw error;
         }
-      ]);
-      if (error) throw error;
+      }
       setKycData(prev => ({
         ...prev,
         verification: {
