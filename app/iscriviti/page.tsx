@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "../../hooks/use-auth";
 
 export default function IscrivitiPage() {
+  // Registration form with password fields - Updated for deployment
   const router = useRouter();
   const { user, login, loginDirect } = useAuth();
   const [form, setForm] = useState({
