@@ -681,3 +681,59 @@ SELECT * FROM pg_policies WHERE tablename = 'packages';
 
 CREATE POLICY "Allow read" ON packages FOR SELECT USING (true);
 ALTER TABLE packages ENABLE ROW LEVEL SECURITY;
+
+-- Function to register a new client
+CREATE OR REPLACE FUNCTION register_client(
+  email VARCHAR,
+  password VARCHAR,
+  first_name VARCHAR,
+  last_name VARCHAR,
+  phone VARCHAR,
+  date_of_birth DATE DEFAULT NULL,
+  nationality VARCHAR DEFAULT NULL
+)
+RETURNS JSON AS $$
+DECLARE
+  user_id UUID;
+  client_id UUID;
+  hashed_password VARCHAR;
+BEGIN
+  -- Check if email already exists
+  IF EXISTS (SELECT 1 FROM users WHERE email = register_client.email) THEN
+    RETURN json_build_object(
+      'success', false,
+      'message', 'Email già registrata',
+      'error_code', 'EMAIL_EXISTS'
+    );
+  END IF;
+
+  -- Hash the password
+  hashed_password := crypt(password, gen_salt('bf'));
+
+  -- Insert user
+  INSERT INTO users (email, password_hash, first_name, last_name, role, is_active, email_verified)
+  VALUES (email, hashed_password, first_name, last_name, 'user', true, false)
+  RETURNING id INTO user_id;
+
+  -- Insert client
+  INSERT INTO clients (user_id, email, first_name, last_name, phone, date_of_birth, nationality, status)
+  VALUES (user_id, email, first_name, last_name, phone, date_of_birth, nationality, 'active')
+  RETURNING id INTO client_id;
+
+  -- Return success
+  RETURN json_build_object(
+    'success', true,
+    'message', 'Registrazione completata con successo',
+    'user_id', user_id,
+    'client_id', client_id
+  );
+
+EXCEPTION
+  WHEN OTHERS THEN
+    RETURN json_build_object(
+      'success', false,
+      'message', 'Errore durante la registrazione: ' || SQLERRM,
+      'error_code', 'DATABASE_ERROR'
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
