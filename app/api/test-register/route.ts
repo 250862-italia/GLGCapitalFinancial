@@ -13,12 +13,23 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Simulate successful registration
+    // Simulate successful registration with test user data
+    const testUser = {
+      id: `test-${Date.now()}`,
+      email,
+      first_name: firstName,
+      last_name: lastName,
+      role: 'user',
+      is_active: true
+    };
+
     return NextResponse.json({
       success: true,
       message: 'Registrazione completata con successo (test)',
-      user_id: 'test-user-id',
-      client_id: 'test-client-id'
+      user_id: testUser.id,
+      client_id: `client-${Date.now()}`,
+      user: testUser,
+      password: password // Include password for auto-login
     })
 
   } catch (error) {

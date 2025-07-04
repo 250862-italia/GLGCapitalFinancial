@@ -73,7 +73,17 @@ export default function IscrivitiPage() {
           email: form.email,
           phone: form.phone
         }));
-        router.push("/login");
+        
+        // Login automatico dopo la registrazione (test mode)
+        if (data.user) {
+          // Per il test, salviamo direttamente i dati utente
+          localStorage.setItem("user", JSON.stringify(data.user));
+          localStorage.setItem("token", "test-token-" + Date.now());
+          router.push("/dashboard");
+        } else {
+          // Fallback: vai alla pagina di login
+          router.push("/login");
+        }
       } else {
         setError(data.error || data.message || "Errore durante la registrazione");
       }
