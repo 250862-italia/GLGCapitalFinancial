@@ -16,6 +16,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Check if email already exists
+    const { data: existingUser } = await supabase
+      .from('users')
+      .select('id')
+      .eq('email', email)
+      .single();
+
+    if (existingUser) {
+      return NextResponse.json(
+        { error: 'Email già registrata' },
+        { status: 400 }
+      )
+    }
+
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -36,10 +50,12 @@ export async function POST(request: NextRequest) {
     if (userError) {
       console.error('User creation error:', userError);
       return NextResponse.json(
-        { error: 'Error creating user account' },
+        { error: 'Error creating user account', details: userError.message },
         { status: 500 }
       )
     }
+
+    console.log('User created successfully:', userData.id);
 
     // Create client record
     const { data: clientData, error: clientError } = await supabase
@@ -49,6 +65,7 @@ export async function POST(request: NextRequest) {
         email: email,
         first_name: firstName,
         last_name: lastName,
+        name: `${firstName} ${lastName}`,
         phone: phone,
         status: 'active',
         kycStatus: 'pending'
@@ -58,13 +75,25 @@ export async function POST(request: NextRequest) {
 
     if (clientError) {
       console.error('Client creation error:', clientError);
+      console.error('Client creation details:', {
+        user_id: userData.id,
+        email: email,
+        first_name: firstName,
+        last_name: lastName,
+        name: `${firstName} ${lastName}`,
+        phone: phone,
+        status: 'active',
+        kycStatus: 'pending'
+      });
       // Try to delete the user if client creation fails
       await supabase.from('users').delete().eq('id', userData.id);
       return NextResponse.json(
-        { error: 'Error creating client profile' },
+        { error: 'Error creating client profile', details: clientError.message },
         { status: 500 }
       )
     }
+
+    console.log('Client created successfully:', clientData.id);
 
     return NextResponse.json({
       success: true,
@@ -84,7 +113,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Registration error:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }
