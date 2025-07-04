@@ -4,25 +4,20 @@ import { supabase } from '@/lib/supabase';
 
 interface Client {
   id: string;
-  name: string;
+  first_name: string;
+  last_name: string;
   email: string;
   phone: string;
-  company?: string;
-  position?: string;
   status: 'active' | 'inactive' | 'pending';
-  kycStatus: 'pending' | 'approved' | 'rejected';
-  registrationdate: string;
+  created_at: string;
 }
 
 const emptyClient = (): Partial<Client> => ({
-  name: '',
+  first_name: '',
+  last_name: '',
   email: '',
   phone: '',
-  company: '',
-  position: '',
   status: 'active',
-  kycStatus: 'pending',
-  registrationdate: new Date().toISOString().split('T')[0],
 });
 
 export default function AdminClientsPage() {
@@ -43,7 +38,7 @@ export default function AdminClientsPage() {
   async function fetchClients() {
     setLoading(true);
     setError(null);
-    const { data, error } = await supabase.from('clients').select('*').order('registrationdate', { ascending: false });
+    const { data, error } = await supabase.from('clients').select('*').order('created_at', { ascending: false });
     if (error) setError(error.message);
     else setClients(data || []);
     setLoading(false);
@@ -78,26 +73,20 @@ export default function AdminClientsPage() {
     let res;
     if (isEdit && form.id) {
       res = await supabase.from('clients').update({
-        name: form.name,
+        first_name: form.first_name,
+        last_name: form.last_name,
         email: form.email,
         phone: form.phone,
-        company: form.company,
-        position: form.position,
-        status: form.status,
-        kycStatus: form.kycStatus,
-        registrationdate: form.registrationdate
+        status: form.status
       }).eq('id', form.id);
     } else {
       res = await supabase.from('clients').insert([
         {
-          name: form.name,
+          first_name: form.first_name,
+          last_name: form.last_name,
           email: form.email,
           phone: form.phone,
-          company: form.company,
-          position: form.position,
-          status: form.status,
-          kycStatus: form.kycStatus,
-          registrationdate: form.registrationdate
+          status: form.status
         }
       ]);
     }
@@ -144,25 +133,19 @@ export default function AdminClientsPage() {
                 <th style={thStyle}>Nome</th>
                 <th style={thStyle}>Email</th>
                 <th style={thStyle}>Telefono</th>
-                <th style={thStyle}>Azienda</th>
-                <th style={thStyle}>Ruolo</th>
                 <th style={thStyle}>Stato</th>
-                <th style={thStyle}>KYC</th>
-                <th style={thStyle}>Registrato il</th>
+                <th style={thStyle}>Creato il</th>
                 <th style={thStyle}>Azioni</th>
               </tr>
             </thead>
             <tbody>
               {clients.map(client => (
                 <tr key={client.id} style={{ background: '#fff', borderBottom: '1px solid #e5e7eb', transition: 'background 0.2s' }}>
-                  <td style={tdStyle}>{client.name}</td>
+                  <td style={tdStyle}>{client.first_name} {client.last_name}</td>
                   <td style={tdStyle}>{client.email}</td>
                   <td style={tdStyle}>{client.phone}</td>
-                  <td style={tdStyle}>{client.company}</td>
-                  <td style={tdStyle}>{client.position}</td>
                   <td style={tdStyle}><span style={{ background: client.status === 'active' ? '#bbf7d0' : client.status === 'pending' ? '#fef3c7' : '#fee2e2', color: client.status === 'active' ? '#16a34a' : client.status === 'pending' ? '#b45309' : '#b91c1c', borderRadius: 6, padding: '2px 10px', fontWeight: 700 }}>{client.status}</span></td>
-                  <td style={tdStyle}><span style={{ background: client.kycStatus === 'approved' ? '#bbf7d0' : client.kycStatus === 'pending' ? '#fef3c7' : '#fee2e2', color: client.kycStatus === 'approved' ? '#16a34a' : client.kycStatus === 'pending' ? '#b45309' : '#b91c1c', borderRadius: 6, padding: '2px 10px', fontWeight: 700 }}>{client.kycStatus}</span></td>
-                  <td style={tdStyle}>{client.registrationdate}</td>
+                  <td style={tdStyle}>{new Date(client.created_at).toLocaleDateString('it-IT')}</td>
                   <td style={tdStyle}>
                     <button onClick={() => openEdit(client)} style={actionBtnStyle}>Modifica</button>
                     <button onClick={() => handleDelete(client.id)} style={{ ...actionBtnStyle, background: '#dc2626', color: '#fff', marginLeft: 8 }}>Elimina</button>
@@ -171,7 +154,7 @@ export default function AdminClientsPage() {
               ))}
               {clients.length === 0 && (
                 <tr>
-                  <td colSpan={9} style={{ textAlign: 'center', padding: 32, color: '#64748b', fontWeight: 600 }}>Nessun cliente trovato.</td>
+                  <td colSpan={6} style={{ textAlign: 'center', padding: 32, color: '#64748b', fontWeight: 600 }}>Nessun cliente trovato.</td>
                 </tr>
               )}
             </tbody>
@@ -184,22 +167,16 @@ export default function AdminClientsPage() {
             <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 16 }}>{isEdit ? 'Modifica Cliente' : 'Nuovo Cliente'}</h2>
             {error && <div style={{ background: '#fee2e2', color: '#b91c1c', padding: 10, borderRadius: 6, marginBottom: 10, fontWeight: 600 }}>{error}</div>}
             <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <input required placeholder="Nome" value={form.name || ''} onChange={e => setForm({ ...form, name: e.target.value })} style={inputStyle} />
+              <input required placeholder="Nome" value={form.first_name || ''} onChange={e => setForm({ ...form, first_name: e.target.value })} style={inputStyle} />
+              <input required placeholder="Cognome" value={form.last_name || ''} onChange={e => setForm({ ...form, last_name: e.target.value })} style={inputStyle} />
               <input required type="email" placeholder="Email" value={form.email || ''} onChange={e => setForm({ ...form, email: e.target.value })} style={inputStyle} />
               <input required placeholder="Telefono" value={form.phone || ''} onChange={e => setForm({ ...form, phone: e.target.value })} style={inputStyle} />
-              <input placeholder="Azienda" value={form.company || ''} onChange={e => setForm({ ...form, company: e.target.value })} style={inputStyle} />
-              <input placeholder="Ruolo" value={form.position || ''} onChange={e => setForm({ ...form, position: e.target.value })} style={inputStyle} />
               <select value={form.status || 'active'} onChange={e => setForm({ ...form, status: e.target.value as Client['status'] })} style={inputStyle}>
                 <option value="active">Attivo</option>
                 <option value="inactive">Non attivo</option>
                 <option value="pending">In attesa</option>
               </select>
-              <select value={form.kycStatus || 'pending'} onChange={e => setForm({ ...form, kycStatus: e.target.value as Client['kycStatus'] })} style={inputStyle}>
-                <option value="pending">KYC in attesa</option>
-                <option value="approved">KYC approvato</option>
-                <option value="rejected">KYC rifiutato</option>
-              </select>
-              <input required type="date" placeholder="Data registrazione" value={form.registrationdate || ''} onChange={e => setForm({ ...form, registrationdate: e.target.value })} style={inputStyle} />
+              
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 16 }}>
                 <button type="button" onClick={closeModal} style={{ ...actionBtnStyle, background: '#e5e7eb', color: '#1e293b' }}>Annulla</button>
                 <button type="submit" disabled={saving} style={{ ...actionBtnStyle, background: '#2563eb', color: '#fff' }}>{saving ? 'Salvataggio...' : isEdit ? 'Salva Modifiche' : 'Aggiungi Cliente'}</button>
