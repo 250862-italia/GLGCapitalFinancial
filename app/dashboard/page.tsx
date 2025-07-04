@@ -20,6 +20,7 @@ import {
 import { Investment } from "@/types/investment";
 import { Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import KYCProcess from "../../components/kyc/kyc-process";
+import UserProfile from "../../components/UserProfile";
 import { useAuth } from "../../hooks/use-auth";
 import { usePackages } from "../../lib/package-context";
 import Toast from "../../components/ui/Toast";
@@ -226,18 +227,16 @@ export default function ClientDashboard() {
           </p>
         </div>
 
-        {/* KYC Process - subito sotto il welcome */}
+        {/* User Profile & KYC Status */}
         <div style={{ marginBottom: '2rem' }}>
           {user ? (
-            <>
-              {console.log('DEBUG: KYCProcess montato per userId', user.id)}
-              <KYCProcess userId={user.id} onComplete={() => {
-                router.push('/kyc/informational-request');
-              }} />
-            </>
+            <UserProfile onKycComplete={() => {
+              // Ricarica la pagina per aggiornare lo stato
+              window.location.reload();
+            }} />
           ) : (
             <div style={{ color: '#dc2626', fontWeight: 700, fontSize: 18, padding: 16, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8 }}>
-              Utente non autenticato, KYC nascosto
+              Utente non autenticato
             </div>
           )}
         </div>
