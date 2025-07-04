@@ -60,8 +60,6 @@ export default function AdminKYCPage() {
         );
 
         setRecords(recordsWithClients);
-        if (error) throw error;
-        setRecords(data || []);
       } catch (err: any) {
         setError(err.message || 'Errore nel caricamento delle KYC');
       } finally {
