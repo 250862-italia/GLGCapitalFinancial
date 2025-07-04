@@ -220,6 +220,6 @@ export default function AdminClientsPage() {
 const thStyle = { padding: '12px 8px', fontWeight: 700, fontSize: 15, background: '#f1f5f9', borderBottom: '1px solid #e5e7eb', textAlign: 'left' as const };
 const tdStyle = { padding: '10px 8px', fontSize: 15, borderBottom: '1px solid #e5e7eb', textAlign: 'left' as const };
 const actionBtnStyle = { background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', fontWeight: 600, cursor: 'pointer', fontSize: 14 };
-const modalOverlayStyle = { position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 };
+const modalOverlayStyle = { position: 'fixed' as const, top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.25)', display: 'flex' as const, alignItems: 'center', justifyContent: 'center', zIndex: 10000 };
 const modalStyle = { background: '#fff', borderRadius: 12, padding: 32, minWidth: 400, boxShadow: '0 4px 32px rgba(30,41,59,0.18)' };
 const inputStyle = { padding: '10px', borderRadius: 6, border: '1px solid #e5e7eb', fontSize: 15, width: '100%' }; 
