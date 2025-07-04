@@ -1,8 +1,30 @@
 "use client";
 import { useEffect, useState } from "react";
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 
 export default function AdminPackagesPage() {
+  // Mostra subito le env
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return (
+      <div style={{ padding: 32, color: 'red', fontWeight: 700 }}>
+        ERRORE: Variabili d'ambiente mancanti!<br/>
+        <pre>
+NEXT_PUBLIC_SUPABASE_URL: {String(supabaseUrl)}
+NEXT_PUBLIC_SUPABASE_ANON_KEY: {String(supabaseAnonKey)}
+        </pre>
+        <div>
+          Controlla le variabili su Vercel e fai un nuovo deploy.<br/>
+          Se sono corrette e vedi ancora questo errore, svuota la cache del browser e riprova.
+        </div>
+      </div>
+    );
+  }
+
+  const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
   const [packages, setPackages] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
