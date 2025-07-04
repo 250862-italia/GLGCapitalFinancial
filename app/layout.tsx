@@ -57,7 +57,7 @@ export default function RootLayout({
           <Link href="/iscriviti" style={{ color: 'var(--primary)' }}>Register</Link>
           <div style={{ marginLeft: '2rem', display: 'flex', gap: '1rem' }}>
             <Link href="/admin/login" style={{ background: 'var(--accent)', color: 'var(--primary)', padding: '0.5rem 1.25rem', borderRadius: 6, fontWeight: 700, textDecoration: 'none', boxShadow: '0 2px 8px rgba(34,40,49,0.07)' }}>Admin Console</Link>
-            <Link href="/iscriviti" style={{ background: '#3b82f6', color: '#fff', padding: '0.5rem 1.25rem', borderRadius: 6, fontWeight: 700, textDecoration: 'none', boxShadow: '0 2px 8px rgba(34,40,49,0.07)' }}>Register</Link>
+            <Link href="/login" style={{ background: '#3b82f6', color: '#fff', padding: '0.5rem 1.25rem', borderRadius: 6, fontWeight: 700, textDecoration: 'none', boxShadow: '0 2px 8px rgba(34,40,49,0.07)' }}>Register</Link>
             {isLoggedIn && (
               <button
                 onClick={handleLogout}

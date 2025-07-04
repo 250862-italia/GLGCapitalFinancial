@@ -1,9 +1,11 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "../../hooks/use-auth";
 
 export default function IscrivitiPage() {
   const router = useRouter();
+  const { user, login, loginDirect } = useAuth();
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -17,12 +19,8 @@ export default function IscrivitiPage() {
 
   // Controlla se già registrato
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const user = localStorage.getItem("user");
-      const token = localStorage.getItem("token");
-      setIsRegistered(!!user || !!token);
-    }
-  }, []);
+    setIsRegistered(!!user);
+  }, [user]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -74,12 +72,16 @@ export default function IscrivitiPage() {
           phone: form.phone
         }));
         
-        // Login automatico dopo la registrazione (test mode)
+        // Login automatico dopo la registrazione
         if (data.user) {
-          // Per il test, salviamo direttamente i dati utente
-          localStorage.setItem("user", JSON.stringify(data.user));
-          localStorage.setItem("token", "test-token-" + Date.now());
-          router.push("/dashboard");
+          // Usa il login diretto per bypassare l'API
+          const loginResult = await loginDirect(data.user);
+          if (loginResult.success) {
+            router.push("/dashboard");
+          } else {
+            // Se il login automatico fallisce, vai alla pagina di login
+            router.push("/login");
+          }
         } else {
           // Fallback: vai alla pagina di login
           router.push("/login");
@@ -104,19 +106,12 @@ export default function IscrivitiPage() {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: loginForm.email, password: loginForm.password }),
-      });
-      const data = await response.json();
-      if (response.ok) {
-        localStorage.setItem("user", JSON.stringify(data.user));
-        localStorage.setItem("token", data.token);
+      const loginResult = await login(loginForm.email, loginForm.password);
+      if (loginResult.success) {
         setSuccess(true);
         router.push("/dashboard");
       } else {
-        setError(data.error || "Login fallito");
+        setError(loginResult.error || "Login fallito");
       }
     } catch {
       setError("Errore di rete. Riprova.");

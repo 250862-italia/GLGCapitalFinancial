@@ -15,6 +15,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  loginDirect: (userData: User) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   register: (userData: any) => Promise<{ success: boolean; error?: string }>;
 }
@@ -70,6 +71,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const loginDirect = async (userData: User) => {
+    try {
+      setUser(userData);
+      localStorage.setItem('user', JSON.stringify(userData));
+      localStorage.setItem('token', 'direct-login-' + Date.now());
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: 'Login direct failed' };
+    }
+  };
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user');
@@ -101,7 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return React.createElement(AuthContext.Provider, {
-    value: { user, loading, login, logout, register }
+    value: { user, loading, login, loginDirect, logout, register }
   }, children);
 }
 
