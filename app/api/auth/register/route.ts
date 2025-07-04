@@ -30,36 +30,76 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Chiamata alla funzione SQL
-    const { data, error } = await supabase.rpc('register_client', {
-      email,
-      password,
-      first_name: firstName,
-      last_name: lastName,
-      phone,
-      date_of_birth: dateOfBirth,
-      nationality
-    });
+    // Check if email already exists
+    const { data: existingUser } = await supabase
+      .from('users')
+      .select('id')
+      .eq('email', email)
+      .single();
 
-    if (error) {
-      console.error('register_client error:', error)
+    if (existingUser) {
       return NextResponse.json(
-        { error: 'Errore durante la registrazione', details: error.message },
+        { error: 'Email già registrata' },
+        { status: 400 }
+      )
+    }
+
+    // Hash password
+    const bcrypt = require('bcryptjs');
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Insert user
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .insert({
+        email,
+        password_hash: hashedPassword,
+        first_name: firstName,
+        last_name: lastName,
+        role: 'user',
+        is_active: true,
+        email_verified: false
+      })
+      .select()
+      .single();
+
+    if (userError) {
+      console.error('User creation error:', userError);
+      return NextResponse.json(
+        { error: 'Errore durante la creazione utente', details: userError.message },
         { status: 500 }
       )
     }
-    if (!data.success) {
+
+    // Insert client
+    const { data: clientData, error: clientError } = await supabase
+      .from('clients')
+      .insert({
+        user_id: userData.id,
+        email,
+        first_name: firstName,
+        last_name: lastName,
+        phone,
+        date_of_birth: dateOfBirth,
+        nationality,
+        status: 'active'
+      })
+      .select()
+      .single();
+
+    if (clientError) {
+      console.error('Client creation error:', clientError);
       return NextResponse.json(
-        { error: data.message, error_code: data.error_code },
-        { status: 400 }
+        { error: 'Errore durante la creazione cliente', details: clientError.message },
+        { status: 500 }
       )
     }
 
     return NextResponse.json({
       success: true,
-      message: data.message,
-      user_id: data.user_id,
-      client_id: data.client_id
+      message: 'Registrazione completata con successo',
+      user_id: userData.id,
+      client_id: clientData.id
     })
   } catch (error) {
     console.error('Registration error:', error)
