@@ -91,7 +91,7 @@ export default function TestLoginPage() {
         <ul>
           <li><strong>Super Admin:</strong> admin@glgcapitalgroupllc.com / GLG2024!Admin</li>
           <li><strong>Admin:</strong> manager@glgcapitalgroupllc.com / GLG2024!Manager</li>
-          <li><strong>Regular User:</strong> Try any email with password length >= 6 (offline mode)</li>
+          <li><strong>Regular User:</strong> Try any email with password length &gt;= 6 (offline mode)</li>
         </ul>
       </div>
       
