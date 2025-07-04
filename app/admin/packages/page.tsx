@@ -133,7 +133,7 @@ export default function AdminPackagesPage() {
         <div style={{ overflowX: 'auto', boxShadow: '0 4px 24px rgba(30,41,59,0.07)', borderRadius: 16, background: '#fff' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 900 }}>
             <thead>
-              <tr style={{ background: '#f1f5f9', color: '#1e293b', position: 'sticky', top: 0, zIndex: 1 }}>
+              <tr style={{ background: '#f1f5f9', color: '#1e293b', position: 'sticky' as const, top: 0, zIndex: 1 }}>
                 <th style={thStyle}>Nome</th>
                 <th style={thStyle}>Descrizione</th>
                 <th style={thStyle}>Prezzo</th>
@@ -219,9 +219,9 @@ const thStyle = {
   fontWeight: 700,
   fontSize: 16,
   borderBottom: '2px solid #e5e7eb',
-  textAlign: 'left',
+  textAlign: 'left' as const,
   background: '#f1f5f9',
-  position: 'sticky',
+  position: 'sticky' as const,
   top: 0,
   zIndex: 1
 };
