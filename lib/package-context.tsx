@@ -179,10 +179,19 @@ export function PackageProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // On mount, fetch packages
+  // On mount, fetch packages e attiva realtime
   useEffect(() => {
     fetchPackages();
-    // (Opzionale) qui puoi aggiungere la logica realtime Supabase
+    // Realtime subscription
+    const subscription = supabase
+      .channel('public:packages')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'packages' }, (payload) => {
+        fetchPackages();
+      })
+      .subscribe();
+    return () => {
+      supabase.removeChannel(subscription);
+    };
   }, []);
 
   const value: PackageContextType = {
