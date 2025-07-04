@@ -28,26 +28,38 @@ export default function AdminKYCPage() {
   const [records, setRecords] = useState<KYCRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reloadingSchema, setReloadingSchema] = useState(false);
 
   useEffect(() => {
     const fetchKYC = async () => {
       setLoading(true);
       setError(null);
       try {
-        const { data, error } = await supabase
+        // First get KYC records
+        const { data: kycData, error: kycError } = await supabase
           .from('kyc_records')
-          .select(`
-            *,
-            clients (
-              first_name,
-              last_name,
-              email,
-              phone,
-              date_of_birth,
-              nationality
-            )
-          `)
+          .select('*')
           .order('created_at', { ascending: false });
+
+        if (kycError) throw kycError;
+
+        // Then get client data for each KYC record
+        const recordsWithClients = await Promise.all(
+          (kycData || []).map(async (record) => {
+            const { data: clientData } = await supabase
+              .from('clients')
+              .select('first_name, last_name, email, phone, date_of_birth, nationality')
+              .eq('id', record.client_id)
+              .single();
+
+            return {
+              ...record,
+              clients: clientData || null
+            };
+          })
+        );
+
+        setRecords(recordsWithClients);
         if (error) throw error;
         setRecords(data || []);
       } catch (err: any) {
@@ -76,9 +88,55 @@ export default function AdminKYCPage() {
     }
   };
 
+  // Funzione per ricaricare il cache dello schema
+  const reloadSchema = async () => {
+    setReloadingSchema(true);
+    try {
+      const response = await fetch('/api/admin/reload-schema', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to reload schema');
+      }
+
+      alert('Schema cache reloaded successfully!');
+      // Reload the page data
+      window.location.reload();
+    } catch (error) {
+      console.error('Schema reload error:', error);
+      alert('Error reloading schema cache. Please try again.');
+    } finally {
+      setReloadingSchema(false);
+    }
+  };
+
   return (
     <div style={{ maxWidth: 900, margin: '0 auto', padding: '2rem' }}>
-      <h1 style={{ fontSize: 32, fontWeight: 800, marginBottom: 24 }}>KYC Management</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+        <h1 style={{ fontSize: 32, fontWeight: 800, margin: 0 }}>KYC Management</h1>
+        <button 
+          onClick={reloadSchema}
+          disabled={reloadingSchema}
+          style={{
+            background: '#3b82f6',
+            color: 'white',
+            border: 'none',
+            borderRadius: 6,
+            padding: '0.5rem 1rem',
+            cursor: reloadingSchema ? 'not-allowed' : 'pointer',
+            fontWeight: 600,
+            fontSize: 14
+          }}
+        >
+          {reloadingSchema ? 'Reloading...' : 'Reload Schema'}
+        </button>
+      </div>
       {loading ? (
         <p>Loading...</p>
       ) : error ? (

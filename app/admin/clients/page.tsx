@@ -43,16 +43,9 @@ export default function AdminClientsPage() {
     setError(null);
     const { data, error } = await supabase
       .from('clients')
-      .select(`
-        *,
-        kyc_records (
-          id,
-          document_type,
-          status,
-          created_at
-        )
-      `)
+      .select('*')
       .order('created_at', { ascending: false });
+    
     if (error) setError(error.message);
     else setClients(data || []);
     setLoading(false);
