@@ -38,6 +38,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     setIsLoading(false);
   }, [router]);
 
+  // Controllo ruolo superadmin
+  const isSuperAdmin = adminUser?.role === 'superadmin';
+
   const handleLogout = () => {
     localStorage.removeItem('admin_user');
     localStorage.removeItem('admin_token');
@@ -96,6 +99,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       window.location.href = "/admin/login";
     }
     return null;
+  }
+
+  if (!isSuperAdmin) {
+    // Se autenticato ma non superadmin, logout e redirect
+    if (typeof window !== "undefined") {
+      localStorage.removeItem('admin_user');
+      localStorage.removeItem('admin_token');
+      window.location.href = "/admin/login?error=access-denied";
+    }
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f9fafb' }}>
+        <div style={{ textAlign: 'center', color: '#b91c1c', fontWeight: 700, fontSize: 20 }}>
+          Accesso negato: solo i superadmin possono accedere a quest'area.<br/>
+          <a href="/admin/login" style={{ color: '#2563eb', textDecoration: 'underline' }}>Torna al login</a>
+        </div>
+      </div>
+    );
   }
 
   // DISABILITATO controllo autenticazione e ruolo per sviluppo
