@@ -225,7 +225,7 @@ export default function ClientDashboard() {
         {/* Header */}
         <div style={{ marginBottom: '2rem' }}>
           <h1 style={{ fontSize: '2.5rem', fontWeight: 800, color: '#1f2937', marginBottom: '0.5rem' }}>
-            Welcome back, John!
+            Welcome back, {user?.name || 'User'}!
           </h1>
           <p style={{ fontSize: '1.125rem', color: '#6b7280' }}>
             Here's your investment portfolio overview

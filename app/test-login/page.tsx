@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '../../hooks/use-auth';
 
 export default function TestLoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
   const [email, setEmail] = useState('admin@glgcapitalgroupllc.com');
   const [password, setPassword] = useState('GLG2024!Admin');
   const [result, setResult] = useState('');
@@ -15,28 +17,16 @@ export default function TestLoginPage() {
     setResult('');
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await response.json();
+      const loginResult = await login(email, password);
       
-      if (response.ok) {
-        setResult(`✅ Login successful! User: ${JSON.stringify(data.user, null, 2)}`);
-        // Store user data
-        localStorage.setItem('user', JSON.stringify(data.user));
-        localStorage.setItem('token', 'test-token');
-        
+      if (loginResult.success) {
+        setResult(`✅ Login successful! Redirecting to dashboard...`);
         // Redirect to dashboard after 2 seconds
         setTimeout(() => {
           router.push('/dashboard');
         }, 2000);
       } else {
-        setResult(`❌ Login failed: ${data.error}`);
+        setResult(`❌ Login failed: ${loginResult.error}`);
       }
     } catch (error) {
       setResult(`❌ Network error: ${error}`);
@@ -97,11 +87,18 @@ export default function TestLoginPage() {
       )}
       
       <div style={{ marginTop: '2rem' }}>
-        <h3>Credenziali di Test:</h3>
+        <h3>Test Credentials:</h3>
         <ul>
           <li><strong>Super Admin:</strong> admin@glgcapitalgroupllc.com / GLG2024!Admin</li>
           <li><strong>Admin:</strong> manager@glgcapitalgroupllc.com / GLG2024!Manager</li>
+          <li><strong>Regular User:</strong> Try any email with password length >= 6 (offline mode)</li>
         </ul>
+      </div>
+      
+      <div style={{ marginTop: '2rem' }}>
+        <a href="/login" style={{ color: '#3b82f6', textDecoration: 'underline' }}>
+          Go to regular login page
+        </a>
       </div>
     </div>
   );

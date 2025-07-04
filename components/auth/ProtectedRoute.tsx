@@ -12,6 +12,12 @@ export default function ProtectedRoute({
   const { user, loading } = useAuth();
   const router = useRouter();
 
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
+
   if (loading) {
     return (
       <div style={{
@@ -47,6 +53,10 @@ export default function ProtectedRoute({
         `}</style>
       </div>
     );
+  }
+
+  if (!user) {
+    return null; // Will redirect to login
   }
 
   return <>{children}</>;
