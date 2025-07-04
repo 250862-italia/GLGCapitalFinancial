@@ -315,7 +315,7 @@ export function PackageProvider({ children }: { children: ReactNode }) {
       {showToast && (
         <Toast
           message={error || 'Operation completed successfully'}
-          type={error ? 'error' : 'success'}
+          visible={showToast}
           onClose={() => setShowToast(false)}
         />
       )}
