@@ -6,6 +6,7 @@ export default function AdminPackagesPage() {
   const [packages, setPackages] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [debug, setDebug] = useState<any>({});
   const [form, setForm] = useState({
     id: null,
     nome: '',
@@ -21,12 +22,16 @@ export default function AdminPackagesPage() {
     setLoading(true);
     setError(null);
     try {
+      const envVars = {
+        NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      };
       const { data, error } = await supabase.from('packages').select('*').order('id', { ascending: true });
-      console.log('DEBUG: Risposta Supabase', { data, error });
+      setDebug({ envVars, data, error });
       if (error) setError(error.message);
       else setPackages(data || []);
     } catch (e) {
-      console.error('DEBUG: Errore JS fetchPackages', e);
+      setDebug((prev: any) => ({ ...prev, jsError: (e as Error).message }));
       setError((e as Error).message);
     }
     setLoading(false);
@@ -72,7 +77,6 @@ export default function AdminPackagesPage() {
       setEditing(false);
       await fetchPackages();
     } catch (e) {
-      console.error('DEBUG: Errore JS handleSubmit', e);
       setError((e as Error).message);
     }
     setLoading(false);
@@ -93,7 +97,6 @@ export default function AdminPackagesPage() {
       if (error) setError(error.message);
       await fetchPackages();
     } catch (e) {
-      console.error('DEBUG: Errore JS handleDelete', e);
       setError((e as Error).message);
     }
     setLoading(false);
@@ -102,6 +105,11 @@ export default function AdminPackagesPage() {
   return (
     <div style={{ padding: 32, maxWidth: 900, margin: '0 auto' }}>
       <h1>Gestione Pacchetti</h1>
+      {/* DEBUG AUTOMATICO */}
+      <div style={{ background: '#fef9c3', color: '#92400e', padding: 12, borderRadius: 8, marginBottom: 16, fontSize: 14 }}>
+        <b>DEBUG AUTOMATICO</b>
+        <pre style={{ fontSize: 12, margin: 0 }}>{JSON.stringify(debug, null, 2)}</pre>
+      </div>
       {loading && <div style={{ background: '#e0e7ff', color: '#3730a3', padding: 12, fontWeight: 600, marginBottom: 16 }}>Caricamento...</div>}
       {error && <div style={{ background: '#fee', color: '#900', padding: 16, fontWeight: 700, marginBottom: 16 }}>ERRORE: {error}</div>}
       <form onSubmit={handleSubmit} style={{ marginBottom: 32, background: '#f8fafc', padding: 16, borderRadius: 8 }}>
