@@ -29,24 +29,15 @@ export default function AdminDashboardPage() {
   const [activeTab, setActiveTab] = useState('overview');
   const [adminUser, setAdminUser] = useState<any>(null);
 
+  // For access without login, set a fake admin user
   useEffect(() => {
-    // Check if admin is authenticated
-    const adminUserData = localStorage.getItem('admin_user');
-    const adminToken = localStorage.getItem('admin_token');
-    
-    if (!adminUserData || !adminToken) {
-      router.push('/admin/login');
-      return;
-    }
-
-    const user = JSON.parse(adminUserData);
-    if (user.role !== 'admin' && user.role !== 'superadmin') {
-      router.push('/admin/login');
-      return;
-    }
-
-    setAdminUser(user);
-  }, [router]);
+    setAdminUser({
+      id: '1',
+      name: 'Temporary Admin',
+      email: 'admin@glgcapital.com',
+      role: 'superadmin'
+    });
+  }, []);
 
   const stats = [
     { 
