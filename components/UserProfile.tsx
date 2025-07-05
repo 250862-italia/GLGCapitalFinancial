@@ -57,35 +57,64 @@ export default function UserProfile({ onKycComplete }: UserProfileProps) {
     if (!user) return;
     
     try {
-      // Check if KYC records exist for this user
-      const { data, error } = await supabase
-        .from('kyc_records')
-        .select('*')
-        .eq('client_id', user.id)
-        .order('created_at', { ascending: false });
+      // First, get the client record for this user
+      const { data: clientData, error: clientError } = await supabase
+        .from('clients')
+        .select('id, kycStatus')
+        .eq('"userId"', user.id)
+        .single();
 
-      if (error) {
-        console.error('Error loading KYC status:', error);
+      if (clientError) {
+        console.error('Error loading client data:', clientError);
         return;
       }
 
-      if (data && data.length > 0) {
-        // Determine the general status
-        const latestRecord = data[0];
-        const status = latestRecord.status as KYCStatus['status'];
+      if (!clientData) {
+        console.log('No client record found for user:', user.id);
+        setLoading(false);
+        return;
+      }
+
+      // Now get KYC records for this client
+      const { data: kycData, error: kycError } = await supabase
+        .from('kyc_records')
+        .select('*')
+        .eq('"clientId"', clientData.id)
+        .order('"createdAt"', { ascending: false });
+
+      if (kycError) {
+        console.error('Error loading KYC records:', kycError);
+        return;
+      }
+
+      if (kycData && kycData.length > 0) {
+        // Determine the general status from client or latest KYC record
+        const status = (clientData.kycStatus as KYCStatus['status']) || kycData[0].status as KYCStatus['status'];
         
         // Check which documents have been uploaded
         const documents = {
-          idDocument: data.some(d => d.document_type === 'idDocument'),
-          proofOfAddress: data.some(d => d.document_type === 'proofOfAddress'),
-          bankStatement: data.some(d => d.document_type === 'bankStatement')
+          idDocument: kycData.some(d => d.documentType === 'PERSONAL_INFO'),
+          proofOfAddress: kycData.some(d => d.documentType === 'PROOF_OF_ADDRESS'),
+          bankStatement: kycData.some(d => d.documentType === 'BANK_STATEMENT')
         };
 
         setKycStatus({
           status,
           documents,
-          lastUpdated: latestRecord.updated_at
+          lastUpdated: kycData[0].updatedAt
         });
+      } else {
+        // No KYC records found, check if client has KYC status
+        if (clientData.kycStatus && clientData.kycStatus !== 'pending') {
+          setKycStatus({
+            status: clientData.kycStatus as KYCStatus['status'],
+            documents: {
+              idDocument: false,
+              proofOfAddress: false,
+              bankStatement: false
+            }
+          });
+        }
       }
     } catch (error) {
       console.error('Error loading KYC status:', error);

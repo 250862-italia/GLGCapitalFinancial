@@ -5,21 +5,21 @@ import { supabase } from '@/lib/supabase';
 
 interface KYCRecord {
   id: string;
-  client_id: string;
-  document_type: string;
-  document_number: string;
-  document_image_url: string;
+  "clientId": string;
+  "documentType": string;
+  "documentNumber": string;
+  "documentImageUrl": string;
   status: string;
   notes?: string;
-  verified_at?: string;
-  created_at: string;
-  updated_at: string;
+  "verifiedAt"?: string;
+  "createdAt": string;
+  "updatedAt": string;
   clients?: {
-    first_name: string;
-    last_name: string;
+    "firstName": string;
+    "lastName": string;
     email: string;
     phone: string;
-    date_of_birth: string;
+    "dateOfBirth": string;
     nationality: string;
   };
 }
@@ -39,7 +39,7 @@ export default function AdminKYCPage() {
         const { data: kycData, error: kycError } = await supabase
           .from('kyc_records')
           .select('*')
-          .order('created_at', { ascending: false });
+          .order('"createdAt"', { ascending: false });
 
         if (kycError) throw kycError;
 
@@ -48,8 +48,8 @@ export default function AdminKYCPage() {
           (kycData || []).map(async (record) => {
             const { data: clientData } = await supabase
               .from('clients')
-              .select('first_name, last_name, email, phone, date_of_birth, nationality')
-              .eq('id', record.client_id)
+              .select('"firstName", "lastName", email, phone, "dateOfBirth", nationality')
+              .eq('id', record.clientId)
               .single();
 
             return {
@@ -159,15 +159,15 @@ export default function AdminKYCPage() {
               <tr key={app.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
                 <td style={{ padding: 12 }}>
                   <div>
-                    <strong>{app.clients?.first_name} {app.clients?.last_name}</strong>
+                    <strong>{app.clients?.firstName} {app.clients?.lastName}</strong>
                     <br />
                     <small style={{ color: '#6b7280' }}>{app.clients?.email}</small>
                     <br />
                     <small style={{ color: '#6b7280' }}>{app.clients?.phone}</small>
                   </div>
                 </td>
-                <td style={{ padding: 12 }}>{app.document_type}</td>
-                <td style={{ padding: 12 }}>{app.document_number}</td>
+                <td style={{ padding: 12 }}>{app.documentType}</td>
+                <td style={{ padding: 12 }}>{app.documentNumber}</td>
                 <td style={{ padding: 12 }}>
                   <span style={{
                     background: app.status === 'approved' ? '#bbf7d0' : 
@@ -195,8 +195,8 @@ export default function AdminKYCPage() {
                   </div>
                 </td>
                 <td style={{ padding: 12 }}>
-                  {app.document_image_url ? (
-                    <a href={app.document_image_url} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline' }}>View</a>
+                  {app.documentImageUrl ? (
+                    <a href={app.documentImageUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline' }}>View</a>
                   ) : '-' }
                 </td>
                 <td style={{ padding: 12 }}>

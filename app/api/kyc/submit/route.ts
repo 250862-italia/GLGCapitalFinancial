@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     const { data: clientByUserId, error: errorByUserId } = await supabase
       .from('clients')
       .select('id')
-      .eq('user_id', userId)
+      .eq('"userId"', userId)
       .single();
 
     if (clientByUserId) {
@@ -76,12 +76,12 @@ export async function POST(request: NextRequest) {
       const { data: newClient, error: createError } = await supabase
         .from('clients')
         .insert({
-          user_id: userId,
+          "userId": userId,
           email: personalInfo.email,
-          first_name: personalInfo.firstName,
-          last_name: personalInfo.lastName,
+          "firstName": personalInfo.firstName,
+          "lastName": personalInfo.lastName,
           phone: personalInfo.phone,
-          date_of_birth: personalInfo.dateOfBirth,
+          "dateOfBirth": personalInfo.dateOfBirth,
           nationality: personalInfo.nationality,
           status: 'active',
           kycStatus: 'pending'
@@ -106,10 +106,10 @@ export async function POST(request: NextRequest) {
 
     // Personal Information KYC Record (always create this one)
     kycRecords.push({
-      client_id: clientData.id,
-      document_type: 'PERSONAL_INFO',
-      document_number: `ID: ${personalInfo.idDocument || 'Not provided'}`,
-      document_image_url: personalInfo.idDocument || null,
+      "clientId": clientData.id,
+      "documentType": 'PERSONAL_INFO',
+      "documentNumber": `ID: ${personalInfo.idDocument || 'Not provided'}`,
+      "documentImageUrl": personalInfo.idDocument || null,
       status: 'pending',
       notes: `Personal Info: ${personalInfo.firstName} ${personalInfo.lastName}, DOB: ${personalInfo.dateOfBirth}, Nationality: ${personalInfo.nationality}, Address: ${personalInfo.address}, ${personalInfo.city}, ${personalInfo.country}`
     });
@@ -117,10 +117,10 @@ export async function POST(request: NextRequest) {
     // Proof of Address KYC Record
     if (documents.proofOfAddress) {
       kycRecords.push({
-        client_id: clientData.id,
-        document_type: 'PROOF_OF_ADDRESS',
-        document_number: `Address: ${personalInfo.address}, ${personalInfo.city}, ${personalInfo.country}`,
-        document_image_url: documents.proofOfAddress,
+        "clientId": clientData.id,
+        "documentType": 'PROOF_OF_ADDRESS',
+        "documentNumber": `Address: ${personalInfo.address}, ${personalInfo.city}, ${personalInfo.country}`,
+        "documentImageUrl": documents.proofOfAddress,
         status: 'pending',
         notes: `Address: ${personalInfo.address}, ${personalInfo.city}, ${personalInfo.country}`
       });
@@ -129,10 +129,10 @@ export async function POST(request: NextRequest) {
     // Bank Statement KYC Record
     if (documents.bankStatement) {
       kycRecords.push({
-        client_id: clientData.id,
-        document_type: 'BANK_STATEMENT',
-        document_number: 'Bank Statement',
-        document_image_url: documents.bankStatement,
+        "clientId": clientData.id,
+        "documentType": 'BANK_STATEMENT',
+        "documentNumber": 'Bank Statement',
+        "documentImageUrl": documents.bankStatement,
         status: 'pending',
         notes: `Financial Profile: Employment: ${financialProfile.employmentStatus}, Income: ${financialProfile.annualIncome}, Source: ${financialProfile.sourceOfFunds}`
       });
@@ -157,7 +157,7 @@ export async function POST(request: NextRequest) {
       .from('clients')
       .update({ 
         kycStatus: 'pending',
-        date_of_birth: personalInfo.dateOfBirth,
+        "dateOfBirth": personalInfo.dateOfBirth,
         nationality: personalInfo.nationality
       })
       .eq('id', clientData.id);
