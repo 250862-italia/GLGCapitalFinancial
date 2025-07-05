@@ -21,7 +21,7 @@ export interface Investment {
   duration: number;
   startDate: string;
   endDate: string;
-  status: 'active' | 'completed' | 'pending';
+  status: 'active' | 'completed' | 'pending' | 'pending_payment';
   totalEarned: number;
   dailyEarnings: number;
   monthlyEarnings: number;
