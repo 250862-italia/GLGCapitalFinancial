@@ -263,11 +263,6 @@ export default function LoginPage() {
               Sign up here
             </Link>
           </p>
-          <p style={{ fontSize: 12, color: '#9ca3af', margin: '0.5rem 0 0 0' }}>
-            <Link href="/test-login" style={{ color: '#6b7280', textDecoration: 'underline' }}>
-              Test login page
-            </Link>
-          </p>
         </div>
       </div>
     </div>
