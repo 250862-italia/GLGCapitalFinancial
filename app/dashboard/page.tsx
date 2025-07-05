@@ -511,8 +511,6 @@ export default function ClientDashboard() {
           )}
         </div>
 
-
-
         {/* Portfolio Summary - blocco attrattivo */}
         <div style={{
           display: 'grid',
@@ -571,117 +569,6 @@ export default function ClientDashboard() {
             <BarChart3 size={38} color="#ec4899" style={{ marginBottom: 12 }} />
             <div style={{ fontSize: 16, color: '#ec4899', fontWeight: 700, marginBottom: 6 }}>Monthly Earnings</div>
             <div style={{ fontSize: 32, fontWeight: 900, color: '#0a2540', letterSpacing: -1 }}>{formatCurrency(stats.monthlyEarnings)}</div>
-          </div>
-        </div>
-
-        {/* Earnings Chart */}
-        <div style={{ 
-          background: 'white', 
-          borderRadius: '12px', 
-          padding: '1.5rem',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          border: '1px solid #e5e7eb'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#1f2937' }}>
-              Earnings Overview
-            </h2>
-            
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              {(['1d', '7d', '30d', '90d'] as const).map(timeframe => (
-                <button
-                  key={timeframe}
-                  onClick={() => setSelectedTimeframe(timeframe)}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    border: selectedTimeframe === timeframe ? '1px solid #3b82f6' : '1px solid #d1d5db',
-                    background: selectedTimeframe === timeframe ? '#3b82f6' : 'white',
-                    color: selectedTimeframe === timeframe ? 'white' : '#374151',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: '0.875rem',
-                    fontWeight: 500
-                  }}
-                >
-                  {timeframe === '1d' && '1D'}
-                  {timeframe === '7d' && '7D'}
-                  {timeframe === '30d' && '30D'}
-                  {timeframe === '90d' && '90D'}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Mock Chart */}
-          <div style={{ 
-            height: '300px', 
-            background: '#f8fafc', 
-            borderRadius: '8px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            border: '1px dashed #d1d5db'
-          }}>
-            <div style={{ textAlign: 'center' }}>
-              <BarChart3 size={48} color="#6b7280" />
-              <p style={{ marginTop: '1rem', color: '#6b7280' }}>
-                Earnings chart for {selectedTimeframe} period
-              </p>
-              <p style={{ fontSize: '0.875rem', color: '#9ca3af' }}>
-                Chart visualization will be implemented here
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Recent Activity */}
-        <div style={{ 
-          background: 'white', 
-          borderRadius: '12px', 
-          padding: '1.5rem',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          border: '1px solid #e5e7eb',
-          marginTop: '2rem'
-        }}>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#1f2937', marginBottom: '1.5rem' }}>
-            Recent Activity
-          </h2>
-          
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {[
-              { type: 'earnings', message: 'Daily earnings credited', amount: 594, time: '2 hours ago' },
-              { type: 'investment', message: 'New investment started', amount: 10000, time: '1 day ago' },
-              { type: 'earnings', message: 'Daily earnings credited', amount: 594, time: '1 day ago' },
-              { type: 'withdrawal', message: 'Withdrawal processed', amount: 5000, time: '3 days ago' }
-            ].map((activity, index) => (
-              <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem', borderRadius: '6px', background: '#f9fafb' }}>
-                <div style={{
-                  background: activity.type === 'earnings' ? '#f0fdf4' : activity.type === 'investment' ? '#eff6ff' : '#fef2f2',
-                  padding: '0.5rem',
-                  borderRadius: '6px',
-                  color: activity.type === 'earnings' ? '#059669' : activity.type === 'investment' ? '#3b82f6' : '#dc2626'
-                }}>
-                  {activity.type === 'earnings' && <TrendingUp size={16} />}
-                  {activity.type === 'investment' && <DollarSign size={16} />}
-                  {activity.type === 'withdrawal' && <ArrowDownRight size={16} />}
-                </div>
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: '0.875rem', fontWeight: 500, color: '#1f2937' }}>
-                    {activity.message}
-                  </p>
-                  <p style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                    {activity.time}
-                  </p>
-                </div>
-                <span style={{ 
-                  fontSize: '0.875rem', 
-                  fontWeight: 600, 
-                  color: activity.type === 'withdrawal' ? '#dc2626' : '#059669'
-                }}>
-                  {activity.type === 'withdrawal' ? '-' : '+'}{formatCurrency(activity.amount)}
-                </span>
-              </div>
-            ))}
           </div>
         </div>
 

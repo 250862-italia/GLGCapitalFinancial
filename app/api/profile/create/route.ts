@@ -36,25 +36,10 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Get user data from auth.users
-    const { data: userData, error: userError } = await supabase
-      .from('auth.users')
-      .select('email, created_at')
-      .eq('id', userId)
-      .single();
-
-    if (userError) {
-      console.error('Error fetching user data:', userError);
-      return NextResponse.json(
-        { error: 'Failed to fetch user data' },
-        { status: 500 }
-      );
-    }
-
-    // Create new client profile
+    // Create new client profile with basic data
     const newProfile = {
       userId: userId,
-      email: userData.email,
+      email: '', // Will be filled by the client
       firstName: '',
       lastName: '',
       phone: '',
@@ -66,6 +51,7 @@ export async function POST(request: NextRequest) {
       country: '',
       profilePhoto: null,
       kycStatus: 'PENDING',
+      status: 'ACTIVE',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
