@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { AuthProvider } from '@/hooks/use-auth'
+import ConnectionStatus from '@/components/ui/ConnectionStatus'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -18,6 +19,7 @@ export default function RootLayout({
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [isInReservedArea, setIsInReservedArea] = useState(false)
   const [isSuperAdmin, setIsSuperAdmin] = useState(false)
+  const [isConnected, setIsConnected] = useState(true)
   const router = useRouter()
 
   useEffect(() => {
@@ -42,7 +44,22 @@ export default function RootLayout({
     const pathname = window.location.pathname
     const reservedPaths = ['/dashboard', '/profile', '/kyc', '/investments', '/admin']
     setIsInReservedArea(reservedPaths.some(path => pathname.startsWith(path)))
-  }, [])
+
+    // Check database connection
+    const checkConnection = async () => {
+      try {
+        const response = await fetch('/api/admin/analytics');
+        setIsConnected(response.ok);
+      } catch (error) {
+        console.log('Database connection check failed:', error);
+        setIsConnected(false);
+      }
+    };
+
+    if (isInReservedArea) {
+      checkConnection();
+    }
+  }, [isInReservedArea])
 
   const handleLogout = () => {
     localStorage.removeItem('user')
@@ -57,6 +74,12 @@ export default function RootLayout({
     <html lang="en">
       <body style={{ background: 'var(--background)', minHeight: '100vh', fontFamily: 'Inter, Open Sans, Roboto, sans-serif' }}>
         <AuthProvider>
+        {/* Connection Status */}
+        <ConnectionStatus 
+          isConnected={isConnected} 
+          message="Database connection failed. Using demo data for demonstration purposes."
+        />
+        
         {/* HEADER - Hidden in reserved areas */}
         {!isInReservedArea && (
           <header style={{ background: 'var(--primary)', padding: '2rem 0', textAlign: 'center', borderBottom: '1px solid #e0e3eb' }}>
