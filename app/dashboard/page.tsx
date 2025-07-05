@@ -144,20 +144,26 @@ export default function ClientDashboard() {
     if (myInvestments.some(inv => inv.packageName === selectedPackage.name)) return;
 
     try {
-      // Send email with banking details
-      const response = await fetch('/api/send-email', {
+      // Send email to GLG support with investment request
+      const supportEmailResponse = await fetch('/api/send-email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          to: user.email,
-          subject: `Investment Instructions - ${selectedPackage.name} Package`,
+          to: 'corefound@glgcapitalgroupllc.com',
+          subject: `Investment Request - ${selectedPackage.name} Package - ${user.name || user.first_name || user.email}`,
           html: `
-            <h2>Investment Instructions</h2>
-            <p>Dear ${user.name || user.first_name || 'Valued Customer'},</p>
-            <p>Thank you for choosing to invest in our <b>${selectedPackage.name}</b> package.</p>
+            <h2>New Investment Request</h2>
+            <p>A new investment request has been submitted:</p>
             
+            <h3>Client Information:</h3>
+            <ul>
+              <li><strong>Name:</strong> ${user.name || user.first_name || 'Not provided'}</li>
+              <li><strong>Email:</strong> ${user.email}</li>
+              <li><strong>Request Date:</strong> ${new Date().toLocaleDateString()}</li>
+            </ul>
+
             <h3>Package Details:</h3>
             <ul>
               <li><strong>Package:</strong> ${selectedPackage.name}</li>
@@ -165,6 +171,42 @@ export default function ClientDashboard() {
               <li><strong>Expected Return:</strong> ${selectedPackage.expectedReturn || selectedPackage.dailyReturn || 1.0}% daily</li>
               <li><strong>Duration:</strong> ${selectedPackage.duration || 30} days</li>
             </ul>
+
+            <p>Please process this investment request and send banking details to the client.</p>
+            
+            <p>Best regards,<br>GLG Capital Group System</p>
+          `
+        })
+      });
+
+      // Send confirmation email to user with banking details
+      const userEmailResponse = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: user.email,
+          subject: `Investment Request Confirmation - ${selectedPackage.name} Package`,
+          html: `
+            <h2>Investment Request Confirmation</h2>
+            <p>Dear ${user.name || user.first_name || 'Valued Customer'},</p>
+            <p>Thank you for your investment request for the <b>${selectedPackage.name}</b> package.</p>
+            
+            <h3>Request Details:</h3>
+            <ul>
+              <li><strong>Package:</strong> ${selectedPackage.name}</li>
+              <li><strong>Investment Amount:</strong> $${selectedPackage.minInvestment || selectedPackage.minAmount || 1000}</li>
+              <li><strong>Expected Return:</strong> ${selectedPackage.expectedReturn || selectedPackage.dailyReturn || 1.0}% daily</li>
+              <li><strong>Duration:</strong> ${selectedPackage.duration || 30} days</li>
+            </ul>
+
+            <h3>Next Steps:</h3>
+            <ol>
+              <li>Our team will review your investment request</li>
+              <li>You will receive banking details and payment instructions within 24-48 hours</li>
+              <li>Once payment is confirmed, your investment will be activated</li>
+            </ol>
 
             <h3>Banking Details for Wire Transfer:</h3>
             <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
@@ -189,15 +231,15 @@ export default function ClientDashboard() {
             </ol>
 
             <h3>Contact Information:</h3>
-            <p>If you have any questions or need assistance, please contact our support team.</p>
+            <p>If you have any questions or need assistance, please contact our support team at corefound@glgcapitalgroupllc.com</p>
             
             <p>Best regards,<br>GLG Capital Group Team</p>
           `
         })
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to send email');
+      if (!supportEmailResponse.ok || !userEmailResponse.ok) {
+        throw new Error('Failed to send emails');
       }
 
       // Create investment record

@@ -87,7 +87,7 @@ By submitting this form, you acknowledge that GLG Capital Consulting LLC operate
 
 5. Submission Channels
 Please send the requested information via one of the following:
-* Email: corefound@glgcapitalconsulting.com
+* Email: corefound@glgcapitalgroupllc.com
 
 ---
 APPLICANT INFORMATION:
@@ -110,7 +110,7 @@ Time: ${new Date().toLocaleTimeString()}
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        to: 'corefound@glgcapitalconsulting.com',
+        to: 'corefound@glgcapitalgroupllc.com',
         subject: `Informational Request - ${firstName} ${lastName}`,
         text: emailContent,
         html: emailContent.replace(/\n/g, '<br>'),

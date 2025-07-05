@@ -123,7 +123,7 @@ By submitting this form, you acknowledge that GLG Capital Consulting LLC operate
 
 5. Submission Channels
 Please send the requested information via one of the following:
-* Email: corefound@glgcapitalconsulting.com
+* Email: corefound@glgcapitalgroupllc.com
 
 ---
 APPLICANT INFORMATION:
