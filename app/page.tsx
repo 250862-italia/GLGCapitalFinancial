@@ -372,7 +372,7 @@ export default function HomePage() {
             gap: '2rem' 
           }}>
             
-            {/* Partner 1 */}
+            {/* Partner 1 - Grey */}
             <div style={{ 
               background: 'var(--secondary)', 
               padding: '2rem', 
@@ -400,9 +400,9 @@ export default function HomePage() {
               </p>
             </div>
 
-            {/* Partner 2 */}
+            {/* Partner 2 - White */}
             <div style={{ 
-              background: 'var(--secondary)', 
+              background: '#ffffff', 
               padding: '2rem', 
               borderRadius: 12, 
               boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
@@ -428,7 +428,7 @@ export default function HomePage() {
               </p>
             </div>
 
-            {/* Partner 3 */}
+            {/* Partner 3 - Grey */}
             <div style={{ 
               background: 'var(--secondary)', 
               padding: '2rem', 
@@ -453,6 +453,34 @@ export default function HomePage() {
               </p>
               <p style={{ color: 'var(--foreground)', fontSize: '0.9rem' }}>
                 For more information: <strong>www.pentawash.com</strong>
+              </p>
+            </div>
+
+            {/* Partner 4 - White */}
+            <div style={{ 
+              background: '#ffffff', 
+              padding: '2rem', 
+              borderRadius: 12, 
+              boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
+              border: '1px solid #e2e8f0'
+            }}>
+              <h3 style={{ 
+                color: 'var(--primary)', 
+                fontSize: '1.4rem', 
+                fontWeight: 700, 
+                marginBottom: '1rem' 
+              }}>
+                GreenTech Solutions – Sustainable Innovation Partner
+              </h3>
+              <p style={{ 
+                color: 'var(--foreground)', 
+                lineHeight: 1.6,
+                marginBottom: '1rem'
+              }}>
+                GreenTech Solutions specializes in <strong>sustainable technology and green investment opportunities</strong>. As a strategic partner, they provide innovative solutions for environmental challenges while creating profitable investment opportunities in the growing green economy sector.
+              </p>
+              <p style={{ color: 'var(--foreground)', fontSize: '0.9rem' }}>
+                For more information: <strong>www.greentech-solutions.eu</strong>
               </p>
             </div>
 
