@@ -1,39 +1,178 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GLG Capital Group Dashboard
 
-## Getting Started
+A comprehensive financial dashboard and investment management platform for GLG Capital Group LLC.
 
-First, run the development server:
+## 🚀 Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### Client Features
+- **User Registration & Authentication** - Secure client registration and login
+- **Profile Management** - Complete profile setup with personal information
+- **KYC Process** - Document verification and compliance checks
+- **Investment Dashboard** - View and manage investment portfolios
+- **Document Requests** - Request official documentation from GLG
+- **Banking Details** - Manage banking information securely
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Admin Features
+- **Analytics Dashboard** - Real-time financial metrics and insights
+- **Client Management** - Complete client database management
+- **KYC Management** - Document verification and approval system
+- **Investment Management** - Track and manage all investments
+- **Content Management** - Manage news, markets, and partnerships
+- **Team Management** - Admin team and role management
+- **Settings & Configuration** - System configuration and backup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🛠️ Technology Stack
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Frontend**: Next.js 14, React, TypeScript, Tailwind CSS
+- **Backend**: Next.js API Routes, Supabase
+- **Database**: PostgreSQL (via Supabase)
+- **Authentication**: Custom auth system with role-based access
+- **Storage**: Supabase Storage for documents and files
+- **Email**: SMTP integration for notifications
+- **Deployment**: Vercel-ready
 
-## Learn More
+## 📋 Prerequisites
 
-To learn more about Next.js, take a look at the following resources:
+- Node.js 18+ 
+- npm or yarn
+- Supabase account
+- SMTP email service (Gmail, SendGrid, etc.)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🔧 Installation
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/your-org/glg-dashboard.git
+   cd glg-dashboard
+   ```
 
-## Deploy on Vercel
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+3. **Set up environment variables**
+   ```bash
+   cp env.example .env.local
+   ```
+   
+   Edit `.env.local` with your configuration:
+   - Supabase URL and keys
+   - SMTP email settings
+   - Application secrets
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-# Forzo redeploy Thu Jul  3 12:28:52 CEST 2025
-# Trigger build
-# Trigger build 2
+4. **Set up Supabase**
+   - Create a new Supabase project
+   - Run the database setup scripts in Supabase SQL Editor
+   - Configure storage buckets for document uploads
+   - Set up Row Level Security (RLS) policies
+
+5. **Start development server**
+   ```bash
+   npm run dev
+   ```
+
+## 🗄️ Database Setup
+
+The application requires the following database tables:
+
+- `users` - User authentication and profiles
+- `clients` - Client information and profiles
+- `kyc_records` - KYC document management
+- `investments` - Investment tracking
+- `analytics` - Dashboard metrics
+- `informational_requests` - Document requests
+- `team_members` - Admin team management
+- `content` - News and market content
+- `partnerships` - Partnership management
+- `settings` - System configuration
+
+Run the provided SQL scripts in your Supabase SQL Editor to create all necessary tables and policies.
+
+## 🔐 Authentication
+
+The system uses a custom authentication system with role-based access:
+
+- **Clients**: Regular users with access to their dashboard
+- **Admins**: Administrative users with full system access
+- **Superadmins**: Full system control and configuration access
+
+## 📧 Email Configuration
+
+Configure SMTP settings in `.env.local` for:
+- User registration confirmations
+- Password reset emails
+- KYC status notifications
+- Document request confirmations
+- Investment updates
+
+## 🚀 Deployment
+
+### Vercel Deployment
+
+1. **Connect to Vercel**
+   ```bash
+   npm install -g vercel
+   vercel login
+   ```
+
+2. **Deploy**
+   ```bash
+   vercel --prod
+   ```
+
+3. **Set environment variables** in Vercel dashboard
+
+### Manual Deployment
+
+1. **Build the application**
+   ```bash
+   npm run build
+   ```
+
+2. **Start production server**
+   ```bash
+   npm start
+   ```
+
+## 🔒 Security Features
+
+- **Row Level Security (RLS)** - Database-level security
+- **CSRF Protection** - Cross-site request forgery prevention
+- **Input Validation** - Comprehensive data validation
+- **Rate Limiting** - API request rate limiting
+- **Secure File Uploads** - Document upload security
+- **Encrypted Storage** - Sensitive data encryption
+
+## 📊 Monitoring & Analytics
+
+- **Error Tracking** - Comprehensive error logging
+- **Performance Monitoring** - Application performance metrics
+- **User Analytics** - User behavior tracking
+- **Database Monitoring** - Database performance and health
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## 📄 License
+
+This project is proprietary software for GLG Capital Group LLC.
+
+## 🆘 Support
+
+For support and questions:
+- Email: support@glgcapital.com
+- Documentation: [Internal Wiki]
+- Issues: [GitHub Issues]
+
+## 🔄 Version History
+
+- **v1.0.0** - Initial release with core features
+- **v1.1.0** - Added KYC management and document uploads
+- **v1.2.0** - Enhanced analytics and reporting
+- **v1.3.0** - Complete CRUD operations and admin panel
