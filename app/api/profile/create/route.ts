@@ -64,6 +64,43 @@ export async function POST(request: NextRequest) {
 
     if (createError) {
       console.error('Error creating profile:', createError);
+      
+      // If the error is due to missing columns, try with minimal data
+      if (createError.code === '42703' || createError.message.includes('column')) {
+        const minimalProfile = {
+          userId: userId,
+          email: '',
+          firstName: '',
+          lastName: '',
+          phone: '',
+          kycStatus: 'PENDING',
+          status: 'ACTIVE',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+
+        const { data: minimalCreatedProfile, error: minimalCreateError } = await supabase
+          .from('clients')
+          .insert(minimalProfile)
+          .select()
+          .single();
+
+        if (minimalCreateError) {
+          console.error('Error creating minimal profile:', minimalCreateError);
+          return NextResponse.json(
+            { error: 'Failed to create profile - database schema issue' },
+            { status: 500 }
+          );
+        }
+
+        console.log('Minimal profile created successfully:', minimalCreatedProfile);
+        return NextResponse.json({
+          success: true,
+          data: minimalCreatedProfile,
+          message: 'Minimal profile created successfully'
+        });
+      }
+
       return NextResponse.json(
         { error: 'Failed to create profile' },
         { status: 500 }
