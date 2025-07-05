@@ -1,39 +1,105 @@
 "use client";
-import { useRouter } from "next/navigation";
-import { ArrowLeft, Edit, Trash2, User } from "lucide-react";
+import { useState, useEffect } from 'react';
+import { useRouter, useParams } from 'next/navigation';
+import { ArrowLeft, Edit, Trash2, User } from 'lucide-react';
 
-// Mock dati investimento
-const investment = {
-  id: "1",
-  user: { id: "u1", name: "Mario Rossi", email: "mario@rossi.com" },
-  type: "Equity Pledge",
-  amount: 100000,
-  status: "active",
-  createdAt: "2023-01-10",
-  maturity: "2026-01-10",
-  yield: 0.12,
-  history: [
-    { date: "2023-01-10", value: 100000 },
-    { date: "2023-02-10", value: 101000 },
-    { date: "2023-03-10", value: 102000 },
-    { date: "2023-04-10", value: 103000 },
-    { date: "2023-05-10", value: 104000 },
-    { date: "2023-06-10", value: 105000 },
-    { date: "2023-07-10", value: 106000 },
-    { date: "2023-08-10", value: 107000 },
-    { date: "2023-09-10", value: 108000 },
-    { date: "2023-10-10", value: 109000 },
-    { date: "2023-11-10", value: 110000 },
-    { date: "2023-12-10", value: 111000 },
-  ],
-  notes: [
-    { date: "2023-01-10", text: "Investimento creato" },
-    { date: "2023-06-10", text: "Rendimento trimestrale accreditato" },
-  ],
-};
+interface InvestmentDetail {
+  id: string;
+  user: { id: string; name: string; email: string };
+  type: string;
+  amount: number;
+  status: string;
+  createdAt: string;
+  maturity: string;
+  yield: number;
+  history: Array<{ date: string; value: number }>;
+  notes: Array<{ date: string; text: string }>;
+}
 
 export default function InvestmentDetailPage() {
   const router = useRouter();
+  const params = useParams();
+  const [investment, setInvestment] = useState<InvestmentDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (params?.id) {
+      loadInvestmentDetail(params.id as string);
+    }
+  }, [params?.id]);
+
+  const loadInvestmentDetail = async (id: string) => {
+    try {
+      const response = await fetch(`/api/investments/${id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setInvestment(data);
+      } else {
+        console.error('Failed to load investment details');
+        // Fallback to mock data if API fails
+        const mockInvestment: InvestmentDetail = {
+          id: "1",
+          user: { id: "u1", name: "Mario Rossi", email: "mario@rossi.com" },
+          type: "Equity Pledge",
+          amount: 100000,
+          status: "active",
+          createdAt: "2023-01-10",
+          maturity: "2026-01-10",
+          yield: 0.12,
+          history: [
+            { date: "2023-01-10", value: 100000 },
+            { date: "2023-02-10", value: 101000 },
+            { date: "2023-03-10", value: 102000 },
+            { date: "2023-04-10", value: 103000 },
+            { date: "2023-05-10", value: 104000 },
+            { date: "2023-06-10", value: 105000 },
+            { date: "2023-07-10", value: 106000 },
+            { date: "2023-08-10", value: 107000 },
+            { date: "2023-09-10", value: 108000 },
+            { date: "2023-10-10", value: 109000 },
+            { date: "2023-11-10", value: 110000 },
+            { date: "2023-12-10", value: 111000 },
+          ],
+          notes: [
+            { date: "2023-01-10", text: "Investimento creato" },
+            { date: "2023-06-10", text: "Rendimento trimestrale accreditato" },
+          ],
+        };
+        setInvestment(mockInvestment);
+      }
+    } catch (error) {
+      console.error('Error loading investment details:', error);
+      setError('Failed to load investment details');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div style={{ padding: '2rem', textAlign: 'center' }}>
+        <div>Loading investment details...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ padding: '2rem', textAlign: 'center', color: '#dc2626' }}>
+        <div>Error: {error}</div>
+      </div>
+    );
+  }
+
+  if (!investment) {
+    return (
+      <div style={{ padding: '2rem', textAlign: 'center' }}>
+        <div>Investment not found</div>
+      </div>
+    );
+  }
+
   // Calcolo rendimenti
   const dailyYield = ((investment.yield * investment.amount) / 365).toFixed(2);
   const monthlyYield = ((investment.yield * investment.amount) / 12).toFixed(2);

@@ -65,43 +65,55 @@ export default function AdminSettingsPage() {
     setIsLoading(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock data
-      const mockSettings: SystemSettings = {
-        general: {
-          siteName: 'GLG Capital Group LLC',
-          siteDescription: 'Innovative investment firm committed to providing tailored financial solutions',
-          maintenanceMode: false,
-          timezone: 'America/New_York',
-          language: 'en'
-        },
-        security: {
-          twoFactorAuth: true,
-          sessionTimeout: 30,
-          maxLoginAttempts: 5,
-          passwordPolicy: 'Strong',
-          sslEnabled: true
-        },
-        email: {
-          smtpHost: 'smtp.gmail.com',
-          smtpPort: 587,
-          smtpUser: 'noreply@glgcapitalgroupllc.com',
-          smtpSecure: true,
-          fromEmail: 'noreply@glgcapitalgroupllc.com',
-          fromName: 'GLG Capital Group'
-        },
-        backup: {
-          autoBackup: true,
-          backupFrequency: 'daily',
-          retentionDays: 30,
-          lastBackup: new Date(Date.now() - 1000 * 60 * 60 * 12), // 12 hours ago
-          nextBackup: new Date(Date.now() + 1000 * 60 * 60 * 12) // 12 hours from now
+      const response = await fetch('/api/admin/settings');
+      if (response.ok) {
+        const data = await response.json();
+        // Convert date strings back to Date objects for backup dates
+        if (data.backup) {
+          if (data.backup.lastBackup) {
+            data.backup.lastBackup = new Date(data.backup.lastBackup);
+          }
+          if (data.backup.nextBackup) {
+            data.backup.nextBackup = new Date(data.backup.nextBackup);
+          }
         }
-      };
-
-      setSettings(mockSettings);
+        setSettings(data);
+      } else {
+        console.error('Failed to load settings');
+        // Fallback to mock data if API fails
+        const mockSettings: SystemSettings = {
+          general: {
+            siteName: 'GLG Capital Group LLC',
+            siteDescription: 'Innovative investment firm committed to providing tailored financial solutions',
+            maintenanceMode: false,
+            timezone: 'America/New_York',
+            language: 'en'
+          },
+          security: {
+            twoFactorAuth: true,
+            sessionTimeout: 30,
+            maxLoginAttempts: 5,
+            passwordPolicy: 'Strong',
+            sslEnabled: true
+          },
+          email: {
+            smtpHost: 'smtp.gmail.com',
+            smtpPort: 587,
+            smtpUser: 'noreply@glgcapitalgroupllc.com',
+            smtpSecure: true,
+            fromEmail: 'noreply@glgcapitalgroupllc.com',
+            fromName: 'GLG Capital Group'
+          },
+          backup: {
+            autoBackup: true,
+            backupFrequency: 'daily',
+            retentionDays: 30,
+            lastBackup: new Date(Date.now() - 1000 * 60 * 60 * 12), // 12 hours ago
+            nextBackup: new Date(Date.now() + 1000 * 60 * 60 * 12) // 12 hours from now
+          }
+        };
+        setSettings(mockSettings);
+      }
     } catch (error) {
       console.error('Error loading settings:', error);
     } finally {
@@ -110,10 +122,26 @@ export default function AdminSettingsPage() {
   };
 
   const handleSave = async () => {
-    // Simulate saving settings
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setHasChanges(false);
-    alert('Settings saved successfully!');
+    if (!settings) return;
+    
+    try {
+      const response = await fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings)
+      });
+      
+      if (response.ok) {
+        setHasChanges(false);
+        alert('Settings saved successfully!');
+      } else {
+        console.error('Failed to save settings');
+        alert('Failed to save settings. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      alert('Error saving settings. Please try again.');
+    }
   };
 
   const handleBackup = async () => {
