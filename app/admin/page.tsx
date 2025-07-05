@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { 
   Settings, 
   Users, 
+  User,
   FileText, 
   BarChart3, 
   Globe, 
