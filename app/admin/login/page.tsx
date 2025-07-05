@@ -37,7 +37,7 @@ export default function AdminLoginPage() {
     }
 
     // Se le credenziali non sono valide
-    setError("Credenziali non valide. Usa admin@glgcapital.com / Admin123!@#");
+    setError("Invalid credentials. Please contact system administrator.");
     setLoading(false);
   };
 
@@ -82,13 +82,11 @@ export default function AdminLoginPage() {
             opacity: loading ? 0.7 : 1
           }}
         >
-          {loading ? "Accesso..." : "Accedi"}
+          {loading ? "Accessing..." : "Login"}
         </button>
         
         <div style={{ marginTop: 16, fontSize: 12, color: "#6b7280", textAlign: "center" }}>
-          <p><strong>Credenziali di accesso:</strong></p>
-          <p>Email: admin@glgcapital.com</p>
-          <p>Password: Admin123!@#</p>
+          <p>Contact system administrator for access credentials</p>
         </div>
       </form>
     </div>

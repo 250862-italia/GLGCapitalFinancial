@@ -1,9 +1,10 @@
+import { supabaseAdmin } from '@/lib/supabase';
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase';
+
+const supabase = supabaseAdmin;
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createServerSupabaseClient();
     const formData = await request.formData();
     const file = formData.get('document') as File;
     const userId = formData.get('userId') as string;

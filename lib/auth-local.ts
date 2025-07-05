@@ -311,22 +311,6 @@ class LocalAuthService {
   async verifyPassword(inputPassword: string, storedPassword: string): Promise<boolean> {
     return inputPassword === storedPassword;
   }
-
-  // Method to get admin credentials for display
-  getAdminCredentials() {
-    return {
-      superadmin: {
-        email: 'admin@glgcapitalgroupllc.com',
-        password: 'GLG2024!Admin',
-        role: 'superadmin'
-      },
-      admin: {
-        email: 'manager@glgcapitalgroupllc.com',
-        password: 'GLG2024!Manager',
-        role: 'admin'
-      }
-    };
-  }
 }
 
 export const localAuthService = new LocalAuthService(); 
