@@ -263,7 +263,7 @@ export class DatabaseManager {
     const mockData = MOCK_DATA[table as keyof typeof MOCK_DATA] || [];
     
     // Apply filters to mock data
-    let filteredData = mockData;
+    let filteredData: any[] = [...mockData];
     if (options.filters) {
       options.filters.forEach((filter: any) => {
         filteredData = filteredData.filter((item: any) => 
