@@ -1,7 +1,22 @@
 "use client";
 
 import { useState } from 'react';
-import { useAuth } from '../../hooks/use-auth';
+import { useAuth } from '@/hooks/use-auth';
+import { useRouter } from 'next/navigation';
+import { 
+  User, 
+  Lock, 
+  Mail, 
+  Eye, 
+  EyeOff, 
+  CheckCircle, 
+  XCircle, 
+  AlertCircle,
+  ArrowRight,
+  Home,
+  Settings,
+  LogOut
+} from 'lucide-react';
 
 export default function TestCompleteFlowPage() {
   const { user, loading } = useAuth();

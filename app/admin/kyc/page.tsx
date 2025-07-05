@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { CheckCircle, XCircle, Clock, Eye, Download, User, Shield, Plus, Edit, Trash2, Search, Filter, Upload, Image as ImageIcon } from 'lucide-react';
-import { supabase } from '../../../lib/supabase';
+import { supabase } from '@/lib/supabase';
 
 interface KYCRecord {
   id: string;

@@ -25,7 +25,7 @@ import {
   CreditCard,
   FileText
 } from 'lucide-react';
-import { emailNotificationService, NotificationData } from '../../../../lib/email-service';
+import { emailNotificationService, NotificationData } from '@/lib/email-service';
 
 interface SurveillanceStats {
   totalNotifications: number;

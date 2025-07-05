@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import AdminProtectedRoute from '../../../components/auth/AdminProtectedRoute';
 import { 
   FileText, 
   Image, 
@@ -359,8 +358,7 @@ export default function AdminContentPage() {
   const statusOptions = ['published', 'draft', 'archived'];
 
   return (
-    <AdminProtectedRoute>
-      <div style={{ padding: '2rem', background: '#f9fafb', minHeight: '100vh' }}>
+    <div style={{ padding: '2rem', background: '#f9fafb', minHeight: '100vh' }}>
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
         
         {isUsingMockData && (
@@ -981,6 +979,6 @@ export default function AdminContentPage() {
           </div>
         </div>
       )}
-    </AdminProtectedRoute>
+    </div>
   );
 } 

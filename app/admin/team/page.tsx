@@ -39,72 +39,76 @@ export default function TeamPage() {
   });
 
   useEffect(() => {
-    // Carica da localStorage, se vuoto usa mock
-    const stored = localStorage.getItem('teamMembers');
-    if (stored) {
-      setTeam(JSON.parse(stored));
-    } else {
-      const mockData: TeamMember[] = [
-        {
-          id: '1',
-          name: 'John Smith',
-          email: 'john.smith@glgcapitalgroupllc.com',
-          phone: '+1 786 798 8311',
-          role: 'admin',
-          department: 'Management',
-          status: 'active',
-          joinDate: '2023-01-15',
-          lastActive: '2024-01-15',
-          permissions: ['full_access', 'user_management', 'analytics', 'content']
-        },
-        {
-          id: '2',
-          name: 'Maria Garcia',
-          email: 'maria.garcia@glgcapitalgroupllc.com',
-          phone: '+1 786 798 8312',
-          role: 'manager',
-          department: 'Operations',
-          status: 'active',
-          joinDate: '2023-03-20',
-          lastActive: '2024-01-14',
-          permissions: ['analytics', 'content', 'team_view']
-        },
-        {
-          id: '3',
-          name: 'David Chen',
-          email: 'david.chen@glgcapitalgroupllc.com',
-          phone: '+1 786 798 8313',
-          role: 'analyst',
-          department: 'Analytics',
-          status: 'active',
-          joinDate: '2023-06-10',
-          lastActive: '2024-01-13',
-          permissions: ['analytics', 'reports']
-        },
-        {
-          id: '4',
-          name: 'Sarah Johnson',
-          email: 'sarah.johnson@glgcapitalgroupllc.com',
-          phone: '+1 786 798 8314',
-          role: 'support',
-          department: 'Customer Service',
-          status: 'inactive',
-          joinDate: '2023-02-28',
-          lastActive: '2023-12-15',
-          permissions: ['support', 'user_view']
-        }
-      ];
-      setTeam(mockData);
-      localStorage.setItem('teamMembers', JSON.stringify(mockData));
-    }
+    fetchTeamMembers();
   }, []);
 
-  // Salva su localStorage ogni volta che cambia il team
-  useEffect(() => {
-    if (team.length > 0) {
-      localStorage.setItem('teamMembers', JSON.stringify(team));
+  const fetchTeamMembers = async () => {
+    try {
+      const response = await fetch('/api/admin/team');
+      if (response.ok) {
+        const data = await response.json();
+        setTeam(data);
+      } else {
+        console.error('Failed to fetch team members');
+        // Fallback to mock data if API fails
+        const mockData: TeamMember[] = [
+          {
+            id: '1',
+            name: 'John Smith',
+            email: 'john.smith@glgcapitalgroupllc.com',
+            phone: '+1 786 798 8311',
+            role: 'admin',
+            department: 'Management',
+            status: 'active',
+            joinDate: '2023-01-15',
+            lastActive: '2024-01-15',
+            permissions: ['full_access', 'user_management', 'analytics', 'content']
+          },
+          {
+            id: '2',
+            name: 'Maria Garcia',
+            email: 'maria.garcia@glgcapitalgroupllc.com',
+            phone: '+1 786 798 8312',
+            role: 'manager',
+            department: 'Operations',
+            status: 'active',
+            joinDate: '2023-03-20',
+            lastActive: '2024-01-14',
+            permissions: ['analytics', 'content', 'team_view']
+          },
+          {
+            id: '3',
+            name: 'David Chen',
+            email: 'david.chen@glgcapitalgroupllc.com',
+            phone: '+1 786 798 8313',
+            role: 'analyst',
+            department: 'Analytics',
+            status: 'active',
+            joinDate: '2023-06-10',
+            lastActive: '2024-01-13',
+            permissions: ['analytics', 'reports']
+          },
+          {
+            id: '4',
+            name: 'Sarah Johnson',
+            email: 'sarah.johnson@glgcapitalgroupllc.com',
+            phone: '+1 786 798 8314',
+            role: 'support',
+            department: 'Customer Service',
+            status: 'inactive',
+            joinDate: '2023-02-28',
+            lastActive: '2023-12-15',
+            permissions: ['support', 'user_view']
+          }
+        ];
+        setTeam(mockData);
+      }
+    } catch (error) {
+      console.error('Error fetching team members:', error);
     }
-  }, [team]);
+  };
+
+  // Remove localStorage save since we're using database now
 
   useEffect(() => {
     filterTeam();
@@ -169,40 +173,62 @@ export default function TeamPage() {
     setShowViewModal(true);
   };
 
-  const saveTeamMember = () => {
-    if (showEditModal && selectedItem) {
-      // Update existing member
-      const updated = team.map(member =>
-        member.id === selectedItem.id
-          ? { 
-              ...member, 
-              ...formData, 
-              lastActive: new Date().toISOString().split('T')[0]
-            }
-          : member
-      );
-      setTeam(updated);
-    } else {
-      // Add new member
-      const newMember: TeamMember = {
-        id: Date.now().toString(),
-        ...formData,
-        joinDate: new Date().toISOString().split('T')[0],
-        lastActive: new Date().toISOString().split('T')[0]
-      };
-      setTeam([newMember, ...team]);
+  const saveTeamMember = async () => {
+    try {
+      if (showEditModal && selectedItem) {
+        // Update existing member
+        const response = await fetch('/api/admin/team', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: selectedItem.id, ...formData })
+        });
+        
+        if (response.ok) {
+          await fetchTeamMembers(); // Refresh data
+        } else {
+          console.error('Failed to update team member');
+        }
+      } else {
+        // Add new member
+        const response = await fetch('/api/admin/team', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+        
+        if (response.ok) {
+          await fetchTeamMembers(); // Refresh data
+        } else {
+          console.error('Failed to create team member');
+        }
+      }
+    } catch (error) {
+      console.error('Error saving team member:', error);
     }
+    
     setShowAddModal(false);
     setShowEditModal(false);
     setSelectedItem(null);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (selectedItem) {
-      setTeam(team.filter(member => member.id !== selectedItem.id));
-      setShowDeleteModal(false);
-      setSelectedItem(null);
+      try {
+        const response = await fetch(`/api/admin/team?id=${selectedItem.id}`, {
+          method: 'DELETE'
+        });
+        
+        if (response.ok) {
+          await fetchTeamMembers(); // Refresh data
+        } else {
+          console.error('Failed to delete team member');
+        }
+      } catch (error) {
+        console.error('Error deleting team member:', error);
+      }
     }
+    setShowDeleteModal(false);
+    setSelectedItem(null);
   };
 
   const getRoleColor = (role: string) => {

@@ -36,6 +36,7 @@ export default function MyInvestmentsPage() {
   }, [user]);
 
   const fetchInvestments = async () => {
+    if (!user) return;
     try {
       setLoading(true);
       setError('');

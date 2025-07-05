@@ -6,7 +6,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { AuthProvider } from '../hooks/use-auth'
+import { AuthProvider } from '@/hooks/use-auth'
 
 const inter = Inter({ subsets: ['latin'] })
 

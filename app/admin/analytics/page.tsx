@@ -64,7 +64,7 @@ export default function AnalyticsPage() {
             change_percentage: 12.5,
             period: 'Q1 2024',
             category: 'Financial',
-            status: 'active',
+            status: 'active' as 'active',
             description: 'Total platform revenue',
             created_at: '2024-01-15T00:00:00Z',
             updated_at: '2024-01-15T00:00:00Z'
@@ -76,7 +76,7 @@ export default function AnalyticsPage() {
             change_percentage: -2.3,
             period: 'Q1 2024',
             category: 'User',
-            status: 'active',
+            status: 'active' as 'active',
             description: 'Number of active users',
             created_at: '2024-01-14T00:00:00Z',
             updated_at: '2024-01-14T00:00:00Z'
@@ -88,7 +88,7 @@ export default function AnalyticsPage() {
             change_percentage: 0.8,
             period: 'Q1 2024',
             category: 'Performance',
-            status: 'active',
+            status: 'active' as 'active',
             description: 'User conversion rate',
             created_at: '2024-01-13T00:00:00Z',
             updated_at: '2024-01-13T00:00:00Z'
@@ -100,7 +100,7 @@ export default function AnalyticsPage() {
             change_percentage: 0.2,
             period: 'Q1 2024',
             category: 'Quality',
-            status: 'inactive',
+            status: 'inactive' as 'inactive',
             description: 'Customer satisfaction score',
             created_at: '2024-01-12T00:00:00Z',
             updated_at: '2024-01-12T00:00:00Z'
@@ -120,7 +120,7 @@ export default function AnalyticsPage() {
           change_percentage: 12.5,
           period: 'Q1 2024',
           category: 'Financial',
-          status: 'active',
+          status: 'active' as 'active',
           description: 'Total platform revenue',
           created_at: '2024-01-15T00:00:00Z',
           updated_at: '2024-01-15T00:00:00Z'
@@ -132,7 +132,7 @@ export default function AnalyticsPage() {
           change_percentage: -2.3,
           period: 'Q1 2024',
           category: 'User',
-          status: 'active',
+          status: 'active' as 'active',
           description: 'Number of active users',
           created_at: '2024-01-14T00:00:00Z',
           updated_at: '2024-01-14T00:00:00Z'
@@ -144,7 +144,7 @@ export default function AnalyticsPage() {
           change_percentage: 0.8,
           period: 'Q1 2024',
           category: 'Performance',
-          status: 'active',
+          status: 'active' as 'active',
           description: 'User conversion rate',
           created_at: '2024-01-13T00:00:00Z',
           updated_at: '2024-01-13T00:00:00Z'
@@ -156,7 +156,7 @@ export default function AnalyticsPage() {
           change_percentage: 0.2,
           period: 'Q1 2024',
           category: 'Quality',
-          status: 'inactive',
+          status: 'inactive' as 'inactive',
           description: 'Customer satisfaction score',
           created_at: '2024-01-12T00:00:00Z',
           updated_at: '2024-01-12T00:00:00Z'

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { backupService, type BackupMetadata } from '../../../../lib/backup-service';
+import { backupService, type BackupMetadata } from '@/lib/backup-service';
 
 export default function AdminSettingsBackupPage() {
   const [backups, setBackups] = useState<BackupMetadata[]>([]);

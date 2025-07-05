@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { PackageProvider, usePackages } from '../../lib/package-context';
+import { PackageProvider, usePackages } from '@/lib/package-context';
 import { 
   User, 
   DollarSign, 

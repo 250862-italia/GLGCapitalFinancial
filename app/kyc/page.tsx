@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '../../hooks/use-auth';
-import KYCProcess from '../../components/kyc/kyc-process';
+import { useAuth } from '@/hooks/use-auth';
+import KYCProcess from '@/components/kyc/kyc-process';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Shield, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Shield, CheckCircle, AlertCircle } from 'lucide-react';
 
 export default function KYCPage() {
   const { user } = useAuth();

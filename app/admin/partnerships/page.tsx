@@ -73,79 +73,90 @@ export default function AdminPartnershipsPage() {
     filterPartnerships();
   }, [partnerships, searchTerm, selectedType, selectedStatus]);
 
-  const loadPartnerships = () => {
-    // Mock data - in real app this would come from API
-    const mockData: Partnership[] = [
-      {
-        id: '1',
-        name: 'European Investment Bank',
-        type: 'financial',
-        status: 'active',
-        startDate: '2024-01-15',
-        endDate: '2027-01-15',
-        value: 5000000,
-        description: 'Strategic financial partnership for European market expansion and investment opportunities.',
-        contactPerson: 'Marco Rossi',
-        contactEmail: 'marco.rossi@eib.eu',
-        contactPhone: '+39 02 1234567',
-        country: 'Italy',
-        industry: 'Financial Services',
-        benefits: ['Market Access', 'Capital Investment', 'Regulatory Support'],
-        lastUpdated: '2024-01-15'
-      },
-      {
-        id: '2',
-        name: 'Tech Innovation Hub',
-        type: 'technology',
-        status: 'active',
-        startDate: '2023-11-20',
-        endDate: '2026-11-20',
-        value: 2500000,
-        description: 'Technology partnership for digital transformation and fintech solutions development.',
-        contactPerson: 'Sarah Chen',
-        contactEmail: 'sarah.chen@techhub.com',
-        contactPhone: '+1 415 9876543',
-        country: 'United States',
-        industry: 'Technology',
-        benefits: ['Technology Transfer', 'R&D Collaboration', 'Innovation Support'],
-        lastUpdated: '2023-11-20'
-      },
-      {
-        id: '3',
-        name: 'Global Distribution Network',
-        type: 'distribution',
-        status: 'pending',
-        startDate: '',
-        endDate: '',
-        value: 1500000,
-        description: 'Distribution partnership for expanding market reach across multiple regions.',
-        contactPerson: 'Carlos Rodriguez',
-        contactEmail: 'carlos.rodriguez@globaldist.com',
-        contactPhone: '+34 91 4567890',
-        country: 'Spain',
-        industry: 'Distribution',
-        benefits: ['Market Expansion', 'Logistics Support', 'Local Expertise'],
-        lastUpdated: '2024-01-10'
-      },
-      {
-        id: '4',
-        name: 'Research Institute Partnership',
-        type: 'research',
-        status: 'expired',
-        startDate: '2022-06-01',
-        endDate: '2023-12-31',
-        value: 800000,
-        description: 'Research collaboration for market analysis and investment strategy development.',
-        contactPerson: 'Dr. Anna Schmidt',
-        contactEmail: 'anna.schmidt@research.org',
-        contactPhone: '+49 30 1234567',
-        country: 'Germany',
-        industry: 'Research',
-        benefits: ['Market Research', 'Data Analytics', 'Expert Consultation'],
-        lastUpdated: '2023-12-31'
+  const loadPartnerships = async () => {
+    try {
+      const response = await fetch('/api/admin/partnerships');
+      if (response.ok) {
+        const data = await response.json();
+        setPartnerships(data);
+      } else {
+        console.error('Failed to fetch partnerships');
+        // Fallback to mock data if API fails
+        const mockData: Partnership[] = [
+          {
+            id: '1',
+            name: 'European Investment Bank',
+            type: 'financial',
+            status: 'active',
+            startDate: '2024-01-15',
+            endDate: '2027-01-15',
+            value: 5000000,
+            description: 'Strategic financial partnership for European market expansion and investment opportunities.',
+            contactPerson: 'Marco Rossi',
+            contactEmail: 'marco.rossi@eib.eu',
+            contactPhone: '+39 02 1234567',
+            country: 'Italy',
+            industry: 'Financial Services',
+            benefits: ['Market Access', 'Capital Investment', 'Regulatory Support'],
+            lastUpdated: '2024-01-15'
+          },
+          {
+            id: '2',
+            name: 'Tech Innovation Hub',
+            type: 'technology',
+            status: 'active',
+            startDate: '2023-11-20',
+            endDate: '2026-11-20',
+            value: 2500000,
+            description: 'Technology partnership for digital transformation and fintech solutions development.',
+            contactPerson: 'Sarah Chen',
+            contactEmail: 'sarah.chen@techhub.com',
+            contactPhone: '+1 415 9876543',
+            country: 'United States',
+            industry: 'Technology',
+            benefits: ['Technology Transfer', 'R&D Collaboration', 'Innovation Support'],
+            lastUpdated: '2023-11-20'
+          },
+          {
+            id: '3',
+            name: 'Global Distribution Network',
+            type: 'distribution',
+            status: 'pending',
+            startDate: '',
+            endDate: '',
+            value: 1500000,
+            description: 'Distribution partnership for expanding market reach across multiple regions.',
+            contactPerson: 'Carlos Rodriguez',
+            contactEmail: 'carlos.rodriguez@globaldist.com',
+            contactPhone: '+34 91 4567890',
+            country: 'Spain',
+            industry: 'Distribution',
+            benefits: ['Market Expansion', 'Logistics Support', 'Local Expertise'],
+            lastUpdated: '2024-01-10'
+          },
+          {
+            id: '4',
+            name: 'Research Institute Partnership',
+            type: 'research',
+            status: 'expired',
+            startDate: '2022-06-01',
+            endDate: '2023-12-31',
+            value: 800000,
+            description: 'Research collaboration for market analysis and investment strategy development.',
+            contactPerson: 'Dr. Anna Schmidt',
+            contactEmail: 'anna.schmidt@research.org',
+            contactPhone: '+49 30 1234567',
+            country: 'Germany',
+            industry: 'Research',
+            benefits: ['Market Research', 'Data Analytics', 'Expert Consultation'],
+            lastUpdated: '2023-12-31'
+          }
+        ];
+        setPartnerships(mockData);
       }
-    ];
-    setPartnerships(mockData);
+    } catch (error) {
+      console.error('Error fetching partnerships:', error);
+    }
   };
 
   const filterPartnerships = () => {
@@ -220,27 +231,37 @@ export default function AdminPartnershipsPage() {
     setShowViewModal(true);
   };
 
-  const savePartnership = () => {
-    if (showEditModal && selectedItem) {
-      // Update existing partnership
-      const updated = partnerships.map(partnership =>
-        partnership.id === selectedItem.id
-          ? { 
-              ...partnership, 
-              ...formData, 
-              lastUpdated: new Date().toISOString().split('T')[0]
-            }
-          : partnership
-      );
-      setPartnerships(updated);
-    } else {
-      // Add new partnership
-      const newPartnership: Partnership = {
-        id: Date.now().toString(),
-        ...formData,
-        lastUpdated: new Date().toISOString().split('T')[0]
-      };
-      setPartnerships([newPartnership, ...partnerships]);
+  const savePartnership = async () => {
+    try {
+      if (showEditModal && selectedItem) {
+        // Update existing partnership
+        const response = await fetch('/api/admin/partnerships', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: selectedItem.id, ...formData })
+        });
+        
+        if (response.ok) {
+          await loadPartnerships(); // Refresh data
+        } else {
+          console.error('Failed to update partnership');
+        }
+      } else {
+        // Add new partnership
+        const response = await fetch('/api/admin/partnerships', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+        
+        if (response.ok) {
+          await loadPartnerships(); // Refresh data
+        } else {
+          console.error('Failed to create partnership');
+        }
+      }
+    } catch (error) {
+      console.error('Error saving partnership:', error);
     }
     
     setShowAddModal(false);
@@ -248,12 +269,24 @@ export default function AdminPartnershipsPage() {
     setSelectedItem(null);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (selectedItem) {
-      setPartnerships(partnerships.filter(partnership => partnership.id !== selectedItem.id));
-      setShowDeleteModal(false);
-      setSelectedItem(null);
+      try {
+        const response = await fetch(`/api/admin/partnerships?id=${selectedItem.id}`, {
+          method: 'DELETE'
+        });
+        
+        if (response.ok) {
+          await loadPartnerships(); // Refresh data
+        } else {
+          console.error('Failed to delete partnership');
+        }
+      } catch (error) {
+        console.error('Error deleting partnership:', error);
+      }
     }
+    setShowDeleteModal(false);
+    setSelectedItem(null);
   };
 
   const getTypeColor = (type: string) => {
