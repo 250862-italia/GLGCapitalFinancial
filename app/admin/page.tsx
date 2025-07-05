@@ -32,15 +32,21 @@ export default function AdminDashboardPage() {
   const [adminUser, setAdminUser] = useState<any>(null);
   const [logs, setLogs] = useState<string[]>([]);
 
-  // For access without login, set a fake admin user
+  // Check for admin user in localStorage
   useEffect(() => {
-    setAdminUser({
-      id: '1',
-      name: 'Temporary Admin',
-      email: 'admin@glgcapital.com',
-      role: 'superadmin'
-    });
-  }, []);
+    const storedUser = localStorage.getItem("admin_user");
+    if (storedUser) {
+      try {
+        const user = JSON.parse(storedUser);
+        setAdminUser(user);
+      } catch (error) {
+        console.error('Error parsing admin user:', error);
+        router.push('/admin/login');
+      }
+    } else {
+      router.push('/admin/login');
+    }
+  }, [router]);
 
   // Funzione per aggiungere log
   const addLog = (msg: string) => setLogs(logs => [...logs, `[${new Date().toLocaleTimeString()}] ${msg}`]);
@@ -191,6 +197,7 @@ export default function AdminDashboardPage() {
               { id: 'team', name: 'Team Management', icon: Users },
               { id: 'partnerships', name: 'Partnerships', icon: Building },
               { id: 'analytics', name: 'Analytics', icon: TrendingUp },
+              { id: 'personal', name: 'Personal Info', icon: User },
               { id: 'settings', name: 'Settings', icon: Settings },
             ].map((tab) => (
               <button
@@ -426,6 +433,42 @@ export default function AdminDashboardPage() {
                   <p style={{ color: 'var(--foreground)', fontSize: 14, marginBottom: '1rem' }}>Generate detailed performance reports</p>
                   <Link href="/admin/analytics/reports" style={{ background: 'var(--accent)', color: 'var(--primary)', padding: '0.5rem 1rem', borderRadius: 6, border: 'none', fontWeight: 600, textDecoration: 'none', display: 'inline-block' }}>Generate Report</Link>
                 </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* PERSONAL INFO TAB */}
+        {activeTab === 'personal' && (
+          <section>
+            <h2 style={{ color: 'var(--primary)', fontSize: 24, fontWeight: 700, marginBottom: '1.5rem' }}>Personal Information</h2>
+            <div style={{ background: 'var(--secondary)', borderRadius: 12, padding: '2rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+                <User size={20} style={{ color: 'var(--accent)' }} />
+                <span style={{ color: 'var(--primary)', fontWeight: 600 }}>Manage Your Profile</span>
+              </div>
+              
+              <div style={{ background: '#fff', padding: '2rem', borderRadius: 8, border: '1px solid #e0e3eb', textAlign: 'center' }}>
+                <h3 style={{ color: 'var(--primary)', fontSize: 20, fontWeight: 700, marginBottom: '1rem' }}>Profile Management</h3>
+                <p style={{ color: 'var(--foreground)', fontSize: 16, lineHeight: 1.6, marginBottom: '1.5rem' }}>
+                  Update your personal information, profile photo, and professional details.
+                </p>
+                <Link 
+                  href="/admin/personal-info" 
+                  style={{ 
+                    background: 'var(--accent)', 
+                    color: 'var(--primary)', 
+                    padding: '0.75rem 1.5rem', 
+                    borderRadius: 6, 
+                    border: 'none', 
+                    fontWeight: 600, 
+                    textDecoration: 'none', 
+                    display: 'inline-block',
+                    fontSize: 16
+                  }}
+                >
+                  Manage Profile
+                </Link>
               </div>
             </div>
           </section>

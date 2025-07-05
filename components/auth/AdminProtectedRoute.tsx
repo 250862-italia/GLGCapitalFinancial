@@ -23,7 +23,7 @@ export default function AdminProtectedRoute({ children }: AdminProtectedRoutePro
 
       try {
         const adminData = JSON.parse(adminUser);
-        if (adminData.role !== 'super_admin') {
+        if (adminData.role !== 'super_admin' && adminData.role !== 'superadmin') {
           router.push('/admin/login');
           return;
         }

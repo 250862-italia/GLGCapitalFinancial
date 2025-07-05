@@ -14,20 +14,30 @@ export default function AdminLoginPage() {
     setError("");
     setLoading(true);
 
-    // Esempio: credenziali hardcoded per demo
-    if (email === "superadmin@glgcapital.com" && password === "superpassword") {
-      const user = {
-        id: "1",
+    // Credenziali hardcoded per il superadmin
+    const validEmail = "admin@glgcapital.com";
+    const validPassword = "Admin123!@#";
+
+    // Verifica credenziali
+    if (email === validEmail && password === validPassword) {
+      const adminUser = {
+        id: "superadmin-1",
+        email: email,
         name: "Super Admin",
-        email,
-        role: "superadmin"
+        role: "super_admin"
       };
-      localStorage.setItem("admin_user", JSON.stringify(user));
-      localStorage.setItem("admin_token", "demo-token");
+      
+      // Salva nel localStorage
+      localStorage.setItem("admin_user", JSON.stringify(adminUser));
+      localStorage.setItem("admin_token", "admin-token");
+      
+      // Reindirizza alla dashboard admin
       router.push("/admin");
       return;
     }
-    setError("Credenziali non valide. Riprova.");
+
+    // Se le credenziali non sono valide
+    setError("Credenziali non valide. Usa admin@glgcapital.com / Admin123!@#");
     setLoading(false);
   };
 
@@ -38,15 +48,48 @@ export default function AdminLoginPage() {
         {error && <div style={{ color: "#dc2626", marginBottom: 16 }}>{error}</div>}
         <div style={{ marginBottom: 16 }}>
           <label style={{ display: "block", marginBottom: 4 }}>Email</label>
-          <input type="email" value={email} onChange={e => setEmail(e.target.value)} required style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb" }} />
+          <input 
+            type="email" 
+            value={email} 
+            onChange={e => setEmail(e.target.value)} 
+            required 
+            style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb" }} 
+          />
         </div>
         <div style={{ marginBottom: 24 }}>
           <label style={{ display: "block", marginBottom: 4 }}>Password</label>
-          <input type="password" value={password} onChange={e => setPassword(e.target.value)} required style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb" }} />
+          <input 
+            type="password" 
+            value={password} 
+            onChange={e => setPassword(e.target.value)} 
+            required 
+            style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb" }} 
+          />
         </div>
-        <button type="submit" disabled={loading} style={{ width: "100%", background: "#2563eb", color: "#fff", padding: "10px 0", border: 0, borderRadius: 6, fontWeight: 700, fontSize: 16 }}>
+        <button 
+          type="submit" 
+          disabled={loading} 
+          style={{ 
+            width: "100%", 
+            background: "#2563eb", 
+            color: "#fff", 
+            padding: "10px 0", 
+            border: 0, 
+            borderRadius: 6, 
+            fontWeight: 700, 
+            fontSize: 16,
+            cursor: loading ? "not-allowed" : "pointer",
+            opacity: loading ? 0.7 : 1
+          }}
+        >
           {loading ? "Accesso..." : "Accedi"}
         </button>
+        
+        <div style={{ marginTop: 16, fontSize: 12, color: "#6b7280", textAlign: "center" }}>
+          <p><strong>Credenziali di accesso:</strong></p>
+          <p>Email: admin@glgcapital.com</p>
+          <p>Password: Admin123!@#</p>
+        </div>
       </form>
     </div>
   );
