@@ -7,6 +7,9 @@ export const supabase = createClient(getSupabaseUrl(), getSupabaseAnonKey());
 // Create Supabase client for server-side (with service role)
 export const supabaseAdmin = createClient(getSupabaseUrl(), getSupabaseServiceKey());
 
+// Server-side Supabase client (alias for compatibility)
+export const createServerSupabaseClient = () => supabaseAdmin;
+
 // Test connection function
 export async function testSupabaseConnection() {
   try {
