@@ -163,9 +163,9 @@ export default function HomePage() {
             gap: '2rem' 
           }}>
             
-            {/* Service 1 */}
+            {/* Service 1 - Grey */}
             <div style={{ 
-              background: 'var(--secondary)', 
+              background: '#f8f9fa', 
               padding: '2rem', 
               borderRadius: 12, 
               boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
@@ -193,9 +193,9 @@ export default function HomePage() {
               </ul>
             </div>
 
-            {/* Service 2 */}
+            {/* Service 2 - White */}
             <div style={{ 
-              background: 'var(--secondary)', 
+              background: '#ffffff', 
               padding: '2rem', 
               borderRadius: 12, 
               boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
@@ -222,9 +222,9 @@ export default function HomePage() {
               </ul>
             </div>
 
-            {/* Service 3 */}
+            {/* Service 3 - Grey */}
             <div style={{ 
-              background: 'var(--secondary)', 
+              background: '#f8f9fa', 
               padding: '2rem', 
               borderRadius: 12, 
               boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
@@ -250,9 +250,9 @@ export default function HomePage() {
               </ul>
             </div>
 
-            {/* Service 4 */}
+            {/* Service 4 - White */}
             <div style={{ 
-              background: 'var(--secondary)', 
+              background: '#ffffff', 
               padding: '2rem', 
               borderRadius: 12, 
               boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
@@ -277,9 +277,9 @@ export default function HomePage() {
               </ul>
             </div>
 
-            {/* Service 5 */}
+            {/* Service 5 - Grey */}
             <div style={{ 
-              background: 'var(--secondary)', 
+              background: '#f8f9fa', 
               padding: '2rem', 
               borderRadius: 12, 
               boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
@@ -300,6 +300,36 @@ export default function HomePage() {
                 paddingLeft: '1.5rem'
               }}>
                 <li>Marketplace of credit assignment and real estate rights</li>
+              </ul>
+            </div>
+
+            {/* Service 6 - White (NEW) */}
+            <div style={{ 
+              background: '#ffffff', 
+              padding: '2rem', 
+              borderRadius: 12, 
+              boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
+              border: '1px solid #e2e8f0',
+              transition: 'transform 0.3s ease, box-shadow 0.3s ease'
+            }}>
+              <h3 style={{ 
+                color: 'var(--primary)', 
+                fontSize: '1.4rem', 
+                fontWeight: 700, 
+                marginBottom: '1rem' 
+              }}>
+                Digital Investment Platform
+              </h3>
+              <ul style={{ 
+                color: 'var(--foreground)', 
+                lineHeight: 1.6,
+                paddingLeft: '1.5rem'
+              }}>
+                <li>Advanced investment portfolio management</li>
+                <li>Real-time market analysis and insights</li>
+                <li>Automated investment strategies and rebalancing</li>
+                <li>Secure digital asset management and custody</li>
+                <li>24/7 platform access with mobile optimization</li>
               </ul>
             </div>
 
