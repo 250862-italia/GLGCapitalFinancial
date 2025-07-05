@@ -17,6 +17,7 @@ export default function RootLayout({
 }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [isInReservedArea, setIsInReservedArea] = useState(false)
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -26,6 +27,16 @@ export default function RootLayout({
     const user = localStorage.getItem('user')
     const adminUser = localStorage.getItem('admin_user')
     setIsLoggedIn(!!user || !!adminUser)
+    
+    // Check if user is superadmin
+    if (adminUser) {
+      try {
+        const adminData = JSON.parse(adminUser)
+        setIsSuperAdmin(adminData.role === 'super_admin')
+      } catch (e) {
+        setIsSuperAdmin(false)
+      }
+    }
     
     // Check if we're in a reserved area
     const pathname = window.location.pathname
@@ -65,7 +76,10 @@ export default function RootLayout({
             <Link href="/about" style={{ color: 'var(--primary)' }}>About Us</Link>
             <Link href="/contact" style={{ color: 'var(--primary)' }}>Contact</Link>
             <div style={{ marginLeft: '2rem', display: 'flex', gap: '1rem' }}>
-              <Link href="/admin/login" style={{ background: 'var(--accent)', color: 'var(--primary)', padding: '0.5rem 1.25rem', borderRadius: 6, fontWeight: 700, textDecoration: 'none', boxShadow: '0 2px 8px rgba(34,40,49,0.07)' }}>Admin Console</Link>
+              {isSuperAdmin && (
+                <Link href="/admin" style={{ background: 'var(--accent)', color: 'var(--primary)', padding: '0.5rem 1.25rem', borderRadius: 6, fontWeight: 700, textDecoration: 'none', boxShadow: '0 2px 8px rgba(34,40,49,0.07)' }}>Admin Panel</Link>
+              )}
+              <Link href="/admin/login" style={{ background: '#8b5cf6', color: '#fff', padding: '0.5rem 1.25rem', borderRadius: 6, fontWeight: 700, textDecoration: 'none', boxShadow: '0 2px 8px rgba(34,40,49,0.07)' }}>Admin Login</Link>
               <Link href="/login" style={{ background: '#059669', color: '#fff', padding: '0.5rem 1.25rem', borderRadius: 6, fontWeight: 700, textDecoration: 'none', boxShadow: '0 2px 8px rgba(34,40,49,0.07)' }}>Login</Link>
               {isLoggedIn && (
                 <button

@@ -149,6 +149,20 @@ CREATE TABLE client_packages (
   UNIQUE(client_id, package_id)
 );
 
+-- 9. ANALYTICS TABLE (NEW)
+CREATE TABLE analytics (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  metric VARCHAR(255) NOT NULL,
+  value DECIMAL(15,2) NOT NULL,
+  change_percentage DECIMAL(5,2) DEFAULT 0,
+  period VARCHAR(100) NOT NULL,
+  category VARCHAR(100) NOT NULL,
+  status VARCHAR(50) DEFAULT 'active',
+  description TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- NOTIFICATIONS TABLE (log invio email/notifiche)
 CREATE TABLE notifications (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -188,6 +202,8 @@ CREATE INDEX idx_team_status ON team_members(status);
 CREATE INDEX idx_partnerships_status ON partnerships(status);
 CREATE INDEX idx_client_packages_client_id ON client_packages(client_id);
 CREATE INDEX idx_client_packages_status ON client_packages(status);
+CREATE INDEX idx_analytics_category ON analytics(category);
+CREATE INDEX idx_analytics_status ON analytics(status);
 
 -- Enable Row Level Security (RLS)
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
@@ -199,6 +215,7 @@ ALTER TABLE news_articles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE team_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE partnerships ENABLE ROW LEVEL SECURITY;
 ALTER TABLE client_packages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE analytics ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 
 -- Create RLS policies (basic - allow all for now, customize later)
@@ -211,7 +228,21 @@ CREATE POLICY "Allow all operations on news_articles" ON news_articles FOR ALL U
 CREATE POLICY "Allow all operations on team_members" ON team_members FOR ALL USING (true);
 CREATE POLICY "Allow all operations on partnerships" ON partnerships FOR ALL USING (true);
 CREATE POLICY "Allow all operations on client_packages" ON client_packages FOR ALL USING (true);
-CREATE POLICY "Allow insert for all" ON users FOR INSERT USING (true);
+CREATE POLICY "Allow all operations on analytics" ON analytics FOR ALL USING (true);
+CREATE POLICY "Allow all operations on notifications" ON notifications FOR ALL USING (true);
+
+-- Insert sample analytics data
+INSERT INTO analytics (metric, value, change_percentage, period, category, description) VALUES
+('Total Revenue', 1250000, 12.5, 'Q1 2024', 'Financial', 'Total platform revenue'),
+('Active Users', 15420, -2.3, 'Q1 2024', 'User', 'Number of active users'),
+('Conversion Rate', 3.2, 0.8, 'Q1 2024', 'Performance', 'User conversion rate'),
+('Customer Satisfaction', 4.7, 0.2, 'Q1 2024', 'Quality', 'Customer satisfaction score'),
+('Total Investments', 8500000, 15.7, 'Q1 2024', 'Financial', 'Total investment volume'),
+('New Registrations', 1250, 8.9, 'Q1 2024', 'User', 'New user registrations'),
+('KYC Approval Rate', 94.2, 1.5, 'Q1 2024', 'Quality', 'KYC approval success rate'),
+('Average Investment', 25000, 5.2, 'Q1 2024', 'Financial', 'Average investment per user'),
+('Platform Uptime', 99.8, 0.1, 'Q1 2024', 'Performance', 'Platform availability'),
+('Support Response Time', 2.5, -0.3, 'Q1 2024', 'Quality', 'Average support response time in hours');
 
 -- Insert default super admin user (password: SuperAdmin123!)
 INSERT INTO users (email, password_hash, first_name, last_name, role, is_active, email_verified) VALUES

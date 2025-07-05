@@ -558,25 +558,7 @@ function DashboardContent() {
             Login
           </button>
           
-          <button
-            onClick={() => router.push('/admin')}
-            style={{
-              background: '#f59e0b',
-              color: 'white',
-              border: 'none',
-              padding: '1rem',
-              borderRadius: 8,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '0.5rem',
-              fontWeight: 600
-            }}
-          >
-            <Shield size={20} />
-            Admin Panel
-          </button>
+
         </div>
       </div>
     </div>

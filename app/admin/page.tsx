@@ -24,6 +24,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import AdminConsole from '@/components/admin/AdminConsole';
+import AdminProtectedRoute from '@/components/auth/AdminProtectedRoute';
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -151,7 +152,7 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <>
+    <AdminProtectedRoute>
       {/* STICKY BANNER */}
       <div style={{
         position: 'fixed',
@@ -465,6 +466,6 @@ export default function AdminDashboardPage() {
 
       </div>
       <AdminConsole logs={logs} onClear={clearLogs} />
-    </>
+    </AdminProtectedRoute>
   );
 } 

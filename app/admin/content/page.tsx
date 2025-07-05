@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import AdminProtectedRoute from '../../../components/auth/AdminProtectedRoute';
 import { 
   FileText, 
   Image, 
@@ -23,11 +24,16 @@ interface ContentItem {
   type: 'article' | 'news' | 'market' | 'partnership';
   status: 'published' | 'draft' | 'archived';
   author: string;
-  publishDate: string;
-  lastModified: string;
+  publish_date: string | null;
+  last_modified: string;
   views: number;
   content: string;
   tags: string[];
+  featured_image_url?: string;
+  meta_description?: string;
+  seo_keywords?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export default function AdminContentPage() {
@@ -47,8 +53,12 @@ export default function AdminContentPage() {
     status: 'draft' as 'published' | 'draft' | 'archived',
     author: '',
     content: '',
-    tags: [] as string[]
+    tags: [] as string[],
+    featured_image_url: '',
+    meta_description: '',
+    seo_keywords: ''
   });
+  const [isUsingMockData, setIsUsingMockData] = useState(false);
 
   useEffect(() => {
     loadContent();
@@ -58,59 +68,141 @@ export default function AdminContentPage() {
     filterContent();
   }, [content, searchTerm, selectedType, selectedStatus]);
 
-  const loadContent = () => {
-    // Mock data - in real app this would come from API
-    const mockData: ContentItem[] = [
-      {
-        id: '1',
-        title: 'GLG Capital Group Q1 2024 Financial Report',
-        type: 'article',
-        status: 'published',
-        author: 'John Smith',
-        publishDate: '2024-01-15',
-        lastModified: '2024-01-15',
-        views: 1247,
-        content: 'Comprehensive analysis of GLG Capital Group performance in Q1 2024...',
-        tags: ['financial', 'report', 'Q1-2024']
-      },
-      {
-        id: '2',
-        title: 'New Partnership with European Investment Bank',
-        type: 'partnership',
-        status: 'published',
-        author: 'Maria Garcia',
-        publishDate: '2024-01-12',
-        lastModified: '2024-01-12',
-        views: 892,
-        content: 'GLG Capital Group announces strategic partnership with European Investment Bank...',
-        tags: ['partnership', 'europe', 'investment']
-      },
-      {
-        id: '3',
-        title: 'Market Analysis: Tech Sector Trends',
-        type: 'market',
-        status: 'draft',
-        author: 'David Chen',
-        publishDate: '',
-        lastModified: '2024-01-14',
-        views: 0,
-        content: 'Analysis of current trends in the technology sector and investment opportunities...',
-        tags: ['market', 'tech', 'analysis']
-      },
-      {
-        id: '4',
-        title: 'Investment Opportunities in Renewable Energy',
-        type: 'news',
-        status: 'archived',
-        author: 'Sarah Johnson',
-        publishDate: '2023-12-20',
-        lastModified: '2023-12-20',
-        views: 2156,
-        content: 'Exploring investment opportunities in the growing renewable energy sector...',
-        tags: ['renewable', 'energy', 'investment']
+  const loadContent = async () => {
+    try {
+      const response = await fetch('/api/admin/content');
+      if (response.ok) {
+        const data = await response.json();
+        setContent(data);
+        setIsUsingMockData(false);
+      } else {
+        console.error('Failed to load content');
+        setIsUsingMockData(true);
+        // Fallback to mock data if API fails
+        const mockData: ContentItem[] = [
+          {
+            id: '1',
+            title: 'GLG Capital Group Q1 2024 Financial Report',
+            type: 'article',
+            status: 'published',
+            author: 'John Smith',
+            publish_date: '2024-01-15',
+            last_modified: '2024-01-15T00:00:00Z',
+            views: 1247,
+            content: 'Comprehensive analysis of GLG Capital Group performance in Q1 2024...',
+            tags: ['financial', 'report', 'Q1-2024'],
+            created_at: '2024-01-15T00:00:00Z',
+            updated_at: '2024-01-15T00:00:00Z'
+          },
+          {
+            id: '2',
+            title: 'New Partnership with European Investment Bank',
+            type: 'partnership',
+            status: 'published',
+            author: 'Maria Garcia',
+            publish_date: '2024-01-12',
+            last_modified: '2024-01-12T00:00:00Z',
+            views: 892,
+            content: 'GLG Capital Group announces strategic partnership with European Investment Bank...',
+            tags: ['partnership', 'europe', 'investment'],
+            created_at: '2024-01-12T00:00:00Z',
+            updated_at: '2024-01-12T00:00:00Z'
+          },
+          {
+            id: '3',
+            title: 'Market Analysis: Tech Sector Trends',
+            type: 'market',
+            status: 'draft',
+            author: 'David Chen',
+            publish_date: null,
+            last_modified: '2024-01-14T00:00:00Z',
+            views: 0,
+            content: 'Analysis of current trends in the technology sector and investment opportunities...',
+            tags: ['market', 'tech', 'analysis'],
+            created_at: '2024-01-14T00:00:00Z',
+            updated_at: '2024-01-14T00:00:00Z'
+          },
+          {
+            id: '4',
+            title: 'Investment Opportunities in Renewable Energy',
+            type: 'news',
+            status: 'archived',
+            author: 'Sarah Johnson',
+            publish_date: '2023-12-20',
+            last_modified: '2023-12-20T00:00:00Z',
+            views: 2156,
+            content: 'Exploring investment opportunities in the growing renewable energy sector...',
+            tags: ['renewable', 'energy', 'investment'],
+            created_at: '2023-12-20T00:00:00Z',
+            updated_at: '2023-12-20T00:00:00Z'
+          }
+        ];
+        setContent(mockData);
       }
-    ];
-    setContent(mockData);
+    } catch (error) {
+      console.error('Error loading content:', error);
+      setIsUsingMockData(true);
+      // Fallback to mock data if API fails
+      const mockData: ContentItem[] = [
+        {
+          id: '1',
+          title: 'GLG Capital Group Q1 2024 Financial Report',
+          type: 'article',
+          status: 'published',
+          author: 'John Smith',
+          publish_date: '2024-01-15',
+          last_modified: '2024-01-15T00:00:00Z',
+          views: 1247,
+          content: 'Comprehensive analysis of GLG Capital Group performance in Q1 2024...',
+          tags: ['financial', 'report', 'Q1-2024'],
+          created_at: '2024-01-15T00:00:00Z',
+          updated_at: '2024-01-15T00:00:00Z'
+        },
+        {
+          id: '2',
+          title: 'New Partnership with European Investment Bank',
+          type: 'partnership',
+          status: 'published',
+          author: 'Maria Garcia',
+          publish_date: '2024-01-12',
+          last_modified: '2024-01-12T00:00:00Z',
+          views: 892,
+          content: 'GLG Capital Group announces strategic partnership with European Investment Bank...',
+          tags: ['partnership', 'europe', 'investment'],
+          created_at: '2024-01-12T00:00:00Z',
+          updated_at: '2024-01-12T00:00:00Z'
+        },
+        {
+          id: '3',
+          title: 'Market Analysis: Tech Sector Trends',
+          type: 'market',
+          status: 'draft',
+          author: 'David Chen',
+          publish_date: null,
+          last_modified: '2024-01-14T00:00:00Z',
+          views: 0,
+          content: 'Analysis of current trends in the technology sector and investment opportunities...',
+          tags: ['market', 'tech', 'analysis'],
+          created_at: '2024-01-14T00:00:00Z',
+          updated_at: '2024-01-14T00:00:00Z'
+        },
+        {
+          id: '4',
+          title: 'Investment Opportunities in Renewable Energy',
+          type: 'news',
+          status: 'archived',
+          author: 'Sarah Johnson',
+          publish_date: '2023-12-20',
+          last_modified: '2023-12-20T00:00:00Z',
+          views: 2156,
+          content: 'Exploring investment opportunities in the growing renewable energy sector...',
+          tags: ['renewable', 'energy', 'investment'],
+          created_at: '2023-12-20T00:00:00Z',
+          updated_at: '2023-12-20T00:00:00Z'
+        }
+      ];
+      setContent(mockData);
+    }
   };
 
   const filterContent = () => {
@@ -142,7 +234,10 @@ export default function AdminContentPage() {
       status: 'draft',
       author: '',
       content: '',
-      tags: []
+      tags: [],
+      featured_image_url: '',
+      meta_description: '',
+      seo_keywords: ''
     });
     setShowAddModal(true);
   };
@@ -155,7 +250,10 @@ export default function AdminContentPage() {
       status: item.status,
       author: item.author,
       content: item.content,
-      tags: item.tags
+      tags: item.tags,
+      featured_image_url: item.featured_image_url || '',
+      meta_description: item.meta_description || '',
+      seo_keywords: item.seo_keywords || ''
     });
     setShowEditModal(true);
   };
@@ -170,42 +268,69 @@ export default function AdminContentPage() {
     setShowViewModal(true);
   };
 
-  const saveContent = () => {
-    if (showEditModal && selectedItem) {
-      // Update existing item
-      const updated = content.map(item =>
-        item.id === selectedItem.id
-          ? { 
-              ...item, 
-              ...formData, 
-              lastModified: new Date().toISOString().split('T')[0],
-              publishDate: formData.status === 'published' && !item.publishDate 
-                ? new Date().toISOString().split('T')[0] 
-                : item.publishDate
-            }
-          : item
-      );
-      setContent(updated);
-    } else {
-      // Add new item
-      const newItem: ContentItem = {
-        id: Date.now().toString(),
-        ...formData,
-        publishDate: formData.status === 'published' ? new Date().toISOString().split('T')[0] : '',
-        lastModified: new Date().toISOString().split('T')[0],
-        views: 0
-      };
-      setContent([newItem, ...content]);
+  const saveContent = async () => {
+    try {
+      if (showEditModal && selectedItem) {
+        // Update existing item
+        const response = await fetch('/api/admin/content', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: selectedItem.id,
+            ...formData
+          })
+        });
+
+        if (response.ok) {
+          const updatedItem = await response.json();
+          setContent(content.map(item =>
+            item.id === selectedItem.id ? updatedItem : item
+          ));
+        } else {
+          console.error('Failed to update content');
+          return;
+        }
+      } else {
+        // Add new item
+        const response = await fetch('/api/admin/content', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+
+        if (response.ok) {
+          const newItem = await response.json();
+          setContent([newItem, ...content]);
+        } else {
+          console.error('Failed to create content');
+          return;
+        }
+      }
+      
+      setShowAddModal(false);
+      setShowEditModal(false);
+      setSelectedItem(null);
+    } catch (error) {
+      console.error('Error saving content:', error);
     }
-    
-    setShowAddModal(false);
-    setShowEditModal(false);
-    setSelectedItem(null);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (selectedItem) {
-      setContent(content.filter(item => item.id !== selectedItem.id));
+      try {
+        const response = await fetch(`/api/admin/content?id=${selectedItem.id}`, {
+          method: 'DELETE'
+        });
+
+        if (response.ok) {
+          setContent(content.filter(item => item.id !== selectedItem.id));
+        } else {
+          console.error('Failed to delete content');
+        }
+      } catch (error) {
+        console.error('Error deleting content:', error);
+      }
+      
       setShowDeleteModal(false);
       setSelectedItem(null);
     }
@@ -234,8 +359,30 @@ export default function AdminContentPage() {
   const statusOptions = ['published', 'draft', 'archived'];
 
   return (
-    <div style={{ padding: '2rem', background: '#f9fafb', minHeight: '100vh' }}>
+    <AdminProtectedRoute>
+      <div style={{ padding: '2rem', background: '#f9fafb', minHeight: '100vh' }}>
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+        
+        {isUsingMockData && (
+          <div style={{
+            background: '#fef3c7',
+            border: '1px solid #f59e0b',
+            borderRadius: '8px',
+            padding: '1rem',
+            marginBottom: '2rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <span style={{ fontSize: '1.2rem' }}>⚠️</span>
+            <div>
+              <strong style={{ color: '#92400e' }}>Development Mode</strong>
+              <p style={{ margin: '0.25rem 0 0 0', color: '#92400e', fontSize: '0.9rem' }}>
+                Showing mock data due to database connection issues. CRUD operations are simulated.
+              </p>
+            </div>
+          </div>
+        )}
         
         {/* Header */}
         <div style={{ marginBottom: '2rem' }}>
@@ -468,7 +615,7 @@ export default function AdminContentPage() {
               </div>
               
               <div style={{ color: '#64748b', fontSize: '0.875rem' }}>
-                {item.lastModified}
+                {new Date(item.last_modified).toLocaleDateString()}
               </div>
               
               <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -738,7 +885,7 @@ export default function AdminContentPage() {
             
             <div style={{ marginBottom: '1rem' }}>
               <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>
-                By {selectedItem.author} • {selectedItem.publishDate || 'Not published'} • {selectedItem.views} views
+                By {selectedItem.author} • {selectedItem.publish_date || 'Not published'} • {selectedItem.views} views
               </p>
             </div>
             
@@ -834,6 +981,6 @@ export default function AdminContentPage() {
           </div>
         </div>
       )}
-    </div>
+    </AdminProtectedRoute>
   );
 } 

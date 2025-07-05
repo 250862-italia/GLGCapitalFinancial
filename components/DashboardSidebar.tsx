@@ -30,12 +30,19 @@ export default function DashboardSidebar({ isOpen, onToggle }: DashboardSidebarP
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuth();
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   useEffect(() => {
-    // Check if user is admin
+    // Check if user is superadmin
     const adminUser = localStorage.getItem('admin_user');
-    setIsAdmin(!!adminUser);
+    if (adminUser) {
+      try {
+        const adminData = JSON.parse(adminUser);
+        setIsSuperAdmin(adminData.role === 'super_admin');
+      } catch (e) {
+        setIsSuperAdmin(false);
+      }
+    }
   }, []);
 
   const handleLogout = () => {
@@ -63,50 +70,20 @@ export default function DashboardSidebar({ isOpen, onToggle }: DashboardSidebarP
       adminOnly: false
     },
     {
-      title: 'Banking Details',
-      icon: <CreditCard size={20} />,
-      href: '/profile/banking',
-      adminOnly: false
-    },
-    {
       title: 'KYC Process',
       icon: <Shield size={20} />,
       href: '/kyc',
       adminOnly: false
     },
     {
-      title: 'Investment Packages',
-      icon: <Package size={20} />,
-      href: '/investments',
-      adminOnly: false
-    },
-    {
-      title: 'Reports',
-      icon: <BarChart3 size={20} />,
-      href: '/admin/analytics/reports',
-      adminOnly: true
-    },
-    {
-      title: 'User Management',
-      icon: <User size={20} />,
-      href: '/admin/users',
-      adminOnly: true
-    },
-    {
-      title: 'Content Management',
-      icon: <FileText size={20} />,
-      href: '/admin/content',
-      adminOnly: true
-    },
-    {
-      title: 'Settings',
-      icon: <Settings size={20} />,
-      href: '/admin/settings',
+      title: 'Admin Panel',
+      icon: <Shield size={20} />,
+      href: '/admin',
       adminOnly: true
     }
   ];
 
-  const filteredMenuItems = menuItems.filter(item => !item.adminOnly || isAdmin);
+  const filteredMenuItems = menuItems.filter(item => !item.adminOnly || isSuperAdmin);
 
   return (
     <div style={{
@@ -144,7 +121,7 @@ export default function DashboardSidebar({ isOpen, onToggle }: DashboardSidebarP
               <Shield size={18} />
             </div>
             <span style={{ fontWeight: 700, fontSize: '1.1rem' }}>
-              {isAdmin ? 'Admin Panel' : 'Dashboard'}
+              {isSuperAdmin ? 'Admin Panel' : 'Dashboard'}
             </span>
           </div>
         )}
@@ -177,7 +154,7 @@ export default function DashboardSidebar({ isOpen, onToggle }: DashboardSidebarP
             {user.name || user.first_name || user.email}
           </div>
           <div style={{ fontSize: '0.875rem', opacity: 0.8 }}>
-            {isAdmin ? 'Administrator' : 'Client'}
+            {isSuperAdmin ? 'Super Administrator' : 'Client'}
           </div>
         </div>
       )}

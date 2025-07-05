@@ -2,16 +2,19 @@
 
 import { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Search, Filter, Download, Eye } from 'lucide-react';
+import AdminProtectedRoute from '@/components/auth/AdminProtectedRoute';
 
 interface AnalyticsData {
   id: string;
   metric: string;
   value: number;
-  change: number;
+  change_percentage: number;
   period: string;
   category: string;
   status: 'active' | 'inactive';
-  lastUpdated: string;
+  description?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export default function AnalyticsPage() {
@@ -26,11 +29,13 @@ export default function AnalyticsPage() {
   const [formData, setFormData] = useState({
     metric: '',
     value: 0,
-    change: 0,
+    change_percentage: 0,
     period: '',
     category: '',
-    status: 'active' as 'active' | 'inactive'
+    status: 'active' as 'active' | 'inactive',
+    description: ''
   });
+  const [isUsingMockData, setIsUsingMockData] = useState(false);
 
   useEffect(() => {
     loadAnalytics();
@@ -40,51 +45,125 @@ export default function AnalyticsPage() {
     filterAnalytics();
   }, [analytics, searchTerm, selectedCategory]);
 
-  const loadAnalytics = () => {
-    // Mock data - in real app this would come from API
-    const mockData: AnalyticsData[] = [
-      {
-        id: '1',
-        metric: 'Total Revenue',
-        value: 1250000,
-        change: 12.5,
-        period: 'Q1 2024',
-        category: 'Financial',
-        status: 'active',
-        lastUpdated: '2024-01-15'
-      },
-      {
-        id: '2',
-        metric: 'Active Users',
-        value: 15420,
-        change: -2.3,
-        period: 'Q1 2024',
-        category: 'User',
-        status: 'active',
-        lastUpdated: '2024-01-14'
-      },
-      {
-        id: '3',
-        metric: 'Conversion Rate',
-        value: 3.2,
-        change: 0.8,
-        period: 'Q1 2024',
-        category: 'Performance',
-        status: 'active',
-        lastUpdated: '2024-01-13'
-      },
-      {
-        id: '4',
-        metric: 'Customer Satisfaction',
-        value: 4.7,
-        change: 0.2,
-        period: 'Q1 2024',
-        category: 'Quality',
-        status: 'inactive',
-        lastUpdated: '2024-01-12'
+  const loadAnalytics = async () => {
+    try {
+      const response = await fetch('/api/admin/analytics');
+      if (response.ok) {
+        const data = await response.json();
+        setAnalytics(data);
+        setIsUsingMockData(false);
+      } else {
+        console.error('Failed to load analytics');
+        setIsUsingMockData(true);
+        // Fallback to mock data if API fails
+        const mockData = [
+          {
+            id: '1',
+            metric: 'Total Revenue',
+            value: 1250000,
+            change_percentage: 12.5,
+            period: 'Q1 2024',
+            category: 'Financial',
+            status: 'active',
+            description: 'Total platform revenue',
+            created_at: '2024-01-15T00:00:00Z',
+            updated_at: '2024-01-15T00:00:00Z'
+          },
+          {
+            id: '2',
+            metric: 'Active Users',
+            value: 15420,
+            change_percentage: -2.3,
+            period: 'Q1 2024',
+            category: 'User',
+            status: 'active',
+            description: 'Number of active users',
+            created_at: '2024-01-14T00:00:00Z',
+            updated_at: '2024-01-14T00:00:00Z'
+          },
+          {
+            id: '3',
+            metric: 'Conversion Rate',
+            value: 3.2,
+            change_percentage: 0.8,
+            period: 'Q1 2024',
+            category: 'Performance',
+            status: 'active',
+            description: 'User conversion rate',
+            created_at: '2024-01-13T00:00:00Z',
+            updated_at: '2024-01-13T00:00:00Z'
+          },
+          {
+            id: '4',
+            metric: 'Customer Satisfaction',
+            value: 4.7,
+            change_percentage: 0.2,
+            period: 'Q1 2024',
+            category: 'Quality',
+            status: 'inactive',
+            description: 'Customer satisfaction score',
+            created_at: '2024-01-12T00:00:00Z',
+            updated_at: '2024-01-12T00:00:00Z'
+          }
+        ];
+        setAnalytics(mockData);
       }
-    ];
-    setAnalytics(mockData);
+    } catch (error) {
+      console.error('Error loading analytics:', error);
+      setIsUsingMockData(true);
+      // Fallback to mock data if API fails
+      const mockData = [
+        {
+          id: '1',
+          metric: 'Total Revenue',
+          value: 1250000,
+          change_percentage: 12.5,
+          period: 'Q1 2024',
+          category: 'Financial',
+          status: 'active',
+          description: 'Total platform revenue',
+          created_at: '2024-01-15T00:00:00Z',
+          updated_at: '2024-01-15T00:00:00Z'
+        },
+        {
+          id: '2',
+          metric: 'Active Users',
+          value: 15420,
+          change_percentage: -2.3,
+          period: 'Q1 2024',
+          category: 'User',
+          status: 'active',
+          description: 'Number of active users',
+          created_at: '2024-01-14T00:00:00Z',
+          updated_at: '2024-01-14T00:00:00Z'
+        },
+        {
+          id: '3',
+          metric: 'Conversion Rate',
+          value: 3.2,
+          change_percentage: 0.8,
+          period: 'Q1 2024',
+          category: 'Performance',
+          status: 'active',
+          description: 'User conversion rate',
+          created_at: '2024-01-13T00:00:00Z',
+          updated_at: '2024-01-13T00:00:00Z'
+        },
+        {
+          id: '4',
+          metric: 'Customer Satisfaction',
+          value: 4.7,
+          change_percentage: 0.2,
+          period: 'Q1 2024',
+          category: 'Quality',
+          status: 'inactive',
+          description: 'Customer satisfaction score',
+          created_at: '2024-01-12T00:00:00Z',
+          updated_at: '2024-01-12T00:00:00Z'
+        }
+      ];
+      setAnalytics(mockData);
+    }
   };
 
   const filterAnalytics = () => {
@@ -108,10 +187,11 @@ export default function AnalyticsPage() {
     setFormData({
       metric: '',
       value: 0,
-      change: 0,
+      change_percentage: 0,
       period: '',
       category: '',
-      status: 'active'
+      status: 'active',
+      description: ''
     });
     setShowAddModal(true);
   };
@@ -121,10 +201,11 @@ export default function AnalyticsPage() {
     setFormData({
       metric: item.metric,
       value: item.value,
-      change: item.change,
+      change_percentage: item.change_percentage,
       period: item.period,
       category: item.category,
-      status: item.status
+      status: item.status,
+      description: item.description || ''
     });
     setShowEditModal(true);
   };
@@ -140,33 +221,60 @@ export default function AnalyticsPage() {
     alert(`Viewing details for: ${item.metric}`);
   };
 
-  const saveAnalytics = () => {
-    if (showEditModal && selectedItem) {
-      // Update existing item
-      const updated = analytics.map(item =>
-        item.id === selectedItem.id
-          ? { ...item, ...formData, lastUpdated: new Date().toISOString().split('T')[0] }
-          : item
-      );
-      setAnalytics(updated);
-    } else {
-      // Add new item
-      const newItem: AnalyticsData = {
-        id: Date.now().toString(),
-        ...formData,
-        lastUpdated: new Date().toISOString().split('T')[0]
-      };
-      setAnalytics([newItem, ...analytics]);
+  const saveAnalytics = async () => {
+    try {
+      if (showEditModal && selectedItem) {
+        // Update existing item
+        const response = await fetch('/api/admin/analytics', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: selectedItem.id, ...formData })
+        });
+        
+        if (response.ok) {
+          await loadAnalytics(); // Reload data
+        } else {
+          console.error('Failed to update analytics');
+        }
+      } else {
+        // Add new item
+        const response = await fetch('/api/admin/analytics', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+        
+        if (response.ok) {
+          await loadAnalytics(); // Reload data
+        } else {
+          console.error('Failed to create analytics');
+        }
+      }
+      
+      setShowAddModal(false);
+      setShowEditModal(false);
+      setSelectedItem(null);
+    } catch (error) {
+      console.error('Error saving analytics:', error);
     }
-    
-    setShowAddModal(false);
-    setShowEditModal(false);
-    setSelectedItem(null);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (selectedItem) {
-      setAnalytics(analytics.filter(item => item.id !== selectedItem.id));
+      try {
+        const response = await fetch(`/api/admin/analytics?id=${selectedItem.id}`, {
+          method: 'DELETE'
+        });
+        
+        if (response.ok) {
+          await loadAnalytics(); // Reload data
+        } else {
+          console.error('Failed to delete analytics');
+        }
+      } catch (error) {
+        console.error('Error deleting analytics:', error);
+      }
+      
       setShowDeleteModal(false);
       setSelectedItem(null);
     }
@@ -174,16 +282,17 @@ export default function AnalyticsPage() {
 
   const exportData = () => {
     const csvContent = [
-      ['ID', 'Metric', 'Value', 'Change', 'Period', 'Category', 'Status', 'Last Updated'],
+      ['ID', 'Metric', 'Value', 'Change %', 'Period', 'Category', 'Status', 'Description', 'Last Updated'],
       ...filteredAnalytics.map(item => [
         item.id,
         item.metric,
         item.value.toString(),
-        item.change.toString(),
+        item.change_percentage.toString(),
         item.period,
         item.category,
         item.status,
-        item.lastUpdated
+        item.description || '',
+        new Date(item.updated_at).toLocaleDateString()
       ])
     ].map(row => row.join(',')).join('\n');
 
@@ -199,7 +308,28 @@ export default function AnalyticsPage() {
   const categories = ['Financial', 'User', 'Performance', 'Quality'];
 
   return (
-    <div style={{ padding: '2rem', maxWidth: 1400, margin: '0 auto' }}>
+    <AdminProtectedRoute>
+      <div style={{ padding: '2rem', maxWidth: 1400, margin: '0 auto' }}>
+        {isUsingMockData && (
+          <div style={{
+            background: '#fef3c7',
+            border: '1px solid #f59e0b',
+            borderRadius: '8px',
+            padding: '1rem',
+            marginBottom: '2rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <span style={{ fontSize: '1.2rem' }}>⚠️</span>
+            <div>
+              <strong style={{ color: '#92400e' }}>Development Mode</strong>
+              <p style={{ margin: '0.25rem 0 0 0', color: '#92400e', fontSize: '0.9rem' }}>
+                Showing mock data due to database connection issues. CRUD operations are simulated.
+              </p>
+            </div>
+          </div>
+        )}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <h1 style={{ fontSize: '2rem', fontWeight: 700, color: '#1f2937' }}>
           Analytics Dashboard
@@ -326,11 +456,11 @@ export default function AnalyticsPage() {
             
             <div style={{ marginBottom: '1rem' }}>
               <span style={{
-                color: item.change >= 0 ? '#10b981' : '#ef4444',
+                color: item.change_percentage >= 0 ? '#10b981' : '#ef4444',
                 fontWeight: 600,
                 fontSize: '0.875rem'
               }}>
-                {item.change >= 0 ? '+' : ''}{item.change}%
+                {item.change_percentage >= 0 ? '+' : ''}{item.change_percentage}%
               </span>
               <span style={{ color: '#6b7280', fontSize: '0.875rem', marginLeft: '0.5rem' }}>
                 vs {item.period}
@@ -439,8 +569,8 @@ export default function AnalyticsPage() {
               <input
                 type="number"
                 placeholder="Change %"
-                value={formData.change}
-                onChange={(e) => setFormData({...formData, change: parseFloat(e.target.value) || 0})}
+                value={formData.change_percentage}
+                onChange={(e) => setFormData({...formData, change_percentage: parseFloat(e.target.value) || 0})}
                 style={{ padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
               />
               
@@ -471,6 +601,13 @@ export default function AnalyticsPage() {
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
               </select>
+              
+              <textarea
+                placeholder="Description (optional)"
+                value={formData.description}
+                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                style={{ padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px', minHeight: '80px', resize: 'vertical' }}
+              />
             </div>
             
             <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
@@ -573,6 +710,7 @@ export default function AnalyticsPage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </AdminProtectedRoute>
   );
 } 
