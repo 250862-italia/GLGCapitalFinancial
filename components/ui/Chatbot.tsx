@@ -93,7 +93,7 @@ export default function Chatbot() {
         window.location.href = "/about";
         break;
       case "register":
-        window.location.href = "/iscriviti";
+        window.location.href = "/login";
         break;
       case "kyc":
         setSelectedFaq(4); // KYC FAQ

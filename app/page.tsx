@@ -114,7 +114,7 @@ export default function HomePage() {
           </p>
           
           <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link href="/iscriviti" style={{
+            <Link href="/login" style={{
               background: 'var(--accent)',
               color: 'var(--primary)',
               padding: '1rem 2rem',

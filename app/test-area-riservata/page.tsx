@@ -519,7 +519,7 @@ function DashboardContent() {
           marginTop: '2rem'
         }}>
           <button
-            onClick={() => router.push('/iscriviti')}
+            onClick={() => router.push('/login')}
             style={{
               background: '#059669',
               color: 'white',
@@ -535,7 +535,7 @@ function DashboardContent() {
             }}
           >
             <User size={20} />
-            Register Account
+            Get Started
           </button>
           
           <button
