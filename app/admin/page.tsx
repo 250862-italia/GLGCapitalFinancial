@@ -19,7 +19,8 @@ import {
   Building,
   Package,
   CreditCard,
-  CheckCircle
+  CheckCircle,
+  LogOut
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -52,6 +53,14 @@ export default function AdminDashboardPage() {
   // Funzione per aggiungere log
   const addLog = (msg: string) => setLogs(logs => [...logs, `[${new Date().toLocaleTimeString()}] ${msg}`]);
   const clearLogs = () => setLogs([]);
+
+  // Logout function
+  const handleLogout = () => {
+    localStorage.removeItem("admin_user");
+    localStorage.removeItem("admin_token");
+    addLog("Admin logged out successfully");
+    router.push('/admin/login');
+  };
 
   // Listener globale per log (window.dispatchEvent(new CustomEvent('admin-log', { detail: 'messaggio' })))
   useEffect(() => {
@@ -169,13 +178,37 @@ export default function AdminDashboardPage() {
         zIndex: 2000,
         background: '#f0fdf4',
         borderBottom: '1px solid #bbf7d0',
-        padding: '1rem 0',
-        textAlign: 'center',
+        padding: '1rem 2rem',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
         boxShadow: '0 2px 8px rgba(16,185,129,0.08)'
       }}>
         <span style={{ color: '#16a34a', fontWeight: 600, fontSize: 16 }}>
           Welcome, {adminUser.name} ({adminUser.role})
         </span>
+        <button
+          onClick={handleLogout}
+          style={{
+            background: '#dc2626',
+            color: 'white',
+            border: 'none',
+            borderRadius: 8,
+            padding: '0.5rem 1rem',
+            fontSize: 14,
+            fontWeight: 600,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            transition: 'background 0.2s ease'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.background = '#b91c1c'}
+          onMouseLeave={(e) => e.currentTarget.style.background = '#dc2626'}
+        >
+          <LogOut size={16} />
+          Logout
+        </button>
       </div>
       {/* SPACER to avoid content hidden under sticky banner */}
       <div style={{ height: 68 }} />
@@ -509,7 +542,7 @@ export default function AdminDashboardPage() {
         )}
 
       </div>
-      <AdminConsole logs={logs} onClear={clearLogs} />
+      <AdminConsole logs={logs} onClear={clearLogs} onLogout={handleLogout} />
     </AdminProtectedRoute>
   );
 } 
