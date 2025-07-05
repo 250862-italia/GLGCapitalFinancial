@@ -174,7 +174,7 @@ export async function POST(request: NextRequest) {
 
     console.log('Attempting to create client with data:', clientInsertData);
 
-    let clientData: any = null;
+    let finalClientData: any = null;
     const { data: newClientData, error: clientError } = await supabase
       .from('clients')
       .insert(clientInsertData)
@@ -256,18 +256,18 @@ export async function POST(request: NextRequest) {
       }
 
       console.log('Fallback client created successfully:', fallbackClientData.id);
-      clientData = fallbackClientData;
+      finalClientData = fallbackClientData;
     } else {
-      clientData = newClientData;
+      finalClientData = newClientData;
     }
 
-    console.log('Client created successfully:', clientData.id);
+    console.log('Client created successfully:', finalClientData.id);
 
     return NextResponse.json({
       success: true,
       message: 'Registration completed successfully',
       user_id: userData.id,
-      client_id: clientData.id,
+      client_id: finalClientData.id,
       user: {
         id: userData.id,
         email: userData.email,

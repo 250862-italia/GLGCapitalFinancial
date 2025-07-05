@@ -449,6 +449,35 @@ export default function BankingPage() {
                 <span style={{ color: '#92400e', fontFamily: 'monospace', fontSize: 16 }}>101019644</span>
               </div>
             </div>
+
+            <div style={{
+              background: 'white',
+              border: '1px solid #f59e0b',
+              borderRadius: 6,
+              padding: '1rem'
+            }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontWeight: 600, color: '#92400e' }}>Indirizzo del beneficiario:</span>
+                </div>
+                <span style={{ color: '#92400e', fontSize: 14 }}>1309 Coffeen Ave, Ste H, Sheridan, WY, 82801-5714, United States</span>
+              </div>
+            </div>
+
+            <div style={{
+              background: 'white',
+              border: '1px solid #f59e0b',
+              borderRadius: 6,
+              padding: '1rem'
+            }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontWeight: 600, color: '#92400e' }}>Banca e indirizzo:</span>
+                </div>
+                <span style={{ color: '#92400e', fontSize: 14 }}>Lead Bank</span>
+                <span style={{ color: '#92400e', fontSize: 14 }}>1801 Main Street, Kansas City, MO, 64108, United States</span>
+              </div>
+            </div>
           </div>
 
           <div style={{
