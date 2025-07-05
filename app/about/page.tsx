@@ -455,7 +455,7 @@ export default function AboutPage() {
               Specialized in strategic development, consultancy, and high-value project management.
             </p>
             <p style={{ color: '#1a3556', fontSize: '0.9rem' }}>
-              Website: www.magnificusdominusconsulting.com
+              Website: www.magnificusdominus.com
             </p>
           </div>
 

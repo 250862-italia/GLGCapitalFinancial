@@ -217,7 +217,7 @@ export default function ContactPage() {
               Specialized in strategic development, consultancy, and high-value project management.
             </p>
             <p style={{ color: '#1a3556', fontSize: '0.9rem' }}>
-              Website: <a href="https://www.magnificusdominusconsulting.com" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6' }}>www.magnificusdominusconsulting.com</a>
+              Website: <a href="https://www.magnificusdominus.com" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6' }}>www.magnificusdominus.com</a>
             </p>
           </div>
 

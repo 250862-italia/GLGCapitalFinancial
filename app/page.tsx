@@ -396,7 +396,7 @@ export default function HomePage() {
                 GLG Capital Group has entrusted <strong>Magnificus Dominus Consulting Europe Srl</strong> with the exclusive management of its business operations in Italy. As a specialized firm in strategic development, consultancy, and high-value project management, Magnificus Dominus ensures the growth and consolidation of GLG's initiatives in the Italian market.
               </p>
               <p style={{ color: 'var(--foreground)', fontSize: '0.9rem' }}>
-                For more information: <strong>www.magnificusdominusconsulting.com</strong>
+                For more information: <strong>www.magnificusdominus.com</strong>
               </p>
             </div>
 
