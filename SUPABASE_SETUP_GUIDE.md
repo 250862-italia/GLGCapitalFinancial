@@ -19,6 +19,9 @@
 #### **Step 2: Esegui Setup Completo**
 Copia e incolla tutto il contenuto di `setup-production.sql` e clicca **"Run"**
 
+#### **Step 3: Esegui Migration Analytics (se necessario)**
+Se ricevi errori di colonne mancanti (es. "column category does not exist"), esegui anche `migrate-analytics-table.sql`
+
 ### **3. Verifica Setup**
 
 #### **Step 1: Controlla le Tabelle**
