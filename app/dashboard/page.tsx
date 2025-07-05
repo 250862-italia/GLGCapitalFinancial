@@ -96,33 +96,139 @@ export default function ClientDashboard() {
   const allPackages = availablePackages;
 
   // Function to purchase a package
-  const handleBuy = (pkg: any) => {
-    setSelectedPackage(pkg);
-    setShowBankModal(true);
+  const handleBuy = async (pkg: any) => {
+    // Check KYC status first
+    if (!user) {
+      alert('Please log in to make investments.');
+      return;
+    }
+
+    try {
+      // Get client data to check KYC status
+      const { data: clientData, error: clientError } = await supabase
+        .from('clients')
+        .select('kycStatus')
+        .eq('user_id', user.id)
+        .single();
+
+      if (clientError || !clientData) {
+        console.error('Error fetching client data:', clientError);
+        alert('Error checking your account status. Please try again.');
+        return;
+      }
+
+      // Check KYC status
+      if (clientData.kycStatus !== 'approved') {
+        if (clientData.kycStatus === 'pending') {
+          alert('Your KYC is still pending approval. Please complete the KYC process and wait for approval before making investments.');
+        } else if (clientData.kycStatus === 'rejected') {
+          alert('Your KYC has been rejected. Please contact support to resolve this issue before making investments.');
+        } else {
+          alert('Please complete the KYC process before making investments.');
+        }
+        return;
+      }
+
+      // KYC is approved, proceed with purchase
+      setSelectedPackage(pkg);
+      setShowBankModal(true);
+    } catch (error) {
+      console.error('Error checking KYC status:', error);
+      alert('Error checking your account status. Please try again.');
+    }
   };
 
   // Purchase confirmation function
-  const confirmBuy = () => {
-    if (!selectedPackage) return;
+  const confirmBuy = async () => {
+    if (!selectedPackage || !user) return;
     if (myInvestments.some(inv => inv.packageName === selectedPackage.name)) return;
-    const newInvestment: Investment = {
-      id: selectedPackage.id || String(Date.now()),
-      packageName: selectedPackage.name,
-      amount: selectedPackage.minInvestment || selectedPackage.minAmount || 1000,
-      dailyReturn: selectedPackage.expectedReturn || selectedPackage.dailyReturn || 1.0,
-      duration: selectedPackage.duration || 30,
-      startDate: new Date().toISOString().split('T')[0],
-      endDate: new Date(Date.now() + (selectedPackage.duration || 30) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      status: 'active',
-      totalEarned: 0,
-      dailyEarnings: 0,
-      monthlyEarnings: 0
-    };
-    const updated = [...myInvestments, newInvestment];
-    setMyInvestments(updated);
-    localStorage.setItem('myInvestments', JSON.stringify(updated));
-    setShowBankModal(false);
-    setSelectedPackage(null);
+
+    try {
+      // Send email with banking details
+      const response = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: user.email,
+          subject: `Investment Instructions - ${selectedPackage.name} Package`,
+          html: `
+            <h2>Investment Instructions</h2>
+            <p>Dear ${user.name || user.first_name || 'Valued Customer'},</p>
+            <p>Thank you for choosing to invest in our <b>${selectedPackage.name}</b> package.</p>
+            
+            <h3>Package Details:</h3>
+            <ul>
+              <li><strong>Package:</strong> ${selectedPackage.name}</li>
+              <li><strong>Investment Amount:</strong> $${selectedPackage.minInvestment || selectedPackage.minAmount || 1000}</li>
+              <li><strong>Expected Return:</strong> ${selectedPackage.expectedReturn || selectedPackage.dailyReturn || 1.0}% daily</li>
+              <li><strong>Duration:</strong> ${selectedPackage.duration || 30} days</li>
+            </ul>
+
+            <h3>Banking Details for Wire Transfer:</h3>
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <p><strong>Transfer Type:</strong> US Wire Transfer (up to 3 business days)</p>
+              <p><strong>Beneficiary:</strong> GLG capital group LLC</p>
+              <p><strong>Accepted Currency:</strong> USD</p>
+              <p><strong>Account Number:</strong> 218086576410</p>
+              <p><strong>ACH Routing Number:</strong> 101019644</p>
+              <p><strong>Bank Routing Number:</strong> 101019644</p>
+              <p><strong>Beneficiary Address:</strong> 1309 Coffeen Ave, Ste H, Sheridan, WY, 82801-5714, United States</p>
+              <p><strong>Bank:</strong> Lead Bank</p>
+              <p><strong>Bank Address:</strong> 1801 Main Street, Kansas City, MO, 64108, United States</p>
+            </div>
+
+            <h3>Important Instructions:</h3>
+            <ol>
+              <li>Please include your account reference number in the wire transfer description</li>
+              <li>Use the following reference: <strong>Investment ${selectedPackage.name} - ${user.name || user.first_name || user.email}</strong></li>
+              <li>Send the wire transfer to the banking details above</li>
+              <li>Once the transfer is completed, please send the wire transfer receipt to our support team</li>
+              <li>Your investment will be activated within 24-48 hours after we receive the payment confirmation</li>
+            </ol>
+
+            <h3>Contact Information:</h3>
+            <p>If you have any questions or need assistance, please contact our support team.</p>
+            
+            <p>Best regards,<br>GLG Capital Group Team</p>
+          `
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send email');
+      }
+
+      // Create investment record
+      const newInvestment: Investment = {
+        id: selectedPackage.id || String(Date.now()),
+        packageName: selectedPackage.name,
+        amount: selectedPackage.minInvestment || selectedPackage.minAmount || 1000,
+        dailyReturn: selectedPackage.expectedReturn || selectedPackage.dailyReturn || 1.0,
+        duration: selectedPackage.duration || 30,
+        startDate: new Date().toISOString().split('T')[0],
+        endDate: new Date(Date.now() + (selectedPackage.duration || 30) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        status: 'pending_payment', // Changed to pending_payment until payment is confirmed
+        totalEarned: 0,
+        dailyEarnings: 0,
+        monthlyEarnings: 0
+      };
+
+      const updated = [...myInvestments, newInvestment];
+      setMyInvestments(updated);
+      localStorage.setItem('myInvestments', JSON.stringify(updated));
+      
+      setShowBankModal(false);
+      setSelectedPackage(null);
+      
+      // Show success message
+      alert('Investment request submitted successfully! Check your email for banking details and instructions.');
+      
+    } catch (error) {
+      console.error('Error processing investment:', error);
+      alert('Error processing your investment request. Please try again.');
+    }
   };
 
   // Stats calculated only on purchased investments
@@ -152,6 +258,7 @@ export default function ClientDashboard() {
       case 'active': return '#059669';
       case 'completed': return '#3b82f6';
       case 'pending': return '#f59e0b';
+      case 'pending_payment': return '#dc2626';
       default: return '#6b7280';
     }
   };
@@ -161,6 +268,7 @@ export default function ClientDashboard() {
       case 'active': return 'Active';
       case 'completed': return 'Completed';
       case 'pending': return 'Pending';
+      case 'pending_payment': return 'Pending Payment';
       default: return 'Unknown';
     }
   };
@@ -581,20 +689,32 @@ export default function ClientDashboard() {
         {showBankModal && (
           <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
             <div style={{ background: 'white', borderRadius: 12, padding: 32, minWidth: 350, boxShadow: '0 4px 24px rgba(10,37,64,0.10)' }}>
-              <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16 }}>Banking Details for Wire Transfer</h2>
-              {bankDetails ? (
+              <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16 }}>Investment Confirmation</h2>
+              {selectedPackage && (
                 <div style={{ marginBottom: 24 }}>
-                  <div><b>IBAN:</b> {bankDetails.iban}</div>
-                  <div><b>Account Holder:</b> {bankDetails.accountHolder}</div>
-                  <div><b>Bank:</b> {bankDetails.bankName}</div>
-                  <div><b>Reference:</b> {bankDetails.reason}</div>
+                  <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, padding: 16, marginBottom: 16 }}>
+                    <h3 style={{ margin: '0 0 12px 0', color: '#166534' }}>Package Details</h3>
+                    <div><b>Package:</b> {selectedPackage.name}</div>
+                    <div><b>Investment Amount:</b> ${selectedPackage.minInvestment || selectedPackage.minAmount || 1000}</div>
+                    <div><b>Expected Return:</b> {selectedPackage.expectedReturn || selectedPackage.dailyReturn || 1.0}% daily</div>
+                    <div><b>Duration:</b> {selectedPackage.duration || 30} days</div>
+                  </div>
+                  <div style={{ background: '#fef3c7', border: '1px solid #f59e0b', borderRadius: 8, padding: 16 }}>
+                    <h3 style={{ margin: '0 0 12px 0', color: '#92400e' }}>Next Steps</h3>
+                    <p style={{ margin: '0 0 8px 0', fontSize: 14, color: '#92400e' }}>
+                      Click "Send Investment Instructions" to receive an email with:
+                    </p>
+                    <ul style={{ margin: 0, paddingLeft: 20, fontSize: 14, color: '#92400e' }}>
+                      <li>Complete banking details for wire transfer</li>
+                      <li>Step-by-step payment instructions</li>
+                      <li>Reference number for your investment</li>
+                    </ul>
+                  </div>
                 </div>
-              ) : (
-                <div style={{ color: 'red', marginBottom: 24 }}>Banking details not configured. Please contact the administrator.</div>
               )}
               <div style={{ display: 'flex', gap: 16, justifyContent: 'flex-end' }}>
                 <button onClick={() => { setShowBankModal(false); setSelectedPackage(null); }} style={{ background: '#d1d5db', color: '#1f2937', padding: '0.5rem 1rem', border: 'none', borderRadius: 6, fontWeight: 500 }}>Cancel</button>
-                <button onClick={confirmBuy} disabled={!bankDetails} style={{ background: '#059669', color: 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: 6, fontWeight: 500, cursor: bankDetails ? 'pointer' : 'not-allowed' }}>Confirm Purchase</button>
+                <button onClick={confirmBuy} style={{ background: '#059669', color: 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: 6, fontWeight: 500, cursor: 'pointer' }}>Send Investment Instructions</button>
               </div>
             </div>
           </div>
