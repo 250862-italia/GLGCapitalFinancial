@@ -246,7 +246,7 @@ export default function ClientDashboard() {
           )}
         </div>
 
-        {/* Pacchetti Disponibili per l'Acquisto */}
+        {/* Available Packages for Purchase */}
         <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 4px 24px rgba(10,37,64,0.10)', padding: '2rem', margin: '2.5rem 0' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
             <div>
@@ -577,24 +577,24 @@ export default function ClientDashboard() {
           </div>
         </div>
 
-        {/* Modale per i dati bancari */}
+        {/* Banking Details Modal */}
         {showBankModal && (
           <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
             <div style={{ background: 'white', borderRadius: 12, padding: 32, minWidth: 350, boxShadow: '0 4px 24px rgba(10,37,64,0.10)' }}>
-              <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16 }}>Dati Bancari per Bonifico</h2>
+              <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16 }}>Banking Details for Wire Transfer</h2>
               {bankDetails ? (
                 <div style={{ marginBottom: 24 }}>
                   <div><b>IBAN:</b> {bankDetails.iban}</div>
-                  <div><b>Intestatario:</b> {bankDetails.accountHolder}</div>
-                  <div><b>Banca:</b> {bankDetails.bankName}</div>
-                  <div><b>Causale:</b> {bankDetails.reason}</div>
+                  <div><b>Account Holder:</b> {bankDetails.accountHolder}</div>
+                  <div><b>Bank:</b> {bankDetails.bankName}</div>
+                  <div><b>Reference:</b> {bankDetails.reason}</div>
                 </div>
               ) : (
-                <div style={{ color: 'red', marginBottom: 24 }}>Dati bancari non configurati. Contattare l'amministratore.</div>
+                <div style={{ color: 'red', marginBottom: 24 }}>Banking details not configured. Please contact the administrator.</div>
               )}
               <div style={{ display: 'flex', gap: 16, justifyContent: 'flex-end' }}>
-                <button onClick={() => { setShowBankModal(false); setSelectedPackage(null); }} style={{ background: '#d1d5db', color: '#1f2937', padding: '0.5rem 1rem', border: 'none', borderRadius: 6, fontWeight: 500 }}>Annulla</button>
-                <button onClick={confirmBuy} disabled={!bankDetails} style={{ background: '#059669', color: 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: 6, fontWeight: 500, cursor: bankDetails ? 'pointer' : 'not-allowed' }}>Conferma Acquisto</button>
+                <button onClick={() => { setShowBankModal(false); setSelectedPackage(null); }} style={{ background: '#d1d5db', color: '#1f2937', padding: '0.5rem 1rem', border: 'none', borderRadius: 6, fontWeight: 500 }}>Cancel</button>
+                <button onClick={confirmBuy} disabled={!bankDetails} style={{ background: '#059669', color: 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: 6, fontWeight: 500, cursor: bankDetails ? 'pointer' : 'not-allowed' }}>Confirm Purchase</button>
               </div>
             </div>
           </div>
