@@ -8,18 +8,26 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 export async function GET() {
   try {
     const { data, error } = await supabase
-      .from('informational_requests')
-      .select('*')
+      .from('investments')
+      .select(`
+        *,
+        clients!inner(
+          "firstName",
+          "lastName",
+          email,
+          phone
+        )
+      `)
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching informational requests:', error);
-      return NextResponse.json({ error: 'Failed to fetch informational requests' }, { status: 500 });
+      console.error('Error fetching investments:', error);
+      return NextResponse.json({ error: 'Failed to fetch investments' }, { status: 500 });
     }
 
     return NextResponse.json(data || []);
   } catch (error) {
-    console.error('Error in informational requests GET:', error);
+    console.error('Error in investments GET:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -38,20 +46,20 @@ export async function PUT(request: NextRequest) {
     updateData.updated_at = new Date().toISOString();
 
     const { data, error } = await supabase
-      .from('informational_requests')
+      .from('investments')
       .update(updateData)
       .eq('id', id)
       .select()
       .single();
 
     if (error) {
-      console.error('Error updating informational request:', error);
-      return NextResponse.json({ error: 'Failed to update informational request' }, { status: 500 });
+      console.error('Error updating investment:', error);
+      return NextResponse.json({ error: 'Failed to update investment' }, { status: 500 });
     }
 
     return NextResponse.json(data);
   } catch (error) {
-    console.error('Error in informational requests PUT:', error);
+    console.error('Error in investments PUT:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 } 

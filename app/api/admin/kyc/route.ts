@@ -8,18 +8,28 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 export async function GET() {
   try {
     const { data, error } = await supabase
-      .from('informational_requests')
-      .select('*')
-      .order('created_at', { ascending: false });
+      .from('kyc_records')
+      .select(`
+        *,
+        clients!inner(
+          "firstName",
+          "lastName",
+          email,
+          phone,
+          "dateOfBirth",
+          nationality
+        )
+      `)
+      .order('"createdAt"', { ascending: false });
 
     if (error) {
-      console.error('Error fetching informational requests:', error);
-      return NextResponse.json({ error: 'Failed to fetch informational requests' }, { status: 500 });
+      console.error('Error fetching KYC records:', error);
+      return NextResponse.json({ error: 'Failed to fetch KYC records' }, { status: 500 });
     }
 
     return NextResponse.json(data || []);
   } catch (error) {
-    console.error('Error in informational requests GET:', error);
+    console.error('Error in KYC GET:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -35,23 +45,25 @@ export async function PUT(request: NextRequest) {
 
     const updateData: any = { status };
     if (notes !== undefined) updateData.notes = notes;
-    updateData.updated_at = new Date().toISOString();
+    if (status === 'approved') {
+      updateData.verifiedAt = new Date().toISOString();
+    }
 
     const { data, error } = await supabase
-      .from('informational_requests')
+      .from('kyc_records')
       .update(updateData)
       .eq('id', id)
       .select()
       .single();
 
     if (error) {
-      console.error('Error updating informational request:', error);
-      return NextResponse.json({ error: 'Failed to update informational request' }, { status: 500 });
+      console.error('Error updating KYC record:', error);
+      return NextResponse.json({ error: 'Failed to update KYC record' }, { status: 500 });
     }
 
     return NextResponse.json(data);
   } catch (error) {
-    console.error('Error in informational requests PUT:', error);
+    console.error('Error in KYC PUT:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 } 

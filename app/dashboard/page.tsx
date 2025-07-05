@@ -91,14 +91,14 @@ export default function ClientDashboard() {
           id: inv.id,
           packageName: inv.package?.name || 'Unknown Package',
           amount: inv.amount,
-          status: inv.status,
+          dailyReturn: inv.package?.expectedReturn || inv.package?.dailyReturn || 1.0,
+          duration: inv.package?.duration || 30,
           startDate: inv.startDate,
           endDate: inv.endDate,
-          totalReturns: inv.totalReturns || 0,
-          dailyReturns: inv.dailyReturns || 0,
-          paymentMethod: inv.paymentMethod || 'bank',
-          transactionId: inv.transactionId,
-          notes: inv.notes
+          status: inv.status,
+          totalEarned: inv.totalReturns || 0,
+          dailyEarnings: inv.dailyReturns || 0,
+          monthlyEarnings: (inv.dailyReturns || 0) * 30
         }));
 
         setMyInvestments(transformedInvestments);
