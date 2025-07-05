@@ -460,51 +460,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* CONTACT SECTION */}
-      <section style={{ 
-        background: 'var(--primary)', 
-        color: 'var(--secondary)', 
-        padding: '4rem 2rem',
-        textAlign: 'center'
-      }}>
-        <div style={{ maxWidth: 800, margin: '0 auto' }}>
-          <h2 style={{ 
-            fontSize: '2.5rem', 
-            fontWeight: 800, 
-            marginBottom: '2rem' 
-          }}>
-            Contact Us
-          </h2>
-          
-          <div style={{ 
-            background: 'rgba(255,255,255,0.1)', 
-            padding: '2rem', 
-            borderRadius: 12,
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255,255,255,0.2)'
-          }}>
-            <h3 style={{ 
-              fontSize: '1.5rem', 
-              fontWeight: 700, 
-              marginBottom: '1rem' 
-            }}>
-              GLG CAPITAL GROUP
-            </h3>
-            <p style={{ fontSize: '1.1rem', lineHeight: 1.6, marginBottom: '0.5rem' }}>
-              1309 Coffeen Avenue STE 1200<br />
-              Sheridan, Wyoming 82801
-            </p>
-            <p style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>
-              <a href="mailto:corefound@glgcapitalgroupllc.com" style={{ color: 'var(--accent)' }}>
-                corefound@glgcapitalgroupllc.com
-              </a>
-            </p>
-            <p style={{ fontSize: '1.1rem' }}>
-              Phone: +1 786 798 8311
-            </p>
-          </div>
-        </div>
-      </section>
+
 
       {/* CHATBOT */}
       <ChatbotWrapper />
