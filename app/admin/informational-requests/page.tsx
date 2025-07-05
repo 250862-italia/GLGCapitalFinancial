@@ -26,8 +26,6 @@ interface InformationalRequest {
   lastName: string;
   email: string;
   phone: string | null;
-  company: string | null;
-  position: string | null;
   country: string | null;
   city: string | null;
   additionalNotes: string | null;
@@ -125,7 +123,7 @@ export default function InformationalRequestsPage() {
       request.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       request.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       request.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (request.company && request.company.toLowerCase().includes(searchTerm.toLowerCase()));
+      (request.country && request.country.toLowerCase().includes(searchTerm.toLowerCase()));
     
     const matchesStatus = statusFilter === 'ALL' || request.status === statusFilter;
     
@@ -253,7 +251,7 @@ export default function InformationalRequestsPage() {
             }} />
             <input
               type="text"
-              placeholder="Search by name, email, or company..."
+              placeholder="Search by name, email, or country..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               style={{
@@ -304,7 +302,7 @@ export default function InformationalRequestsPage() {
           }}>
             <div>Client</div>
             <div>Contact</div>
-            <div>Company</div>
+            <div>Country</div>
             <div>Status</div>
             <div>Date</div>
             <div>Actions</div>
@@ -357,21 +355,12 @@ export default function InformationalRequestsPage() {
                   )}
                 </div>
 
-                {/* Company */}
+                {/* Country */}
                 <div>
-                  {request.company ? (
-                    <>
-                      <div style={{ fontSize: '14px', color: '#1f2937' }}>
-                        {request.company}
-                      </div>
-                      {request.position && (
-                        <div style={{ fontSize: '14px', color: '#6b7280' }}>
-                          {request.position}
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <span style={{ color: '#9ca3af', fontSize: '14px' }}>Not specified</span>
+                  {request.country && (
+                    <div style={{ fontSize: '14px', color: '#1f2937' }}>
+                      {request.country}
+                    </div>
                   )}
                 </div>
 
@@ -542,26 +531,6 @@ export default function InformationalRequestsPage() {
                     </div>
                   </div>
                 </div>
-
-                {selectedRequest.company && (
-                  <div>
-                    <h3 style={{ fontWeight: 600, color: '#374151', marginBottom: '0.5rem' }}>
-                      Company Information
-                    </h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                      <div>
-                        <label style={{ fontSize: '14px', color: '#6b7280' }}>Company</label>
-                        <div style={{ fontWeight: 500 }}>{selectedRequest.company}</div>
-                      </div>
-                      <div>
-                        <label style={{ fontSize: '14px', color: '#6b7280' }}>Position</label>
-                        <div style={{ fontWeight: 500 }}>
-                          {selectedRequest.position || 'Not specified'}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
 
                 {selectedRequest.additionalNotes && (
                   <div>

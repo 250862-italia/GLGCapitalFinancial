@@ -9,8 +9,6 @@ export async function POST(request: NextRequest) {
       lastName, 
       email, 
       phone, 
-      company, 
-      position, 
       country, 
       city, 
       additionalNotes,
@@ -34,8 +32,6 @@ export async function POST(request: NextRequest) {
         lastName,
         email,
         phone: phone || null,
-        company: company || null,
-        position: position || null,
         country: country || null,
         city: city || null,
         additionalNotes: additionalNotes || null,
@@ -98,8 +94,6 @@ APPLICANT INFORMATION:
 Name: ${firstName} ${lastName}
 Email: ${email}
 Phone: ${phone || 'Not provided'}
-Company: ${company || 'Not provided'}
-Position: ${position || 'Not provided'}
 Country: ${country || 'Not provided'}
 City: ${city || 'Not provided'}
 Additional Notes: ${additionalNotes || 'None'}
