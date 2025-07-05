@@ -60,6 +60,23 @@ export default function ProfilePage() {
         </ProfileGrid>
       </ProfileSection>
       <ProfileSection icon={<CreditCard size={22} color="#059669" />} title="Banking Information">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <span style={{ fontSize: '14px', color: '#6b7280' }}>Manage your banking details for investments</span>
+          <a 
+            href="/profile/banking" 
+            style={{
+              background: '#059669',
+              color: 'white',
+              padding: '0.5rem 1rem',
+              borderRadius: 6,
+              textDecoration: 'none',
+              fontSize: 14,
+              fontWeight: 600
+            }}
+          >
+            Edit Banking Info
+          </a>
+        </div>
         <ProfileGrid>
           <ProfileField label="Bank Name" value={kyc.bankName} />
           <ProfileField label="Account Number" value={kyc.accountNumber} />
