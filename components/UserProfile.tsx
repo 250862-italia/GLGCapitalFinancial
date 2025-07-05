@@ -305,12 +305,28 @@ export default function UserProfile({ onKycComplete }: UserProfileProps) {
                   fontSize: '12px', 
                   color: kycStatus.documents[key as keyof typeof kycStatus.documents] ? '#059669' : '#6b7280'
                 }}>
-                  {kycStatus.documents[key as keyof typeof kycStatus.documents] ? 'Uploaded' : 'Not uploaded'}
+                  {kycStatus.documents[key as keyof typeof kycStatus.documents] ? 'Uploaded (Simulated)' : 'Not uploaded'}
                 </div>
               </div>
             </div>
           ))}
         </div>
+        
+        {/* Development Mode Notice */}
+        {Object.values(kycStatus.documents).some(Boolean) && (
+          <div style={{
+            background: '#fef3c7',
+            border: '1px solid #fde68a',
+            borderRadius: 8,
+            padding: '0.75rem',
+            marginTop: '1rem'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#92400e', fontSize: '12px' }}>
+              <AlertCircle size={14} />
+              <strong>Development Mode:</strong> Document uploads are currently simulated for testing purposes.
+            </div>
+          </div>
+        )}
 
         {/* Status Message */}
         {kycStatus.status === 'not_started' && (

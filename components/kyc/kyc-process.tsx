@@ -167,7 +167,7 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     // Return a mock URL for now
-    const mockUrl = `https://mock-storage.com/${userId}/${Date.now()}_${file.name}`;
+    const mockUrl = `mock://${userId}/${Date.now()}_${file.name}`;
     console.log(`📁 Simulated upload for ${field}:`, mockUrl);
     
     return mockUrl;
@@ -889,6 +889,20 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
               <FileText size={24} />
               Document Upload
             </h2>
+            
+            {/* Info Message */}
+            <div style={{
+              background: '#eff6ff',
+              border: '1px solid #bae6fd',
+              borderRadius: 8,
+              padding: '1rem',
+              marginBottom: '1.5rem'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#1e40af' }}>
+                <AlertCircle size={16} />
+                <strong>Development Mode:</strong> Document upload is currently simulated. In production, documents will be securely stored and verified.
+              </div>
+            </div>
             
             <p style={{
               fontSize: 14,
