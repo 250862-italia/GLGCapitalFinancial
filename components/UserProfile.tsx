@@ -58,14 +58,56 @@ export default function UserProfile({ onKycComplete }: UserProfileProps) {
     
     try {
       // First, get the client record for this user
-      const { data: clientData, error: clientError } = await supabase
+      let { data: clientData, error: clientError } = await supabase
         .from('clients')
         .select('id, kycStatus')
         .eq('"userId"', user.id)
         .single();
 
-      if (clientError) {
+      if (clientError && clientError.code === 'PGRST116') {
+        // Profile not found, create it automatically
+        console.log('No client record found for user:', user.id, '- Creating profile automatically');
+        
+        try {
+          const response = await fetch('/api/profile/create', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ userId: user.id }),
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            console.log('Profile created successfully:', result);
+            
+            // Fetch the newly created profile
+            const { data: newClientData, error: newClientError } = await supabase
+              .from('clients')
+              .select('id, kycStatus')
+              .eq('"userId"', user.id)
+              .single();
+
+            if (newClientError) {
+              console.error('Error fetching newly created profile:', newClientError);
+              setLoading(false);
+              return;
+            }
+
+            clientData = newClientData;
+          } else {
+            console.error('Failed to create profile automatically');
+            setLoading(false);
+            return;
+          }
+        } catch (createError) {
+          console.error('Error creating profile automatically:', createError);
+          setLoading(false);
+          return;
+        }
+      } else if (clientError) {
         console.error('Error loading client data:', clientError);
+        setLoading(false);
         return;
       }
 

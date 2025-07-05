@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/use-auth';
-import { TrendingUp, Calendar, DollarSign, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { TrendingUp, Calendar, DollarSign, CheckCircle, Clock, XCircle, ArrowLeft } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface Investment {
   id: string;
@@ -25,6 +26,7 @@ interface Investment {
 
 export default function MyInvestmentsPage() {
   const { user } = useAuth();
+  const router = useRouter();
   const [investments, setInvestments] = useState<Investment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -66,30 +68,30 @@ export default function MyInvestmentsPage() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'active':
-        return <CheckCircle size={20} className="text-green-500" />;
+        return <CheckCircle size={20} color="#059669" />;
       case 'pending':
-        return <Clock size={20} className="text-yellow-500" />;
+        return <Clock size={20} color="#f59e0b" />;
       case 'completed':
-        return <CheckCircle size={20} className="text-blue-500" />;
+        return <CheckCircle size={20} color="#3b82f6" />;
       case 'cancelled':
-        return <XCircle size={20} className="text-red-500" />;
+        return <XCircle size={20} color="#dc2626" />;
       default:
-        return <Clock size={20} className="text-gray-500" />;
+        return <Clock size={20} color="#6b7280" />;
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active':
-        return 'bg-green-100 text-green-800';
+        return { background: '#dcfce7', color: '#166534' };
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
+        return { background: '#fef3c7', color: '#92400e' };
       case 'completed':
-        return 'bg-blue-100 text-blue-800';
+        return { background: '#dbeafe', color: '#1e40af' };
       case 'cancelled':
-        return 'bg-red-100 text-red-800';
+        return { background: '#fee2e2', color: '#991b1b' };
       default:
-        return 'bg-gray-100 text-gray-800';
+        return { background: '#f3f4f6', color: '#374151' };
     }
   };
 
@@ -107,84 +109,174 @@ export default function MyInvestmentsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="animate-pulse">
-              <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
-              <div className="space-y-4">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="h-24 bg-gray-200 rounded"></div>
-                ))}
-              </div>
-            </div>
-          </div>
+      <div style={{ 
+        minHeight: '100vh', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        background: '#f9fafb'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ 
+            width: 48, 
+            height: 48, 
+            border: '4px solid #e5e7eb', 
+            borderTop: '4px solid #3b82f6', 
+            borderRadius: '50%', 
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 1rem'
+          }} />
+          <p style={{ color: '#64748b', fontSize: 18 }}>Loading investments...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-6xl mx-auto">
+    <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '2rem 1rem' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+        
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">My Investments</h1>
-          <p className="text-gray-600">Track your investment portfolio and performance</p>
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '1rem',
+          marginBottom: '2rem'
+        }}>
+          <button
+            onClick={() => router.push('/dashboard')}
+            style={{
+              background: 'white',
+              border: '1px solid #e5e7eb',
+              borderRadius: 8,
+              padding: '0.5rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+          >
+            <ArrowLeft size={20} color="#6b7280" />
+          </button>
+          <div>
+            <h1 style={{ fontSize: '32px', fontWeight: 800, color: '#1f2937', margin: 0 }}>
+              My Investments
+            </h1>
+            <p style={{ fontSize: '16px', color: '#6b7280', margin: 0 }}>
+              Track your investment portfolio and performance
+            </p>
+          </div>
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <TrendingUp className="h-6 w-6 text-blue-600" />
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+          gap: '1.5rem',
+          marginBottom: '2rem'
+        }}>
+          <div style={{ 
+            background: 'white', 
+            borderRadius: 12, 
+            padding: '1.5rem',
+            boxShadow: '0 4px 24px rgba(10,37,64,0.10)',
+            border: '1px solid #e2e8f0'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <div style={{ 
+                background: '#dbeafe', 
+                borderRadius: 8, 
+                padding: '0.75rem',
+                marginRight: '1rem'
+              }}>
+                <TrendingUp size={24} color="#3b82f6" />
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Investments</p>
-                <p className="text-2xl font-bold text-gray-900">
+              <div>
+                <p style={{ fontSize: '14px', fontWeight: 500, color: '#6b7280', margin: 0 }}>
+                  Total Investments
+                </p>
+                <p style={{ fontSize: '24px', fontWeight: 700, color: '#1f2937', margin: 0 }}>
                   {investments.length}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <DollarSign className="h-6 w-6 text-green-600" />
+          <div style={{ 
+            background: 'white', 
+            borderRadius: 12, 
+            padding: '1.5rem',
+            boxShadow: '0 4px 24px rgba(10,37,64,0.10)',
+            border: '1px solid #e2e8f0'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <div style={{ 
+                background: '#dcfce7', 
+                borderRadius: 8, 
+                padding: '0.75rem',
+                marginRight: '1rem'
+              }}>
+                <DollarSign size={24} color="#059669" />
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Invested</p>
-                <p className="text-2xl font-bold text-gray-900">
+              <div>
+                <p style={{ fontSize: '14px', fontWeight: 500, color: '#6b7280', margin: 0 }}>
+                  Total Invested
+                </p>
+                <p style={{ fontSize: '24px', fontWeight: 700, color: '#1f2937', margin: 0 }}>
                   €{investments.reduce((sum, inv) => sum + inv.amount, 0).toLocaleString()}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-yellow-100 rounded-lg">
-                <Clock className="h-6 w-6 text-yellow-600" />
+          <div style={{ 
+            background: 'white', 
+            borderRadius: 12, 
+            padding: '1.5rem',
+            boxShadow: '0 4px 24px rgba(10,37,64,0.10)',
+            border: '1px solid #e2e8f0'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <div style={{ 
+                background: '#fef3c7', 
+                borderRadius: 8, 
+                padding: '0.75rem',
+                marginRight: '1rem'
+              }}>
+                <Clock size={24} color="#f59e0b" />
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Active</p>
-                <p className="text-2xl font-bold text-gray-900">
+              <div>
+                <p style={{ fontSize: '14px', fontWeight: 500, color: '#6b7280', margin: 0 }}>
+                  Active
+                </p>
+                <p style={{ fontSize: '24px', fontWeight: 700, color: '#1f2937', margin: 0 }}>
                   {investments.filter(inv => inv.status === 'active').length}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Calendar className="h-6 w-6 text-purple-600" />
+          <div style={{ 
+            background: 'white', 
+            borderRadius: 12, 
+            padding: '1.5rem',
+            boxShadow: '0 4px 24px rgba(10,37,64,0.10)',
+            border: '1px solid #e2e8f0'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <div style={{ 
+                background: '#f3e8ff', 
+                borderRadius: 8, 
+                padding: '0.75rem',
+                marginRight: '1rem'
+              }}>
+                <Calendar size={24} color="#8b5cf6" />
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Pending</p>
-                <p className="text-2xl font-bold text-gray-900">
+              <div>
+                <p style={{ fontSize: '14px', fontWeight: 500, color: '#6b7280', margin: 0 }}>
+                  Pending
+                </p>
+                <p style={{ fontSize: '24px', fontWeight: 700, color: '#1f2937', margin: 0 }}>
                   {investments.filter(inv => inv.status === 'pending').length}
                 </p>
               </div>
@@ -193,105 +285,119 @@ export default function MyInvestmentsPage() {
         </div>
 
         {/* Investments List */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">Investment History</h2>
+        <div style={{ 
+          background: 'white', 
+          borderRadius: 16, 
+          boxShadow: '0 4px 24px rgba(10,37,64,0.10)',
+          overflow: 'hidden'
+        }}>
+          <div style={{
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            padding: '1.5rem 2rem',
+            color: 'white'
+          }}>
+            <h2 style={{ fontSize: '20px', fontWeight: 600, margin: 0 }}>
+              Investment History
+            </h2>
           </div>
 
-          {error && (
-            <div className="p-6">
-              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-                {error}
-              </div>
-            </div>
-          )}
-
-          {investments.length === 0 ? (
-            <div className="p-6 text-center">
-              <TrendingUp className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">No investments yet</h3>
-              <p className="mt-1 text-sm text-gray-500">
-                Start your investment journey by exploring our available packages.
-              </p>
-              <div className="mt-6">
-                <a
-                  href="/investments"
-                  className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+          <div style={{ padding: '2rem' }}>
+            {investments.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '3rem' }}>
+                <TrendingUp size={64} color="#d1d5db" style={{ marginBottom: '1rem' }} />
+                <h3 style={{ fontSize: '20px', fontWeight: 600, color: '#6b7280', marginBottom: '0.5rem' }}>
+                  No investments yet
+                </h3>
+                <p style={{ color: '#9ca3af', marginBottom: '2rem' }}>
+                  Start your investment journey by exploring our available packages
+                </p>
+                <button
+                  onClick={() => router.push('/investments')}
+                  style={{
+                    background: '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: 8,
+                    padding: '0.75rem 1.5rem',
+                    fontSize: 16,
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
                 >
-                  View Investment Packages
-                </a>
+                  Browse Investment Packages
+                </button>
               </div>
-            </div>
-          ) : (
-            <div className="divide-y divide-gray-200">
-              {investments.map((investment) => (
-                <div key={investment.id} className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      {getStatusIcon(investment.status)}
-                      <div className="ml-4">
-                        <h3 className="text-lg font-medium text-gray-900">
-                          {investment.package?.name || 'Investment Package'}
-                        </h3>
-                        <p className="text-sm text-gray-500">
-                          {investment.package?.description || 'Package description not available'}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-lg font-semibold text-gray-900">
-                        €{investment.amount.toLocaleString()}
-                      </p>
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(investment.status)}`}>
-                        {investment.status.charAt(0).toUpperCase() + investment.status.slice(1)}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                    <div>
-                      <p className="text-gray-500">Investment Date</p>
-                      <p className="font-medium">{formatDate(investment.created_at)}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500">Expected Return</p>
-                      <p className="font-medium">
-                        {investment.package?.expectedReturn || 0}% 
-                        (€{calculateExpectedReturn(investment.amount, investment.package?.expectedReturn || 0).toLocaleString()})
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500">Duration</p>
-                      <p className="font-medium">
-                        {investment.package?.duration || 0} days
-                      </p>
-                    </div>
-                  </div>
-
-                  {investment.status === 'pending' && (
-                    <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
-                      <div className="flex">
-                        <div className="flex-shrink-0">
-                          <Clock className="h-5 w-5 text-yellow-400" />
-                        </div>
-                        <div className="ml-3">
-                          <h3 className="text-sm font-medium text-yellow-800">
-                            Payment Pending
+            ) : (
+              <div style={{ display: 'grid', gap: '1rem' }}>
+                {investments.map((investment) => {
+                  const statusStyle = getStatusColor(investment.status);
+                  return (
+                    <div key={investment.id} style={{
+                      background: '#f8fafc',
+                      borderRadius: 12,
+                      padding: '1.5rem',
+                      border: '1px solid #e2e8f0',
+                      display: 'grid',
+                      gridTemplateColumns: '1fr auto',
+                      gap: '1rem',
+                      alignItems: 'center'
+                    }}>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                          <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#1f2937', margin: 0 }}>
+                            {investment.package?.name || 'Investment Package'}
                           </h3>
-                          <div className="mt-2 text-sm text-yellow-700">
-                            <p>
-                              Please complete your payment to activate this investment. 
-                              Check your email for payment instructions.
+                          <span style={{
+                            background: statusStyle.background,
+                            color: statusStyle.color,
+                            padding: '0.25rem 0.75rem',
+                            borderRadius: 12,
+                            fontSize: '12px',
+                            fontWeight: 600,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem'
+                          }}>
+                            {getStatusIcon(investment.status)}
+                            {investment.status}
+                          </span>
+                        </div>
+                        <p style={{ color: '#6b7280', fontSize: '14px', margin: '0.5rem 0' }}>
+                          {investment.package?.description || 'Investment package'}
+                        </p>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', marginTop: '1rem' }}>
+                          <div>
+                            <p style={{ fontSize: '12px', color: '#6b7280', margin: 0 }}>Amount</p>
+                            <p style={{ fontSize: '16px', fontWeight: 600, color: '#1f2937', margin: 0 }}>
+                              €{investment.amount.toLocaleString()}
+                            </p>
+                          </div>
+                          <div>
+                            <p style={{ fontSize: '12px', color: '#6b7280', margin: 0 }}>Expected Return</p>
+                            <p style={{ fontSize: '16px', fontWeight: 600, color: '#059669', margin: 0 }}>
+                              €{calculateExpectedReturn(investment.amount, investment.package?.expectedReturn || 0).toLocaleString()}
+                            </p>
+                          </div>
+                          <div>
+                            <p style={{ fontSize: '12px', color: '#6b7280', margin: 0 }}>Duration</p>
+                            <p style={{ fontSize: '16px', fontWeight: 600, color: '#1f2937', margin: 0 }}>
+                              {investment.package?.duration || 0} months
+                            </p>
+                          </div>
+                          <div>
+                            <p style={{ fontSize: '12px', color: '#6b7280', margin: 0 }}>Created</p>
+                            <p style={{ fontSize: '16px', fontWeight: 600, color: '#1f2937', margin: 0 }}>
+                              {formatDate(investment.created_at)}
                             </p>
                           </div>
                         </div>
                       </div>
                     </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

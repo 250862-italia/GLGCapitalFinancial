@@ -57,24 +57,71 @@ export async function GET(request: NextRequest) {
     }
 
     // Get client profile
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from('clients')
       .select('*')
       .eq('"userId"', userId)
       .single();
 
-    if (error) {
+    if (error && error.code === 'PGRST116') {
+      // Profile not found, create it automatically
+      console.log('Profile not found, creating new profile for user:', userId);
+      
+      // Get user data from auth.users
+      const { data: userData, error: userError } = await supabase
+        .from('auth.users')
+        .select('email, created_at')
+        .eq('id', userId)
+        .single();
+
+      if (userError) {
+        console.error('Error fetching user data:', userError);
+        return NextResponse.json(
+          { error: 'Failed to fetch user data' },
+          { status: 500 }
+        );
+      }
+
+      // Create new client profile
+      const newProfile = {
+        userId: userId,
+        email: userData.email,
+        firstName: '',
+        lastName: '',
+        phone: '',
+        dateOfBirth: null,
+        nationality: '',
+        address: '',
+        city: '',
+        postalCode: '',
+        country: '',
+        profilePhoto: null,
+        kycStatus: 'PENDING',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      const { data: createdProfile, error: createError } = await supabase
+        .from('clients')
+        .insert(newProfile)
+        .select()
+        .single();
+
+      if (createError) {
+        console.error('Error creating profile:', createError);
+        return NextResponse.json(
+          { error: 'Failed to create profile' },
+          { status: 500 }
+        );
+      }
+
+      data = createdProfile;
+      console.log('Profile created successfully:', createdProfile);
+    } else if (error) {
       console.error('Profile fetch error:', error);
       return NextResponse.json(
         { error: 'Failed to fetch profile' },
         { status: 500 }
-      );
-    }
-
-    if (!data) {
-      return NextResponse.json(
-        { error: 'Profile not found' },
-        { status: 404 }
       );
     }
 
