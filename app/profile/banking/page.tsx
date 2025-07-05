@@ -364,6 +364,110 @@ export default function BankingPage() {
           </div>
         </form>
 
+        {/* US Wire Transfer Information */}
+        <div style={{
+          background: '#fef3c7',
+          border: '1px solid #f59e0b',
+          borderRadius: 8,
+          padding: '1.5rem',
+          marginTop: '2rem'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#92400e', marginBottom: '1rem' }}>
+            <CreditCard size={20} />
+            <strong style={{ fontSize: 18 }}>US Wire Transfer Information</strong>
+          </div>
+          
+          <div style={{ display: 'grid', gap: '1rem' }}>
+            <div style={{
+              background: 'white',
+              border: '1px solid #f59e0b',
+              borderRadius: 6,
+              padding: '1rem'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <span style={{ fontWeight: 600, color: '#92400e' }}>Transfer Type:</span>
+                <span style={{ color: '#92400e' }}>Bonifici statunitensi · fino a tre giorni lavorativi</span>
+              </div>
+            </div>
+
+            <div style={{
+              background: 'white',
+              border: '1px solid #f59e0b',
+              borderRadius: 6,
+              padding: '1rem'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <span style={{ fontWeight: 600, color: '#92400e' }}>Beneficiario:</span>
+                <span style={{ color: '#92400e' }}>GLG capital group LLC</span>
+              </div>
+            </div>
+
+            <div style={{
+              background: 'white',
+              border: '1px solid #f59e0b',
+              borderRadius: 6,
+              padding: '1rem'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <span style={{ fontWeight: 600, color: '#92400e' }}>Valuta accettata:</span>
+                <span style={{ color: '#92400e' }}>USD</span>
+              </div>
+            </div>
+
+            <div style={{
+              background: 'white',
+              border: '1px solid #f59e0b',
+              borderRadius: 6,
+              padding: '1rem'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <span style={{ fontWeight: 600, color: '#92400e' }}>Numero di conto:</span>
+                <span style={{ color: '#92400e', fontFamily: 'monospace', fontSize: 16 }}>218086576410</span>
+              </div>
+            </div>
+
+            <div style={{
+              background: 'white',
+              border: '1px solid #f59e0b',
+              borderRadius: 6,
+              padding: '1rem'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <span style={{ fontWeight: 600, color: '#92400e' }}>Numero di instradamento ACH:</span>
+                <span style={{ color: '#92400e', fontFamily: 'monospace', fontSize: 16 }}>101019644</span>
+              </div>
+            </div>
+
+            <div style={{
+              background: 'white',
+              border: '1px solid #f59e0b',
+              borderRadius: 6,
+              padding: '1rem'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <span style={{ fontWeight: 600, color: '#92400e' }}>Numero di instradamento bancario:</span>
+                <span style={{ color: '#92400e', fontFamily: 'monospace', fontSize: 16 }}>101019644</span>
+              </div>
+            </div>
+          </div>
+
+          <div style={{
+            background: '#fef2f2',
+            border: '1px solid #fecaca',
+            borderRadius: 6,
+            padding: '1rem',
+            marginTop: '1rem'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#dc2626' }}>
+              <AlertCircle size={16} />
+              <strong>Important:</strong>
+            </div>
+            <p style={{ color: '#dc2626', fontSize: 14, margin: '0.5rem 0 0 0' }}>
+              Please ensure you include your account reference number when making wire transfers. Contact support if you need assistance with the transfer process.
+            </p>
+          </div>
+        </div>
+
         {/* Security Notice */}
         <div style={{
           background: '#f0f9ff',
