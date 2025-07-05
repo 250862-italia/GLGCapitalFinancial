@@ -1,10 +1,37 @@
 "use client";
 
 import { useState } from 'react';
+import { useAuth } from '../../hooks/use-auth';
 
 export default function TestCompleteFlowPage() {
+  const { user, loading } = useAuth();
   const [testResults, setTestResults] = useState<string[]>([]);
   const [isRunning, setIsRunning] = useState(false);
+
+  if (loading) {
+    return <div style={{ textAlign: 'center', marginTop: 80 }}>Loading...</div>;
+  }
+  if (!user || user.role !== 'superadmin') {
+    return (
+      <div style={{
+        maxWidth: 600,
+        margin: '6rem auto',
+        padding: '2rem',
+        background: '#fff',
+        borderRadius: 12,
+        boxShadow: '0 4px 24px rgba(10,37,64,0.10)',
+        textAlign: 'center',
+        color: '#dc2626',
+        fontWeight: 700,
+        fontSize: 22
+      }}>
+        Access Denied<br />
+        <span style={{ fontWeight: 400, fontSize: 16, color: '#6b7280' }}>
+          Only superadmin can access this page.
+        </span>
+      </div>
+    );
+  }
 
   const runTest = async () => {
     setIsRunning(true);
