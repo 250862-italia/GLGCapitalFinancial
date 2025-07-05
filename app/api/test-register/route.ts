@@ -1,8 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase'
 import bcrypt from 'bcryptjs'
+import { verifySuperAdmin } from '../../../lib/admin-auth'
 
 export async function POST(request: NextRequest) {
+  // Verify superadmin access
+  const authResult = await verifySuperAdmin(request);
+  if (!authResult.success) {
+    return NextResponse.json(
+      { error: authResult.error },
+      { status: authResult.status }
+    );
+  }
+
+  console.log('Superadmin access verified:', authResult.user);
   try {
     const body = await request.json()
     const { firstName, lastName, email, phone, password } = body

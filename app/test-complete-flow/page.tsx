@@ -43,8 +43,17 @@ export default function TestCompleteFlowPage() {
       setTestResults([...results]);
     };
 
+    // Get auth token
+    const token = localStorage.getItem('token');
+    if (!token) {
+      addResult('❌ No authentication token found. Please log in as superadmin.');
+      setIsRunning(false);
+      return;
+    }
+
     try {
       addResult('🚀 Starting GLG Dashboard Complete Flow Test...\n');
+      addResult('🔐 Authenticated as: ' + (user?.email || 'Unknown') + '\n');
 
       // Test 1: Registration
       addResult('📝 Test 1: User Registration');
@@ -59,7 +68,10 @@ export default function TestCompleteFlowPage() {
 
         const registrationResponse = await fetch('/api/test-register', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
           body: JSON.stringify(registrationData)
         });
 
