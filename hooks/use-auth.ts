@@ -7,8 +7,11 @@ import React from 'react';
 interface User {
   id: string;
   email: string;
-  name: string;
+  name?: string;
+  first_name?: string;
+  last_name?: string;
   role: string;
+  is_active?: boolean;
 }
 
 interface AuthContextType {
