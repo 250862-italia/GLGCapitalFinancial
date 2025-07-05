@@ -20,24 +20,57 @@ export default function ContactPage() {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setIsSubmitting(false);
-    setIsSubmitted(true);
-    
-    // Reset form after 3 seconds
-    setTimeout(() => {
-      setIsSubmitted(false);
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        company: '',
-        message: '',
-        service: 'general'
+    try {
+      const response = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: 'corefound@glgcapitalgroupllc.com',
+          subject: `Nuovo messaggio da ${formData.name} - ${formData.service}`,
+          html: `
+            <h2>Nuovo messaggio dal form di contatto</h2>
+            <p><strong>Nome:</strong> ${formData.name}</p>
+            <p><strong>Email:</strong> ${formData.email}</p>
+            <p><strong>Telefono:</strong> ${formData.phone || 'Non fornito'}</p>
+            <p><strong>Azienda:</strong> ${formData.company || 'Non fornito'}</p>
+            <p><strong>Servizio richiesto:</strong> ${formData.service}</p>
+            <p><strong>Messaggio:</strong></p>
+            <p>${formData.message}</p>
+            <hr>
+            <p><em>Inviato da: ${formData.email}</em></p>
+          `
+        })
       });
-    }, 3000);
+
+      const result = await response.json();
+      
+      if (result.success) {
+        console.log('Risultato invio email:', result);
+        setIsSubmitted(true);
+        // Reset form after 3 seconds
+        setTimeout(() => {
+          setIsSubmitted(false);
+          setFormData({
+            name: '',
+            email: '',
+            phone: '',
+            company: '',
+            message: '',
+            service: 'general'
+          });
+        }, 3000);
+      } else {
+        console.error('Errore API:', result);
+        alert('Errore nell\'invio del messaggio. Riprova più tardi.');
+      }
+    } catch (error) {
+      console.error('Errore invio email:', error);
+      alert('Errore nell\'invio del messaggio. Riprova più tardi.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -288,6 +321,9 @@ export default function ContactPage() {
               </h3>
               <p style={{ color: '#166534', fontSize: '1.1rem' }}>
                 Thank you for contacting GLG Capital Group LLC. We'll get back to you within 24 hours.
+              </p>
+              <p style={{ color: '#166534', fontSize: '0.9rem', marginTop: '1rem', fontStyle: 'italic' }}>
+                Note: If you don't receive a confirmation email, please check your spam folder or contact us directly.
               </p>
             </div>
           ) : (
