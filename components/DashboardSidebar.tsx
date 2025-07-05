@@ -76,6 +76,12 @@ export default function DashboardSidebar({ isOpen, onToggle }: DashboardSidebarP
       adminOnly: false
     },
     {
+      title: 'Request Documentation',
+      icon: <FileText size={20} />,
+      href: '/informational-request',
+      adminOnly: false
+    },
+    {
       title: 'Admin Panel',
       icon: <Shield size={20} />,
       href: '/admin',

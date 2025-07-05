@@ -4,53 +4,27 @@ import { supabase } from '@/lib/supabase';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { 
-      firstName, 
-      lastName, 
-      email, 
-      phone, 
-      company, 
-      position, 
-      country, 
-      city, 
-      additionalNotes,
-      userId 
-    } = body;
+    const { requestId } = body;
 
-    // Validate required fields
-    if (!firstName || !lastName || !email) {
+    if (!requestId) {
       return NextResponse.json(
-        { error: 'First name, last name, and email are required' },
+        { error: 'Request ID is required' },
         { status: 400 }
       );
     }
 
-    // Create informational request record in database
-    const { data: requestData, error: dbError } = await supabase
+    // Get the informational request
+    const { data: requestData, error: fetchError } = await supabase
       .from('informational_requests')
-      .insert({
-        userId: userId || null,
-        firstName,
-        lastName,
-        email,
-        phone: phone || null,
-        company: company || null,
-        position: position || null,
-        country: country || null,
-        city: city || null,
-        additionalNotes: additionalNotes || null,
-        status: 'PENDING',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      })
-      .select()
+      .select('*')
+      .eq('id', requestId)
       .single();
 
-    if (dbError) {
-      console.error('Database error:', dbError);
+    if (fetchError || !requestData) {
+      console.error('Error fetching request:', fetchError);
       return NextResponse.json(
-        { error: 'Failed to save request' },
-        { status: 500 }
+        { error: 'Request not found' },
+        { status: 404 }
       );
     }
 
@@ -95,18 +69,20 @@ Please send the requested information via one of the following:
 
 ---
 APPLICANT INFORMATION:
-Name: ${firstName} ${lastName}
-Email: ${email}
-Phone: ${phone || 'Not provided'}
-Company: ${company || 'Not provided'}
-Position: ${position || 'Not provided'}
-Country: ${country || 'Not provided'}
-City: ${city || 'Not provided'}
-Additional Notes: ${additionalNotes || 'None'}
+Name: ${requestData.firstName} ${requestData.lastName}
+Email: ${requestData.email}
+Phone: ${requestData.phone || 'Not provided'}
+Company: ${requestData.company || 'Not provided'}
+Position: ${requestData.position || 'Not provided'}
+Country: ${requestData.country || 'Not provided'}
+City: ${requestData.city || 'Not provided'}
+Additional Notes: ${requestData.additionalNotes || 'None'}
 
 Request ID: ${requestData.id}
 Date: ${new Date().toLocaleDateString()}
 Time: ${new Date().toLocaleTimeString()}
+
+[This is a resend of the original request]
     `;
 
     // Send email using the existing email service
@@ -117,68 +93,43 @@ Time: ${new Date().toLocaleTimeString()}
       },
       body: JSON.stringify({
         to: 'corefound@glgcapitalconsulting.com',
-        subject: `Informational Request - ${firstName} ${lastName}`,
+        subject: `[RESEND] Informational Request - ${requestData.firstName} ${requestData.lastName}`,
         text: emailContent,
         html: emailContent.replace(/\n/g, '<br>'),
-        from: email
+        from: requestData.email
       })
     });
 
     if (!emailResponse.ok) {
       console.error('Email sending failed');
-      // Still return success since the request was saved to database
-      // The admin can manually send the email later
-    }
-
-    return NextResponse.json({
-      success: true,
-      data: requestData,
-      message: 'Informational request submitted successfully'
-    });
-
-  } catch (error) {
-    console.error('Informational request error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
-
-export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-
-    if (!userId) {
       return NextResponse.json(
-        { error: 'User ID is required' },
-        { status: 400 }
-      );
-    }
-
-    // Get informational requests for the user
-    const { data, error } = await supabase
-      .from('informational_requests')
-      .select('*')
-      .eq('userId', userId)
-      .order('createdAt', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching informational requests:', error);
-      return NextResponse.json(
-        { error: 'Failed to fetch requests' },
+        { error: 'Failed to send email' },
         { status: 500 }
       );
     }
 
+    // Update the request to mark email as sent
+    const { error: updateError } = await supabase
+      .from('informational_requests')
+      .update({
+        emailSent: true,
+        emailSentAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      })
+      .eq('id', requestId);
+
+    if (updateError) {
+      console.error('Error updating email sent status:', updateError);
+      // Still return success since email was sent
+    }
+
     return NextResponse.json({
       success: true,
-      data: data || []
+      message: 'Email resent successfully'
     });
 
   } catch (error) {
-    console.error('Error fetching informational requests:', error);
+    console.error('Error resending email:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

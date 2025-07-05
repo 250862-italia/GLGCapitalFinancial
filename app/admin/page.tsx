@@ -115,6 +115,7 @@ export default function AdminDashboardPage() {
     { name: "KYC Management", icon: CheckCircle, color: "#10b981", href: "/admin/kyc" },
     { name: "Client Management", icon: Users, color: "var(--accent)", href: "/admin/clients" },
     { name: "Payment Management", icon: CreditCard, color: "#8b5cf6", href: "/admin/payments" },
+    { name: "Documentation Requests", icon: FileText, color: "#f59e0b", href: "/admin/informational-requests" },
   ];
 
   const barData = [
