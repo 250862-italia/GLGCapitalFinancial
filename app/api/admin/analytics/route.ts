@@ -1,10 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+import { dbManager } from '@/lib/database-manager';
 
 // Mock data fallback
 const mockAnalytics = [
@@ -49,52 +44,18 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category');
     const status = searchParams.get('status');
 
-    // Try to connect to Supabase
-    try {
-      let query = supabase
-        .from('analytics')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (category && category !== 'all') {
-        query = query.eq('category', category);
-      }
-
-      if (status && status !== 'all') {
-        query = query.eq('status', status);
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        console.error('Supabase error, using mock data:', error);
-        // Filter mock data based on parameters
-        let filteredData = mockAnalytics;
-        if (category && category !== 'all') {
-          filteredData = filteredData.filter(item => item.category === category);
-        }
-        if (status && status !== 'all') {
-          filteredData = filteredData.filter(item => item.status === status);
-        }
-        return NextResponse.json(filteredData);
-      }
-
-      return NextResponse.json(data || []);
-    } catch (supabaseError) {
-      console.error('Supabase connection failed, using mock data:', supabaseError);
-      // Filter mock data based on parameters
-      let filteredData = mockAnalytics;
-      if (category && category !== 'all') {
-        filteredData = filteredData.filter(item => item.category === category);
-      }
-      if (status && status !== 'all') {
-        filteredData = filteredData.filter(item => item.status === status);
-      }
-      return NextResponse.json(filteredData);
-    }
+    const data = await dbManager.get('analytics', {
+      orderBy: { field: 'created_at', ascending: false },
+      filters: [
+        ...(category && category !== 'all' ? [{ field: 'category', value: category }] : []),
+        ...(status && status !== 'all' ? [{ field: 'status', value: status }] : [])
+      ]
+    });
+    
+    return NextResponse.json(data);
   } catch (error) {
     console.error('Error in analytics GET:', error);
-    return NextResponse.json(mockAnalytics);
+    return NextResponse.json([]);
   }
 }
 
@@ -108,38 +69,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Try to connect to Supabase
-    try {
-      const { data, error } = await supabase
-        .from('analytics')
-        .insert({
-          metric,
-          value,
-          change_percentage: change_percentage || 0,
-          period,
-          category,
-          status: status || 'active',
-          description
-        })
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Supabase error in POST:', error);
-        return NextResponse.json({ 
-          error: 'Database connection failed, but data was validated',
-          mockData: { metric, value, change_percentage, period, category, status, description }
-        }, { status: 503 });
-      }
-
-      return NextResponse.json(data, { status: 201 });
-    } catch (supabaseError) {
-      console.error('Supabase connection failed in POST:', supabaseError);
-      return NextResponse.json({ 
-        error: 'Database connection failed, but data was validated',
-        mockData: { metric, value, change_percentage, period, category, status, description }
-      }, { status: 503 });
+    const result = await dbManager.post('analytics', {
+      metric,
+      value,
+      change_percentage: change_percentage || 0,
+      period,
+      category,
+      status: status || 'active',
+      description
+    });
+    
+    if (result.error) {
+      return NextResponse.json(result, { status: 503 });
     }
+    
+    return NextResponse.json(result, { status: 201 });
   } catch (error) {
     console.error('Error in analytics POST:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -163,32 +107,14 @@ export async function PUT(request: NextRequest) {
     if (category) updateData.category = category;
     if (status) updateData.status = status;
     if (description !== undefined) updateData.description = description;
-
-    // Try to connect to Supabase
-    try {
-      const { data, error } = await supabase
-        .from('analytics')
-        .update(updateData)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Supabase error in PUT:', error);
-        return NextResponse.json({ 
-          error: 'Database connection failed, but update was validated',
-          mockData: { id, ...updateData }
-        }, { status: 503 });
-      }
-
-      return NextResponse.json(data);
-    } catch (supabaseError) {
-      console.error('Supabase connection failed in PUT:', supabaseError);
-      return NextResponse.json({ 
-        error: 'Database connection failed, but update was validated',
-        mockData: { id, ...updateData }
-      }, { status: 503 });
+    
+    const result = await dbManager.put('analytics', id, updateData);
+    
+    if (result.error) {
+      return NextResponse.json(result, { status: 503 });
     }
+    
+    return NextResponse.json(result);
   } catch (error) {
     console.error('Error in analytics PUT:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -203,30 +129,14 @@ export async function DELETE(request: NextRequest) {
     if (!id) {
       return NextResponse.json({ error: 'Analytics ID is required' }, { status: 400 });
     }
-
-    // Try to connect to Supabase
-    try {
-      const { error } = await supabase
-        .from('analytics')
-        .delete()
-        .eq('id', id);
-
-      if (error) {
-        console.error('Supabase error in DELETE:', error);
-        return NextResponse.json({ 
-          error: 'Database connection failed, but delete was validated',
-          mockData: { deletedId: id }
-        }, { status: 503 });
-      }
-
-      return NextResponse.json({ message: 'Analytics deleted successfully' });
-    } catch (supabaseError) {
-      console.error('Supabase connection failed in DELETE:', supabaseError);
-      return NextResponse.json({ 
-        error: 'Database connection failed, but delete was validated',
-        mockData: { deletedId: id }
-      }, { status: 503 });
+    
+    const result = await dbManager.delete('analytics', id);
+    
+    if (result.error) {
+      return NextResponse.json(result, { status: 503 });
     }
+    
+    return NextResponse.json(result);
   } catch (error) {
     console.error('Error in analytics DELETE:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

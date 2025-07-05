@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+import { supabaseAdmin } from '@/lib/supabase';
 
 // Mock data fallback
 const mockInvestments = [
@@ -55,7 +51,7 @@ export async function GET() {
   try {
     // Try to connect to Supabase
     try {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseAdmin
         .from('investments')
         .select(`
           *,
@@ -99,7 +95,7 @@ export async function PUT(request: NextRequest) {
 
     // Try to connect to Supabase
     try {
-      const { data, error } = await supabase
+      const { data, error } = await supabaseAdmin
         .from('investments')
         .update(updateData)
         .eq('id', id)

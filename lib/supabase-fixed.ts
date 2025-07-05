@@ -1,17 +1,21 @@
 import { createClient } from '@supabase/supabase-js';
-import { getSupabaseUrl, getSupabaseAnonKey, getSupabaseServiceKey } from './supabase-config';
+
+// Use the correct Supabase project URL
+const supabaseUrl = 'https://dobjulfwktzltpvqtxbql.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvYmp1bGZ3a3psdHB2cXR4YnFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA5NTI2MjYsImV4cCI6MjA2NjUyODYyNn0.wW9zZe9gD2ARxUpbCu0kgBZfujUnuq6XkXZz42RW0zY';
+const supabaseServiceKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvYmp1bGZ3a3psdHB2cXR4YnFsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MDk1MjYyNiwiZXhwIjoyMDY2NTI4NjI2fQ.wUZnwzSQcVoIYw5f4p-gc4I0jHzxN2VSIUkXfWn0V30';
 
 // Create Supabase client for client-side
-export const supabase = createClient(getSupabaseUrl(), getSupabaseAnonKey());
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Create Supabase client for server-side (with service role)
-export const supabaseAdmin = createClient(getSupabaseUrl(), getSupabaseServiceKey());
+export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
 // Test connection function
 export async function testSupabaseConnection() {
   try {
     console.log('🔍 Testing Supabase connection...');
-    console.log('URL:', getSupabaseUrl());
+    console.log('URL:', supabaseUrl);
     
     const { data, error } = await supabase
       .from('clients')
@@ -91,4 +95,4 @@ export async function isSupabaseAvailable(): Promise<boolean> {
   } catch {
     return false;
   }
-}
+} 
