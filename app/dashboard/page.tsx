@@ -50,26 +50,73 @@ export default function ClientDashboard() {
   const router = useRouter();
 
   useEffect(() => {
-    // Load purchased investments and bank data
-    const loadMyInvestments = () => {
-      const stored = localStorage.getItem('myInvestments');
-      setMyInvestments(stored ? JSON.parse(stored) : []);
+    // Load purchased investments from database and bank data from localStorage
+    const loadMyInvestments = async () => {
+      if (!user) {
+        setMyInvestments([]);
+        return;
+      }
+
+      try {
+        // Get client ID first
+        const { data: clientData, error: clientError } = await supabase
+          .from('clients')
+          .select('id')
+          .eq('userId', user.id)
+          .single();
+
+        if (clientError || !clientData) {
+          console.error('Error fetching client data:', clientError);
+          setMyInvestments([]);
+          return;
+        }
+
+        // Get investments from database
+        const { data: investments, error: investmentsError } = await supabase
+          .from('investments')
+          .select(`
+            *,
+            package:packageId (name, description, duration, expectedReturn, minInvestment)
+          `)
+          .eq('clientId', clientData.id);
+
+        if (investmentsError) {
+          console.error('Error fetching investments:', investmentsError);
+          setMyInvestments([]);
+          return;
+        }
+
+        // Transform database investments to match expected format
+        const transformedInvestments: Investment[] = (investments || []).map(inv => ({
+          id: inv.id,
+          packageName: inv.package?.name || 'Unknown Package',
+          amount: inv.amount,
+          status: inv.status,
+          startDate: inv.startDate,
+          endDate: inv.endDate,
+          totalReturns: inv.totalReturns || 0,
+          dailyReturns: inv.dailyReturns || 0,
+          paymentMethod: inv.paymentMethod || 'bank',
+          transactionId: inv.transactionId,
+          notes: inv.notes
+        }));
+
+        setMyInvestments(transformedInvestments);
+      } catch (error) {
+        console.error('Error loading investments:', error);
+        setMyInvestments([]);
+      }
     };
+
     const loadBankDetails = () => {
       const stored = localStorage.getItem('bankDetails');
       if (stored) setBankDetails(JSON.parse(stored));
     };
+
     loadMyInvestments();
     loadBankDetails();
-    // Real-time synchronization between tabs
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === 'myInvestments') loadMyInvestments();
-      if (e.key === 'bankDetails') loadBankDetails();
-    };
-    window.addEventListener('storage', onStorage);
     setIsLoading(false);
-    return () => window.removeEventListener('storage', onStorage);
-  }, []);
+  }, [user]);
 
   // Package normalization function
   function normalizePackage(pkg: any): any {
@@ -259,7 +306,6 @@ export default function ClientDashboard() {
 
       const updated = [...myInvestments, newInvestment];
       setMyInvestments(updated);
-      localStorage.setItem('myInvestments', JSON.stringify(updated));
       
       setShowBankModal(false);
       setSelectedPackage(null);

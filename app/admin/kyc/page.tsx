@@ -196,8 +196,40 @@ export default function AdminKYCPage() {
                 </td>
                 <td style={{ padding: 12 }}>
                   {app.documentImageUrl ? (
-                    <a href={app.documentImageUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline' }}>View</a>
-                  ) : '-' }
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                      <a 
+                        href={app.documentImageUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        style={{ 
+                          color: '#3b82f6', 
+                          textDecoration: 'underline',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.25rem'
+                        }}
+                      >
+                        <Eye size={16} />
+                        View
+                      </a>
+                      <a 
+                        href={app.documentImageUrl} 
+                        download
+                        style={{ 
+                          color: '#059669', 
+                          textDecoration: 'underline',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.25rem'
+                        }}
+                      >
+                        <Download size={16} />
+                        Download
+                      </a>
+                    </div>
+                  ) : (
+                    <span style={{ color: '#6b7280', fontStyle: 'italic' }}>No document</span>
+                  )}
                 </td>
                 <td style={{ padding: 12 }}>
                   {app.status === 'pending' && (

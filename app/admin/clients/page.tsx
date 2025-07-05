@@ -4,20 +4,20 @@ import { supabase } from '@/lib/supabase';
 
 interface Client {
   id: string;
-  first_name: string;
-  last_name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone: string;
-  date_of_birth?: string;
+  dateOfBirth?: string;
   nationality?: string;
   kycStatus?: string;
   status: 'active' | 'inactive' | 'pending';
-  created_at: string;
+  createdAt: string;
 }
 
 const emptyClient = (): Partial<Client> => ({
-  first_name: '',
-  last_name: '',
+  firstName: '',
+  lastName: '',
   email: '',
   phone: '',
   status: 'active',
@@ -44,7 +44,7 @@ export default function AdminClientsPage() {
     const { data, error } = await supabase
       .from('clients')
       .select('*')
-      .order('created_at', { ascending: false });
+      .order('createdAt', { ascending: false });
     
     if (error) setError(error.message);
     else setClients(data || []);
@@ -80,8 +80,8 @@ export default function AdminClientsPage() {
     let res;
     if (isEdit && form.id) {
       res = await supabase.from('clients').update({
-        first_name: form.first_name,
-        last_name: form.last_name,
+        firstName: form.firstName,
+        lastName: form.lastName,
         email: form.email,
         phone: form.phone,
         status: form.status
@@ -89,8 +89,8 @@ export default function AdminClientsPage() {
     } else {
       res = await supabase.from('clients').insert([
         {
-          first_name: form.first_name,
-          last_name: form.last_name,
+          firstName: form.firstName,
+          lastName: form.lastName,
           email: form.email,
           phone: form.phone,
           status: form.status
@@ -151,10 +151,10 @@ export default function AdminClientsPage() {
                 <tr key={client.id} style={{ background: '#fff', borderBottom: '1px solid #e5e7eb', transition: 'background 0.2s' }}>
                   <td style={tdStyle}>
                     <div>
-                      <strong>{client.first_name} {client.last_name}</strong>
-                      {client.date_of_birth && (
+                      <strong>{client.firstName} {client.lastName}</strong>
+                      {client.dateOfBirth && (
                         <div style={{ fontSize: 12, color: '#6b7280' }}>
-                          DOB: {new Date(client.date_of_birth).toLocaleDateString()}
+                          DOB: {new Date(client.dateOfBirth).toLocaleDateString()}
                         </div>
                       )}
                       {client.nationality && (
@@ -195,10 +195,10 @@ export default function AdminClientsPage() {
                       {client.status}
                     </span>
                   </td>
-                  <td style={tdStyle}>{new Date(client.created_at).toLocaleDateString()}</td>
+                  <td style={tdStyle}>{new Date(client.createdAt).toLocaleDateString()}</td>
                   <td style={tdStyle}>
                     <button onClick={() => openEdit(client)} style={actionBtnStyle}>Edit</button>
-                    <button onClick={() => handleDelete(client.id)} style={{ ...actionBtnStyle, background: '#dc2626', color: '#fff', marginLeft: 8 }}>Delete</button>
+                    <button onClick={() => handleDelete(client.id)} style={{ ...actionBtnStyle, background: '#dc2626' }}>Delete</button>
                   </td>
                 </tr>
               ))}
@@ -212,37 +212,181 @@ export default function AdminClientsPage() {
         </div>
       )}
       {showModal && (
-        <div style={modalOverlayStyle}>
-          <div style={modalStyle}>
-            <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 16 }}>{isEdit ? 'Modifica Cliente' : 'Nuovo Cliente'}</h2>
-            {error && <div style={{ background: '#fee2e2', color: '#b91c1c', padding: 10, borderRadius: 6, marginBottom: 10, fontWeight: 600 }}>{error}</div>}
-            <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <input required placeholder="Nome" value={form.first_name || ''} onChange={e => setForm({ ...form, first_name: e.target.value })} style={inputStyle} />
-              <input required placeholder="Cognome" value={form.last_name || ''} onChange={e => setForm({ ...form, last_name: e.target.value })} style={inputStyle} />
-              <input required type="email" placeholder="Email" value={form.email || ''} onChange={e => setForm({ ...form, email: e.target.value })} style={inputStyle} />
-              <input required placeholder="Telefono" value={form.phone || ''} onChange={e => setForm({ ...form, phone: e.target.value })} style={inputStyle} />
-              <select value={form.status || 'active'} onChange={e => setForm({ ...form, status: e.target.value as Client['status'] })} style={inputStyle}>
-                <option value="active">Attivo</option>
-                <option value="inactive">Non attivo</option>
-                <option value="pending">In attesa</option>
-              </select>
-              
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 16 }}>
-                <button type="button" onClick={closeModal} style={{ ...actionBtnStyle, background: '#e5e7eb', color: '#1e293b' }}>Annulla</button>
-                <button type="submit" disabled={saving} style={{ ...actionBtnStyle, background: '#2563eb', color: '#fff' }}>{saving ? 'Salvataggio...' : isEdit ? 'Salva Modifiche' : 'Aggiungi Cliente'}</button>
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: '#fff',
+            padding: '2rem',
+            borderRadius: 12,
+            width: '90%',
+            maxWidth: 500,
+            maxHeight: '90vh',
+            overflowY: 'auto'
+          }}>
+            <h2 style={{ margin: '0 0 1.5rem 0', color: '#1e293b' }}>
+              {isEdit ? 'Edit Client' : 'Add New Client'}
+            </h2>
+            <form onSubmit={handleSave}>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>
+                  First Name *
+                </label>
+                <input
+                  type="text"
+                  value={form.firstName || ''}
+                  onChange={(e) => setForm({ ...form, firstName: e.target.value })}
+                  required
+                  style={inputStyle}
+                />
+              </div>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>
+                  Last Name *
+                </label>
+                <input
+                  type="text"
+                  value={form.lastName || ''}
+                  onChange={(e) => setForm({ ...form, lastName: e.target.value })}
+                  required
+                  style={inputStyle}
+                />
+              </div>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>
+                  Email *
+                </label>
+                <input
+                  type="email"
+                  value={form.email || ''}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  required
+                  style={inputStyle}
+                />
+              </div>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>
+                  Phone *
+                </label>
+                <input
+                  type="tel"
+                  value={form.phone || ''}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  required
+                  style={inputStyle}
+                />
+              </div>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>
+                  Status
+                </label>
+                <select
+                  value={form.status || 'active'}
+                  onChange={(e) => setForm({ ...form, status: e.target.value as any })}
+                  style={inputStyle}
+                >
+                  <option value="active">Active</option>
+                  <option value="pending">Pending</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    border: '1px solid #d1d5db',
+                    background: '#fff',
+                    color: '#374151',
+                    borderRadius: 8,
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    background: '#2563eb',
+                    color: '#fff',
+                    border: 0,
+                    borderRadius: 8,
+                    fontWeight: 600,
+                    cursor: saving ? 'not-allowed' : 'pointer',
+                    opacity: saving ? 0.6 : 1
+                  }}
+                >
+                  {saving ? 'Saving...' : (isEdit ? 'Update' : 'Create')}
+                </button>
               </div>
             </form>
-            {successMsg && <div style={{ background: '#bbf7d0', color: '#166534', padding: 14, borderRadius: 8, margin: '18px 0', fontWeight: 700, textAlign: 'center' }}>{successMsg}</div>}
           </div>
+        </div>
+      )}
+      {successMsg && (
+        <div style={{
+          position: 'fixed',
+          top: 20,
+          right: 20,
+          background: '#bbf7d0',
+          color: '#16a34a',
+          padding: '1rem 1.5rem',
+          borderRadius: 8,
+          fontWeight: 600,
+          zIndex: 1001,
+          boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+        }}>
+          {successMsg}
         </div>
       )}
     </div>
   );
 }
 
-const thStyle = { padding: '12px 8px', fontWeight: 700, fontSize: 15, background: '#f1f5f9', borderBottom: '1px solid #e5e7eb', textAlign: 'left' as const };
-const tdStyle = { padding: '10px 8px', fontSize: 15, borderBottom: '1px solid #e5e7eb', textAlign: 'left' as const };
-const actionBtnStyle = { background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 6, padding: '6px 14px', fontWeight: 600, cursor: 'pointer', fontSize: 14 };
-const modalOverlayStyle = { position: 'fixed' as const, top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.25)', display: 'flex' as const, alignItems: 'center', justifyContent: 'center', zIndex: 10000 };
-const modalStyle = { background: '#fff', borderRadius: 12, padding: 32, minWidth: 400, boxShadow: '0 4px 32px rgba(30,41,59,0.18)' };
-const inputStyle = { padding: '10px', borderRadius: 6, border: '1px solid #e5e7eb', fontSize: 15, width: '100%' }; 
+const thStyle = {
+  padding: '1rem',
+  textAlign: 'left' as const,
+  fontWeight: 700,
+  fontSize: 14,
+  borderBottom: '2px solid #e5e7eb'
+};
+
+const tdStyle = {
+  padding: '1rem',
+  fontSize: 14,
+  color: '#374151'
+};
+
+const actionBtnStyle = {
+  background: '#2563eb',
+  color: '#fff',
+  border: 0,
+  padding: '0.5rem 1rem',
+  borderRadius: 6,
+  marginRight: '0.5rem',
+  cursor: 'pointer',
+  fontSize: 12,
+  fontWeight: 600
+};
+
+const inputStyle = {
+  width: '100%',
+  padding: '0.75rem',
+  border: '1px solid #d1d5db',
+  borderRadius: 8,
+  fontSize: 14,
+  color: '#374151'
+}; 

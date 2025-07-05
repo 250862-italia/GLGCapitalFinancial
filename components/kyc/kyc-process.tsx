@@ -159,18 +159,34 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Simulate file upload (temporary solution until storage is fixed)
+  // Real file upload to Supabase Storage
   const uploadDocument = async (field: string, file: File) => {
     if (!file || !userId) return null;
     
-    // Simulate upload delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Return a mock URL for now
-    const mockUrl = `mock://${userId}/${Date.now()}_${file.name}`;
-    console.log(`📁 Simulated upload for ${field}:`, mockUrl);
-    
-    return mockUrl;
+    try {
+      const formData = new FormData();
+      formData.append('document', file);
+      formData.append('userId', userId);
+      formData.append('documentType', field.toUpperCase());
+
+      const response = await fetch('/api/kyc/upload-document', {
+        method: 'POST',
+        body: formData
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Upload failed');
+      }
+
+      console.log(`📁 Document uploaded for ${field}:`, result.documentUrl);
+      return result.documentUrl;
+    } catch (error) {
+      console.error(`❌ Upload error for ${field}:`, error);
+      alert(`Failed to upload ${field}. Please try again.`);
+      return null;
+    }
   };
 
   // Modify handleFileUpload for real upload
