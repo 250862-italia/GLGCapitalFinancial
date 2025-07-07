@@ -44,18 +44,17 @@ export class AuthService {
       // Hash password
       const hashedPassword = await bcrypt.hash(data.password, 12);
 
-      // Create user
+      // Create user (solo colonne previste dalla tabella)
       const { data: newUser, error } = await supabase
         .from('users')
         .insert({
           email: data.email.toLowerCase(),
           password_hash: hashedPassword,
-          name: data.name,
-          first_name: data.first_name || data.name.split(' ')[0],
-          last_name: data.last_name || data.name.split(' ').slice(1).join(' '),
           role: 'user',
-          kyc_completed: false,
-          created_at: new Date().toISOString()
+          is_active: true,
+          email_verified: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         })
         .select()
         .single();
