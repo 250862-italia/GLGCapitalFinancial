@@ -137,7 +137,7 @@ export default function ClientDashboard() {
   }
 
   // Active packages for all clients
-  const activeInvestments = availablePackages.filter(pkg => pkg.is_active);
+  const activeInvestments = availablePackages.filter(pkg => pkg.isActive);
 
   // Packages to show: all those present in localStorage
   const allPackages = availablePackages;
@@ -493,7 +493,7 @@ export default function ClientDashboard() {
               gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', 
               gap: '1.5rem' 
             }}>
-              {availablePackages.filter(pkg => pkg.is_active).map(pkg => (
+              {availablePackages.filter(pkg => pkg.isActive).map(pkg => (
                 <div key={pkg.id} style={{
                   border: '1px solid #e5e7eb',
                   borderRadius: '12px',
@@ -581,7 +581,7 @@ export default function ClientDashboard() {
                 </div>
               ))}
               
-              {availablePackages.filter(pkg => pkg.is_active).length === 0 && (
+              {availablePackages.filter(pkg => pkg.isActive).length === 0 && (
                 <div style={{ 
                   gridColumn: '1 / -1', 
                   textAlign: 'center', 
