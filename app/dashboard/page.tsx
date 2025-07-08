@@ -322,11 +322,11 @@ export default function ClientDashboard() {
   // Stats calculated only on purchased investments
   const stats = {
     totalInvested: myInvestments.reduce((sum, inv) => sum + inv.amount, 0),
-    totalEarned: myInvestments.reduce((sum, inv) => sum + inv.total_returns, 0),
+    totalEarned: myInvestments.reduce((sum, inv) => sum + inv.totalReturns, 0),
     activeInvestments: myInvestments.length,
-    averageReturn: myInvestments.length > 0 ? myInvestments.reduce((sum, inv) => sum + inv.daily_return, 0) / myInvestments.length : 0,
-    todayEarnings: myInvestments.reduce((sum, inv) => sum + inv.daily_returns, 0),
-    monthlyEarnings: myInvestments.reduce((sum, inv) => sum + inv.monthly_earnings, 0)
+    averageReturn: myInvestments.length > 0 ? myInvestments.reduce((sum, inv) => sum + inv.dailyReturn, 0) / myInvestments.length : 0,
+    todayEarnings: myInvestments.reduce((sum, inv) => sum + inv.dailyReturns, 0),
+    monthlyEarnings: myInvestments.reduce((sum, inv) => sum + inv.monthlyEarnings, 0)
   };
 
   const formatCurrency = (amount: number) => {
@@ -617,7 +617,7 @@ export default function ClientDashboard() {
           }}>
             <DollarSign size={38} color="#059669" style={{ marginBottom: 12 }} />
             <div style={{ fontSize: 16, color: '#059669', fontWeight: 700, marginBottom: 6 }}>Total Invested</div>
-            <div style={{ fontSize: 32, fontWeight: 900, color: '#0a2540', letterSpacing: -1 }}>{formatCurrency(stats.total_invested)}</div>
+            <div style={{ fontSize: 32, fontWeight: 900, color: '#0a2540', letterSpacing: -1 }}>{formatCurrency(stats.totalInvested)}</div>
           </div>
           {/* Total Earned */}
           <div style={{
@@ -630,7 +630,7 @@ export default function ClientDashboard() {
           }}>
             <TrendingUp size={38} color="#f59e0b" style={{ marginBottom: 12 }} />
             <div style={{ fontSize: 16, color: '#f59e0b', fontWeight: 700, marginBottom: 6 }}>Total Earned</div>
-            <div style={{ fontSize: 32, fontWeight: 900, color: '#0a2540', letterSpacing: -1 }}>{formatCurrency(stats.total_earned)}</div>
+            <div style={{ fontSize: 32, fontWeight: 900, color: '#0a2540', letterSpacing: -1 }}>{formatCurrency(stats.totalEarned)}</div>
           </div>
           {/* Today's Earnings */}
           <div style={{
@@ -643,7 +643,7 @@ export default function ClientDashboard() {
           }}>
             <Target size={38} color="#3b82f6" style={{ marginBottom: 12 }} />
             <div style={{ fontSize: 16, color: '#3b82f6', fontWeight: 700, marginBottom: 6 }}>Today's Earnings</div>
-            <div style={{ fontSize: 32, fontWeight: 900, color: '#0a2540', letterSpacing: -1 }}>{formatCurrency(stats.today_earnings)}</div>
+            <div style={{ fontSize: 32, fontWeight: 900, color: '#0a2540', letterSpacing: -1 }}>{formatCurrency(stats.todayEarnings)}</div>
           </div>
           {/* Monthly Earnings */}
           <div style={{
@@ -656,7 +656,7 @@ export default function ClientDashboard() {
           }}>
             <BarChart3 size={38} color="#ec4899" style={{ marginBottom: 12 }} />
             <div style={{ fontSize: 16, color: '#ec4899', fontWeight: 700, marginBottom: 6 }}>Monthly Earnings</div>
-            <div style={{ fontSize: 32, fontWeight: 900, color: '#0a2540', letterSpacing: -1 }}>{formatCurrency(stats.monthly_earnings)}</div>
+            <div style={{ fontSize: 32, fontWeight: 900, color: '#0a2540', letterSpacing: -1 }}>{formatCurrency(stats.monthlyEarnings)}</div>
           </div>
         </div>
 
