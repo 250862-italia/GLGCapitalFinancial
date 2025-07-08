@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     const { data: clientData, error: clientError } = await supabase
       .from('clients')
       .select('id')
-      .eq('"userId"', userId)
+      .eq('user_id', userId)
       .single();
 
     if (clientError || !clientData) {
@@ -76,10 +76,10 @@ export async function POST(request: NextRequest) {
 
     // Create or update KYC record
     const kycRecord = {
-      "clientId": clientData.id,
-      "documentType": documentType,
-      "documentNumber": `${documentType}_${Date.now()}`,
-      "documentImageUrl": urlData.publicUrl,
+      "client_id": clientData.id,
+      "document_type": documentType,
+      "document_number": `${documentType}_${Date.now()}`,
+      "document_image_url": urlData.publicUrl,
       status: 'pending',
       notes: `Document uploaded: ${file.name}`
     };
@@ -88,8 +88,8 @@ export async function POST(request: NextRequest) {
     const { data: existingRecord } = await supabase
       .from('kyc_records')
       .select('id')
-      .eq('"clientId"', clientData.id)
-      .eq('"documentType"', documentType)
+      .eq('client_id', clientData.id)
+      .eq('document_type', documentType)
       .single();
 
     let result;
@@ -98,11 +98,11 @@ export async function POST(request: NextRequest) {
       const { data, error } = await supabase
         .from('kyc_records')
         .update({
-          "documentImageUrl": urlData.publicUrl,
-          "documentNumber": `${documentType}_${Date.now()}`,
+          "document_image_url": urlData.publicUrl,
+          "document_number": `${documentType}_${Date.now()}`,
           status: 'pending',
           notes: `Document updated: ${file.name}`,
-          "updatedAt": new Date().toISOString()
+          "updated_at": new Date().toISOString()
         })
         .eq('id', existingRecord.id)
         .select()

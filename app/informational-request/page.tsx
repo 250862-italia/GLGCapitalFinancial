@@ -24,8 +24,8 @@ export default function InformationalRequestPage() {
   const [error, setError] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
+    first_name: '',
+    last_name: '',
     email: user?.email || '',
     phone: '',
     country: '',
@@ -60,8 +60,8 @@ export default function InformationalRequestPage() {
         setSuccess(true);
         // Reset form
         setFormData({
-          firstName: '',
-          lastName: '',
+          first_name: '',
+          last_name: '',
           email: user?.email || '',
           phone: '',
           country: '',
@@ -127,7 +127,7 @@ Please send the requested information via one of the following:
 
 ---
 APPLICANT INFORMATION:
-Name: ${formData.firstName} ${formData.lastName}
+Name: ${formData.first_name} ${formData.last_name}
 Email: ${formData.email}
 Phone: ${formData.phone || 'Not provided'}
 Country: ${formData.country || 'Not provided'}
@@ -280,8 +280,8 @@ Time: ${new Date().toLocaleTimeString()}
                   <input
                     type="text"
                     required
-                    value={formData.firstName}
-                    onChange={(e) => handleInputChange('firstName', e.target.value)}
+                    value={formData.first_name}
+                    onChange={(e) => handleInputChange('first_name', e.target.value)}
                     style={{
                       width: '100%',
                       padding: '12px',
@@ -307,8 +307,8 @@ Time: ${new Date().toLocaleTimeString()}
                   <input
                     type="text"
                     required
-                    value={formData.lastName}
-                    onChange={(e) => handleInputChange('lastName', e.target.value)}
+                    value={formData.last_name}
+                    onChange={(e) => handleInputChange('last_name', e.target.value)}
                     style={{
                       width: '100%',
                       padding: '12px',

@@ -4,9 +4,9 @@ interface Session {
   token: string;
   ipAddress: string;
   userAgent: string;
-  createdAt: Date;
-  lastActivity: Date;
-  expiresAt: Date;
+  created_at: Date;
+  last_activity: Date;
+  expires_at: Date;
   isActive: boolean;
   metadata?: Record<string, any>;
 }
@@ -55,7 +55,7 @@ class SessionManager {
     if (userSessions.length >= this.maxSessionsPerUser) {
       // Remove oldest session
       const oldestSession = userSessions.sort((a, b) => 
-        a.createdAt.getTime() - b.createdAt.getTime()
+        a.created_at.getTime() - b.created_at.getTime()
       )[0];
       this.removeSession(oldestSession.id);
     }
@@ -66,9 +66,9 @@ class SessionManager {
       token,
       ipAddress,
       userAgent,
-      createdAt: new Date(),
-      lastActivity: new Date(),
-      expiresAt: new Date(Date.now() + this.sessionTimeout),
+      created_at: new Date(),
+      last_activity: new Date(),
+      expires_at: new Date(Date.now() + this.sessionTimeout),
       isActive: true,
       metadata
     };
@@ -106,10 +106,10 @@ class SessionManager {
       return false;
     }
 
-    session.lastActivity = new Date();
+    session.last_activity = new Date();
     session.ipAddress = ipAddress;
     session.userAgent = userAgent;
-    session.expiresAt = new Date(Date.now() + this.sessionTimeout);
+    session.expires_at = new Date(Date.now() + this.sessionTimeout);
 
     this.sessions.set(sessionId, session);
     this.logActivity(sessionId, session.userId, 'session_activity', ipAddress, userAgent);
@@ -173,7 +173,7 @@ class SessionManager {
 
     activeSessions.forEach(session => {
       sessionsByUser[session.userId] = (sessionsByUser[session.userId] || 0) + 1;
-      totalDuration += session.lastActivity.getTime() - session.createdAt.getTime();
+      totalDuration += session.last_activity.getTime() - session.created_at.getTime();
     });
 
     const recentActivity = this.activities
@@ -218,9 +218,9 @@ class SessionManager {
       }
 
       // Sessions created very close together
-      const sortedSessions = sessions.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+      const sortedSessions = sessions.sort((a, b) => a.created_at.getTime() - b.created_at.getTime());
       for (let i = 1; i < sortedSessions.length; i++) {
-        const timeDiff = sortedSessions[i].createdAt.getTime() - sortedSessions[i-1].createdAt.getTime();
+        const timeDiff = sortedSessions[i].created_at.getTime() - sortedSessions[i-1].created_at.getTime();
         if (timeDiff < 60000) { // Less than 1 minute apart
           suspiciousSessions.push(sortedSessions[i]);
         }
@@ -260,7 +260,7 @@ class SessionManager {
 
   // Check if session is expired
   private isSessionExpired(session: Session): boolean {
-    return session.expiresAt.getTime() < Date.now();
+    return session.expires_at.getTime() < Date.now();
   }
 
   // Initialize cleanup interval
@@ -365,16 +365,16 @@ class SessionManager {
   } {
     const cutoffTime = Date.now() - timeRange;
     const recentSessions = Array.from(this.sessions.values())
-      .filter(session => session.createdAt.getTime() > cutoffTime);
+      .filter(session => session.created_at.getTime() > cutoffTime);
 
     const uniqueUsers = new Set(recentSessions.map(s => s.userId)).size;
     const userSessionCounts = new Map<string, { sessions: number; lastActivity: Date }>();
 
     recentSessions.forEach(session => {
-      const existing = userSessionCounts.get(session.userId) || { sessions: 0, lastActivity: session.lastActivity };
+      const existing = userSessionCounts.get(session.userId) || { sessions: 0, lastActivity: session.last_activity };
       existing.sessions++;
-      if (session.lastActivity > existing.lastActivity) {
-        existing.lastActivity = session.lastActivity;
+      if (session.last_activity > existing.lastActivity) {
+        existing.lastActivity = session.last_activity;
       }
       userSessionCounts.set(session.userId, existing);
     });
@@ -386,7 +386,7 @@ class SessionManager {
 
     const sessionsByHour: Record<number, number> = {};
     recentSessions.forEach(session => {
-      const hour = session.createdAt.getHours();
+      const hour = session.created_at.getHours();
       sessionsByHour[hour] = (sessionsByHour[hour] || 0) + 1;
     });
 

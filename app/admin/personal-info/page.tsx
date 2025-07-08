@@ -16,14 +16,14 @@ import AdminProtectedRoute from '@/components/auth/AdminProtectedRoute';
 
 interface PersonalInfo {
   id: string;
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
   email: string;
   phone: string;
   position: string;
   department: string;
   bio: string;
-  profilePhoto: string;
+  profile_photo: string;
   lastUpdated: string;
 }
 
@@ -32,14 +32,14 @@ export default function PersonalInfoPage() {
   const [adminUser, setAdminUser] = useState<any>(null);
   const [personalInfo, setPersonalInfo] = useState<PersonalInfo>({
     id: '',
-    firstName: '',
-    lastName: '',
+    first_name: '',
+    last_name: '',
     email: '',
     phone: '',
     position: 'Super Administrator',
     department: 'Management',
     bio: '',
-    profilePhoto: '',
+    profile_photo: '',
     lastUpdated: ''
   });
   const [isEditing, setIsEditing] = useState(false);
@@ -62,14 +62,14 @@ export default function PersonalInfoPage() {
         // Dati di default basati sull'utente admin
         setPersonalInfo({
           id: user.id,
-          firstName: user.name?.split(' ')[0] || 'Super',
-          lastName: user.name?.split(' ')[1] || 'Admin',
+          first_name: user.name?.split(' ')[0] || 'Super',
+          last_name: user.name?.split(' ')[1] || 'Admin',
           email: user.email,
           phone: '',
           position: 'Super Administrator',
           department: 'Management',
           bio: 'Experienced administrator with expertise in financial management and system administration.',
-          profilePhoto: '',
+          profile_photo: '',
           lastUpdated: new Date().toISOString()
         });
       }
@@ -102,7 +102,7 @@ export default function PersonalInfoPage() {
     setPhotoPreview('');
     setPersonalInfo(prev => ({
       ...prev,
-      profilePhoto: ''
+      profile_photo: ''
     }));
   };
 
@@ -117,7 +117,7 @@ export default function PersonalInfoPage() {
       // Aggiorna con la nuova foto se caricata
       const updatedInfo = {
         ...personalInfo,
-        profilePhoto: photoPreview || personalInfo.profilePhoto,
+        profile_photo: photoPreview || personalInfo.profile_photo,
         lastUpdated: new Date().toISOString()
       };
 
@@ -132,7 +132,7 @@ export default function PersonalInfoPage() {
       // Aggiorna anche l'utente admin nel localStorage
       const updatedUser = {
         ...adminUser,
-        name: `${updatedInfo.firstName} ${updatedInfo.lastName}`,
+        name: `${updatedInfo.first_name} ${updatedInfo.last_name}`,
         email: updatedInfo.email
       };
       localStorage.setItem("admin_user", JSON.stringify(updatedUser));
@@ -248,9 +248,9 @@ export default function PersonalInfoPage() {
               overflow: 'hidden',
               border: '3px solid #e5e7eb'
             }}>
-              {(photoPreview || personalInfo.profilePhoto) ? (
+              {(photoPreview || personalInfo.profile_photo) ? (
                 <img
-                  src={photoPreview || personalInfo.profilePhoto}
+                  src={photoPreview || personalInfo.profile_photo}
                   alt="Profile"
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />
@@ -284,7 +284,7 @@ export default function PersonalInfoPage() {
                   />
                 </label>
                 
-                {(photoPreview || personalInfo.profilePhoto) && (
+                {(photoPreview || personalInfo.profile_photo) && (
                   <button
                     onClick={removePhoto}
                     style={{
@@ -319,8 +319,8 @@ export default function PersonalInfoPage() {
                 </label>
                 <input
                   type="text"
-                  value={personalInfo.firstName}
-                  onChange={(e) => handleInputChange('firstName', e.target.value)}
+                  value={personalInfo.first_name}
+                  onChange={(e) => handleInputChange('first_name', e.target.value)}
                   disabled={!isEditing}
                   style={{
                     width: '100%',
@@ -339,8 +339,8 @@ export default function PersonalInfoPage() {
                 </label>
                 <input
                   type="text"
-                  value={personalInfo.lastName}
-                  onChange={(e) => handleInputChange('lastName', e.target.value)}
+                  value={personalInfo.last_name}
+                  onChange={(e) => handleInputChange('last_name', e.target.value)}
                   disabled={!isEditing}
                   style={{
                     width: '100%',

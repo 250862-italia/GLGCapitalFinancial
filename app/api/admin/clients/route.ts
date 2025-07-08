@@ -11,7 +11,7 @@ export async function GET() {
       .from('clients')
       .select(`
         *,
-        users!inner(email, firstName, lastName, role, isActive, lastLogin)
+        users!inner(email, first_name, last_name, role, isActive, lastLogin)
       `)
       .order('createdAt', { ascending: false });
 
@@ -23,8 +23,8 @@ export async function GET() {
     // Transform data to match expected format
     const transformedData = data?.map(client => ({
       id: client.id,
-      firstName: client.firstName || client.users?.firstName,
-      lastName: client.lastName || client.users?.lastName,
+      first_name: client.first_name || client.users?.first_name,
+      last_name: client.last_name || client.users?.last_name,
       email: client.email,
       phone: client.phone,
       dateOfBirth: client.dateOfBirth,

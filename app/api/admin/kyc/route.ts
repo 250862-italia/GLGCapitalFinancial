@@ -10,13 +10,13 @@ const mockKYCRecords = [
     document_url: 'https://example.com/doc1.pdf',
     status: 'pending',
     notes: 'Document submitted for review',
-    createdAt: new Date().toISOString(),
+    created_at: new Date().toISOString(),
     clients: {
-      firstName: 'John',
-      lastName: 'Doe',
+      first_name: 'John',
+      last_name: 'Doe',
       email: 'john.doe@example.com',
       phone: '+1234567890',
-      dateOfBirth: '1990-01-01',
+      date_of_birth: '1990-01-01',
       nationality: 'US'
     }
   },
@@ -27,13 +27,13 @@ const mockKYCRecords = [
     document_url: 'https://example.com/doc2.pdf',
     status: 'approved',
     notes: 'Address verification completed',
-    createdAt: new Date().toISOString(),
+    created_at: new Date().toISOString(),
     clients: {
-      firstName: 'Jane',
-      lastName: 'Smith',
+      first_name: 'Jane',
+      last_name: 'Smith',
       email: 'jane.smith@example.com',
       phone: '+0987654321',
-      dateOfBirth: '1985-05-15',
+      date_of_birth: '1985-05-15',
       nationality: 'UK'
     }
   }
@@ -48,15 +48,15 @@ export async function GET() {
         .select(`
           *,
           clients!inner(
-            "firstName",
-            "lastName",
+            first_name,
+            last_name,
             email,
             phone,
-            "dateOfBirth",
+            date_of_birth,
             nationality
           )
         `)
-        .order('"createdAt"', { ascending: false });
+        .order('"created_at"', { ascending: false });
 
       if (error) {
         console.error('Supabase error, using mock data:', error);
@@ -86,7 +86,7 @@ export async function PUT(request: NextRequest) {
     const updateData: any = { status };
     if (notes !== undefined) updateData.notes = notes;
     if (status === 'approved') {
-      updateData.verifiedAt = new Date().toISOString();
+      updateData.verified_at = new Date().toISOString();
     }
 
     // Try to connect to Supabase

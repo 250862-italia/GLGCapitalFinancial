@@ -4,27 +4,27 @@ import { supabase } from '@/lib/supabase';
 
 interface ClientProfile {
   id: string;
-  userId: string;
+  user_id: string;
   email: string;
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
   phone: string;
   company?: string;
   position?: string;
-  dateOfBirth?: string;
+  date_of_birth?: string;
   nationality?: string;
-  photoUrl?: string;
+  photo_url?: string;
   iban?: string;
   bic?: string;
-  accountHolder?: string;
-  usdtWallet?: string;
+  account_holder?: string;
+  usdt_wallet?: string;
   status: string;
-  kycStatus: string;
+  kyc_status: string;
   country?: string;
   city?: string;
   address?: string;
-  createdAt: string;
-  updatedAt: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export function useProfile() {
@@ -33,14 +33,14 @@ export function useProfile() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const createProfile = async (userId: string): Promise<ClientProfile | null> => {
+  const createProfile = async (user_id: string): Promise<ClientProfile | null> => {
     try {
       const response = await fetch('/api/profile/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ userId }),
+        body: JSON.stringify({ user_id }),
       });
 
       if (!response.ok) {
@@ -69,7 +69,7 @@ export function useProfile() {
       let { data: clientData, error: clientError } = await supabase
         .from('clients')
         .select('*')
-        .eq('"userId"', user.id)
+        .eq('"user_id"', user.id)
         .single();
 
       if (clientError && clientError.code === 'PGRST116') {
@@ -113,7 +113,7 @@ export function useProfile() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId: user.id,
+          user_id: user.id,
           updates
         })
       });

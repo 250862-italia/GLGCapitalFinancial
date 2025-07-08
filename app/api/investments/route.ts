@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     // Lista con join su clients e packages
     const { data, error } = await supabase
       .from('investments')
-      .select(`*, client:clientId (name, email), package:packageId (name)`) // join
+      .select(`*, client:client_id (first_name, last_name, email), package:package_id (name)`) // join
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
     return NextResponse.json(data);
   }
@@ -24,9 +24,9 @@ export async function GET(request: NextRequest) {
 // POST: crea nuovo investimento
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const { clientId, packageId, amount, currency, startDate, endDate, status, totalReturns, dailyReturns, paymentMethod, notes } = body;
+  const { client_id, package_id, amount, currency, start_date, end_date, status, total_returns, daily_returns, payment_method, notes } = body;
   const { data, error } = await supabase.from('investments').insert([
-    { clientId, packageId, amount, currency, startDate, endDate, status, totalReturns, dailyReturns, paymentMethod, notes }
+    { client_id, package_id, amount, currency, start_date, end_date, status, total_returns, daily_returns, payment_method, notes }
   ]).select().single();
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
   return NextResponse.json(data);
@@ -45,15 +45,15 @@ export async function PUT(request: NextRequest) {
     // Recupera dati cliente e pacchetto
     const { data: inv, error: errInv } = await supabase
       .from('investments')
-      .select('*, client:clientId (name, email), package:packageId (name)')
+      .select('*, client:client_id (first_name, last_name, email), package:package_id (name)')
       .eq('id', id)
       .single();
     if (!errInv && inv && inv.client && inv.package) {
       const userData = {
-        firstName: inv.client.name?.split(' ')[0] || '',
-        lastName: inv.client.name?.split(' ').slice(1).join(' ') || '',
+        first_name: inv.client.first_name?.split(' ')[0] || '',
+        last_name: inv.client.last_name?.split(' ').join(' ') || '',
         email: inv.client.email,
-        id: inv.clientId
+        id: inv.client_id
       };
       const packageData = {
         name: inv.package.name
@@ -63,7 +63,7 @@ export async function PUT(request: NextRequest) {
           to: userData.email,
           template: 'investment_confirmation',
           data: {
-            name: userData.firstName,
+            name: userData.first_name,
             packageName: packageData.name,
             amount: inv.amount,
             transactionId: inv.id,
@@ -76,7 +76,7 @@ export async function PUT(request: NextRequest) {
           to: userData.email,
           template: 'investment_rejected',
           data: {
-            name: userData.firstName,
+            name: userData.first_name,
             packageName: packageData.name
           }
         });

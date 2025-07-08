@@ -38,22 +38,22 @@ export async function POST(request: NextRequest) {
 
     // Create new client profile with basic data
     const newProfile = {
-      userId: userId,
+      user_id: userId,
       email: '', // Will be filled by the client
-      firstName: '',
-      lastName: '',
+      first_name: '',
+      last_name: '',
       phone: '',
-      dateOfBirth: null,
+      date_of_birth: null,
       nationality: '',
       address: '',
       city: '',
-      postalCode: '',
+      postal_code: '',
       country: '',
-      profilePhoto: null,
-      kycStatus: 'PENDING',
+      profile_photo: null,
+      kyc_status: 'PENDING',
       status: 'ACTIVE',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
 
     const { data: createdProfile, error: createError } = await supabase
@@ -68,15 +68,15 @@ export async function POST(request: NextRequest) {
       // If the error is due to missing columns, try with minimal data
       if (createError.code === '42703' || createError.message.includes('column')) {
         const minimalProfile = {
-          userId: userId,
+          user_id: userId,
           email: '',
-          firstName: '',
-          lastName: '',
+          first_name: '',
+          last_name: '',
           phone: '',
-          kycStatus: 'PENDING',
+          kyc_status: 'PENDING',
           status: 'ACTIVE',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         };
 
         const { data: minimalCreatedProfile, error: minimalCreateError } = await supabase

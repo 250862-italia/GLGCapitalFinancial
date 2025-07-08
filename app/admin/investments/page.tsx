@@ -255,16 +255,16 @@ function InvestmentForm({
   isEdit: boolean;
 }) {
   const [form, setForm] = useState({
-    clientId: initialData?.clientId || '',
-    packageId: initialData?.packageId || '',
+    client_id: initialData?.client_id || '',
+    package_id: initialData?.package_id || '',
     amount: initialData?.amount?.toString() || '',
     currency: initialData?.currency || 'EUR',
-    startDate: initialData?.startDate || '',
-    endDate: initialData?.endDate || '',
+    start_date: initialData?.start_date || '',
+    end_date: initialData?.end_date || '',
     status: initialData?.status || 'active',
-    totalReturns: initialData?.totalReturns?.toString() || '',
-    dailyReturns: initialData?.dailyReturns?.toString() || '',
-    paymentMethod: initialData?.paymentMethod || 'bank',
+    total_returns: initialData?.total_returns?.toString() || '',
+    daily_returns: initialData?.daily_returns?.toString() || '',
+    payment_method: initialData?.payment_method || 'bank',
     notes: initialData?.notes || ''
   });
   const [error, setError] = useState<string>('');
@@ -277,22 +277,22 @@ function InvestmentForm({
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
-    if (!form.clientId || !form.amount || !form.packageId) {
+    if (!form.client_id || !form.amount || !form.package_id) {
       setError('Compila tutti i campi obbligatori');
       return;
     }
     onSubmit({
       id: initialData?.id,
-      clientId: form.clientId,
-      packageId: form.packageId,
+      client_id: form.client_id,
+      package_id: form.package_id,
       amount: Number(form.amount),
       currency: form.currency,
-      startDate: form.startDate,
-      endDate: form.endDate,
+      start_date: form.start_date,
+      end_date: form.end_date,
       status: form.status as 'active' | 'completed' | 'cancelled',
-      totalReturns: Number(form.totalReturns),
-      dailyReturns: Number(form.dailyReturns),
-      paymentMethod: form.paymentMethod as 'bank' | 'usdt',
+      total_returns: Number(form.total_returns),
+      daily_returns: Number(form.daily_returns),
+      payment_method: form.payment_method as 'bank' | 'usdt',
       notes: form.notes
     });
   };
@@ -301,11 +301,11 @@ function InvestmentForm({
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <label>
         ID Cliente*
-        <input name="clientId" value={form.clientId} onChange={handleChange} style={inputStyle} required />
+        <input name="client_id" value={form.client_id} onChange={handleChange} style={inputStyle} required />
       </label>
       <label>
         ID Pacchetto*
-        <input name="packageId" value={form.packageId} onChange={handleChange} style={inputStyle} required />
+        <input name="package_id" value={form.package_id} onChange={handleChange} style={inputStyle} required />
       </label>
       <label>
         Importo (€)*
@@ -317,11 +317,11 @@ function InvestmentForm({
       </label>
       <label>
         Data Inizio
-        <input name="startDate" type="date" value={form.startDate} onChange={handleChange} style={inputStyle} />
+        <input name="start_date" type="date" value={form.start_date} onChange={handleChange} style={inputStyle} />
       </label>
       <label>
         Data Fine
-        <input name="endDate" type="date" value={form.endDate} onChange={handleChange} style={inputStyle} />
+        <input name="end_date" type="date" value={form.end_date} onChange={handleChange} style={inputStyle} />
       </label>
       <label>
         Stato
@@ -333,15 +333,15 @@ function InvestmentForm({
       </label>
       <label>
         Rendimento Totale
-        <input name="totalReturns" type="number" value={form.totalReturns} onChange={handleChange} style={inputStyle} />
+        <input name="total_returns" type="number" value={form.total_returns} onChange={handleChange} style={inputStyle} />
       </label>
       <label>
         Rendimento Giornaliero
-        <input name="dailyReturns" type="number" value={form.dailyReturns} onChange={handleChange} style={inputStyle} />
+        <input name="daily_returns" type="number" value={form.daily_returns} onChange={handleChange} style={inputStyle} />
       </label>
       <label>
         Metodo Pagamento
-        <select name="paymentMethod" value={form.paymentMethod} onChange={handleChange} style={inputStyle}>
+        <select name="payment_method" value={form.payment_method} onChange={handleChange} style={inputStyle}>
           <option value="bank">Bonifico</option>
           <option value="usdt">USDT</option>
         </select>

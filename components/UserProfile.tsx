@@ -27,11 +27,11 @@ interface UserProfileProps {
 interface KYCStatus {
   status: 'pending' | 'approved' | 'rejected' | 'in_review' | 'not_started';
   documents: {
-    idDocument: boolean;
-    proofOfAddress: boolean;
-    bankStatement: boolean;
+    id_document: boolean;
+    proof_of_address: boolean;
+    bank_statement: boolean;
   };
-  lastUpdated?: string;
+  last_updated?: string;
 }
 
 export default function UserProfile({ onKycComplete }: UserProfileProps) {
@@ -40,9 +40,9 @@ export default function UserProfile({ onKycComplete }: UserProfileProps) {
   const [kycStatus, setKycStatus] = useState<KYCStatus>({
     status: 'not_started',
     documents: {
-      idDocument: false,
-      proofOfAddress: false,
-      bankStatement: false
+      id_document: false,
+      proof_of_address: false,
+      bank_statement: false
     }
   });
   const [loading, setLoading] = useState(true);
@@ -60,8 +60,8 @@ export default function UserProfile({ onKycComplete }: UserProfileProps) {
       // First, get the client record for this user
       let { data: clientData, error: clientError } = await supabase
         .from('clients')
-        .select('id, kycStatus')
-        .eq('"userId"', user.id)
+        .select('id, kyc_status')
+        .eq('"user_id"', user.id)
         .single();
 
       if (clientError && clientError.code === 'PGRST116') {
@@ -74,7 +74,7 @@ export default function UserProfile({ onKycComplete }: UserProfileProps) {
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ userId: user.id }),
+            body: JSON.stringify({ user_id: user.id }),
           });
 
           if (response.ok) {
@@ -84,8 +84,8 @@ export default function UserProfile({ onKycComplete }: UserProfileProps) {
             // Fetch the newly created profile
             const { data: newClientData, error: newClientError } = await supabase
               .from('clients')
-              .select('id, kycStatus')
-              .eq('"userId"', user.id)
+              .select('id, kyc_status')
+              .eq('"user_id"', user.id)
               .single();
 
             if (newClientError) {
@@ -121,8 +121,8 @@ export default function UserProfile({ onKycComplete }: UserProfileProps) {
       const { data: kycData, error: kycError } = await supabase
         .from('kyc_records')
         .select('*')
-        .eq('"clientId"', clientData.id)
-        .order('"createdAt"', { ascending: false });
+        .eq('"client_id"', clientData.id)
+        .order('"created_at"', { ascending: false });
 
       if (kycError) {
         console.error('Error loading KYC records:', kycError);
@@ -131,29 +131,29 @@ export default function UserProfile({ onKycComplete }: UserProfileProps) {
 
       if (kycData && kycData.length > 0) {
         // Determine the general status from client or latest KYC record
-        const status = (clientData.kycStatus as KYCStatus['status']) || kycData[0].status as KYCStatus['status'];
+        const status = (clientData.kyc_status as KYCStatus['status']) || kycData[0].status as KYCStatus['status'];
         
         // Check which documents have been uploaded
         const documents = {
-          idDocument: kycData.some(d => d.documentType === 'PERSONAL_INFO'),
-          proofOfAddress: kycData.some(d => d.documentType === 'PROOF_OF_ADDRESS'),
-          bankStatement: kycData.some(d => d.documentType === 'BANK_STATEMENT')
+          id_document: kycData.some(d => d.document_type === 'PERSONAL_INFO'),
+          proof_of_address: kycData.some(d => d.document_type === 'PROOF_OF_ADDRESS'),
+          bank_statement: kycData.some(d => d.document_type === 'BANK_STATEMENT')
         };
 
         setKycStatus({
           status,
           documents,
-          lastUpdated: kycData[0].updatedAt
+          last_updated: kycData[0].updated_at
         });
       } else {
         // No KYC records found, check if client has KYC status
-        if (clientData.kycStatus && clientData.kycStatus !== 'pending') {
+        if (clientData.kyc_status && clientData.kyc_status !== 'pending') {
           setKycStatus({
-            status: clientData.kycStatus as KYCStatus['status'],
+            status: clientData.kyc_status as KYCStatus['status'],
             documents: {
-              idDocument: false,
-              proofOfAddress: false,
-              bankStatement: false
+              id_document: false,
+              proof_of_address: false,
+              bank_statement: false
             }
           });
         }
@@ -354,9 +354,9 @@ export default function UserProfile({ onKycComplete }: UserProfileProps) {
         {/* Document Status */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
           {[
-            { key: 'idDocument', label: 'Identity Document', icon: FileText },
-            { key: 'proofOfAddress', label: 'Proof of Address', icon: MapPin },
-            { key: 'bankStatement', label: 'Bank Statement', icon: CreditCard }
+            { key: 'id_document', label: 'Identity Document', icon: FileText },
+            { key: 'proof_of_address', label: 'Proof of Address', icon: MapPin },
+            { key: 'bank_statement', label: 'Bank Statement', icon: CreditCard }
           ].map(({ key, label, icon: Icon }) => (
             <div key={key} style={{
               display: 'flex',

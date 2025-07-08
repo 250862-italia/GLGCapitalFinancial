@@ -34,10 +34,21 @@ export default function RootLayout({
     if (adminUser) {
       try {
         const adminData = JSON.parse(adminUser)
-        setIsSuperAdmin(adminData.role === 'super_admin')
+        // Solo se il ruolo è esattamente super_admin o superadmin
+        if (adminData.role === 'super_admin' || adminData.role === 'superadmin') {
+          setIsSuperAdmin(true)
+        } else {
+          setIsSuperAdmin(false)
+          localStorage.removeItem('admin_user')
+          localStorage.removeItem('admin_token')
+        }
       } catch (e) {
         setIsSuperAdmin(false)
+        localStorage.removeItem('admin_user')
+        localStorage.removeItem('admin_token')
       }
+    } else {
+      setIsSuperAdmin(false)
     }
     
     // Check if we're in a reserved area

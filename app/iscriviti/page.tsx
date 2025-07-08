@@ -72,8 +72,8 @@ export default function IscrivitiPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          firstName: form.name.split(" ")[0] || form.name,
-          lastName: form.name.split(" ").slice(1).join(" ") || form.name,
+          first_name: form.name.split(" ")[0] || form.name,
+          last_name: form.name.split(" ").slice(1).join(" ") || form.name,
           email: form.email,
           phone: form.phone,
           password: form.password
@@ -84,8 +84,8 @@ export default function IscrivitiPage() {
         setSuccess(true);
         // Save basic data in kycData
         localStorage.setItem("kycData", JSON.stringify({
-          firstName: form.name.split(" ")[0] || form.name,
-          lastName: form.name.split(" ").slice(1).join(" ") || form.name,
+          first_name: form.name.split(" ")[0] || form.name,
+          last_name: form.name.split(" ").slice(1).join(" ") || form.name,
           email: form.email,
           phone: form.phone
         }));

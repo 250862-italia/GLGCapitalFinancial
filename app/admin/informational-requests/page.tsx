@@ -22,8 +22,8 @@ import AdminProtectedRoute from '@/components/auth/AdminProtectedRoute';
 interface InformationalRequest {
   id: string;
   userId: string | null;
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
   email: string;
   phone: string | null;
   country: string | null;
@@ -120,8 +120,8 @@ export default function InformationalRequestsPage() {
 
   const filteredRequests = requests.filter(request => {
     const matchesSearch = 
-      request.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      request.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      request.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      request.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       request.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (request.country && request.country.toLowerCase().includes(searchTerm.toLowerCase()));
     
@@ -336,7 +336,7 @@ export default function InformationalRequestsPage() {
                 {/* Client */}
                 <div>
                   <div style={{ fontWeight: 600, color: '#1f2937' }}>
-                    {request.firstName} {request.lastName}
+                    {request.first_name} {request.last_name}
                   </div>
                   <div style={{ fontSize: '14px', color: '#6b7280' }}>
                     {request.country && request.city ? `${request.city}, ${request.country}` : 'Location not specified'}
@@ -507,7 +507,7 @@ export default function InformationalRequestsPage() {
                     <div>
                       <label style={{ fontSize: '14px', color: '#6b7280' }}>Name</label>
                       <div style={{ fontWeight: 500 }}>
-                        {selectedRequest.firstName} {selectedRequest.lastName}
+                        {selectedRequest.first_name} {selectedRequest.last_name}
                       </div>
                     </div>
                     <div>

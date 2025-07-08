@@ -27,40 +27,40 @@ import { useAuth } from '@/hooks/use-auth';
 
 interface ClientProfile {
   id: string;
-  "userId": string;
+  user_id: string;
   email: string;
-  "firstName": string;
-  "lastName": string;
+  first_name: string;
+  last_name: string;
   phone: string;
   company?: string;
   position?: string;
-  "dateOfBirth"?: string;
+  date_of_birth?: string;
   nationality?: string;
-  "photoUrl"?: string;
+  photo_url?: string;
   iban?: string;
   bic?: string;
-  "accountHolder"?: string;
-  "usdtWallet"?: string;
+  account_holder?: string;
+  usdt_wallet?: string;
   status: string;
-  kycStatus: string;
+  kyc_status: string;
   country?: string;
   city?: string;
   address?: string;
-  "createdAt": string;
-  "updatedAt": string;
+  created_at: string;
+  updated_at: string;
 }
 
 interface KYCData {
   id: string;
-  "clientId": string;
-  "documentType": string;
-  "documentNumber": string;
-  "documentImageUrl": string;
+  client_id: string;
+  document_type: string;
+  document_number: string;
+  document_image_url: string;
   status: string;
   notes?: string;
-  "verifiedAt"?: string;
-  "createdAt": string;
-  "updatedAt": string;
+  verified_at?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export default function ProfilePage() {
@@ -92,7 +92,7 @@ export default function ProfilePage() {
       let { data: clientData, error: clientError } = await supabase
         .from('clients')
         .select('*')
-        .eq('"userId"', user.id)
+        .eq('user_id', user.id)
         .single();
 
       if (clientError && clientError.code === 'PGRST116') {
@@ -105,7 +105,7 @@ export default function ProfilePage() {
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ userId: user.id }),
+            body: JSON.stringify({ user_id: user.id }),
           });
 
           if (response.ok) {
@@ -116,7 +116,7 @@ export default function ProfilePage() {
             const { data: newClientData, error: newClientError } = await supabase
               .from('clients')
               .select('*')
-              .eq('"userId"', user.id)
+              .eq('user_id', user.id)
               .single();
 
             if (newClientError) {
@@ -124,15 +124,15 @@ export default function ProfilePage() {
               // Create a basic profile object to prevent errors
               clientData = {
                 id: user.id,
-                userId: user.id,
+                user_id: user.id,
                 email: user.email || '',
-                firstName: '',
-                lastName: '',
+                first_name: '',
+                last_name: '',
                 phone: '',
                 status: 'ACTIVE',
-                kycStatus: 'PENDING',
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
+                kyc_status: 'PENDING',
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
               } as ClientProfile;
             } else {
               clientData = newClientData;
@@ -142,15 +142,15 @@ export default function ProfilePage() {
             // Create a basic profile object to prevent errors
             clientData = {
               id: user.id,
-              userId: user.id,
+              user_id: user.id,
               email: user.email || '',
-              firstName: '',
-              lastName: '',
+              first_name: '',
+              last_name: '',
               phone: '',
               status: 'ACTIVE',
-              kycStatus: 'PENDING',
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString()
+              kyc_status: 'PENDING',
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
             } as ClientProfile;
           }
         } catch (createError) {
@@ -158,15 +158,15 @@ export default function ProfilePage() {
           // Create a basic profile object to prevent errors
           clientData = {
             id: user.id,
-            userId: user.id,
+            user_id: user.id,
             email: user.email || '',
-            firstName: '',
-            lastName: '',
+            first_name: '',
+            last_name: '',
             phone: '',
             status: 'ACTIVE',
-            kycStatus: 'PENDING',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
+            kyc_status: 'PENDING',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
           } as ClientProfile;
         }
       } else if (clientError) {
@@ -174,15 +174,15 @@ export default function ProfilePage() {
         // Create a basic profile object to prevent errors
         clientData = {
           id: user.id,
-          userId: user.id,
+          user_id: user.id,
           email: user.email || '',
-          firstName: '',
-          lastName: '',
+          first_name: '',
+          last_name: '',
           phone: '',
           status: 'ACTIVE',
-          kycStatus: 'PENDING',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
+          kyc_status: 'PENDING',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         } as ClientProfile;
       }
 
@@ -190,15 +190,15 @@ export default function ProfilePage() {
         // Create a basic profile object to prevent errors
         clientData = {
           id: user.id,
-          userId: user.id,
+          user_id: user.id,
           email: user.email || '',
-          firstName: '',
-          lastName: '',
+          first_name: '',
+          last_name: '',
           phone: '',
           status: 'ACTIVE',
-          kycStatus: 'PENDING',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
+          kyc_status: 'PENDING',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         } as ClientProfile;
       }
 
@@ -210,8 +210,8 @@ export default function ProfilePage() {
         const { data: kycRecords, error: kycError } = await supabase
           .from('kyc_records')
           .select('*')
-          .eq('"clientId"', clientData.id)
-          .order('"createdAt"', { ascending: false });
+          .eq('client_id', clientData.id)
+          .order('created_at', { ascending: false });
 
         if (kycError) {
           console.error('Error loading KYC data:', kycError);
@@ -229,15 +229,15 @@ export default function ProfilePage() {
       // Create a basic profile object to prevent errors
       const fallbackProfile = {
         id: user.id,
-        userId: user.id,
+        user_id: user.id,
         email: user.email || '',
-        firstName: '',
-        lastName: '',
+        first_name: '',
+        last_name: '',
         phone: '',
         status: 'ACTIVE',
-        kycStatus: 'PENDING',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        kyc_status: 'PENDING',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       } as ClientProfile;
       
       setProfile(fallbackProfile);
@@ -260,7 +260,7 @@ export default function ProfilePage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId: user.id,
+          user_id: user.id,
           updates: editForm
         })
       });
@@ -301,7 +301,7 @@ export default function ProfilePage() {
     try {
       const formData = new FormData();
       formData.append('photo', file);
-      formData.append('userId', user.id);
+      formData.append('user_id', user.id);
 
       const response = await fetch('/api/profile/upload-photo', {
         method: 'POST',
@@ -342,7 +342,7 @@ export default function ProfilePage() {
   };
 
   const getDocumentStatus = (documentType: string) => {
-    const doc = kycData.find(d => d.documentType === documentType);
+    const doc = kycData.find(d => d.document_type === documentType);
     return doc ? { uploaded: true, status: doc.status } : { uploaded: false, status: 'not_uploaded' };
   };
 
@@ -511,9 +511,9 @@ export default function ProfilePage() {
                   justifyContent: 'center',
                   border: '3px solid rgba(255,255,255,0.3)'
                 }}>
-                  {profile.photoUrl ? (
+                  {profile.photo_url ? (
                     <img 
-                      src={profile.photoUrl} 
+                      src={profile.photo_url} 
                       alt="Profile" 
                       style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
                     />
@@ -565,7 +565,7 @@ export default function ProfilePage() {
               </div>
               <div style={{ flex: 1 }}>
                 <h2 style={{ fontSize: '28px', fontWeight: 700, margin: 0, marginBottom: '0.5rem' }}>
-                  {profile.firstName} {profile.lastName}
+                  {profile.first_name} {profile.last_name}
                 </h2>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -690,22 +690,22 @@ export default function ProfilePage() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   <ProfileField 
                     label="First Name" 
-                    value={editing ? editForm.firstName : profile.firstName}
+                    value={editing ? editForm.first_name : profile.first_name}
                     editing={editing}
-                    onChange={(value) => setEditForm(prev => ({ ...prev, firstName: value }))}
+                    onChange={(value) => setEditForm(prev => ({ ...prev, first_name: value }))}
                   />
                   <ProfileField 
                     label="Last Name" 
-                    value={editing ? editForm.lastName : profile.lastName}
+                    value={editing ? editForm.last_name : profile.last_name}
                     editing={editing}
-                    onChange={(value) => setEditForm(prev => ({ ...prev, lastName: value }))}
+                    onChange={(value) => setEditForm(prev => ({ ...prev, last_name: value }))}
                   />
                   <ProfileField 
                     label="Date of Birth" 
-                    value={editing ? editForm.dateOfBirth : profile.dateOfBirth}
+                    value={editing ? editForm.date_of_birth : profile.date_of_birth}
                     icon={<Calendar size={14} />}
                     editing={editing}
-                    onChange={(value) => setEditForm(prev => ({ ...prev, dateOfBirth: value }))}
+                    onChange={(value) => setEditForm(prev => ({ ...prev, date_of_birth: value }))}
                   />
                   <ProfileField 
                     label="Nationality" 
@@ -795,15 +795,15 @@ export default function ProfilePage() {
                   />
                   <ProfileField 
                     label="Account Holder" 
-                    value={editing ? editForm.accountHolder : profile.accountHolder}
+                    value={editing ? editForm.account_holder : profile.account_holder}
                     editing={editing}
-                    onChange={(value) => setEditForm(prev => ({ ...prev, accountHolder: value }))}
+                    onChange={(value) => setEditForm(prev => ({ ...prev, account_holder: value }))}
                   />
                   <ProfileField 
                     label="USDT Wallet" 
-                    value={editing ? editForm.usdtWallet : profile.usdtWallet}
+                    value={editing ? editForm.usdt_wallet : profile.usdt_wallet}
                     editing={editing}
-                    onChange={(value) => setEditForm(prev => ({ ...prev, usdtWallet: value }))}
+                    onChange={(value) => setEditForm(prev => ({ ...prev, usdt_wallet: value }))}
                   />
                 </div>
               </div>

@@ -18,8 +18,8 @@ const mockInvestments = [
     notes: 'Standard investment package',
     created_at: new Date().toISOString(),
     clients: {
-      firstName: 'John',
-      lastName: 'Doe',
+      first_name: 'John',
+      last_name: 'Doe',
       email: 'john.doe@example.com',
       phone: '+1234567890'
     }
@@ -39,8 +39,8 @@ const mockInvestments = [
     notes: 'Premium investment package',
     created_at: new Date().toISOString(),
     clients: {
-      firstName: 'Jane',
-      lastName: 'Smith',
+      first_name: 'Jane',
+      last_name: 'Smith',
       email: 'jane.smith@example.com',
       phone: '+0987654321'
     }
@@ -56,8 +56,8 @@ export async function GET() {
         .select(`
           *,
           clients!inner(
-            "firstName",
-            "lastName",
+            "first_name",
+            "last_name",
             email,
             phone
           )

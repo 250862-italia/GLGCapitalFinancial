@@ -49,8 +49,8 @@ export const MOCK_DATA = {
       notes: 'Standard investment package',
       created_at: new Date().toISOString(),
       clients: {
-        firstName: 'John',
-        lastName: 'Doe',
+        first_name: 'John',
+        last_name: 'Doe',
         email: 'john.doe@example.com',
         phone: '+1234567890'
       }
@@ -64,13 +64,13 @@ export const MOCK_DATA = {
       document_url: 'https://example.com/doc1.pdf',
       status: 'pending',
       notes: 'Document submitted for review',
-      createdAt: new Date().toISOString(),
+      created_at: new Date().toISOString(),
       clients: {
-        firstName: 'John',
-        lastName: 'Doe',
+        first_name: 'John',
+        last_name: 'Doe',
         email: 'john.doe@example.com',
         phone: '+1234567890',
-        dateOfBirth: '1990-01-01',
+        date_of_birth: '1990-01-01',
         nationality: 'US'
       }
     }

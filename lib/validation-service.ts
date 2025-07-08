@@ -42,13 +42,13 @@ class ValidationService {
         { type: 'custom', message: 'Passwords do not match', 
           validator: (value, data) => value === data.password }
       ],
-      firstName: [
+      first_name: [
         { type: 'required', message: 'First name is required' },
         { type: 'minLength', value: 2, message: 'First name must be at least 2 characters' },
         { type: 'maxLength', value: 50, message: 'First name must be less than 50 characters' },
         { type: 'pattern', value: /^[a-zA-Z\s]+$/, message: 'First name can only contain letters and spaces' }
       ],
-      lastName: [
+      last_name: [
         { type: 'required', message: 'Last name is required' },
         { type: 'minLength', value: 2, message: 'Last name must be at least 2 characters' },
         { type: 'maxLength', value: 50, message: 'Last name must be less than 50 characters' },
@@ -58,7 +58,7 @@ class ValidationService {
         { type: 'required', message: 'Phone number is required' },
         { type: 'pattern', value: /^\+?[\d\s\-\(\)]+$/, message: 'Invalid phone number format' }
       ],
-      dateOfBirth: [
+      date_of_birth: [
         { type: 'required', message: 'Date of birth is required' },
         { type: 'custom', message: 'Must be at least 18 years old', 
           validator: (value) => {

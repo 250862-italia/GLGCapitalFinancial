@@ -62,7 +62,7 @@ export default function ClientDashboard() {
         const { data: clientData, error: clientError } = await supabase
           .from('clients')
           .select('id')
-          .eq('userId', user.id)
+          .eq('user_id', user.id)
           .single();
 
         if (clientError || !clientData) {
@@ -76,9 +76,9 @@ export default function ClientDashboard() {
           .from('investments')
           .select(`
             *,
-            package:packageId (name, description, duration, expectedReturn, minInvestment)
+            package:package_id (name, description, duration, expected_return, min_investment)
           `)
-          .eq('clientId', clientData.id);
+          .eq('client_id', clientData.id);
 
         if (investmentsError) {
           console.error('Error fetching investments:', investmentsError);
@@ -91,14 +91,14 @@ export default function ClientDashboard() {
           id: inv.id,
           packageName: inv.package?.name || 'Unknown Package',
           amount: inv.amount,
-          dailyReturn: inv.package?.expectedReturn || inv.package?.dailyReturn || 1.0,
+          dailyReturn: inv.package?.expected_return || inv.package?.daily_return || 1.0,
           duration: inv.package?.duration || 30,
-          startDate: inv.startDate,
-          endDate: inv.endDate,
+          startDate: inv.start_date,
+          endDate: inv.end_date,
           status: inv.status,
-          totalEarned: inv.totalReturns || 0,
-          dailyEarnings: inv.dailyReturns || 0,
-          monthlyEarnings: (inv.dailyReturns || 0) * 30
+          totalEarned: inv.total_returns || 0,
+          dailyEarnings: inv.daily_returns || 0,
+          monthlyEarnings: (inv.daily_returns || 0) * 30
         }));
 
         setMyInvestments(transformedInvestments);
@@ -122,22 +122,22 @@ export default function ClientDashboard() {
   function normalizePackage(pkg: any): any {
     return {
       id: pkg.id || pkg.ID || String(Date.now()),
-      name: pkg.name || pkg.packageName || '',
-      minAmount: pkg.minInvestment || pkg.minAmount || pkg.amount || 1000,
-      dailyReturn: pkg.expectedReturn || pkg.dailyReturn || 1.0,
+      name: pkg.name || pkg.package_name || '',
+      minAmount: pkg.min_investment || pkg.min_amount || pkg.amount || 1000,
+      dailyReturn: pkg.expected_return || pkg.daily_return || 1.0,
       duration: pkg.duration || 30,
-      isActive: pkg.isActive !== undefined ? pkg.isActive : (pkg.status === 'Active'),
+      isActive: pkg.is_active !== undefined ? pkg.is_active : (pkg.status === 'Active'),
       category: pkg.category || 'General',
-      riskLevel: pkg.riskLevel || 'medium',
+      riskLevel: pkg.risk_level || 'medium',
       description: pkg.description || '',
-      maxInvestment: pkg.maxInvestment || pkg.maxAmount || 50000,
-      price: pkg.price || pkg.minInvestment || 1000,
+      maxInvestment: pkg.max_investment || pkg.max_amount || 50000,
+      price: pkg.price || pkg.min_investment || 1000,
       currency: pkg.currency || 'USD'
     };
   }
 
   // Active packages for all clients
-  const activeInvestments = availablePackages.filter(pkg => pkg.isActive);
+  const activeInvestments = availablePackages.filter(pkg => pkg.is_active);
 
   // Packages to show: all those present in localStorage
   const allPackages = availablePackages;
@@ -154,7 +154,7 @@ export default function ClientDashboard() {
       // Get client data to check KYC status
       const { data: clientData, error: clientError } = await supabase
         .from('clients')
-        .select('kycStatus')
+        .select('kyc_status')
         .eq('user_id', user.id)
         .single();
 
@@ -165,10 +165,10 @@ export default function ClientDashboard() {
       }
 
       // Check KYC status
-      if (clientData.kycStatus !== 'approved') {
-        if (clientData.kycStatus === 'pending') {
+      if (clientData.kyc_status !== 'approved') {
+        if (clientData.kyc_status === 'pending') {
           alert('Your KYC is still pending approval. Please complete the KYC process and wait for approval before making investments.');
-        } else if (clientData.kycStatus === 'rejected') {
+        } else if (clientData.kyc_status === 'rejected') {
           alert('Your KYC has been rejected. Please contact support to resolve this issue before making investments.');
         } else {
           alert('Please complete the KYC process before making investments.');
@@ -188,7 +188,7 @@ export default function ClientDashboard() {
   // Purchase confirmation function
   const confirmBuy = async () => {
     if (!selectedPackage || !user) return;
-    if (myInvestments.some(inv => inv.packageName === selectedPackage.name)) return;
+    if (myInvestments.some(inv => inv.package_name === selectedPackage.name)) return;
 
     try {
       // Send email to GLG support with investment request
@@ -214,8 +214,8 @@ export default function ClientDashboard() {
             <h3>Package Details:</h3>
             <ul>
               <li><strong>Package:</strong> ${selectedPackage.name}</li>
-              <li><strong>Investment Amount:</strong> $${selectedPackage.minInvestment || selectedPackage.minAmount || 1000}</li>
-              <li><strong>Expected Return:</strong> ${selectedPackage.expectedReturn || selectedPackage.dailyReturn || 1.0}% daily</li>
+              <li><strong>Investment Amount:</strong> $${selectedPackage.min_investment || selectedPackage.min_amount || 1000}</li>
+              <li><strong>Expected Return:</strong> ${selectedPackage.expected_return || selectedPackage.daily_return || 1.0}% daily</li>
               <li><strong>Duration:</strong> ${selectedPackage.duration || 30} days</li>
             </ul>
 
@@ -243,8 +243,8 @@ export default function ClientDashboard() {
             <h3>Request Details:</h3>
             <ul>
               <li><strong>Package:</strong> ${selectedPackage.name}</li>
-              <li><strong>Investment Amount:</strong> $${selectedPackage.minInvestment || selectedPackage.minAmount || 1000}</li>
-              <li><strong>Expected Return:</strong> ${selectedPackage.expectedReturn || selectedPackage.dailyReturn || 1.0}% daily</li>
+              <li><strong>Investment Amount:</strong> $${selectedPackage.min_investment || selectedPackage.min_amount || 1000}</li>
+              <li><strong>Expected Return:</strong> ${selectedPackage.expected_return || selectedPackage.daily_return || 1.0}% daily</li>
               <li><strong>Duration:</strong> ${selectedPackage.duration || 30} days</li>
             </ul>
 
@@ -293,8 +293,8 @@ export default function ClientDashboard() {
       const newInvestment: Investment = {
         id: selectedPackage.id || String(Date.now()),
         packageName: selectedPackage.name,
-        amount: selectedPackage.minInvestment || selectedPackage.minAmount || 1000,
-        dailyReturn: selectedPackage.expectedReturn || selectedPackage.dailyReturn || 1.0,
+        amount: selectedPackage.min_investment || selectedPackage.min_amount || 1000,
+        dailyReturn: selectedPackage.expected_return || selectedPackage.daily_return || 1.0,
         duration: selectedPackage.duration || 30,
         startDate: new Date().toISOString().split('T')[0],
         endDate: new Date(Date.now() + (selectedPackage.duration || 30) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -322,11 +322,11 @@ export default function ClientDashboard() {
   // Stats calculated only on purchased investments
   const stats = {
     totalInvested: myInvestments.reduce((sum, inv) => sum + inv.amount, 0),
-    totalEarned: myInvestments.reduce((sum, inv) => sum + inv.totalEarned, 0),
+    totalEarned: myInvestments.reduce((sum, inv) => sum + inv.total_returns, 0),
     activeInvestments: myInvestments.length,
-    averageReturn: myInvestments.length > 0 ? myInvestments.reduce((sum, inv) => sum + inv.dailyReturn, 0) / myInvestments.length : 0,
-    todayEarnings: myInvestments.reduce((sum, inv) => sum + inv.dailyEarnings, 0),
-    monthlyEarnings: myInvestments.reduce((sum, inv) => sum + inv.monthlyEarnings, 0)
+    averageReturn: myInvestments.length > 0 ? myInvestments.reduce((sum, inv) => sum + inv.daily_return, 0) / myInvestments.length : 0,
+    todayEarnings: myInvestments.reduce((sum, inv) => sum + inv.daily_returns, 0),
+    monthlyEarnings: myInvestments.reduce((sum, inv) => sum + inv.monthly_earnings, 0)
   };
 
   const formatCurrency = (amount: number) => {
@@ -493,7 +493,7 @@ export default function ClientDashboard() {
               gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', 
               gap: '1.5rem' 
             }}>
-              {availablePackages.filter(pkg => pkg.isActive).map(pkg => (
+              {availablePackages.filter(pkg => pkg.is_active).map(pkg => (
                 <div key={pkg.id} style={{
                   border: '1px solid #e5e7eb',
                   borderRadius: '12px',
@@ -521,15 +521,15 @@ export default function ClientDashboard() {
                       </p>
                     </div>
                     <span style={{
-                      background: pkg.riskLevel === 'low' ? '#bbf7d0' : pkg.riskLevel === 'medium' ? '#fef3c7' : '#fee2e2',
-                      color: pkg.riskLevel === 'low' ? '#166534' : pkg.riskLevel === 'medium' ? '#92400e' : '#991b1b',
+                      background: pkg.risk_level === 'low' ? '#bbf7d0' : pkg.risk_level === 'medium' ? '#fef3c7' : '#fee2e2',
+                      color: pkg.risk_level === 'low' ? '#166534' : pkg.risk_level === 'medium' ? '#92400e' : '#991b1b',
                       padding: '0.25rem 0.75rem',
                       borderRadius: '6px',
                       fontSize: '0.75rem',
                       fontWeight: 600,
                       textTransform: 'capitalize'
                     }}>
-                      {pkg.riskLevel}
+                      {pkg.risk_level}
                     </span>
                   </div>
                   
@@ -537,13 +537,13 @@ export default function ClientDashboard() {
                     <div>
                       <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>Min Investment</div>
                       <div style={{ fontSize: '1.125rem', fontWeight: 700, color: '#1f2937' }}>
-                        {formatCurrency(pkg.minInvestment)}
+                        {formatCurrency(pkg.min_investment)}
                       </div>
                     </div>
                     <div>
                       <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>Expected Return</div>
                       <div style={{ fontSize: '1.125rem', fontWeight: 700, color: '#059669' }}>
-                        {pkg.expectedReturn}%
+                        {pkg.expected_return}%
                       </div>
                     </div>
                     <div>
@@ -562,26 +562,26 @@ export default function ClientDashboard() {
                   
                   <button
                     onClick={() => handleBuy(pkg)}
-                    disabled={myInvestments.some(inv => inv.packageName === pkg.name)}
+                    disabled={myInvestments.some(inv => inv.package_name === pkg.name)}
                     style={{
                       width: '100%',
-                      background: myInvestments.some(inv => inv.packageName === pkg.name) ? '#d1d5db' : '#059669',
+                      background: myInvestments.some(inv => inv.package_name === pkg.name) ? '#d1d5db' : '#059669',
                       color: 'white',
                       border: 'none',
                       borderRadius: '8px',
                       padding: '0.75rem',
                       fontSize: '1rem',
                       fontWeight: 600,
-                      cursor: myInvestments.some(inv => inv.packageName === pkg.name) ? 'not-allowed' : 'pointer',
+                      cursor: myInvestments.some(inv => inv.package_name === pkg.name) ? 'not-allowed' : 'pointer',
                       transition: 'background 0.2s ease'
                     }}
                   >
-                    {myInvestments.some(inv => inv.packageName === pkg.name) ? 'Already Invested' : 'Invest Now'}
+                    {myInvestments.some(inv => inv.package_name === pkg.name) ? 'Already Invested' : 'Invest Now'}
                   </button>
                 </div>
               ))}
               
-              {availablePackages.filter(pkg => pkg.isActive).length === 0 && (
+              {availablePackages.filter(pkg => pkg.is_active).length === 0 && (
                 <div style={{ 
                   gridColumn: '1 / -1', 
                   textAlign: 'center', 
@@ -617,7 +617,7 @@ export default function ClientDashboard() {
           }}>
             <DollarSign size={38} color="#059669" style={{ marginBottom: 12 }} />
             <div style={{ fontSize: 16, color: '#059669', fontWeight: 700, marginBottom: 6 }}>Total Invested</div>
-            <div style={{ fontSize: 32, fontWeight: 900, color: '#0a2540', letterSpacing: -1 }}>{formatCurrency(stats.totalInvested)}</div>
+            <div style={{ fontSize: 32, fontWeight: 900, color: '#0a2540', letterSpacing: -1 }}>{formatCurrency(stats.total_invested)}</div>
           </div>
           {/* Total Earned */}
           <div style={{
@@ -630,7 +630,7 @@ export default function ClientDashboard() {
           }}>
             <TrendingUp size={38} color="#f59e0b" style={{ marginBottom: 12 }} />
             <div style={{ fontSize: 16, color: '#f59e0b', fontWeight: 700, marginBottom: 6 }}>Total Earned</div>
-            <div style={{ fontSize: 32, fontWeight: 900, color: '#0a2540', letterSpacing: -1 }}>{formatCurrency(stats.totalEarned)}</div>
+            <div style={{ fontSize: 32, fontWeight: 900, color: '#0a2540', letterSpacing: -1 }}>{formatCurrency(stats.total_earned)}</div>
           </div>
           {/* Today's Earnings */}
           <div style={{
@@ -643,7 +643,7 @@ export default function ClientDashboard() {
           }}>
             <Target size={38} color="#3b82f6" style={{ marginBottom: 12 }} />
             <div style={{ fontSize: 16, color: '#3b82f6', fontWeight: 700, marginBottom: 6 }}>Today's Earnings</div>
-            <div style={{ fontSize: 32, fontWeight: 900, color: '#0a2540', letterSpacing: -1 }}>{formatCurrency(stats.todayEarnings)}</div>
+            <div style={{ fontSize: 32, fontWeight: 900, color: '#0a2540', letterSpacing: -1 }}>{formatCurrency(stats.today_earnings)}</div>
           </div>
           {/* Monthly Earnings */}
           <div style={{
@@ -656,7 +656,7 @@ export default function ClientDashboard() {
           }}>
             <BarChart3 size={38} color="#ec4899" style={{ marginBottom: 12 }} />
             <div style={{ fontSize: 16, color: '#ec4899', fontWeight: 700, marginBottom: 6 }}>Monthly Earnings</div>
-            <div style={{ fontSize: 32, fontWeight: 900, color: '#0a2540', letterSpacing: -1 }}>{formatCurrency(stats.monthlyEarnings)}</div>
+            <div style={{ fontSize: 32, fontWeight: 900, color: '#0a2540', letterSpacing: -1 }}>{formatCurrency(stats.monthly_earnings)}</div>
           </div>
         </div>
 
@@ -670,8 +670,8 @@ export default function ClientDashboard() {
                   <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, padding: 16, marginBottom: 16 }}>
                     <h3 style={{ margin: '0 0 12px 0', color: '#166534' }}>Package Details</h3>
                     <div><b>Package:</b> {selectedPackage.name}</div>
-                    <div><b>Investment Amount:</b> ${selectedPackage.minInvestment || selectedPackage.minAmount || 1000}</div>
-                    <div><b>Expected Return:</b> {selectedPackage.expectedReturn || selectedPackage.dailyReturn || 1.0}% daily</div>
+                    <div><b>Investment Amount:</b> ${selectedPackage.min_investment || selectedPackage.min_amount || 1000}</div>
+                    <div><b>Expected Return:</b> {selectedPackage.expected_return || selectedPackage.daily_return || 1.0}% daily</div>
                     <div><b>Duration:</b> {selectedPackage.duration || 30} days</div>
                   </div>
                   <div style={{ background: '#fef3c7', border: '1px solid #f59e0b', borderRadius: 8, padding: 16 }}>

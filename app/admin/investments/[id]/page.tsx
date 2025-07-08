@@ -9,7 +9,7 @@ interface InvestmentDetail {
   type: string;
   amount: number;
   status: string;
-  createdAt: string;
+  created_at: string;
   maturity: string;
   yield: number;
   history: Array<{ date: string; value: number }>;
@@ -44,7 +44,7 @@ export default function InvestmentDetailPage() {
           type: "Equity Pledge",
           amount: 100000,
           status: "active",
-          createdAt: "2023-01-10",
+          created_at: "2023-01-10",
           maturity: "2026-01-10",
           yield: 0.12,
           history: [
@@ -117,7 +117,7 @@ export default function InvestmentDetailPage() {
             <div style={{ fontSize: 20, fontWeight: 700, color: "#0a2540" }}>€{investment.amount.toLocaleString()}</div>
             <div style={{ color: "#1a3556", fontSize: 16, marginTop: 4 }}>{investment.type}</div>
             <div style={{ color: investment.status === "active" ? "#16a34a" : "#92400e", fontWeight: 600, marginTop: 4 }}>{investment.status === "active" ? "Attivo" : "Chiuso"}</div>
-            <div style={{ color: "#64748b", fontSize: 14, marginTop: 4 }}>Creato il: {investment.createdAt} | Scadenza: {investment.maturity}</div>
+            <div style={{ color: "#64748b", fontSize: 14, marginTop: 4 }}>Creato il: {investment.created_at} | Scadenza: {investment.maturity}</div>
           </div>
           <div style={{ margin: "1rem 0" }}>
             <span style={{ color: "#0a2540", fontWeight: 600 }}>Utente: </span>

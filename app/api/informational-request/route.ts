@@ -5,18 +5,18 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { 
-      firstName, 
-      lastName, 
+      first_name, 
+      last_name, 
       email, 
       phone, 
       country, 
       city, 
-      additionalNotes,
-      userId 
+      additional_notes,
+      user_id 
     } = body;
 
     // Validate required fields
-    if (!firstName || !lastName || !email) {
+    if (!first_name || !last_name || !email) {
       return NextResponse.json(
         { error: 'First name, last name, and email are required' },
         { status: 400 }
@@ -24,26 +24,26 @@ export async function POST(request: NextRequest) {
     }
 
     // Create informational request record in database
-    const { data: requestData, error: dbError } = await supabase
+    const { data: request_data, error: db_error } = await supabase
       .from('informational_requests')
       .insert({
-        userId: userId || null,
-        firstName,
-        lastName,
+        user_id: user_id || null,
+        first_name,
+        last_name,
         email,
         phone: phone || null,
         country: country || null,
         city: city || null,
-        additionalNotes: additionalNotes || null,
+        additional_notes: additional_notes || null,
         status: 'PENDING',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       })
       .select()
       .single();
 
-    if (dbError) {
-      console.error('Database error:', dbError);
+    if (db_error) {
+      console.error('Database error:', db_error);
       return NextResponse.json(
         { error: 'Failed to save request' },
         { status: 500 }
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Prepare email content
-    const emailContent = `
+    const email_content = `
 Informational Request Form
 GLG Equity Pledge
 
@@ -91,34 +91,34 @@ Please send the requested information via one of the following:
 
 ---
 APPLICANT INFORMATION:
-Name: ${firstName} ${lastName}
+Name: ${first_name} ${last_name}
 Email: ${email}
 Phone: ${phone || 'Not provided'}
 Country: ${country || 'Not provided'}
 City: ${city || 'Not provided'}
-Additional Notes: ${additionalNotes || 'None'}
+Additional Notes: ${additional_notes || 'None'}
 
-Request ID: ${requestData.id}
+Request ID: ${request_data.id}
 Date: ${new Date().toLocaleDateString()}
 Time: ${new Date().toLocaleTimeString()}
     `;
 
     // Send email using the existing email service
-    const emailResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/send-email`, {
+    const email_response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/send-email`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         to: 'corefound@glgcapitalgroupllc.com',
-        subject: `Informational Request - ${firstName} ${lastName}`,
-        text: emailContent,
-        html: emailContent.replace(/\n/g, '<br>'),
+        subject: `Informational Request - ${first_name} ${last_name}`,
+        text: email_content,
+        html: email_content.replace(/\n/g, '<br>'),
         from: email
       })
     });
 
-    if (!emailResponse.ok) {
+    if (!email_response.ok) {
       console.error('Email sending failed');
       // Still return success since the request was saved to database
       // The admin can manually send the email later
@@ -126,7 +126,7 @@ Time: ${new Date().toLocaleTimeString()}
 
     return NextResponse.json({
       success: true,
-      data: requestData,
+      data: request_data,
       message: 'Informational request submitted successfully'
     });
 
@@ -142,9 +142,9 @@ Time: ${new Date().toLocaleTimeString()}
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
+    const user_id = searchParams.get('user_id');
 
-    if (!userId) {
+    if (!user_id) {
       return NextResponse.json(
         { error: 'User ID is required' },
         { status: 400 }
@@ -155,8 +155,8 @@ export async function GET(request: NextRequest) {
     const { data, error } = await supabase
       .from('informational_requests')
       .select('*')
-      .eq('userId', userId)
-      .order('createdAt', { ascending: false });
+      .eq('user_id', user_id)
+      .order('created_at', { ascending: false });
 
     if (error) {
       console.error('Error fetching informational requests:', error);

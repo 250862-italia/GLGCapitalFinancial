@@ -1,15 +1,15 @@
 export interface InvestmentFormData {
   id?: string;
-  clientId: string;
-  packageId: string;
+  client_id: string;
+  package_id: string;
   amount: number;
   currency: string;
-  startDate: string;
-  endDate: string;
+  start_date: string;
+  end_date: string;
   status: 'active' | 'completed' | 'cancelled';
-  totalReturns: number;
-  dailyReturns: number;
-  paymentMethod: 'bank' | 'usdt';
+  total_returns: number;
+  daily_returns: number;
+  payment_method: 'bank' | 'usdt';
   notes?: string;
 }
 

@@ -23,9 +23,9 @@ import { supabase } from '../../lib/supabase';
 
 interface KYCData {
   personalInfo: {
-    firstName: string;
-    lastName: string;
-    dateOfBirth: string;
+    first_name: string;
+    last_name: string;
+    date_of_birth: string;
     nationality: string;
     address: string;
     city: string;
@@ -34,23 +34,23 @@ interface KYCData {
     email: string;
   };
   financialProfile: {
-    employmentStatus: string;
-    annualIncome: string;
-    sourceOfFunds: string;
-    investmentExperience: string;
-    riskTolerance: string;
-    investmentGoals: string[];
+    employment_status: string;
+    annual_income: string;
+    source_of_funds: string;
+    investment_experience: string;
+    risk_tolerance: string;
+    investment_goals: string[];
   };
   documents: {
-    idDocument: string | null;
-    proofOfAddress: string | null;
-    bankStatement: string | null;
+    id_document: string | null;
+    proof_of_address: string | null;
+    bank_statement: string | null;
   };
   verification: {
-    personalInfoVerified: boolean;
-    documentsVerified: boolean;
-    financialProfileVerified: boolean;
-    overallStatus: 'pending' | 'approved' | 'rejected' | 'in_review';
+    personal_info_verified: boolean;
+    documents_verified: boolean;
+    financial_profile_verified: boolean;
+    overall_status: 'pending' | 'approved' | 'rejected' | 'in_review';
   };
 }
 
@@ -63,9 +63,9 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [kycData, setKycData] = useState<KYCData>({
     personalInfo: {
-      firstName: '',
-      lastName: '',
-      dateOfBirth: '',
+      first_name: '',
+      last_name: '',
+      date_of_birth: '',
       nationality: '',
       address: '',
       city: '',
@@ -74,23 +74,23 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
       email: ''
     },
     financialProfile: {
-      employmentStatus: '',
-      annualIncome: '',
-      sourceOfFunds: '',
-      investmentExperience: '',
-      riskTolerance: '',
-      investmentGoals: []
+      employment_status: '',
+      annual_income: '',
+      source_of_funds: '',
+      investment_experience: '',
+      risk_tolerance: '',
+      investment_goals: []
     },
     documents: {
-      idDocument: null,
-      proofOfAddress: null,
-      bankStatement: null
+      id_document: null,
+      proof_of_address: null,
+      bank_statement: null
     },
     verification: {
-      personalInfoVerified: false,
-      documentsVerified: false,
-      financialProfileVerified: false,
-      overallStatus: 'pending'
+      personal_info_verified: false,
+      documents_verified: false,
+      financial_profile_verified: false,
+      overall_status: 'pending'
     }
   });
 
@@ -127,9 +127,9 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
 
     if (step === 1) {
       const { personalInfo } = kycData;
-      if (!personalInfo.firstName) newErrors['personalInfo.firstName'] = 'First name is required';
-      if (!personalInfo.lastName) newErrors['personalInfo.lastName'] = 'Last name is required';
-      if (!personalInfo.dateOfBirth) newErrors['personalInfo.dateOfBirth'] = 'Date of birth is required';
+      if (!personalInfo.first_name) newErrors['personalInfo.first_name'] = 'First name is required';
+      if (!personalInfo.last_name) newErrors['personalInfo.last_name'] = 'Last name is required';
+      if (!personalInfo.date_of_birth) newErrors['personalInfo.date_of_birth'] = 'Date of birth is required';
       if (!personalInfo.nationality) newErrors['personalInfo.nationality'] = 'Nationality is required';
       if (!personalInfo.address) newErrors['personalInfo.address'] = 'Address is required';
       if (!personalInfo.city) newErrors['personalInfo.city'] = 'City is required';
@@ -140,19 +140,19 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
 
     if (step === 2) {
       const { financialProfile } = kycData;
-      if (!financialProfile.employmentStatus) newErrors['financialProfile.employmentStatus'] = 'Employment status is required';
-      if (!financialProfile.annualIncome) newErrors['financialProfile.annualIncome'] = 'Annual income is required';
-      if (!financialProfile.sourceOfFunds) newErrors['financialProfile.sourceOfFunds'] = 'Source of funds is required';
-      if (!financialProfile.investmentExperience) newErrors['financialProfile.investmentExperience'] = 'Investment experience is required';
-      if (!financialProfile.riskTolerance) newErrors['financialProfile.riskTolerance'] = 'Risk tolerance is required';
-      if (financialProfile.investmentGoals.length === 0) newErrors['financialProfile.investmentGoals'] = 'At least one investment goal is required';
+      if (!financialProfile.employment_status) newErrors['financialProfile.employment_status'] = 'Employment status is required';
+      if (!financialProfile.annual_income) newErrors['financialProfile.annual_income'] = 'Annual income is required';
+      if (!financialProfile.source_of_funds) newErrors['financialProfile.source_of_funds'] = 'Source of funds is required';
+      if (!financialProfile.investment_experience) newErrors['financialProfile.investment_experience'] = 'Investment experience is required';
+      if (!financialProfile.risk_tolerance) newErrors['financialProfile.risk_tolerance'] = 'Risk tolerance is required';
+      if (financialProfile.investment_goals.length === 0) newErrors['financialProfile.investment_goals'] = 'At least one investment goal is required';
     }
 
     if (step === 3) {
       const { documents } = kycData;
-      if (!documents.idDocument) newErrors['documents.idDocument'] = 'ID document is required';
-      if (!documents.proofOfAddress) newErrors['documents.proofOfAddress'] = 'Proof of address is required';
-      if (!documents.bankStatement) newErrors['documents.bankStatement'] = 'Bank statement is required';
+      if (!documents.id_document) newErrors['documents.id_document'] = 'ID document is required';
+      if (!documents.proof_of_address) newErrors['documents.proof_of_address'] = 'Proof of address is required';
+      if (!documents.bank_statement) newErrors['documents.bank_statement'] = 'Bank statement is required';
     }
 
     setErrors(newErrors);
@@ -248,10 +248,10 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
       setKycData(prev => ({
         ...prev,
         verification: {
-          personalInfoVerified: true,
-          documentsVerified: true,
-          financialProfileVerified: true,
-          overallStatus: 'in_review'
+          personal_info_verified: true,
+          documents_verified: true,
+          financial_profile_verified: true,
+          overall_status: 'in_review'
         }
       }));
       
@@ -378,20 +378,20 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
                 </label>
                 <input
                   type="text"
-                  value={kycData.personalInfo.firstName}
-                  onChange={(e) => handleInputChange('personalInfo', 'firstName', e.target.value)}
+                  value={kycData.personalInfo.first_name}
+                  onChange={(e) => handleInputChange('personalInfo', 'first_name', e.target.value)}
                   style={{
                     width: '100%',
                     padding: '0.75rem',
-                    border: errors['personalInfo.firstName'] ? '1px solid #ef4444' : '1px solid #d1d5db',
+                    border: errors['personalInfo.first_name'] ? '1px solid #ef4444' : '1px solid #d1d5db',
                     borderRadius: 8,
                     fontSize: 16
                   }}
                   placeholder="Enter your first name"
                 />
-                {errors['personalInfo.firstName'] && (
+                {errors['personalInfo.first_name'] && (
                   <p style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>
-                    {errors['personalInfo.firstName']}
+                    {errors['personalInfo.first_name']}
                   </p>
                 )}
               </div>
@@ -407,20 +407,20 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
                 </label>
                 <input
                   type="text"
-                  value={kycData.personalInfo.lastName}
-                  onChange={(e) => handleInputChange('personalInfo', 'lastName', e.target.value)}
+                  value={kycData.personalInfo.last_name}
+                  onChange={(e) => handleInputChange('personalInfo', 'last_name', e.target.value)}
                   style={{
                     width: '100%',
                     padding: '0.75rem',
-                    border: errors['personalInfo.lastName'] ? '1px solid #ef4444' : '1px solid #d1d5db',
+                    border: errors['personalInfo.last_name'] ? '1px solid #ef4444' : '1px solid #d1d5db',
                     borderRadius: 8,
                     fontSize: 16
                   }}
                   placeholder="Enter your last name"
                 />
-                {errors['personalInfo.lastName'] && (
+                {errors['personalInfo.last_name'] && (
                   <p style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>
-                    {errors['personalInfo.lastName']}
+                    {errors['personalInfo.last_name']}
                   </p>
                 )}
               </div>
@@ -436,19 +436,19 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
                 </label>
                 <input
                   type="date"
-                  value={kycData.personalInfo.dateOfBirth}
-                  onChange={(e) => handleInputChange('personalInfo', 'dateOfBirth', e.target.value)}
+                  value={kycData.personalInfo.date_of_birth}
+                  onChange={(e) => handleInputChange('personalInfo', 'date_of_birth', e.target.value)}
                   style={{
                     width: '100%',
                     padding: '0.75rem',
-                    border: errors['personalInfo.dateOfBirth'] ? '1px solid #ef4444' : '1px solid #d1d5db',
+                    border: errors['personalInfo.date_of_birth'] ? '1px solid #ef4444' : '1px solid #d1d5db',
                     borderRadius: 8,
                     fontSize: 16
                   }}
                 />
-                {errors['personalInfo.dateOfBirth'] && (
+                {errors['personalInfo.date_of_birth'] && (
                   <p style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>
-                    {errors['personalInfo.dateOfBirth']}
+                    {errors['personalInfo.date_of_birth']}
                   </p>
                 )}
               </div>
@@ -674,12 +674,12 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
                   Employment Status <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <select
-                  value={kycData.financialProfile.employmentStatus}
-                  onChange={(e) => handleInputChange('financialProfile', 'employmentStatus', e.target.value)}
+                  value={kycData.financialProfile.employment_status}
+                  onChange={(e) => handleInputChange('financialProfile', 'employment_status', e.target.value)}
                   style={{
                     width: '100%',
                     padding: '0.75rem',
-                    border: errors['financialProfile.employmentStatus'] ? '1px solid #ef4444' : '1px solid #d1d5db',
+                    border: errors['financialProfile.employment_status'] ? '1px solid #ef4444' : '1px solid #d1d5db',
                     borderRadius: 8,
                     fontSize: 16
                   }}
@@ -691,9 +691,9 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
                   <option value="retired">Retired</option>
                   <option value="student">Student</option>
                 </select>
-                {errors['financialProfile.employmentStatus'] && (
+                {errors['financialProfile.employment_status'] && (
                   <p style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>
-                    {errors['financialProfile.employmentStatus']}
+                    {errors['financialProfile.employment_status']}
                   </p>
                 )}
               </div>
@@ -708,12 +708,12 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
                   Annual Income <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <select
-                  value={kycData.financialProfile.annualIncome}
-                  onChange={(e) => handleInputChange('financialProfile', 'annualIncome', e.target.value)}
+                  value={kycData.financialProfile.annual_income}
+                  onChange={(e) => handleInputChange('financialProfile', 'annual_income', e.target.value)}
                   style={{
                     width: '100%',
                     padding: '0.75rem',
-                    border: errors['financialProfile.annualIncome'] ? '1px solid #ef4444' : '1px solid #d1d5db',
+                    border: errors['financialProfile.annual_income'] ? '1px solid #ef4444' : '1px solid #d1d5db',
                     borderRadius: 8,
                     fontSize: 16
                   }}
@@ -726,9 +726,9 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
                   <option value="100000-250000">$100,000 - $250,000</option>
                   <option value="250000+">$250,000+</option>
                 </select>
-                {errors['financialProfile.annualIncome'] && (
+                {errors['financialProfile.annual_income'] && (
                   <p style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>
-                    {errors['financialProfile.annualIncome']}
+                    {errors['financialProfile.annual_income']}
                   </p>
                 )}
               </div>
@@ -743,12 +743,12 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
                   Source of Funds <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <select
-                  value={kycData.financialProfile.sourceOfFunds}
-                  onChange={(e) => handleInputChange('financialProfile', 'sourceOfFunds', e.target.value)}
+                  value={kycData.financialProfile.source_of_funds}
+                  onChange={(e) => handleInputChange('financialProfile', 'source_of_funds', e.target.value)}
                   style={{
                     width: '100%',
                     padding: '0.75rem',
-                    border: errors['financialProfile.sourceOfFunds'] ? '1px solid #ef4444' : '1px solid #d1d5db',
+                    border: errors['financialProfile.source_of_funds'] ? '1px solid #ef4444' : '1px solid #d1d5db',
                     borderRadius: 8,
                     fontSize: 16
                   }}
@@ -761,9 +761,9 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
                   <option value="savings">Savings</option>
                   <option value="other">Other</option>
                 </select>
-                {errors['financialProfile.sourceOfFunds'] && (
+                {errors['financialProfile.source_of_funds'] && (
                   <p style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>
-                    {errors['financialProfile.sourceOfFunds']}
+                    {errors['financialProfile.source_of_funds']}
                   </p>
                 )}
               </div>
@@ -778,12 +778,12 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
                   Investment Experience <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <select
-                  value={kycData.financialProfile.investmentExperience}
-                  onChange={(e) => handleInputChange('financialProfile', 'investmentExperience', e.target.value)}
+                  value={kycData.financialProfile.investment_experience}
+                  onChange={(e) => handleInputChange('financialProfile', 'investment_experience', e.target.value)}
                   style={{
                     width: '100%',
                     padding: '0.75rem',
-                    border: errors['financialProfile.investmentExperience'] ? '1px solid #ef4444' : '1px solid #d1d5db',
+                    border: errors['financialProfile.investment_experience'] ? '1px solid #ef4444' : '1px solid #d1d5db',
                     borderRadius: 8,
                     fontSize: 16
                   }}
@@ -795,9 +795,9 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
                   <option value="advanced">Advanced (5+ years)</option>
                   <option value="expert">Expert (10+ years)</option>
                 </select>
-                {errors['financialProfile.investmentExperience'] && (
+                {errors['financialProfile.investment_experience'] && (
                   <p style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>
-                    {errors['financialProfile.investmentExperience']}
+                    {errors['financialProfile.investment_experience']}
                   </p>
                 )}
               </div>
@@ -812,12 +812,12 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
                   Risk Tolerance <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <select
-                  value={kycData.financialProfile.riskTolerance}
-                  onChange={(e) => handleInputChange('financialProfile', 'riskTolerance', e.target.value)}
+                  value={kycData.financialProfile.risk_tolerance}
+                  onChange={(e) => handleInputChange('financialProfile', 'risk_tolerance', e.target.value)}
                   style={{
                     width: '100%',
                     padding: '0.75rem',
-                    border: errors['financialProfile.riskTolerance'] ? '1px solid #ef4444' : '1px solid #d1d5db',
+                    border: errors['financialProfile.risk_tolerance'] ? '1px solid #ef4444' : '1px solid #d1d5db',
                     borderRadius: 8,
                     fontSize: 16
                   }}
@@ -827,9 +827,9 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
                   <option value="moderate">Moderate</option>
                   <option value="aggressive">Aggressive</option>
                 </select>
-                {errors['financialProfile.riskTolerance'] && (
+                {errors['financialProfile.risk_tolerance'] && (
                   <p style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>
-                    {errors['financialProfile.riskTolerance']}
+                    {errors['financialProfile.risk_tolerance']}
                   </p>
                 )}
               </div>
@@ -868,13 +868,13 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
                   }}>
                     <input
                       type="checkbox"
-                      checked={kycData.financialProfile.investmentGoals.includes(goal)}
+                      checked={kycData.financialProfile.investment_goals.includes(goal)}
                       onChange={(e) => {
-                        const currentGoals = kycData.financialProfile.investmentGoals;
+                        const currentGoals = kycData.financialProfile.investment_goals;
                         const newGoals = e.target.checked
                           ? [...currentGoals, goal]
                           : currentGoals.filter(g => g !== goal);
-                        handleInputChange('financialProfile', 'investmentGoals', newGoals);
+                        handleInputChange('financialProfile', 'investment_goals', newGoals);
                       }}
                       style={{ margin: 0 }}
                     />
@@ -882,9 +882,9 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
                   </label>
                 ))}
               </div>
-              {errors['financialProfile.investmentGoals'] && (
+              {errors['financialProfile.investment_goals'] && (
                 <p style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>
-                  {errors['financialProfile.investmentGoals']}
+                  {errors['financialProfile.investment_goals']}
                 </p>
               )}
             </div>
@@ -934,19 +934,19 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
             }}>
               {[
                 {
-                  key: 'idDocument',
+                  key: 'id_document',
                   title: 'Government ID Document',
                   description: 'Passport, driver\'s license, or national ID card',
                   required: true
                 },
                 {
-                  key: 'proofOfAddress',
+                  key: 'proof_of_address',
                   title: 'Proof of Address',
                   description: 'Utility bill, bank statement, or lease agreement (not older than 3 months)',
                   required: true
                 },
                 {
-                  key: 'bankStatement',
+                  key: 'bank_statement',
                   title: 'Bank Statement',
                   description: 'Recent bank statement showing your name and address',
                   required: true

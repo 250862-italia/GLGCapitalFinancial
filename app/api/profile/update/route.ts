@@ -14,10 +14,19 @@ export async function PUT(request: NextRequest) {
     }
 
     // Update client profile
+    // Mappa i campi updates da camelCase a snake_case se necessario
+    const updatesSnakeCase = {};
+    for (const key in updates) {
+      if (Object.prototype.hasOwnProperty.call(updates, key)) {
+        // Conversione base camelCase -> snake_case
+        const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+        updatesSnakeCase[snakeKey] = updates[key];
+      }
+    }
     const { data, error } = await supabase
       .from('clients')
-      .update(updates)
-      .eq('"userId"', userId)
+      .update(updatesSnakeCase)
+      .eq('user_id', userId)
       .select()
       .single();
 
@@ -84,21 +93,21 @@ export async function GET(request: NextRequest) {
 
       // Create new client profile
       const newProfile = {
-        userId: userId,
+        user_id: userId,
         email: userData.email,
-        firstName: '',
-        lastName: '',
+        first_name: '',
+        last_name: '',
         phone: '',
-        dateOfBirth: null,
+        date_of_birth: null,
         nationality: '',
         address: '',
         city: '',
-        postalCode: '',
+        postal_code: '',
         country: '',
-        profilePhoto: null,
-        kycStatus: 'PENDING',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        profile_photo: null,
+        kyc_status: 'PENDING',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       };
 
       const { data: createdProfile, error: createError } = await supabase

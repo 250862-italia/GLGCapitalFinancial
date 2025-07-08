@@ -69,7 +69,7 @@ Please send the requested information via one of the following:
 
 ---
 APPLICANT INFORMATION:
-Name: ${requestData.firstName} ${requestData.lastName}
+Name: ${requestData.first_name} ${requestData.last_name}
 Email: ${requestData.email}
 Phone: ${requestData.phone || 'Not provided'}
 Company: ${requestData.company || 'Not provided'}
@@ -93,7 +93,7 @@ Time: ${new Date().toLocaleTimeString()}
       },
       body: JSON.stringify({
         to: 'corefound@glgcapitalconsulting.com',
-        subject: `[RESEND] Informational Request - ${requestData.firstName} ${requestData.lastName}`,
+        subject: `[RESEND] Informational Request - ${requestData.first_name} ${requestData.last_name}`,
         text: emailContent,
         html: emailContent.replace(/\n/g, '<br>'),
         from: requestData.email

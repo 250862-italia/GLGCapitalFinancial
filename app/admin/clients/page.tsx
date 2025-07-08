@@ -4,20 +4,20 @@ import { supabase } from '@/lib/supabase';
 
 interface Client {
   id: string;
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
   email: string;
   phone: string;
-  dateOfBirth?: string;
+  date_of_birth?: string;
   nationality?: string;
-  kycStatus?: string;
+  kyc_status?: string;
   status: 'active' | 'inactive' | 'pending';
-  createdAt: string;
+  created_at: string;
 }
 
 const emptyClient = (): Partial<Client> => ({
-  firstName: '',
-  lastName: '',
+  first_name: '',
+  last_name: '',
   email: '',
   phone: '',
   status: 'active',
@@ -44,7 +44,7 @@ export default function AdminClientsPage() {
     const { data, error } = await supabase
       .from('clients')
       .select('*')
-      .order('createdAt', { ascending: false });
+      .order('created_at', { ascending: false });
     
     if (error) setError(error.message);
     else setClients(data || []);
@@ -80,8 +80,8 @@ export default function AdminClientsPage() {
     let res;
     if (isEdit && form.id) {
       res = await supabase.from('clients').update({
-        firstName: form.firstName,
-        lastName: form.lastName,
+        first_name: form.first_name,
+        last_name: form.last_name,
         email: form.email,
         phone: form.phone,
         status: form.status
@@ -89,8 +89,8 @@ export default function AdminClientsPage() {
     } else {
       res = await supabase.from('clients').insert([
         {
-          firstName: form.firstName,
-          lastName: form.lastName,
+          first_name: form.first_name,
+          last_name: form.last_name,
           email: form.email,
           phone: form.phone,
           status: form.status
@@ -151,10 +151,10 @@ export default function AdminClientsPage() {
                 <tr key={client.id} style={{ background: '#fff', borderBottom: '1px solid #e5e7eb', transition: 'background 0.2s' }}>
                   <td style={tdStyle}>
                     <div>
-                      <strong>{client.firstName} {client.lastName}</strong>
-                      {client.dateOfBirth && (
+                      <strong>{client.first_name} {client.last_name}</strong>
+                      {client.date_of_birth && (
                         <div style={{ fontSize: 12, color: '#6b7280' }}>
-                          DOB: {new Date(client.dateOfBirth).toLocaleDateString()}
+                          DOB: {new Date(client.date_of_birth).toLocaleDateString()}
                         </div>
                       )}
                       {client.nationality && (
@@ -168,18 +168,18 @@ export default function AdminClientsPage() {
                   <td style={tdStyle}>{client.phone}</td>
                   <td style={tdStyle}>
                     <span style={{
-                      background: client.kycStatus === 'approved' ? '#bbf7d0' : 
-                                 client.kycStatus === 'rejected' ? '#fee2e2' : 
-                                 client.kycStatus === 'pending' ? '#fef3c7' : '#f3f4f6',
-                      color: client.kycStatus === 'approved' ? '#16a34a' : 
-                            client.kycStatus === 'rejected' ? '#dc2626' : 
-                            client.kycStatus === 'pending' ? '#b45309' : '#6b7280',
+                      background: client.kyc_status === 'approved' ? '#bbf7d0' : 
+                                 client.kyc_status === 'rejected' ? '#fee2e2' : 
+                                 client.kyc_status === 'pending' ? '#fef3c7' : '#f3f4f6',
+                      color: client.kyc_status === 'approved' ? '#16a34a' : 
+                            client.kyc_status === 'rejected' ? '#dc2626' : 
+                            client.kyc_status === 'pending' ? '#b45309' : '#6b7280',
                       borderRadius: 6,
                       padding: '2px 10px',
                       fontWeight: 700,
                       fontSize: 12
                     }}>
-                      {client.kycStatus || 'Not Started'}
+                      {client.kyc_status || 'Not Started'}
                     </span>
                   </td>
                   <td style={tdStyle}>
@@ -195,7 +195,7 @@ export default function AdminClientsPage() {
                       {client.status}
                     </span>
                   </td>
-                  <td style={tdStyle}>{new Date(client.createdAt).toLocaleDateString()}</td>
+                  <td style={tdStyle}>{new Date(client.created_at).toLocaleDateString()}</td>
                   <td style={tdStyle}>
                     <button onClick={() => openEdit(client)} style={actionBtnStyle}>Edit</button>
                     <button onClick={() => handleDelete(client.id)} style={{ ...actionBtnStyle, background: '#dc2626' }}>Delete</button>
@@ -243,8 +243,8 @@ export default function AdminClientsPage() {
                 </label>
                 <input
                   type="text"
-                  value={form.firstName || ''}
-                  onChange={(e) => setForm({ ...form, firstName: e.target.value })}
+                  value={form.first_name || ''}
+                  onChange={(e) => setForm({ ...form, first_name: e.target.value })}
                   required
                   style={inputStyle}
                 />
@@ -255,8 +255,8 @@ export default function AdminClientsPage() {
                 </label>
                 <input
                   type="text"
-                  value={form.lastName || ''}
-                  onChange={(e) => setForm({ ...form, lastName: e.target.value })}
+                  value={form.last_name || ''}
+                  onChange={(e) => setForm({ ...form, last_name: e.target.value })}
                   required
                   style={inputStyle}
                 />

@@ -560,7 +560,7 @@ For immediate attention, contact the security team.
     await this.sendNotification({
       type: 'user_registration',
       title: 'New User Registration',
-      message: `A new user has registered: ${userData.firstName} ${userData.lastName} (${userData.email})`,
+      message: `A new user has registered: ${userData.first_name} ${userData.last_name} (${userData.email})`,
       details: {
         user: userData,
         registrationDate: new Date().toISOString(),
@@ -569,7 +569,7 @@ For immediate attention, contact the security team.
       },
       timestamp: new Date().toISOString(),
       userId: userData.id,
-      userName: `${userData.firstName} ${userData.lastName}`,
+      userName: `${userData.first_name} ${userData.last_name}`,
       severity: 'medium'
     });
   }
@@ -579,7 +579,7 @@ For immediate attention, contact the security team.
     await this.sendNotification({
       type: 'kyc_submission',
       title: 'KYC Document Submission',
-      message: `KYC documents submitted by ${userData.firstName} ${userData.lastName}`,
+      message: `KYC documents submitted by ${userData.first_name} ${userData.last_name}`,
       details: {
         user: userData,
         kycData: {
@@ -589,7 +589,7 @@ For immediate attention, contact the security team.
       },
       timestamp: new Date().toISOString(),
       userId: userData.id,
-      userName: `${userData.firstName} ${userData.lastName}`,
+      userName: `${userData.first_name} ${userData.last_name}`,
       severity: 'high'
     });
   }
@@ -599,7 +599,7 @@ For immediate attention, contact the security team.
     await this.sendNotification({
       type: 'package_purchase',
       title: 'Investment Package Purchase',
-      message: `${userData.firstName} ${userData.lastName} purchased ${packageData.name} for $${amount != null ? amount.toLocaleString() : '-'}`,
+      message: `${userData.first_name} ${userData.last_name} purchased ${packageData.name} for $${amount != null ? amount.toLocaleString() : '-'}`,
       details: {
         user: userData,
         package: packageData,
@@ -610,7 +610,7 @@ For immediate attention, contact the security team.
       },
       timestamp: new Date().toISOString(),
       userId: userData.id,
-      userName: `${userData.firstName} ${userData.lastName}`,
+      userName: `${userData.first_name} ${userData.last_name}`,
       severity: 'high'
     });
   }
@@ -630,7 +630,7 @@ For immediate attention, contact the security team.
       },
       timestamp: new Date().toISOString(),
       userId: userData.id,
-      userName: `${userData.firstName} ${userData.lastName}`,
+      userName: `${userData.first_name} ${userData.last_name}`,
       severity: 'critical'
     });
   }
@@ -659,7 +659,7 @@ For immediate attention, contact the security team.
     await this.sendNotification({
       type: 'payment_processed',
       title: 'Payment Processed',
-      message: `Payment processed for ${userData.firstName} ${userData.lastName}: $${paymentData.amount.toLocaleString()}`,
+      message: `Payment processed for ${userData.first_name} ${userData.last_name}: $${paymentData.amount.toLocaleString()}`,
       details: {
         user: userData,
         payment: paymentData,
@@ -667,7 +667,7 @@ For immediate attention, contact the security team.
       },
       timestamp: new Date().toISOString(),
       userId: userData.id,
-      userName: `${userData.firstName} ${userData.lastName}`,
+      userName: `${userData.first_name} ${userData.last_name}`,
       severity: 'high'
     });
   }
@@ -677,7 +677,7 @@ For immediate attention, contact the security team.
     await this.sendNotification({
       type: 'client_activity',
       title: 'Client Activity',
-      message: `Client activity: ${userData.firstName} ${userData.lastName} - ${activity}`,
+      message: `Client activity: ${userData.first_name} ${userData.last_name} - ${activity}`,
       details: {
         user: userData,
         activity: activity,
@@ -686,7 +686,7 @@ For immediate attention, contact the security team.
       },
       timestamp: new Date().toISOString(),
       userId: userData.id,
-      userName: `${userData.firstName} ${userData.lastName}`,
+      userName: `${userData.first_name} ${userData.last_name}`,
       severity: 'low'
     });
   }

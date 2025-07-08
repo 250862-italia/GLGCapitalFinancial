@@ -118,17 +118,17 @@ async function createTables() {
     `CREATE TABLE IF NOT EXISTS clients (
       id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
       user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-      "firstName" VARCHAR(100) NOT NULL,
-      "lastName" VARCHAR(100) NOT NULL,
+      first_name VARCHAR(100) NOT NULL,
+      last_name VARCHAR(100) NOT NULL,
       phone VARCHAR(20),
-      "dateOfBirth" DATE,
+      date_of_birth DATE,
       nationality VARCHAR(50),
       address TEXT,
       city VARCHAR(100),
       country VARCHAR(100),
-      "postalCode" VARCHAR(20),
-      "profilePhoto" VARCHAR(500),
-      "bankingDetails" JSONB,
+      postal_code VARCHAR(20),
+      profile_photo VARCHAR(500),
+      banking_details JSONB,
       created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
       updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
     );`,
@@ -137,13 +137,13 @@ async function createTables() {
     `CREATE TABLE IF NOT EXISTS kyc_records (
       id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
       client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
-      "documentType" VARCHAR(50) NOT NULL CHECK ("documentType" IN ('PERSONAL_INFO', 'PROOF_OF_ADDRESS', 'BANK_STATEMENT', 'ID_DOCUMENT')),
-      "documentUrl" VARCHAR(500) NOT NULL,
+      document_type VARCHAR(50) NOT NULL CHECK (document_type IN ('PERSONAL_INFO', 'PROOF_OF_ADDRESS', 'BANK_STATEMENT', 'ID_DOCUMENT')),
+      document_url VARCHAR(500) NOT NULL,
       status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
       notes TEXT,
-      "verifiedAt" TIMESTAMP WITH TIME ZONE,
-      "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-      "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      verified_at TIMESTAMP WITH TIME ZONE,
+      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
     );`,
     
     // Investments table
@@ -267,7 +267,36 @@ async function createPolicies() {
           SELECT 1 FROM users 
           WHERE id = auth.uid() AND role IN ('admin', 'superadmin')
         )
-      );`
+      );`,
+    
+    // Allow all inserts
+    `CREATE POLICY "Allow all inserts" ON users
+      FOR INSERT
+      TO public
+      USING (true)
+      WITH CHECK (true);`,
+    
+    // Allow all selects
+    `CREATE POLICY "Allow all select" ON users
+      FOR SELECT
+      TO public
+      USING (true);`,
+    
+    // Allow all updates
+    `CREATE POLICY "Allow all update" ON users
+      FOR UPDATE
+      TO public
+      USING (true)
+      WITH CHECK (true);`,
+    
+    // Allow all deletes
+    `CREATE POLICY "Allow all delete" ON users
+      FOR DELETE
+      TO public
+      USING (true);`,
+    
+    // Enable RLS
+    `ALTER TABLE users ENABLE ROW LEVEL SECURITY;`
   ];
 
   for (const policySQL of policies) {
