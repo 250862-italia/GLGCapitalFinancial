@@ -15,12 +15,13 @@ export async function PUT(request: NextRequest) {
 
     // Update client profile
     // Mappa i campi updates da camelCase a snake_case se necessario
-    const updatesSnakeCase = {};
-    for (const key in updates) {
-      if (Object.prototype.hasOwnProperty.call(updates, key)) {
+    const updatesTyped: Record<string, any> = updates;
+    const updatesSnakeCase: Record<string, any> = {};
+    for (const key in updatesTyped) {
+      if (Object.prototype.hasOwnProperty.call(updatesTyped, key)) {
         // Conversione base camelCase -> snake_case
         const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
-        updatesSnakeCase[snakeKey] = updates[key];
+        updatesSnakeCase[snakeKey] = updatesTyped[key];
       }
     }
     const { data, error } = await supabase
