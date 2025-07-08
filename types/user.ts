@@ -11,7 +11,9 @@ export interface User {
 
 export interface Client {
   id: string;
-  name: string;
+  user_id: string;
+  first_name: string;
+  last_name: string;
   email: string;
   phone: string;
   company?: string;
@@ -25,19 +27,15 @@ export interface Client {
   total_returns: number;
   active_packages: number;
   notes?: string;
-  
-  // New fields for photo and payment details
-  profile_photo?: string; // Base64 or URL
+  profile_photo?: string;
   bank_details?: {
     iban: string;
     bic: string;
     account_holder: string;
     bank_name?: string;
   };
-  usdt_wallet?: string; // USDT wallet address
+  usdt_wallet?: string;
   preferred_payment_method: 'bank' | 'usdt' | 'both';
-  
-  // Additional fields for better tracking
   country?: string;
   city?: string;
   address?: string;
@@ -45,25 +43,17 @@ export interface Client {
   nationality?: string;
   passport_number?: string;
   tax_id?: string;
-  
-  // Performance tracking
   risk_profile: 'conservative' | 'moderate' | 'aggressive';
   investment_goals: string[];
   source_of_funds: 'salary' | 'business' | 'inheritance' | 'investment' | 'other';
-  
-  // Communication preferences
   preferred_language: 'en' | 'it' | 'es' | 'fr' | 'de';
   marketing_consent: boolean;
   newsletter_subscription: boolean;
-  
-  // Security and compliance
   two_factor_enabled: boolean;
   last_password_change?: string;
   failed_login_attempts: number;
   account_locked: boolean;
   lock_reason?: string;
-  
-  // Audit trail
   created_by?: string;
   updated_by?: string;
   created_at: string;

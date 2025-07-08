@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     const { data: clientByUserId, error: errorByUserId } = await supabase
       .from('clients')
       .select('id')
-      .eq('"userId"', userId)
+      .eq('user_id', userId)
       .single();
 
     if (clientByUserId) {
@@ -76,12 +76,12 @@ export async function POST(request: NextRequest) {
       const { data: newClient, error: createError } = await supabase
         .from('clients')
         .insert({
-          "userId": userId,
+          user_id: userId,
           email: personalInfo.email,
-          "first_name": personalInfo.first_name,
-          "last_name": personalInfo.last_name,
+          first_name: personalInfo.first_name,
+          last_name: personalInfo.last_name,
           phone: personalInfo.phone,
-          "date_of_birth": personalInfo.date_of_birth,
+          date_of_birth: personalInfo.date_of_birth,
           nationality: personalInfo.nationality,
           status: 'active',
           kyc_status: 'pending'
@@ -106,10 +106,10 @@ export async function POST(request: NextRequest) {
 
     // Personal Information KYC Record (always create this one)
     kycRecords.push({
-      "client_id": clientData.id,
-      "document_type": 'PERSONAL_INFO',
-      "document_number": `ID: ${personalInfo.id_document || 'Not provided'}`,
-      "document_image_url": personalInfo.id_document || null,
+      client_id: clientData.id,
+      document_type: 'PERSONAL_INFO',
+      document_number: `ID: ${personalInfo.id_document || 'Not provided'}`,
+      document_image_url: personalInfo.id_document || null,
       status: 'pending',
       notes: `Personal Info: ${personalInfo.first_name} ${personalInfo.last_name}, DOB: ${personalInfo.date_of_birth}, Nationality: ${personalInfo.nationality}, Address: ${personalInfo.address}, ${personalInfo.city}, ${personalInfo.country}`
     });
