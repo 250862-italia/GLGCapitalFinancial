@@ -188,7 +188,7 @@ export default function ClientDashboard() {
   // Purchase confirmation function
   const confirmBuy = async () => {
     if (!selectedPackage || !user) return;
-    if (myInvestments.some(inv => inv.package_name === selectedPackage.name)) return;
+    if (myInvestments.some(inv => inv.packageName === selectedPackage.name)) return;
 
     try {
       // Send email to GLG support with investment request
@@ -562,21 +562,21 @@ export default function ClientDashboard() {
                   
                   <button
                     onClick={() => handleBuy(pkg)}
-                    disabled={myInvestments.some(inv => inv.package_name === pkg.name)}
+                    disabled={myInvestments.some(inv => inv.packageName === pkg.name)}
                     style={{
                       width: '100%',
-                      background: myInvestments.some(inv => inv.package_name === pkg.name) ? '#d1d5db' : '#059669',
+                      background: myInvestments.some(inv => inv.packageName === pkg.name) ? '#d1d5db' : '#059669',
                       color: 'white',
                       border: 'none',
                       borderRadius: '8px',
                       padding: '0.75rem',
                       fontSize: '1rem',
                       fontWeight: 600,
-                      cursor: myInvestments.some(inv => inv.package_name === pkg.name) ? 'not-allowed' : 'pointer',
+                      cursor: myInvestments.some(inv => inv.packageName === pkg.name) ? 'not-allowed' : 'pointer',
                       transition: 'background 0.2s ease'
                     }}
                   >
-                    {myInvestments.some(inv => inv.package_name === pkg.name) ? 'Already Invested' : 'Invest Now'}
+                    {myInvestments.some(inv => inv.packageName === pkg.name) ? 'Already Invested' : 'Invest Now'}
                   </button>
                 </div>
               ))}
