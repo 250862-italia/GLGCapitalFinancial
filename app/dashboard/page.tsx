@@ -322,11 +322,11 @@ export default function ClientDashboard() {
   // Stats calculated only on purchased investments
   const stats = {
     totalInvested: myInvestments.reduce((sum, inv) => sum + inv.amount, 0),
-    totalEarned: myInvestments.reduce((sum, inv) => sum + inv.totalReturns, 0),
+    totalEarned: myInvestments.reduce((sum, inv) => sum + inv.total_returns, 0),
     activeInvestments: myInvestments.length,
-    averageReturn: myInvestments.length > 0 ? myInvestments.reduce((sum, inv) => sum + inv.dailyReturn, 0) / myInvestments.length : 0,
-    todayEarnings: myInvestments.reduce((sum, inv) => sum + inv.dailyReturns, 0),
-    monthlyEarnings: myInvestments.reduce((sum, inv) => sum + inv.monthlyEarnings, 0)
+    averageReturn: myInvestments.length > 0 ? myInvestments.reduce((sum, inv) => sum + inv.daily_returns, 0) / myInvestments.length : 0,
+    todayEarnings: myInvestments.reduce((sum, inv) => sum + inv.daily_returns, 0),
+    monthlyEarnings: myInvestments.reduce((sum, inv) => sum + inv.monthly_earnings, 0)
   };
 
   const formatCurrency = (amount: number) => {
