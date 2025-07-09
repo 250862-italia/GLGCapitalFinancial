@@ -1,0 +1,39 @@
+name: Puppeteer E2E Test
+
+on:
+  push:
+    branches: [ main ]
+  schedule:
+    - cron: '0 3 * * *' # every day at 3am UTC
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        test_env:
+          - https://staging.glgcapitalgroup.com
+          - https://www.glgcapitalgroup.com
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: Install dependencies
+        run: npm install
+      - name: Ensure dummy KYC files
+        run: |
+          mkdir -p dummy
+          [ -f dummy/front.jpg ] || curl -o dummy/front.jpg https://via.placeholder.com/300x400.jpg?text=Front
+          [ -f dummy/back.jpg ] || curl -o dummy/back.jpg https://via.placeholder.com/300x400.jpg?text=Back
+          [ -f dummy/selfie.jpg ] || curl -o dummy/selfie.jpg https://via.placeholder.com/300x400.jpg?text=Selfie
+      - name: Run Puppeteer E2E
+        env:
+          TEST_BASE_URL: ${{ matrix.test_env }}
+        run: npm run e2e:puppeteer
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v3
+        with:
+          name: puppeteer-screenshots-${{ matrix.test_env }}
+          path: puppeteer-screenshots/ 
