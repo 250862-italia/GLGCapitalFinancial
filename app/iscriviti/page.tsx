@@ -8,7 +8,8 @@ export default function IscrivitiPage() {
   const router = useRouter();
   const { user, login, loginDirect } = useAuth();
   const [form, setForm] = useState({
-    name: "",
+    firstName: "",
+    lastName: "",
     email: "",
     phone: "",
     password: "",
@@ -41,7 +42,7 @@ export default function IscrivitiPage() {
   };
 
   const validate = () => {
-    if (!form.name || !form.email || !form.phone || !form.password || !form.confirmPassword) {
+    if (!form.firstName || !form.lastName || !form.email || !form.phone || !form.password || !form.confirmPassword) {
       return false;
     }
     if (form.password !== form.confirmPassword) {
@@ -56,7 +57,7 @@ export default function IscrivitiPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) {
-      if (!form.name || !form.email || !form.phone || !form.password || !form.confirmPassword) {
+      if (!form.firstName || !form.lastName || !form.email || !form.phone || !form.password || !form.confirmPassword) {
         setError("Please fill in all required fields");
       } else if (form.password !== form.confirmPassword) {
         setError("Passwords do not match");
@@ -72,8 +73,8 @@ export default function IscrivitiPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          first_name: form.name.split(" ")[0] || form.name,
-          last_name: form.name.split(" ").slice(1).join(" ") || form.name,
+          first_name: form.firstName,
+          last_name: form.lastName,
           email: form.email,
           phone: form.phone,
           password: form.password
@@ -84,8 +85,8 @@ export default function IscrivitiPage() {
         setSuccess(true);
         // Save basic data in kycData
         localStorage.setItem("kycData", JSON.stringify({
-          first_name: form.name.split(" ")[0] || form.name,
-          last_name: form.name.split(" ").slice(1).join(" ") || form.name,
+          first_name: form.firstName,
+          last_name: form.lastName,
           email: form.email,
           phone: form.phone
         }));
@@ -161,8 +162,10 @@ export default function IscrivitiPage() {
       ) : (
         <form onSubmit={handleSubmit}>
           <div>
-            <label>Full Name*</label>
-            <input name="name" value={form.name} onChange={handleChange} style={inputStyle} required />
+            <label>First Name*</label>
+            <input name="firstName" value={form.firstName} onChange={handleChange} style={inputStyle} required />
+            <label>Last Name*</label>
+            <input name="lastName" value={form.lastName} onChange={handleChange} style={inputStyle} required />
             <label>Email*</label>
             <input name="email" type="email" value={form.email} onChange={handleChange} style={inputStyle} required />
             <label>Phone Number*</label>
