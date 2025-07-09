@@ -35,17 +35,38 @@ export async function POST(request: NextRequest) {
     }
 
     // Get client ID
-    const { data: clientData, error: clientError } = await supabase
+    let { data: clientData, error: clientError } = await supabase
       .from('clients')
       .select('id')
       .eq('user_id', userId)
       .single();
 
     if (clientError || !clientData) {
-      return NextResponse.json(
-        { error: 'Client not found' },
-        { status: 404 }
-      );
+      // Try to create client if not found
+      const { data: newClient, error: createError } = await supabase
+        .from('clients')
+        .insert({
+          user_id: userId,
+          email: '',
+          first_name: '',
+          last_name: '',
+          phone: '',
+          date_of_birth: null,
+          nationality: '',
+          status: 'active',
+          kyc_status: 'pending',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select('id')
+        .single();
+      if (createError || !newClient) {
+        return NextResponse.json(
+          { error: 'Failed to create client record. Please try registering again.' },
+          { status: 500 }
+        );
+      }
+      clientData = newClient;
     }
 
     // Generate unique filename
