@@ -15,7 +15,7 @@ export async function PUT(request: NextRequest) {
 
     // Update client profile
     // Mappa i campi updates da camelCase a snake_case se necessario
-    const updatesTyped: Record<string, any> = updates;
+    const updatesTyped: Record<string, any> = updates as Record<string, any>;
     const updatesSnakeCase: Record<string, any> = {};
     for (const key in updatesTyped) {
       if (Object.prototype.hasOwnProperty.call(updatesTyped, key)) {
