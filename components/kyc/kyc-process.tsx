@@ -177,14 +177,16 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Upload failed');
+        console.error(`❌ Upload error for ${field}:`, result);
+        alert(`Failed to upload ${field}.\n${result.error || 'Upload failed.'}`);
+        return null;
       }
 
       console.log(`📁 Document uploaded for ${field}:`, result.documentUrl);
       return result.documentUrl;
     } catch (error) {
       console.error(`❌ Upload error for ${field}:`, error);
-      alert(`Failed to upload ${field}. Please try again.`);
+      alert(`Failed to upload ${field}. Please try again.\n${error}`);
       return null;
     }
   };
