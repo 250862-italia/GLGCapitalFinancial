@@ -120,14 +120,6 @@ export default function ClientDashboard() {
       totalEarned: inv.totalEarned ?? inv.total_returns ?? 0,
       dailyEarnings: inv.dailyEarnings ?? inv.daily_returns ?? 0,
       monthlyEarnings: inv.monthlyEarnings ?? inv.monthly_earnings ?? ((inv.daily_returns ?? 0) * 30),
-      // snake_case fallback
-      package_name: inv.package_name,
-      daily_return: inv.daily_return,
-      start_date: inv.start_date,
-      end_date: inv.end_date,
-      total_returns: inv.total_returns,
-      daily_returns: inv.daily_returns,
-      monthly_earnings: inv.monthly_earnings,
     };
   }
 
