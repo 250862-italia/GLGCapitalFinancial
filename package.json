@@ -7,6 +7,7 @@
     "build": "next build",
     "prelaunch-check": "node prelaunch-check.js",
     "test:e2e": "npx playwright test e2e/customer-registration.spec.ts",
+    "test:e2e:investment": "npx playwright test e2e/investment-e2e.spec.ts",
     "start": "next start",
     "lint": "next lint",
     "setup-db": "node setup-database.js",
