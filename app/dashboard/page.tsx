@@ -231,7 +231,7 @@ export default function ClientDashboard() {
             <ul>
               <li><strong>Package:</strong> ${selectedPackage.name}</li>
               <li><strong>Investment Amount:</strong> $${selectedPackage.minInvestment || selectedPackage.minAmount || 1000}</li>
-              <li><strong>Expected Return:</strong> ${selectedPackage.expected_return || selectedPackage.daily_return || 1.0}% daily</li>
+              <li><strong>Expected Return:</strong> ${selectedPackage.expectedReturn || selectedPackage.daily_return || 1.0}% daily</li>
               <li><strong>Duration:</strong> ${selectedPackage.duration || 30} days</li>
             </ul>
 
@@ -260,7 +260,7 @@ export default function ClientDashboard() {
             <ul>
               <li><strong>Package:</strong> ${selectedPackage.name}</li>
               <li><strong>Investment Amount:</strong> $${selectedPackage.minInvestment || selectedPackage.minAmount || 1000}</li>
-              <li><strong>Expected Return:</strong> ${selectedPackage.expected_return || selectedPackage.daily_return || 1.0}% daily</li>
+              <li><strong>Expected Return:</strong> ${selectedPackage.expectedReturn || selectedPackage.daily_return || 1.0}% daily</li>
               <li><strong>Duration:</strong> ${selectedPackage.duration || 30} days</li>
             </ul>
 
@@ -310,7 +310,7 @@ export default function ClientDashboard() {
         id: selectedPackage.id || String(Date.now()),
         packageName: selectedPackage.name,
         amount: selectedPackage.minInvestment || selectedPackage.minAmount || 1000,
-        dailyReturn: selectedPackage.expected_return || selectedPackage.daily_return || 1.0,
+        dailyReturn: selectedPackage.expectedReturn || selectedPackage.daily_return || 1.0,
         duration: selectedPackage.duration || 30,
         startDate: new Date().toISOString().split('T')[0],
         endDate: new Date(Date.now() + (selectedPackage.duration || 30) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
