@@ -87,19 +87,7 @@ export default function ClientDashboard() {
         }
 
         // Transform database investments to match expected format
-        const transformedInvestments: Investment[] = (investments || []).map(inv => ({
-          id: inv.id,
-          packageName: inv.package?.name || 'Unknown Package',
-          amount: inv.amount,
-          dailyReturn: inv.package?.expected_return || inv.package?.daily_return || 1.0,
-          duration: inv.package?.duration || 30,
-          startDate: inv.start_date,
-          endDate: inv.end_date,
-          status: inv.status,
-          totalEarned: inv.total_returns || 0,
-          dailyEarnings: inv.daily_returns || 0,
-          monthlyEarnings: (inv.daily_returns || 0) * 30
-        }));
+        const transformedInvestments: Investment[] = (investments || []).map(normalizeInvestment);
 
         setMyInvestments(transformedInvestments);
       } catch (error) {
@@ -117,6 +105,31 @@ export default function ClientDashboard() {
     loadBankDetails();
     setIsLoading(false);
   }, [user]);
+
+  // Funzione di normalizzazione per Investment (snake_case -> camelCase)
+  function normalizeInvestment(inv: any): Investment {
+    return {
+      id: inv.id,
+      packageName: inv.packageName || inv.package_name || inv.package?.name || 'Unknown Package',
+      amount: inv.amount,
+      dailyReturn: inv.dailyReturn ?? inv.daily_return ?? inv.package?.expected_return ?? inv.package?.daily_return ?? 1.0,
+      duration: inv.duration ?? inv.package?.duration ?? 30,
+      startDate: inv.startDate ?? inv.start_date,
+      endDate: inv.endDate ?? inv.end_date,
+      status: inv.status,
+      totalEarned: inv.totalEarned ?? inv.total_returns ?? 0,
+      dailyEarnings: inv.dailyEarnings ?? inv.daily_returns ?? 0,
+      monthlyEarnings: inv.monthlyEarnings ?? inv.monthly_earnings ?? ((inv.daily_returns ?? 0) * 30),
+      // snake_case fallback
+      package_name: inv.package_name,
+      daily_return: inv.daily_return,
+      start_date: inv.start_date,
+      end_date: inv.end_date,
+      total_returns: inv.total_returns,
+      daily_returns: inv.daily_returns,
+      monthly_earnings: inv.monthly_earnings,
+    };
+  }
 
   // Package normalization function
   function normalizePackage(pkg: any): any {
@@ -321,12 +334,12 @@ export default function ClientDashboard() {
 
   // Stats calculated only on purchased investments
   const stats = {
-    totalInvested: myInvestments.reduce((sum, inv) => sum + inv.amount, 0),
-    totalEarned: myInvestments.reduce((sum, inv) => sum + inv.total_returns, 0),
+    totalInvested: myInvestments.reduce((sum, inv) => sum + (inv.amount ?? 0), 0),
+    totalEarned: myInvestments.reduce((sum, inv) => sum + (inv.totalEarned ?? inv.total_returns ?? 0), 0),
     activeInvestments: myInvestments.length,
-    averageReturn: myInvestments.length > 0 ? myInvestments.reduce((sum, inv) => sum + inv.daily_returns, 0) / myInvestments.length : 0,
-    todayEarnings: myInvestments.reduce((sum, inv) => sum + inv.daily_returns, 0),
-    monthlyEarnings: myInvestments.reduce((sum, inv) => sum + inv.monthly_earnings, 0)
+    averageReturn: myInvestments.length > 0 ? myInvestments.reduce((sum, inv) => sum + (inv.dailyReturn ?? inv.daily_returns ?? 0), 0) / myInvestments.length : 0,
+    todayEarnings: myInvestments.reduce((sum, inv) => sum + (inv.dailyEarnings ?? inv.daily_returns ?? 0), 0),
+    monthlyEarnings: myInvestments.reduce((sum, inv) => sum + (inv.monthlyEarnings ?? inv.monthly_earnings ?? 0), 0)
   };
 
   const formatCurrency = (amount: number) => {
