@@ -33,7 +33,7 @@ jobs:
           TEST_BASE_URL: ${{ matrix.test_env }}
         run: npm run e2e:puppeteer
       - name: Upload screenshots
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: puppeteer-screenshots-${{ matrix.test_env }}
           path: puppeteer-screenshots/ 
