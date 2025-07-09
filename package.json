@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "prelaunch-check": "node prelaunch-check.js",
     "start": "next start",
     "lint": "next lint",
     "setup-db": "node setup-database.js",
