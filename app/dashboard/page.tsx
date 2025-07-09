@@ -141,19 +141,22 @@ export default function ClientDashboard() {
       duration: pkg.duration || 30,
       isActive: pkg.is_active !== undefined ? pkg.is_active : (pkg.status === 'Active'),
       category: pkg.category || 'General',
-      riskLevel: pkg.risk_level || 'medium',
+      riskLevel: pkg.riskLevel || pkg.risk_level || 'medium',
       description: pkg.description || '',
       maxInvestment: pkg.max_investment || pkg.max_amount || 50000,
       price: pkg.price || pkg.min_investment || 1000,
-      currency: pkg.currency || 'USD'
+      currency: pkg.currency || 'USD',
+      // fallback snake_case
+      risk_level: pkg.risk_level
     };
   }
 
+  // Normalizza tutti i pacchetti caricati
+  const normalizedPackages = availablePackages.map(normalizePackage);
   // Active packages for all clients
-  const activeInvestments = availablePackages.filter(pkg => pkg.isActive);
-
+  const activeInvestments = normalizedPackages.filter(pkg => pkg.isActive);
   // Packages to show: all those present in localStorage
-  const allPackages = availablePackages;
+  const allPackages = normalizedPackages;
 
   // Function to purchase a package
   const handleBuy = async (pkg: any) => {
@@ -534,15 +537,15 @@ export default function ClientDashboard() {
                       </p>
                     </div>
                     <span style={{
-                      background: pkg.risk_level === 'low' ? '#bbf7d0' : pkg.risk_level === 'medium' ? '#fef3c7' : '#fee2e2',
-                      color: pkg.risk_level === 'low' ? '#166534' : pkg.risk_level === 'medium' ? '#92400e' : '#991b1b',
+                      background: pkg.riskLevel === 'low' ? '#bbf7d0' : pkg.riskLevel === 'medium' ? '#fef3c7' : '#fee2e2',
+                      color: pkg.riskLevel === 'low' ? '#166534' : pkg.riskLevel === 'medium' ? '#92400e' : '#991b1b',
                       padding: '0.25rem 0.75rem',
                       borderRadius: '6px',
                       fontSize: '0.75rem',
                       fontWeight: 600,
                       textTransform: 'capitalize'
                     }}>
-                      {pkg.risk_level}
+                      {pkg.riskLevel}
                     </span>
                   </div>
                   
