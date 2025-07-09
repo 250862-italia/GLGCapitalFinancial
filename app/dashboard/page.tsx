@@ -559,7 +559,7 @@ export default function ClientDashboard() {
                     <div>
                       <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>Expected Return</div>
                       <div style={{ fontSize: '1.125rem', fontWeight: 700, color: '#059669' }}>
-                        {pkg.expected_return}%
+                        {pkg.expectedReturn}%
                       </div>
                     </div>
                     <div>
@@ -687,7 +687,7 @@ export default function ClientDashboard() {
                     <h3 style={{ margin: '0 0 12px 0', color: '#166534' }}>Package Details</h3>
                     <div><b>Package:</b> {selectedPackage.name}</div>
                     <div><b>Investment Amount:</b> ${selectedPackage.minInvestment || selectedPackage.minAmount || 1000}</div>
-                    <div><b>Expected Return:</b> {selectedPackage.expected_return || selectedPackage.daily_return || 1.0}% daily</div>
+                    <div><b>Expected Return:</b> {selectedPackage.expectedReturn || selectedPackage.daily_return || 1.0}% daily</div>
                     <div><b>Duration:</b> {selectedPackage.duration || 30} days</div>
                   </div>
                   <div style={{ background: '#fef3c7', border: '1px solid #f59e0b', borderRadius: 8, padding: 16 }}>
