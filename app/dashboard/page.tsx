@@ -138,8 +138,7 @@ export default function ClientDashboard() {
       maxInvestment: pkg.max_investment || pkg.max_amount || 50000,
       price: pkg.price || pkg.min_investment || 1000,
       currency: pkg.currency || 'USD',
-      // fallback snake_case
-      risk_level: pkg.risk_level
+      // no snake_case fallback for frontend
     };
   }
 
