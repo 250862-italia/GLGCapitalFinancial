@@ -113,7 +113,7 @@ export function useProfile() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          user_id: user.id,
+          userId: user.id,
           updates
         })
       });

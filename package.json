@@ -11,8 +11,7 @@
     "start": "next start",
     "lint": "next lint",
     "setup-db": "node setup-database.js",
-    "create-admin": "node create-superadmin.js",
-    "e2e:puppeteer": "node full-real-test-puppeteer.js"
+    "create-admin": "node create-superadmin.js"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.14",
@@ -48,7 +47,6 @@
     "eslint": "^8.57.1",
     "eslint-config-next": "14.2.30",
     "playwright": "^1.53.2",
-    "puppeteer": "^24.12.0",
     "tailwindcss": "^4.1.11",
     "tw-animate-css": "^1.3.4",
     "typescript": "^5",

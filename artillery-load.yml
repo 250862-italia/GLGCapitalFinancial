@@ -1,0 +1,37 @@
+config:
+  target: "https://www.glgcapitalgroup.com"
+  phases:
+    - duration: 120
+      arrivalRate: 10
+      name: "10 concurrent users"
+scenarios:
+  - name: "Register, KYC, Invest"
+    flow:
+      - post:
+          url: "/api/test-register"
+          json:
+            first_name: "User{{ $randomInt(1000,9999) }}"
+            last_name: "Test"
+            email: "user{{ $randomInt(1000,9999) }}@example.com"
+            phone: "+1234567890"
+            password: "Test1234!"
+      - post:
+          url: "/api/kyc/upload-document"
+          formData:
+            document: "./test-assets/passport-front.jpg"
+            userId: "{{ last_response.body.user.id }}"
+            documentType: "ID_DOCUMENT"
+      - post:
+          url: "/api/investments"
+          json:
+            client_id: "{{ last_response.body.user.id }}"
+            package_id: "REPLACE_WITH_PACKAGE_ID"
+            amount: 1000
+            currency: "USD"
+            start_date: "2024-07-01"
+            end_date: "2025-07-01"
+            status: "pending"
+            total_returns: 0
+            daily_returns: 0
+            payment_method: "credit_card"
+            notes: "Automated test investment" 
