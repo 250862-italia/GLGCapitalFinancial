@@ -1,3 +1,5 @@
+"use client";
+export const dynamic = "force-dynamic";
 import { InvestmentFormData } from "@/types/investment";
 
 export default function HomePage() {
