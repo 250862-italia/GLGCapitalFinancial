@@ -90,7 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('user');
     localStorage.removeItem('token');
     document.cookie = 'auth-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-    router.push('/login');
+    router.push('/');
   };
 
   const register = async (userData: any) => {

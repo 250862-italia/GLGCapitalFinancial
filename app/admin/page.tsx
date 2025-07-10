@@ -59,7 +59,7 @@ export default function AdminDashboardPage() {
     localStorage.removeItem("admin_user");
     localStorage.removeItem("admin_token");
     addLog("Admin logged out successfully");
-    router.push('/admin/login');
+    router.push('/');
   };
 
   // Listener globale per log (window.dispatchEvent(new CustomEvent('admin-log', { detail: 'messaggio' })))
