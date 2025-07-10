@@ -97,11 +97,11 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Rimuovo lo step 3 (Document Upload) e la validazione dei documenti
   const steps = [
     { id: 1, title: 'Personal Information', icon: User },
     { id: 2, title: 'Financial Profile', icon: CreditCard },
-    { id: 3, title: 'Document Upload', icon: FileText },
-    { id: 4, title: 'Verification', icon: Shield }
+    { id: 3, title: 'Verification', icon: Shield }
   ];
 
   const handleInputChange = (section: string, field: string, value: any) => {
@@ -146,13 +146,6 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
       if (!financialProfile.investment_experience) newErrors['financialProfile.investment_experience'] = 'Investment experience is required';
       if (!financialProfile.risk_tolerance) newErrors['financialProfile.risk_tolerance'] = 'Risk tolerance is required';
       if (financialProfile.investment_goals.length === 0) newErrors['financialProfile.investment_goals'] = 'At least one investment goal is required';
-    }
-
-    if (step === 3) {
-      const { documents } = kycData;
-      if (!documents.id_document) newErrors['documents.id_document'] = 'ID document is required';
-      if (!documents.proof_of_address) newErrors['documents.proof_of_address'] = 'Proof of address is required';
-      if (!documents.bank_statement) newErrors['documents.bank_statement'] = 'Bank statement is required';
     }
 
     setErrors(newErrors);
@@ -865,129 +858,6 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
         )}
 
         {currentStep === 3 && (
-          <div>
-            <h2 style={{
-              fontSize: 24,
-              fontWeight: 700,
-              color: '#1f2937',
-              marginBottom: '1.5rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8
-            }}>
-              <FileText size={24} />
-              Document Upload
-            </h2>
-            
-            {/* Info Message */}
-            <div style={{
-              background: '#fef3c7',
-              border: '1px solid #fde68a',
-              borderRadius: 8,
-              padding: '1.5rem',
-              margin: '2rem 0',
-              color: '#92400e',
-              fontSize: 16
-            }}>
-              <div style={{ marginBottom: 12 }}>
-                For any KYC verification request, please contact us by email. We will be happy to assist you.
-              </div>
-              <strong>Email: <a href="mailto:kyc@glgcapitalgroup.com" style={{ color: '#b45309', textDecoration: 'underline' }}>kyc@glgcapitalgroup.com</a></strong>
-              <div style={{ marginTop: 16 }}>
-                <em>You will receive a confirmation email once your documents have been verified.</em>
-              </div>
-            </div>
-            
-            <p style={{
-              fontSize: 14,
-              color: '#6b7280',
-              marginBottom: '2rem'
-            }}>
-              Please upload the required documents for verification. All documents must be clear, legible, and in PDF, JPG, or PNG format.
-            </p>
-
-            <div style={{
-              display: 'grid',
-              gap: '1.5rem'
-            }}>
-              {[
-                {
-                  key: 'id_document',
-                  title: 'Government ID Document',
-                  description: 'Passport, driver\'s license, or national ID card',
-                  required: true
-                },
-                {
-                  key: 'proof_of_address',
-                  title: 'Proof of Address',
-                  description: 'Utility bill, bank statement, or lease agreement (not older than 3 months)',
-                  required: true
-                },
-                {
-                  key: 'bank_statement',
-                  title: 'Bank Statement',
-                  description: 'Recent bank statement showing your name and address',
-                  required: true
-                }
-              ].map((doc) => (
-                <div key={doc.key} style={{
-                  border: '2px dashed #d1d5db',
-                  borderRadius: 12,
-                  padding: '2rem',
-                  textAlign: 'center',
-                  background: kycData.documents[doc.key as keyof typeof kycData.documents] ? '#f0fdf4' : '#f8fafc'
-                }}>
-                  {kycData.documents[doc.key as keyof typeof kycData.documents] ? (
-                    <div>
-                      <CheckCircle size={48} color="#059669" style={{ marginBottom: '1rem' }} />
-                      <h4 style={{
-                        fontSize: 18,
-                        fontWeight: 600,
-                        color: '#059669',
-                        marginBottom: '0.5rem'
-                      }}>
-                        {doc.title} Uploaded
-                      </h4>
-                      <p style={{
-                        fontSize: 14,
-                        color: '#6b7280',
-                        marginBottom: '1rem'
-                      }}>
-                        <a href={kycData.documents[doc.key as keyof typeof kycData.documents] as string} target="_blank" rel="noopener noreferrer">View Document</a>
-                      </p>
-                    </div>
-                  ) : (
-                    <div>
-                      <Upload size={48} color="#9ca3af" style={{ marginBottom: '1rem' }} />
-                      <h4 style={{
-                        fontSize: 18,
-                        fontWeight: 600,
-                        color: '#374151',
-                        marginBottom: '0.5rem'
-                      }}>
-                        {doc.title}
-                      </h4>
-                      <p style={{
-                        fontSize: 14,
-                        color: '#6b7280',
-                        marginBottom: '1rem'
-                      }}>
-                        {doc.description}
-                      </p>
-                    </div>
-                  )}
-                  {errors[`documents.${doc.key}`] && (
-                    <p style={{ color: '#ef4444', fontSize: 12, marginTop: 8 }}>
-                      {errors[`documents.${doc.key}`]}
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {currentStep === 4 && (
           <div>
             <h2 style={{
               fontSize: 24,
