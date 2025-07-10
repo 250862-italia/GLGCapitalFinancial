@@ -101,7 +101,8 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
   const steps = [
     { id: 1, title: 'Personal Information', icon: User },
     { id: 2, title: 'Financial Profile', icon: CreditCard },
-    { id: 3, title: 'Verification', icon: Shield }
+    { id: 3, title: 'Documents', icon: FileText },
+    { id: 4, title: 'Confirmation', icon: CheckCircle }
   ];
 
   const handleInputChange = (section: string, field: string, value: any) => {
@@ -239,22 +240,70 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
   // Rimuovo la sezione 'Verification Summary' e ogni riferimento a step, flag o messaggi di stato KYC
   // La pagina mostra solo il messaggio di cortesia e l'email di contatto
   return (
-    <div style={{
-      background: '#fef3c7',
-      border: '1px solid #fde68a',
-      borderRadius: 8,
-      padding: '1.5rem',
-      margin: '2rem 0',
-      color: '#92400e',
-      fontSize: 16
-    }}>
-      <div style={{ marginBottom: 12 }}>
-        For any KYC verification request, please contact us by email. We will be happy to assist you.
+    <div>
+      {/* Stepper UI (opzionale) */}
+      <div style={{ display: 'flex', gap: 16, marginBottom: 32 }}>
+        {steps.map((step, idx) => (
+          <div key={step.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <step.icon size={24} color={currentStep === step.id ? '#6366f1' : '#d1d5db'} />
+            <span style={{ fontWeight: currentStep === step.id ? 700 : 400 }}>{step.title}</span>
+            {idx < steps.length - 1 && <span style={{ color: '#d1d5db' }}>&rarr;</span>}
+          </div>
+        ))}
       </div>
-      <strong>Email: <a href="mailto:kyc@glgcapitalgroup.com" style={{ color: '#b45309', textDecoration: 'underline' }}>kyc@glgcapitalgroup.com</a></strong>
-      <div style={{ marginTop: 16 }}>
-        <em>You will receive a confirmation email once your documents have been verified.</em>
-      </div>
+
+      {/* Step 1: Personal Information */}
+      {currentStep === 1 && (
+        <div>
+          <h2>Personal Information</h2>
+          {/* Qui i campi anagrafici come prima */}
+          {/* ... */}
+          <button onClick={handleNext}>Next</button>
+        </div>
+      )}
+
+      {/* Step 2: Financial Profile */}
+      {currentStep === 2 && (
+        <div>
+          <h2>Financial Profile</h2>
+          {/* Qui i campi del profilo finanziario come prima */}
+          {/* ... */}
+          <button onClick={handlePrevious}>Back</button>
+          <button onClick={handleNext}>Next</button>
+        </div>
+      )}
+
+      {/* Step 3: Documenti (solo messaggio/email) */}
+      {currentStep === 3 && (
+        <div style={{
+          background: '#fef3c7',
+          border: '1px solid #fde68a',
+          borderRadius: 8,
+          padding: '1.5rem',
+          margin: '2rem 0',
+          color: '#92400e',
+          fontSize: 16
+        }}>
+          <div style={{ marginBottom: 12 }}>
+            For KYC document verification, please send your documents by email. We will be happy to assist you.
+          </div>
+          <strong>Email: <a href="mailto:kyc@glgcapitalgroup.com" style={{ color: '#b45309', textDecoration: 'underline' }}>kyc@glgcapitalgroup.com</a></strong>
+          <div style={{ marginTop: 16 }}>
+            <em>You will receive a confirmation email once your documents have been verified.</em>
+          </div>
+          <button style={{ marginTop: 32 }} onClick={handleNext}>Next</button>
+          <button style={{ marginTop: 32, marginLeft: 16 }} onClick={handlePrevious}>Back</button>
+        </div>
+      )}
+
+      {/* Step 4: Conferma invio dati */}
+      {currentStep === 4 && (
+        <div style={{ textAlign: 'center', marginTop: 64 }}>
+          <CheckCircle size={48} color="#059669" style={{ marginBottom: 16 }} />
+          <h2>Thank you!</h2>
+          <p>Your KYC data has been submitted. Our team will review your information and contact you soon.</p>
+        </div>
+      )}
     </div>
   );
 }
