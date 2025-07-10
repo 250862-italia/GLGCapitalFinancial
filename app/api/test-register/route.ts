@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AuthService } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: NextRequest) {
   // LOG DIAGNOSTICO: Mostra le chiavi e URL usati dal backend
   console.log('🔑 SUPABASE_URL (env):', process.env.NEXT_PUBLIC_SUPABASE_URL);
