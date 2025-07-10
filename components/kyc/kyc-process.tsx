@@ -159,54 +159,27 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Real file upload to Supabase Storage
-  const uploadDocument = async (field: string, file: File) => {
-    if (!file || !userId) return null;
-    
-    try {
-      const formData = new FormData();
-      formData.append('document', file);
-      formData.append('userId', userId);
-      formData.append('documentType', field.toUpperCase());
-
-      const response = await fetch('/api/kyc/upload-document', {
-        method: 'POST',
-        body: formData
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        console.error(`❌ Upload error for ${field}:`, result);
-        alert(`Failed to upload ${field}.\n${result.error || 'Upload failed.'}`);
-        return null;
-      }
-
-      console.log(`📁 Document uploaded for ${field}:`, result.documentUrl);
-      return result.documentUrl;
-    } catch (error) {
-      console.error(`❌ Upload error for ${field}:`, error);
-      alert(`Failed to upload ${field}. Please try again.\n${error}`);
-      return null;
-    }
-  };
-
-  // Modify handleFileUpload for real upload
-  const handleFileUpload = async (field: string, file: File | null) => {
-    if (!file) {
-      setKycData(prev => ({
-        ...prev,
-        documents: { ...prev.documents, [field]: null }
-      }));
-      return;
-    }
-    // Real upload
-    const url = await uploadDocument(field, file);
-    setKycData(prev => ({
-      ...prev,
-      documents: { ...prev.documents, [field]: url }
-    }));
-  };
+  // Rimuovo la sezione di upload file e mostro istruzioni email
+  // Sostituisco la sezione di upload con:
+  <div style={{
+    background: '#fef3c7',
+    border: '1px solid #fde68a',
+    borderRadius: 8,
+    padding: '1.5rem',
+    margin: '2rem 0',
+    color: '#92400e',
+    fontSize: 16
+  }}>
+    <strong>Per completare la verifica KYC, invia i seguenti documenti a <a href="mailto:kyc@glgcapitalgroup.com" style={{ color: '#b45309', textDecoration: 'underline' }}>kyc@glgcapitalgroup.com</a>:</strong>
+    <ul style={{ marginTop: 16, marginBottom: 0, paddingLeft: 24 }}>
+      <li>Documento d'identità (fronte/retro)</li>
+      <li>Prova di residenza (es. bolletta, estratto conto)</li>
+      <li>Estratto conto bancario (opzionale)</li>
+    </ul>
+    <div style={{ marginTop: 16 }}>
+      <em>Riceverai una conferma via email una volta che i documenti saranno stati verificati.</em>
+    </div>
+  </div>
 
   const handleNext = () => {
     if (validateStep(currentStep)) {
@@ -910,15 +883,22 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
             
             {/* Info Message */}
             <div style={{
-              background: '#eff6ff',
-              border: '1px solid #bae6fd',
+              background: '#fef3c7',
+              border: '1px solid #fde68a',
               borderRadius: 8,
-              padding: '1rem',
-              marginBottom: '1.5rem'
+              padding: '1.5rem',
+              margin: '2rem 0',
+              color: '#92400e',
+              fontSize: 16
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#1e40af' }}>
-                <AlertCircle size={16} />
-                <strong>Development Mode:</strong> Document upload is currently simulated. In production, documents will be securely stored and verified.
+              <strong>Per completare la verifica KYC, invia i seguenti documenti a <a href="mailto:kyc@glgcapitalgroup.com" style={{ color: '#b45309', textDecoration: 'underline' }}>kyc@glgcapitalgroup.com</a>:</strong>
+              <ul style={{ marginTop: 16, marginBottom: 0, paddingLeft: 24 }}>
+                <li>Documento d'identità (fronte/retro)</li>
+                <li>Prova di residenza (es. bolletta, estratto conto)</li>
+                <li>Estratto conto bancario (opzionale)</li>
+              </ul>
+              <div style={{ marginTop: 16 }}>
+                <em>Riceverai una conferma via email una volta che i documenti saranno stati verificati.</em>
               </div>
             </div>
             
