@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { User, Shield, FileText, CreditCard, CheckCircle, AlertCircle, Upload, ArrowRight, ArrowLeft } from 'lucide-react';
+import { useAuth } from '../../hooks/use-auth';
 
 interface KYCData {
   personalInfo: {
@@ -24,9 +25,9 @@ interface KYCData {
     investmentGoals: string[];
   };
   documents: {
-    idDocument: File | null;
-    proofOfAddress: File | null;
-    bankStatement: File | null;
+    idDocument: string | null;
+    proofOfAddress: string | null;
+    bankStatement: string | null;
   };
   verification: {
     personalInfoVerified: boolean;
@@ -44,6 +45,7 @@ const steps = [
 ];
 
 export default function KYCProcess({ userId, onComplete }: { userId: string; onComplete: (status: string) => void }) {
+  const { user } = useAuth ? useAuth() : { user: null };
   const [currentStep, setCurrentStep] = useState(1);
   const [kycData, setKycData] = useState<KYCData>({
     personalInfo: {
@@ -79,6 +81,8 @@ export default function KYCProcess({ userId, onComplete }: { userId: string; onC
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [uploadStatus, setUploadStatus] = useState<{ [key: string]: 'idle' | 'uploading' | 'success' | 'error' }>({});
+  const [uploadError, setUploadError] = useState<{ [key: string]: string }>({});
 
   const validateStep = (step: number): boolean => {
     const newErrors: Record<string, string> = {};
@@ -113,14 +117,69 @@ export default function KYCProcess({ userId, onComplete }: { userId: string; onC
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleFileUpload = (field: string, file: File | null) => {
-    setKycData(prev => ({
-      ...prev,
-      documents: {
-        ...prev.documents,
-        [field]: file
+  // Upload document to API and save URL
+  const handleFileUpload = async (field: string, file: File | null) => {
+    if (!file) {
+      setKycData(prev => ({
+        ...prev,
+        documents: {
+          ...prev.documents,
+          [field]: null
+        }
+      }));
+      setUploadStatus(prev => ({ ...prev, [field]: 'idle' }));
+      setUploadError(prev => ({ ...prev, [field]: '' }));
+      return;
+    }
+    setUploadStatus(prev => ({ ...prev, [field]: 'uploading' }));
+    setUploadError(prev => ({ ...prev, [field]: '' }));
+    try {
+      const formData = new FormData();
+      formData.append('document', file);
+      formData.append('userId', userId);
+      // Mappa il campo in documentType
+      let documentType = '';
+      if (field === 'idDocument') documentType = 'ID_DOCUMENT';
+      if (field === 'proofOfAddress') documentType = 'PROOF_OF_ADDRESS';
+      if (field === 'bankStatement') documentType = 'BANK_STATEMENT';
+      formData.append('documentType', documentType);
+      const res = await fetch('/api/kyc/upload-document', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      if (!res.ok || !data.documentUrl) {
+        setUploadStatus(prev => ({ ...prev, [field]: 'error' }));
+        setUploadError(prev => ({ ...prev, [field]: data.error || 'Upload failed' }));
+        setKycData(prev => ({
+          ...prev,
+          documents: {
+            ...prev.documents,
+            [field]: null
+          }
+        }));
+        return;
       }
-    }));
+      setKycData(prev => ({
+        ...prev,
+        documents: {
+          ...prev.documents,
+          [field]: data.documentUrl
+        }
+      }));
+      setUploadStatus(prev => ({ ...prev, [field]: 'success' }));
+      setUploadError(prev => ({ ...prev, [field]: '' }));
+    } catch (err: any) {
+      setUploadStatus(prev => ({ ...prev, [field]: 'error' }));
+      setUploadError(prev => ({ ...prev, [field]: err.message || 'Upload failed' }));
+      setKycData(prev => ({
+        ...prev,
+        documents: {
+          ...prev.documents,
+          [field]: null
+        }
+      }));
+    }
   };
 
   const handleInputChange = (section: string, field: string, value: any) => {
@@ -341,21 +400,28 @@ export default function KYCProcess({ userId, onComplete }: { userId: string; onC
           <div> {/* ...Document Upload step... */}
             <h2 style={{ fontSize: 24, fontWeight: 700, color: '#1f2937', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: 8 }}><FileText size={24} />Document Upload</h2>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>ID Document <span style={{ color: '#ef4444' }}>*</span></label>
-                <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => handleFileUpload('idDocument', e.target.files?.[0] || null)} style={{ width: '100%', padding: '0.75rem', border: errors['documents.idDocument'] ? '1px solid #ef4444' : '1px solid #d1d5db', borderRadius: 8, fontSize: 16 }} />
-                {errors['documents.idDocument'] && (<p style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>{errors['documents.idDocument']}</p>)}
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>Proof of Address <span style={{ color: '#ef4444' }}>*</span></label>
-                <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => handleFileUpload('proofOfAddress', e.target.files?.[0] || null)} style={{ width: '100%', padding: '0.75rem', border: errors['documents.proofOfAddress'] ? '1px solid #ef4444' : '1px solid #d1d5db', borderRadius: 8, fontSize: 16 }} />
-                {errors['documents.proofOfAddress'] && (<p style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>{errors['documents.proofOfAddress']}</p>)}
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>Bank Statement <span style={{ color: '#ef4444' }}>*</span></label>
-                <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => handleFileUpload('bankStatement', e.target.files?.[0] || null)} style={{ width: '100%', padding: '0.75rem', border: errors['documents.bankStatement'] ? '1px solid #ef4444' : '1px solid #d1d5db', borderRadius: 8, fontSize: 16 }} />
-                {errors['documents.bankStatement'] && (<p style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>{errors['documents.bankStatement']}</p>)}
-              </div>
+              {['idDocument', 'proofOfAddress', 'bankStatement'].map((field) => (
+                <div key={field}>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>
+                    {field === 'idDocument' && 'ID Document'}
+                    {field === 'proofOfAddress' && 'Proof of Address'}
+                    {field === 'bankStatement' && 'Bank Statement'} <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <input
+                    type="file"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                    onChange={e => handleFileUpload(field, e.target.files?.[0] || null)}
+                    style={{ width: '100%', padding: '0.75rem', border: errors[`documents.${field}`] ? '1px solid #ef4444' : '1px solid #d1d5db', borderRadius: 8, fontSize: 16 }}
+                  />
+                  {uploadStatus[field] === 'uploading' && <span style={{ color: '#3b82f6', fontSize: 12 }}>Uploading...</span>}
+                  {uploadStatus[field] === 'success' && kycData.documents[field] && <span style={{ color: '#059669', fontSize: 12 }}>Uploaded ✓</span>}
+                  {uploadStatus[field] === 'error' && <span style={{ color: '#ef4444', fontSize: 12 }}>{uploadError[field]}</span>}
+                  {errors[`documents.${field}`] && (<p style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>{errors[`documents.${field}`]}</p>)}
+                  {kycData.documents[field] && typeof kycData.documents[field] === 'string' && (
+                    <a href={kycData.documents[field]} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: '#2563eb', textDecoration: 'underline', display: 'block', marginTop: 4 }}>View uploaded file</a>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         )}
@@ -384,9 +450,9 @@ export default function KYCProcess({ userId, onComplete }: { userId: string; onC
               </div>
               <div>
                 <h3 style={{ fontSize: 18, fontWeight: 600, color: '#374151', marginBottom: '0.5rem' }}>Documents</h3>
-                <p><strong>ID Document:</strong> {kycData.documents.idDocument ? kycData.documents.idDocument.name : 'Not uploaded'}</p>
-                <p><strong>Proof of Address:</strong> {kycData.documents.proofOfAddress ? kycData.documents.proofOfAddress.name : 'Not uploaded'}</p>
-                <p><strong>Bank Statement:</strong> {kycData.documents.bankStatement ? kycData.documents.bankStatement.name : 'Not uploaded'}</p>
+                <p><strong>ID Document:</strong> {kycData.documents.idDocument ? kycData.documents.idDocument : 'Not uploaded'}</p>
+                <p><strong>Proof of Address:</strong> {kycData.documents.proofOfAddress ? kycData.documents.proofOfAddress : 'Not uploaded'}</p>
+                <p><strong>Bank Statement:</strong> {kycData.documents.bankStatement ? kycData.documents.bankStatement : 'Not uploaded'}</p>
               </div>
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '2rem' }}>
