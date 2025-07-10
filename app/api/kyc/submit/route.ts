@@ -185,3 +185,68 @@ export async function POST(request: NextRequest) {
     )
   }
 } 
+
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
+    if (!userId) {
+      return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
+    }
+
+    // Trova il client tramite user_id
+    const { data: client, error: clientError } = await supabase
+      .from('clients')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    if (clientError || !client) {
+      return NextResponse.json({ error: 'Client not found' }, { status: 404 });
+    }
+
+    // Recupera eventuali documenti associati
+    const { data: kycRecords } = await supabase
+      .from('kyc_records')
+      .select('*')
+      .eq('client_id', client.id);
+
+    // Ricostruisci la struttura attesa dal frontend
+    const personalInfo = {
+      first_name: client.first_name || '',
+      last_name: client.last_name || '',
+      date_of_birth: client.date_of_birth || '',
+      nationality: client.nationality || '',
+      address: client.address || '',
+      city: client.city || '',
+      country: client.country || '',
+      phone: client.phone || '',
+      email: client.email || ''
+    };
+    // NB: i campi address/city/country potrebbero non essere presenti in clients, fallback vuoto
+    const financialProfile = {
+      employment_status: client.employment_status || '',
+      annual_income: client.annual_income || '',
+      source_of_funds: client.source_of_funds || '',
+      investment_experience: client.investment_experience || '',
+      risk_tolerance: client.risk_tolerance || '',
+      investment_goals: client.investment_goals || []
+    };
+    // NB: i campi financial potrebbero non essere presenti in clients, fallback vuoto
+
+    // Documenti (se presenti)
+    const documents = {
+      id_document: kycRecords?.find(r => r.document_type === 'PERSONAL_INFO')?.document_image_url || null,
+      proof_of_address: kycRecords?.find(r => r.document_type === 'PROOF_OF_ADDRESS')?.document_image_url || null,
+      bank_statement: kycRecords?.find(r => r.document_type === 'BANK_STATEMENT')?.document_image_url || null
+    };
+
+    return NextResponse.json({
+      personalInfo,
+      financialProfile,
+      documents
+    });
+  } catch (error) {
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+} 

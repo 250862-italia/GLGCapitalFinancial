@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   User, 
   Shield, 
@@ -108,6 +108,27 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
     { id: 3, title: 'Documents', icon: FileText },
     { id: 4, title: 'Confirmation', icon: CheckCircle }
   ];
+
+  // FETCH DATI KYC ALL'INIZIO
+  useEffect(() => {
+    if (!userId) return;
+    (async () => {
+      try {
+        const res = await fetch(`/api/kyc/submit?userId=${userId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setKycData(prev => ({
+            ...prev,
+            personalInfo: data.personalInfo || prev.personalInfo,
+            financialProfile: data.financialProfile || prev.financialProfile,
+            documents: data.documents || prev.documents
+          }));
+        }
+      } catch (e) {
+        // Ignora errori fetch, fallback vuoto
+      }
+    })();
+  }, [userId]);
 
   const handleInputChange = (section: string, field: string, value: any) => {
     setKycData(prev => ({
