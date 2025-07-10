@@ -56,11 +56,11 @@ export async function POST(request: NextRequest) {
       .from('avatars')
       .getPublicUrl(filePath);
 
-    // Update client profile with photo URL
+    // Aggiorna la colonna photo_url invece di photoUrl
     const { data: updateData, error: updateError } = await supabase
       .from('clients')
-      .update({ photoUrl: urlData.publicUrl })
-      .eq('"userId"', userId)
+      .update({ photo_url: urlData.publicUrl })
+      .eq('user_id', userId)
       .select()
       .single();
 
