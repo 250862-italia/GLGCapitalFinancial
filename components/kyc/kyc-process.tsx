@@ -170,12 +170,12 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
     color: '#92400e',
     fontSize: 16
   }}>
-    <strong>To complete KYC verification, please send your documents to <a href="mailto:kyc@glgcapitalgroup.com" style={{ color: '#b45309', textDecoration: 'underline' }}>kyc@glgcapitalgroup.com</a>.</strong>
+    <div style={{ marginBottom: 12 }}>
+      For any KYC verification request, please contact us by email. We will be happy to assist you.
+    </div>
+    <strong>Email: <a href="mailto:kyc@glgcapitalgroup.com" style={{ color: '#b45309', textDecoration: 'underline' }}>kyc@glgcapitalgroup.com</a></strong>
     <div style={{ marginTop: 16 }}>
       <em>You will receive a confirmation email once your documents have been verified.</em>
-    </div>
-    <div style={{ marginTop: 16, fontSize: 15, color: '#b45309' }}>
-      <strong>If the upload does not work, you can always send your documents by email.</strong>
     </div>
   </div>
 
@@ -889,12 +889,12 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
               color: '#92400e',
               fontSize: 16
             }}>
-              <strong>To complete KYC verification, please send your documents to <a href="mailto:kyc@glgcapitalgroup.com" style={{ color: '#b45309', textDecoration: 'underline' }}>kyc@glgcapitalgroup.com</a>.</strong>
+              <div style={{ marginBottom: 12 }}>
+                For any KYC verification request, please contact us by email. We will be happy to assist you.
+              </div>
+              <strong>Email: <a href="mailto:kyc@glgcapitalgroup.com" style={{ color: '#b45309', textDecoration: 'underline' }}>kyc@glgcapitalgroup.com</a></strong>
               <div style={{ marginTop: 16 }}>
                 <em>You will receive a confirmation email once your documents have been verified.</em>
-              </div>
-              <div style={{ marginTop: 16, fontSize: 15, color: '#b45309' }}>
-                <strong>If the upload does not work, you can always send your documents by email.</strong>
               </div>
             </div>
             
