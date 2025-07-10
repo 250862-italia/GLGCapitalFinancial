@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { AuthProvider } from '@/hooks/use-auth'
 import ConnectionStatus from '@/components/ui/ConnectionStatus'
+import LanguageSwitcher from '../components/ui/LanguageSwitcher';
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -84,6 +85,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body style={{ background: 'var(--background)', minHeight: '100vh', fontFamily: 'Inter, Open Sans, Roboto, sans-serif' }}>
+        <LanguageSwitcher />
         <AuthProvider>
         {/* Connection Status */}
         <ConnectionStatus 
