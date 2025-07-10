@@ -170,12 +170,7 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
     color: '#92400e',
     fontSize: 16
   }}>
-    <strong>To complete KYC verification, you are encouraged to send the following documents to <a href="mailto:kyc@glgcapitalgroup.com" style={{ color: '#b45309', textDecoration: 'underline' }}>kyc@glgcapitalgroup.com</a>. <span style={{color:'#b45309'}}>None of these documents are strictly required to proceed, but providing them will speed up your verification process.</span></strong>
-    <ul style={{ marginTop: 16, marginBottom: 0, paddingLeft: 24 }}>
-      <li><strong>Government ID Document</strong><br/>Passport, driver's license, or national ID card<br/><span style={{color:'#b91c1c'}}>ID document is recommended</span></li>
-      <li style={{marginTop:12}}><strong>Proof of Address</strong><br/>Utility bill, bank statement, or lease agreement (not older than 3 months)<br/><span style={{color:'#b91c1c'}}>Proof of address is recommended</span></li>
-      <li style={{marginTop:12}}><strong>Bank Statement</strong><br/>Recent bank statement showing your name and address<br/><span style={{color:'#b91c1c'}}>Bank statement is recommended</span></li>
-    </ul>
+    <strong>To complete KYC verification, please send your documents to <a href="mailto:kyc@glgcapitalgroup.com" style={{ color: '#b45309', textDecoration: 'underline' }}>kyc@glgcapitalgroup.com</a>.</strong>
     <div style={{ marginTop: 16 }}>
       <em>You will receive a confirmation email once your documents have been verified.</em>
     </div>
@@ -894,12 +889,7 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
               color: '#92400e',
               fontSize: 16
             }}>
-              <strong>To complete KYC verification, you are encouraged to send the following documents to <a href="mailto:kyc@glgcapitalgroup.com" style={{ color: '#b45309', textDecoration: 'underline' }}>kyc@glgcapitalgroup.com</a>. <span style={{color:'#b45309'}}>None of these documents are strictly required to proceed, but providing them will speed up your verification process.</span></strong>
-              <ul style={{ marginTop: 16, marginBottom: 0, paddingLeft: 24 }}>
-                <li><strong>Government ID Document</strong><br/>Passport, driver's license, or national ID card<br/><span style={{color:'#b91c1c'}}>ID document is recommended</span></li>
-                <li style={{marginTop:12}}><strong>Proof of Address</strong><br/>Utility bill, bank statement, or lease agreement (not older than 3 months)<br/><span style={{color:'#b91c1c'}}>Proof of address is recommended</span></li>
-                <li style={{marginTop:12}}><strong>Bank Statement</strong><br/>Recent bank statement showing your name and address<br/><span style={{color:'#b91c1c'}}>Bank statement is recommended</span></li>
-              </ul>
+              <strong>To complete KYC verification, please send your documents to <a href="mailto:kyc@glgcapitalgroup.com" style={{ color: '#b45309', textDecoration: 'underline' }}>kyc@glgcapitalgroup.com</a>.</strong>
               <div style={{ marginTop: 16 }}>
                 <em>You will receive a confirmation email once your documents have been verified.</em>
               </div>
