@@ -159,7 +159,7 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Rimuovo la sezione di upload file e mostro istruzioni email
+  // Rimuovo ogni riferimento a handleFileUpload e i bottoni associati
   // Sostituisco la sezione di upload con:
   <div style={{
     background: '#fef3c7',
@@ -959,20 +959,6 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
                       }}>
                         <a href={kycData.documents[doc.key as keyof typeof kycData.documents] as string} target="_blank" rel="noopener noreferrer">View Document</a>
                       </p>
-                      <button
-                        onClick={() => handleFileUpload(doc.key, null as any)}
-                        style={{
-                          padding: '0.5rem 1rem',
-                          border: '1px solid #d1d5db',
-                          borderRadius: 6,
-                          background: 'white',
-                          color: '#374151',
-                          fontSize: 14,
-                          cursor: 'pointer'
-                        }}
-                      >
-                        Remove
-                      </button>
                     </div>
                   ) : (
                     <div>
@@ -992,32 +978,6 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
                       }}>
                         {doc.description}
                       </p>
-                      <input
-                        type="file"
-                        accept=".pdf,.jpg,.jpeg,.png"
-                        onChange={async (e) => {
-                          const file = e.target.files?.[0];
-                          if (file) await handleFileUpload(doc.key, file);
-                        }}
-                        style={{ display: 'none' }}
-                        id={`file-${doc.key}`}
-                      />
-                      <label
-                        htmlFor={`file-${doc.key}`}
-                        style={{
-                          padding: '0.75rem 1.5rem',
-                          border: '1px solid #d1d5db',
-                          borderRadius: 8,
-                          background: 'white',
-                          color: '#374151',
-                          fontSize: 14,
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                          display: 'inline-block'
-                        }}
-                      >
-                        Choose File
-                      </label>
                     </div>
                   )}
                   {errors[`documents.${doc.key}`] && (
