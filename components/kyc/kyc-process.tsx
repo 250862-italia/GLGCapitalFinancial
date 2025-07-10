@@ -96,6 +96,8 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  // Stato per messaggio di errore UX
+  const [showStepError, setShowStepError] = useState(false);
 
   // Rimuovo lo step 3 (Document Upload) e la validazione dei documenti
   const steps = [
@@ -175,7 +177,10 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
 
   const handleNext = () => {
     if (validateStep(currentStep)) {
+      setShowStepError(false);
       setCurrentStep(prev => Math.min(prev + 1, steps.length));
+    } else {
+      setShowStepError(true);
     }
   };
 
@@ -259,6 +264,11 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
           {/* Qui i campi anagrafici come prima */}
           {/* ... */}
           <button onClick={handleNext}>Next</button>
+          {showStepError && (
+            <div style={{ color: '#dc2626', marginTop: 12, fontWeight: 500 }}>
+              Please fill in all required fields before continuing.
+            </div>
+          )}
         </div>
       )}
 
@@ -270,6 +280,11 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
           {/* ... */}
           <button onClick={handlePrevious}>Back</button>
           <button onClick={handleNext}>Next</button>
+          {showStepError && (
+            <div style={{ color: '#dc2626', marginTop: 12, fontWeight: 500 }}>
+              Please fill in all required fields before continuing.
+            </div>
+          )}
         </div>
       )}
 
