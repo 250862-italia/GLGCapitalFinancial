@@ -5,7 +5,8 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const file = formData.get('photo') as File;
-    const userId = formData.get('userId') as string;
+    // Accetta sia user_id che userId
+    const userId = formData.get('user_id') || formData.get('userId');
 
     if (!file || !userId) {
       return NextResponse.json(
