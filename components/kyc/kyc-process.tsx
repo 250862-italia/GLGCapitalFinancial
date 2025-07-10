@@ -170,14 +170,17 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
     color: '#92400e',
     fontSize: 16
   }}>
-    <strong>Per completare la verifica KYC, invia i seguenti documenti a <a href="mailto:kyc@glgcapitalgroup.com" style={{ color: '#b45309', textDecoration: 'underline' }}>kyc@glgcapitalgroup.com</a>:</strong>
+    <strong>To complete KYC verification, please send the following documents to <a href="mailto:kyc@glgcapitalgroup.com" style={{ color: '#b45309', textDecoration: 'underline' }}>kyc@glgcapitalgroup.com</a>:</strong>
     <ul style={{ marginTop: 16, marginBottom: 0, paddingLeft: 24 }}>
-      <li>Documento d'identità (fronte/retro)</li>
-      <li>Prova di residenza (es. bolletta, estratto conto)</li>
-      <li>Estratto conto bancario (opzionale)</li>
+      <li>Identity document (front and back)</li>
+      <li>Proof of residence (e.g. utility bill, bank statement)</li>
+      <li>Bank statement</li>
     </ul>
     <div style={{ marginTop: 16 }}>
-      <em>Riceverai una conferma via email una volta che i documenti saranno stati verificati.</em>
+      <em>You will receive a confirmation email once your documents have been verified.</em>
+    </div>
+    <div style={{ marginTop: 16, fontSize: 15, color: '#b45309' }}>
+      <strong>If the upload does not work, you can always send your documents by email.</strong>
     </div>
   </div>
 
@@ -891,14 +894,17 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
               color: '#92400e',
               fontSize: 16
             }}>
-              <strong>Per completare la verifica KYC, invia i seguenti documenti a <a href="mailto:kyc@glgcapitalgroup.com" style={{ color: '#b45309', textDecoration: 'underline' }}>kyc@glgcapitalgroup.com</a>:</strong>
+              <strong>To complete KYC verification, please send the following documents to <a href="mailto:kyc@glgcapitalgroup.com" style={{ color: '#b45309', textDecoration: 'underline' }}>kyc@glgcapitalgroup.com</a>:</strong>
               <ul style={{ marginTop: 16, marginBottom: 0, paddingLeft: 24 }}>
-                <li>Documento d'identità (fronte/retro)</li>
-                <li>Prova di residenza (es. bolletta, estratto conto)</li>
-                <li>Estratto conto bancario (opzionale)</li>
+                <li>Identity document (front and back)</li>
+                <li>Proof of residence (e.g. utility bill, bank statement)</li>
+                <li>Bank statement</li>
               </ul>
               <div style={{ marginTop: 16 }}>
-                <em>Riceverai una conferma via email una volta che i documenti saranno stati verificati.</em>
+                <em>You will receive a confirmation email once your documents have been verified.</em>
+              </div>
+              <div style={{ marginTop: 16, fontSize: 15, color: '#b45309' }}>
+                <strong>If the upload does not work, you can always send your documents by email.</strong>
               </div>
             </div>
             
