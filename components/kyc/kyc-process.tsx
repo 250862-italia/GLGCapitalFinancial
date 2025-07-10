@@ -15,6 +15,7 @@ interface KYCData {
     country: string;
     phone: string;
     email: string;
+    codiceFiscale: string; // AGGIUNTO
   };
   financialProfile: {
     employmentStatus: string;
@@ -57,7 +58,8 @@ export default function KYCProcess({ userId, onComplete }: { userId: string; onC
       city: '',
       country: '',
       phone: '',
-      email: ''
+      email: '',
+      codiceFiscale: '' // AGGIUNTO
     },
     financialProfile: {
       employmentStatus: '',
@@ -97,6 +99,10 @@ export default function KYCProcess({ userId, onComplete }: { userId: string; onC
       if (!personalInfo.country) newErrors['personalInfo.country'] = 'Country is required';
       if (!personalInfo.phone) newErrors['personalInfo.phone'] = 'Phone number is required';
       if (!personalInfo.email) newErrors['personalInfo.email'] = 'Email is required';
+      // Validazione Codice Fiscale solo se nazionalità Italia
+      if (personalInfo.nationality && personalInfo.nationality.toLowerCase() === 'italia' && !personalInfo.codiceFiscale) {
+        newErrors['personalInfo.codiceFiscale'] = 'Codice Fiscale obbligatorio per cittadini italiani';
+      }
     }
     if (step === 2) {
       const { financialProfile } = kycData;
@@ -290,6 +296,16 @@ export default function KYCProcess({ userId, onComplete }: { userId: string; onC
                 </select>
                 {errors['personalInfo.nationality'] && (<p style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>{errors['personalInfo.nationality']}</p>)}
               </div>
+              {/* Mostra il campo Codice Fiscale solo se la nazionalità è Italia */}
+              {kycData.personalInfo.nationality && kycData.personalInfo.nationality.toLowerCase() === 'italia' && (
+                <>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>Codice Fiscale <span style={{ color: '#ef4444' }}>*</span></label>
+                    <input type="text" value={kycData.personalInfo.codiceFiscale} onChange={(e) => handleInputChange('personalInfo', 'codiceFiscale', e.target.value)} style={{ width: '100%', padding: '0.75rem', border: errors['personalInfo.codiceFiscale'] ? '1px solid #ef4444' : '1px solid #d1d5db', borderRadius: 8, fontSize: 16 }} placeholder="Enter your Codice Fiscale" />
+                    {errors['personalInfo.codiceFiscale'] && (<p style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>{errors['personalInfo.codiceFiscale']}</p>)}
+                  </div>
+                </>
+              )}
               <div style={{ gridColumn: '1 / -1' }}>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>Address <span style={{ color: '#ef4444' }}>*</span></label>
                 <input type="text" value={kycData.personalInfo.address} onChange={(e) => handleInputChange('personalInfo', 'address', e.target.value)} style={{ width: '100%', padding: '0.75rem', border: errors['personalInfo.address'] ? '1px solid #ef4444' : '1px solid #d1d5db', borderRadius: 8, fontSize: 16 }} placeholder="Enter your full address" />
