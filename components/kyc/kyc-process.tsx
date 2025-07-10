@@ -400,7 +400,7 @@ export default function KYCProcess({ userId, onComplete }: { userId: string; onC
           <div> {/* ...Document Upload step... */}
             <h2 style={{ fontSize: 24, fontWeight: 700, color: '#1f2937', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: 8 }}><FileText size={24} />Document Upload</h2>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-              {['idDocument', 'proofOfAddress', 'bankStatement'].map((field) => (
+              {(['idDocument', 'proofOfAddress', 'bankStatement'] as const).map((field) => (
                 <div key={field}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>
                     {field === 'idDocument' && 'ID Document'}
@@ -414,11 +414,11 @@ export default function KYCProcess({ userId, onComplete }: { userId: string; onC
                     style={{ width: '100%', padding: '0.75rem', border: errors[`documents.${field}`] ? '1px solid #ef4444' : '1px solid #d1d5db', borderRadius: 8, fontSize: 16 }}
                   />
                   {uploadStatus[field] === 'uploading' && <span style={{ color: '#3b82f6', fontSize: 12 }}>Uploading...</span>}
-                  {uploadStatus[field] === 'success' && kycData.documents[field] && <span style={{ color: '#059669', fontSize: 12 }}>Uploaded ✓</span>}
+                  {uploadStatus[field] === 'success' && kycData.documents[field as keyof typeof kycData.documents] && <span style={{ color: '#059669', fontSize: 12 }}>Uploaded ✓</span>}
                   {uploadStatus[field] === 'error' && <span style={{ color: '#ef4444', fontSize: 12 }}>{uploadError[field]}</span>}
                   {errors[`documents.${field}`] && (<p style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>{errors[`documents.${field}`]}</p>)}
-                  {kycData.documents[field] && typeof kycData.documents[field] === 'string' && (
-                    <a href={kycData.documents[field]} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: '#2563eb', textDecoration: 'underline', display: 'block', marginTop: 4 }}>View uploaded file</a>
+                  {kycData.documents[field as keyof typeof kycData.documents] && typeof kycData.documents[field as keyof typeof kycData.documents] === 'string' && (
+                    <a href={kycData.documents[field as keyof typeof kycData.documents] as string} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: '#2563eb', textDecoration: 'underline', display: 'block', marginTop: 4 }}>View uploaded file</a>
                   )}
                 </div>
               ))}
@@ -450,9 +450,9 @@ export default function KYCProcess({ userId, onComplete }: { userId: string; onC
               </div>
               <div>
                 <h3 style={{ fontSize: 18, fontWeight: 600, color: '#374151', marginBottom: '0.5rem' }}>Documents</h3>
-                <p><strong>ID Document:</strong> {kycData.documents.idDocument ? kycData.documents.idDocument : 'Not uploaded'}</p>
-                <p><strong>Proof of Address:</strong> {kycData.documents.proofOfAddress ? kycData.documents.proofOfAddress : 'Not uploaded'}</p>
-                <p><strong>Bank Statement:</strong> {kycData.documents.bankStatement ? kycData.documents.bankStatement : 'Not uploaded'}</p>
+                <p><strong>ID Document:</strong> {kycData.documents.idDocument ? <a href={kycData.documents.idDocument} target="_blank" rel="noopener noreferrer">{kycData.documents.idDocument}</a> : 'Not uploaded'}</p>
+                <p><strong>Proof of Address:</strong> {kycData.documents.proofOfAddress ? <a href={kycData.documents.proofOfAddress} target="_blank" rel="noopener noreferrer">{kycData.documents.proofOfAddress}</a> : 'Not uploaded'}</p>
+                <p><strong>Bank Statement:</strong> {kycData.documents.bankStatement ? <a href={kycData.documents.bankStatement} target="_blank" rel="noopener noreferrer">{kycData.documents.bankStatement}</a> : 'Not uploaded'}</p>
               </div>
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '2rem' }}>
