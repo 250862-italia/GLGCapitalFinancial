@@ -1,32 +1,13 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { 
-  User, 
-  Shield, 
-  FileText, 
-  CreditCard, 
-  CheckCircle, 
-  AlertCircle,
-  Upload,
-  Eye,
-  EyeOff,
-  ArrowRight,
-  ArrowLeft,
-  Lock,
-  Calendar,
-  MapPin,
-  Phone,
-  Mail
-} from 'lucide-react';
-import { supabase } from '../../lib/supabase';
-import { useTranslation } from 'next-i18next';
+import { useState } from 'react';
+import { User, Shield, FileText, CreditCard, CheckCircle, AlertCircle, Upload, ArrowRight, ArrowLeft } from 'lucide-react';
 
 interface KYCData {
   personalInfo: {
-    first_name: string;
-    last_name: string;
-    date_of_birth: string;
+    firstName: string;
+    lastName: string;
+    dateOfBirth: string;
     nationality: string;
     address: string;
     city: string;
@@ -35,38 +16,40 @@ interface KYCData {
     email: string;
   };
   financialProfile: {
-    employment_status: string;
-    annual_income: string;
-    source_of_funds: string;
-    investment_experience: string;
-    risk_tolerance: string;
-    investment_goals: string[];
+    employmentStatus: string;
+    annualIncome: string;
+    sourceOfFunds: string;
+    investmentExperience: string;
+    riskTolerance: string;
+    investmentGoals: string[];
   };
   documents: {
-    id_document: string | null;
-    proof_of_address: string | null;
-    bank_statement: string | null;
+    idDocument: File | null;
+    proofOfAddress: File | null;
+    bankStatement: File | null;
   };
   verification: {
-    personal_info_verified: boolean;
-    documents_verified: boolean;
-    financial_profile_verified: boolean;
-    overall_status: 'pending' | 'approved' | 'rejected' | 'in_review';
+    personalInfoVerified: boolean;
+    documentsVerified: boolean;
+    financialProfileVerified: boolean;
+    overallStatus: 'pending' | 'approved' | 'rejected' | 'in_review';
   };
 }
 
-interface KYCProcessProps {
-  userId: string;
-  onComplete: (status: string) => void;
-}
+const steps = [
+  { id: 1, title: 'Personal Information', icon: User },
+  { id: 2, title: 'Financial Profile', icon: CreditCard },
+  { id: 3, title: 'Document Upload', icon: FileText },
+  { id: 4, title: 'Verification Summary', icon: Shield }
+];
 
-export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
+export default function KYCProcess({ userId, onComplete }: { userId: string; onComplete: (status: string) => void }) {
   const [currentStep, setCurrentStep] = useState(1);
   const [kycData, setKycData] = useState<KYCData>({
     personalInfo: {
-      first_name: '',
-      last_name: '',
-      date_of_birth: '',
+      firstName: '',
+      lastName: '',
+      dateOfBirth: '',
       nationality: '',
       address: '',
       city: '',
@@ -75,60 +58,70 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
       email: ''
     },
     financialProfile: {
-      employment_status: '',
-      annual_income: '',
-      source_of_funds: '',
-      investment_experience: '',
-      risk_tolerance: '',
-      investment_goals: []
+      employmentStatus: '',
+      annualIncome: '',
+      sourceOfFunds: '',
+      investmentExperience: '',
+      riskTolerance: '',
+      investmentGoals: []
     },
     documents: {
-      id_document: null,
-      proof_of_address: null,
-      bank_statement: null
+      idDocument: null,
+      proofOfAddress: null,
+      bankStatement: null
     },
     verification: {
-      personal_info_verified: false,
-      documents_verified: false,
-      financial_profile_verified: false,
-      overall_status: 'pending'
+      personalInfoVerified: false,
+      documentsVerified: false,
+      financialProfileVerified: false,
+      overallStatus: 'pending'
     }
   });
-
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  // Stato per messaggio di errore UX
-  const [showStepError, setShowStepError] = useState(false);
-  const { t } = useTranslation('common');
 
-  // Rimuovo lo step 3 (Document Upload) e la validazione dei documenti
-  const steps = [
-    { id: 1, title: 'Personal Information', icon: User },
-    { id: 2, title: 'Financial Profile', icon: CreditCard },
-    { id: 3, title: 'Documents', icon: FileText },
-    { id: 4, title: 'Confirmation', icon: CheckCircle }
-  ];
+  const validateStep = (step: number): boolean => {
+    const newErrors: Record<string, string> = {};
+    if (step === 1) {
+      const { personalInfo } = kycData;
+      if (!personalInfo.firstName) newErrors['personalInfo.firstName'] = 'First name is required';
+      if (!personalInfo.lastName) newErrors['personalInfo.lastName'] = 'Last name is required';
+      if (!personalInfo.dateOfBirth) newErrors['personalInfo.dateOfBirth'] = 'Date of birth is required';
+      if (!personalInfo.nationality) newErrors['personalInfo.nationality'] = 'Nationality is required';
+      if (!personalInfo.address) newErrors['personalInfo.address'] = 'Address is required';
+      if (!personalInfo.city) newErrors['personalInfo.city'] = 'City is required';
+      if (!personalInfo.country) newErrors['personalInfo.country'] = 'Country is required';
+      if (!personalInfo.phone) newErrors['personalInfo.phone'] = 'Phone number is required';
+      if (!personalInfo.email) newErrors['personalInfo.email'] = 'Email is required';
+    }
+    if (step === 2) {
+      const { financialProfile } = kycData;
+      if (!financialProfile.employmentStatus) newErrors['financialProfile.employmentStatus'] = 'Employment status is required';
+      if (!financialProfile.annualIncome) newErrors['financialProfile.annualIncome'] = 'Annual income is required';
+      if (!financialProfile.sourceOfFunds) newErrors['financialProfile.sourceOfFunds'] = 'Source of funds is required';
+      if (!financialProfile.investmentExperience) newErrors['financialProfile.investmentExperience'] = 'Investment experience is required';
+      if (!financialProfile.riskTolerance) newErrors['financialProfile.riskTolerance'] = 'Risk tolerance is required';
+      if (financialProfile.investmentGoals.length === 0) newErrors['financialProfile.investmentGoals'] = 'At least one investment goal is required';
+    }
+    if (step === 3) {
+      const { documents } = kycData;
+      if (!documents.idDocument) newErrors['documents.idDocument'] = 'ID document is required';
+      if (!documents.proofOfAddress) newErrors['documents.proofOfAddress'] = 'Proof of address is required';
+      if (!documents.bankStatement) newErrors['documents.bankStatement'] = 'Bank statement is required';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
-  // FETCH DATI KYC ALL'INIZIO
-  useEffect(() => {
-    if (!userId) return;
-    (async () => {
-      try {
-        const res = await fetch(`/api/kyc/submit?userId=${userId}`);
-        if (res.ok) {
-          const data = await res.json();
-          setKycData(prev => ({
-            ...prev,
-            personalInfo: data.personalInfo || prev.personalInfo,
-            financialProfile: data.financialProfile || prev.financialProfile,
-            documents: data.documents || prev.documents
-          }));
-        }
-      } catch (e) {
-        // Ignora errori fetch, fallback vuoto
+  const handleFileUpload = (field: string, file: File | null) => {
+    setKycData(prev => ({
+      ...prev,
+      documents: {
+        ...prev.documents,
+        [field]: file
       }
-    })();
-  }, [userId]);
+    }));
+  };
 
   const handleInputChange = (section: string, field: string, value: any) => {
     setKycData(prev => ({
@@ -138,7 +131,6 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
         [field]: value
       }
     }));
-    // Clear error when user starts typing
     if (errors[`${section}.${field}`]) {
       setErrors(prev => {
         const newErrors = { ...prev };
@@ -148,62 +140,9 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
     }
   };
 
-  const validateStep = (step: number): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    if (step === 1) {
-      const { personalInfo } = kycData;
-      if (!personalInfo.first_name) newErrors['personalInfo.first_name'] = 'First name is required';
-      if (!personalInfo.last_name) newErrors['personalInfo.last_name'] = 'Last name is required';
-      if (!personalInfo.date_of_birth) newErrors['personalInfo.date_of_birth'] = 'Date of birth is required';
-      if (!personalInfo.nationality) newErrors['personalInfo.nationality'] = 'Nationality is required';
-      if (!personalInfo.address) newErrors['personalInfo.address'] = 'Address is required';
-      if (!personalInfo.city) newErrors['personalInfo.city'] = 'City is required';
-      if (!personalInfo.country) newErrors['personalInfo.country'] = 'Country is required';
-      if (!personalInfo.phone) newErrors['personalInfo.phone'] = 'Phone number is required';
-      if (!personalInfo.email) newErrors['personalInfo.email'] = 'Email is required';
-    }
-
-    if (step === 2) {
-      const { financialProfile } = kycData;
-      if (!financialProfile.employment_status) newErrors['financialProfile.employment_status'] = 'Employment status is required';
-      if (!financialProfile.annual_income) newErrors['financialProfile.annual_income'] = 'Annual income is required';
-      if (!financialProfile.source_of_funds) newErrors['financialProfile.source_of_funds'] = 'Source of funds is required';
-      if (!financialProfile.investment_experience) newErrors['financialProfile.investment_experience'] = 'Investment experience is required';
-      if (!financialProfile.risk_tolerance) newErrors['financialProfile.risk_tolerance'] = 'Risk tolerance is required';
-      if (financialProfile.investment_goals.length === 0) newErrors['financialProfile.investment_goals'] = 'At least one investment goal is required';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  // Rimuovo ogni riferimento a handleFileUpload e i bottoni associati
-  // Sostituisco la sezione di upload con:
-  <div style={{
-    background: '#fef3c7',
-    border: '1px solid #fde68a',
-    borderRadius: 8,
-    padding: '1.5rem',
-    margin: '2rem 0',
-    color: '#92400e',
-    fontSize: 16
-  }}>
-    <div style={{ marginBottom: 12 }}>
-      For any KYC verification request, please contact us by email. We will be happy to assist you.
-    </div>
-    <strong>Email: <a href="mailto:kyc@glgcapitalgroup.com" style={{ color: '#b45309', textDecoration: 'underline' }}>kyc@glgcapitalgroup.com</a></strong>
-    <div style={{ marginTop: 16 }}>
-      <em>You will receive a confirmation email once your documents have been verified.</em>
-    </div>
-  </div>
-
   const handleNext = () => {
     if (validateStep(currentStep)) {
-      setShowStepError(false);
       setCurrentStep(prev => Math.min(prev + 1, steps.length));
-    } else {
-      setShowStepError(true);
     }
   };
 
@@ -214,46 +153,20 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      console.log('📋 Saving KYC data:', kycData);
-      
-      // Submit KYC data to API
-      const response = await fetch('/api/kyc/submit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId,
-          personalInfo: kycData.personalInfo,
-          financialProfile: kycData.financialProfile,
-          documents: kycData.documents,
-          verification: kycData.verification
-        })
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to submit KYC data');
-      }
-
-      console.log('✅ KYC submission completed successfully:', result);
-      
-      // Update local state
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 3000));
       setKycData(prev => ({
         ...prev,
         verification: {
-          personal_info_verified: true,
-          documents_verified: true,
-          financial_profile_verified: true,
-          overall_status: 'in_review'
+          personalInfoVerified: true,
+          documentsVerified: true,
+          financialProfileVerified: true,
+          overallStatus: 'in_review'
         }
       }));
-      
       onComplete('in_review');
     } catch (error) {
       console.error('KYC submission error:', error);
-      alert('Error during KYC submission. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -265,83 +178,224 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
     return 'pending';
   };
 
-  // Rimuovo la sezione 'Verification Summary' e ogni riferimento a step, flag o messaggi di stato KYC
-  // La pagina mostra solo il messaggio di cortesia e l'email di contatto
   return (
-    <div>
-      {/* Stepper UI (opzionale) */}
-      <div style={{ display: 'flex', gap: 16, marginBottom: 32 }}>
-        {steps.map((step, idx) => (
-          <div key={step.id} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <step.icon size={24} color={currentStep === step.id ? '#6366f1' : '#d1d5db'} />
-            <span style={{ fontWeight: currentStep === step.id ? 700 : 400 }}>{step.title}</span>
-            {idx < steps.length - 1 && <span style={{ color: '#d1d5db' }}>&rarr;</span>}
-          </div>
-        ))}
+    <div style={{ maxWidth: 800, margin: '0 auto', padding: '2rem' }}>
+      {/* Progress Steps */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3rem', position: 'relative' }}>
+        {steps.map((step, index) => {
+          const status = getStepStatus(step.id);
+          const Icon = step.icon;
+          return (
+            <div key={step.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, position: 'relative' }}>
+              <div style={{ width: 50, height: 50, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: status === 'completed' ? '#059669' : status === 'current' ? '#3b82f6' : '#e5e7eb', color: status === 'pending' ? '#9ca3af' : 'white', marginBottom: '0.5rem', fontWeight: 600 }}>
+                {status === 'completed' ? (<CheckCircle size={24} />) : (<Icon size={24} />)}
+              </div>
+              <span style={{ fontSize: 14, fontWeight: 600, color: status === 'pending' ? '#9ca3af' : '#374151', textAlign: 'center' }}>{step.title}</span>
+              {index < steps.length - 1 && (<div style={{ position: 'absolute', top: 25, left: '50%', width: '100%', height: 2, background: status === 'completed' ? '#059669' : '#e5e7eb', zIndex: -1 }} />)}
+            </div>
+          );
+        })}
       </div>
-
-      {/* Step 1: Personal Information */}
-      {currentStep === 1 && (
-        <div>
-          <h2>Personal Information</h2>
-          {/* Qui i campi anagrafici come prima */}
-          {/* ... */}
-          <button onClick={handleNext}>Next</button>
-          {showStepError && (
-            <div style={{ color: '#dc2626', marginTop: 12, fontWeight: 500 }}>
-              {t('required_fields_error')}
+      {/* Step Content */}
+      <div style={{ background: 'white', borderRadius: 16, padding: '2rem', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', border: '1px solid #e5e7eb' }}>
+        {currentStep === 1 && (
+          <div>
+            <h2 style={{ fontSize: 24, fontWeight: 700, color: '#1f2937', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: 8 }}><User size={24} />Personal Information</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>First Name <span style={{ color: '#ef4444' }}>*</span></label>
+                <input type="text" value={kycData.personalInfo.firstName} onChange={(e) => handleInputChange('personalInfo', 'firstName', e.target.value)} style={{ width: '100%', padding: '0.75rem', border: errors['personalInfo.firstName'] ? '1px solid #ef4444' : '1px solid #d1d5db', borderRadius: 8, fontSize: 16 }} placeholder="Enter your first name" />
+                {errors['personalInfo.firstName'] && (<p style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>{errors['personalInfo.firstName']}</p>)}
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>Last Name <span style={{ color: '#ef4444' }}>*</span></label>
+                <input type="text" value={kycData.personalInfo.lastName} onChange={(e) => handleInputChange('personalInfo', 'lastName', e.target.value)} style={{ width: '100%', padding: '0.75rem', border: errors['personalInfo.lastName'] ? '1px solid #ef4444' : '1px solid #d1d5db', borderRadius: 8, fontSize: 16 }} placeholder="Enter your last name" />
+                {errors['personalInfo.lastName'] && (<p style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>{errors['personalInfo.lastName']}</p>)}
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>Date of Birth <span style={{ color: '#ef4444' }}>*</span></label>
+                <input type="date" value={kycData.personalInfo.dateOfBirth} onChange={(e) => handleInputChange('personalInfo', 'dateOfBirth', e.target.value)} style={{ width: '100%', padding: '0.75rem', border: errors['personalInfo.dateOfBirth'] ? '1px solid #ef4444' : '1px solid #d1d5db', borderRadius: 8, fontSize: 16 }} />
+                {errors['personalInfo.dateOfBirth'] && (<p style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>{errors['personalInfo.dateOfBirth']}</p>)}
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>Nationality <span style={{ color: '#ef4444' }}>*</span></label>
+                <select value={kycData.personalInfo.nationality} onChange={(e) => handleInputChange('personalInfo', 'nationality', e.target.value)} style={{ width: '100%', padding: '0.75rem', border: errors['personalInfo.nationality'] ? '1px solid #ef4444' : '1px solid #d1d5db', borderRadius: 8, fontSize: 16 }}>
+                  <option value="">Select nationality</option>
+                  <option value="US">United States</option>
+                  <option value="UK">United Kingdom</option>
+                  <option value="IT">Italy</option>
+                  <option value="DE">Germany</option>
+                  <option value="FR">France</option>
+                  <option value="CA">Canada</option>
+                  <option value="AU">Australia</option>
+                </select>
+                {errors['personalInfo.nationality'] && (<p style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>{errors['personalInfo.nationality']}</p>)}
+              </div>
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>Address <span style={{ color: '#ef4444' }}>*</span></label>
+                <input type="text" value={kycData.personalInfo.address} onChange={(e) => handleInputChange('personalInfo', 'address', e.target.value)} style={{ width: '100%', padding: '0.75rem', border: errors['personalInfo.address'] ? '1px solid #ef4444' : '1px solid #d1d5db', borderRadius: 8, fontSize: 16 }} placeholder="Enter your full address" />
+                {errors['personalInfo.address'] && (<p style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>{errors['personalInfo.address']}</p>)}
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>City <span style={{ color: '#ef4444' }}>*</span></label>
+                <input type="text" value={kycData.personalInfo.city} onChange={(e) => handleInputChange('personalInfo', 'city', e.target.value)} style={{ width: '100%', padding: '0.75rem', border: errors['personalInfo.city'] ? '1px solid #ef4444' : '1px solid #d1d5db', borderRadius: 8, fontSize: 16 }} placeholder="Enter your city" />
+                {errors['personalInfo.city'] && (<p style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>{errors['personalInfo.city']}</p>)}
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>Country <span style={{ color: '#ef4444' }}>*</span></label>
+                <select value={kycData.personalInfo.country} onChange={(e) => handleInputChange('personalInfo', 'country', e.target.value)} style={{ width: '100%', padding: '0.75rem', border: errors['personalInfo.country'] ? '1px solid #ef4444' : '1px solid #d1d5db', borderRadius: 8, fontSize: 16 }}>
+                  <option value="">Select country</option>
+                  <option value="US">United States</option>
+                  <option value="UK">United Kingdom</option>
+                  <option value="IT">Italy</option>
+                  <option value="DE">Germany</option>
+                  <option value="FR">France</option>
+                  <option value="CA">Canada</option>
+                  <option value="AU">Australia</option>
+                </select>
+                {errors['personalInfo.country'] && (<p style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>{errors['personalInfo.country']}</p>)}
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>Phone Number <span style={{ color: '#ef4444' }}>*</span></label>
+                <input type="tel" value={kycData.personalInfo.phone} onChange={(e) => handleInputChange('personalInfo', 'phone', e.target.value)} style={{ width: '100%', padding: '0.75rem', border: errors['personalInfo.phone'] ? '1px solid #ef4444' : '1px solid #d1d5db', borderRadius: 8, fontSize: 16 }} placeholder="Enter your phone number" />
+                {errors['personalInfo.phone'] && (<p style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>{errors['personalInfo.phone']}</p>)}
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>Email <span style={{ color: '#ef4444' }}>*</span></label>
+                <input type="email" value={kycData.personalInfo.email} onChange={(e) => handleInputChange('personalInfo', 'email', e.target.value)} style={{ width: '100%', padding: '0.75rem', border: errors['personalInfo.email'] ? '1px solid #ef4444' : '1px solid #d1d5db', borderRadius: 8, fontSize: 16 }} placeholder="Enter your email address" />
+                {errors['personalInfo.email'] && (<p style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>{errors['personalInfo.email']}</p>)}
+              </div>
             </div>
-          )}
-        </div>
-      )}
-
-      {/* Step 2: Financial Profile */}
-      {currentStep === 2 && (
-        <div>
-          <h2>Financial Profile</h2>
-          {/* Qui i campi del profilo finanziario come prima */}
-          {/* ... */}
-          <button onClick={handlePrevious}>Back</button>
-          <button onClick={handleNext}>Next</button>
-          {showStepError && (
-            <div style={{ color: '#dc2626', marginTop: 12, fontWeight: 500 }}>
-              Please fill in all required fields before continuing.
+          </div>
+        )}
+        {currentStep === 2 && (
+          <div> {/* ...Financial Profile step... */}
+            <h2 style={{ fontSize: 24, fontWeight: 700, color: '#1f2937', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: 8 }}><CreditCard size={24} />Financial Profile</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>Employment Status <span style={{ color: '#ef4444' }}>*</span></label>
+                <select value={kycData.financialProfile.employmentStatus} onChange={(e) => handleInputChange('financialProfile', 'employmentStatus', e.target.value)} style={{ width: '100%', padding: '0.75rem', border: errors['financialProfile.employmentStatus'] ? '1px solid #ef4444' : '1px solid #d1d5db', borderRadius: 8, fontSize: 16 }}>
+                  <option value="">Select employment status</option>
+                  <option value="Employed">Employed</option>
+                  <option value="Self-Employed">Self-Employed</option>
+                  <option value="Unemployed">Unemployed</option>
+                  <option value="Student">Student</option>
+                  <option value="Retired">Retired</option>
+                </select>
+                {errors['financialProfile.employmentStatus'] && (<p style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>{errors['financialProfile.employmentStatus']}</p>)}
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>Annual Income <span style={{ color: '#ef4444' }}>*</span></label>
+                <input type="text" value={kycData.financialProfile.annualIncome} onChange={(e) => handleInputChange('financialProfile', 'annualIncome', e.target.value)} style={{ width: '100%', padding: '0.75rem', border: errors['financialProfile.annualIncome'] ? '1px solid #ef4444' : '1px solid #d1d5db', borderRadius: 8, fontSize: 16 }} placeholder="Enter your annual income" />
+                {errors['financialProfile.annualIncome'] && (<p style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>{errors['financialProfile.annualIncome']}</p>)}
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>Source of Funds <span style={{ color: '#ef4444' }}>*</span></label>
+                <select value={kycData.financialProfile.sourceOfFunds} onChange={(e) => handleInputChange('financialProfile', 'sourceOfFunds', e.target.value)} style={{ width: '100%', padding: '0.75rem', border: errors['financialProfile.sourceOfFunds'] ? '1px solid #ef4444' : '1px solid #d1d5db', borderRadius: 8, fontSize: 16 }}>
+                  <option value="">Select source of funds</option>
+                  <option value="Savings">Savings</option>
+                  <option value="Investments">Investments</option>
+                  <option value="Inheritance">Inheritance</option>
+                  <option value="Other">Other</option>
+                </select>
+                {errors['financialProfile.sourceOfFunds'] && (<p style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>{errors['financialProfile.sourceOfFunds']}</p>)}
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>Investment Experience <span style={{ color: '#ef4444' }}>*</span></label>
+                <select value={kycData.financialProfile.investmentExperience} onChange={(e) => handleInputChange('financialProfile', 'investmentExperience', e.target.value)} style={{ width: '100%', padding: '0.75rem', border: errors['financialProfile.investmentExperience'] ? '1px solid #ef4444' : '1px solid #d1d5db', borderRadius: 8, fontSize: 16 }}>
+                  <option value="">Select investment experience</option>
+                  <option value="None">None</option>
+                  <option value="Beginner">Beginner</option>
+                  <option value="Intermediate">Intermediate</option>
+                  <option value="Advanced">Advanced</option>
+                </select>
+                {errors['financialProfile.investmentExperience'] && (<p style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>{errors['financialProfile.investmentExperience']}</p>)}
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>Risk Tolerance <span style={{ color: '#ef4444' }}>*</span></label>
+                <select value={kycData.financialProfile.riskTolerance} onChange={(e) => handleInputChange('financialProfile', 'riskTolerance', e.target.value)} style={{ width: '100%', padding: '0.75rem', border: errors['financialProfile.riskTolerance'] ? '1px solid #ef4444' : '1px solid #d1d5db', borderRadius: 8, fontSize: 16 }}>
+                  <option value="">Select risk tolerance</option>
+                  <option value="Very Conservative">Very Conservative</option>
+                  <option value="Conservative">Conservative</option>
+                  <option value="Moderate">Moderate</option>
+                  <option value="Aggressive">Aggressive</option>
+                  <option value="Very Aggressive">Very Aggressive</option>
+                </select>
+                {errors['financialProfile.riskTolerance'] && (<p style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>{errors['financialProfile.riskTolerance']}</p>)}
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>Investment Goals <span style={{ color: '#ef4444' }}>*</span></label>
+                <select value={kycData.financialProfile.investmentGoals[0] || ''} onChange={(e) => handleInputChange('financialProfile', 'investmentGoals', [e.target.value])} style={{ width: '100%', padding: '0.75rem', border: errors['financialProfile.investmentGoals'] ? '1px solid #ef4444' : '1px solid #d1d5db', borderRadius: 8, fontSize: 16 }}>
+                  <option value="">Select investment goal</option>
+                  <option value="Growth">Growth</option>
+                  <option value="Income">Income</option>
+                  <option value="Preservation">Preservation</option>
+                  <option value="Other">Other</option>
+                </select>
+                {errors['financialProfile.investmentGoals'] && (<p style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>{errors['financialProfile.investmentGoals']}</p>)}
+              </div>
             </div>
-          )}
-        </div>
-      )}
-
-      {/* Step 3: Documenti (solo messaggio/email) */}
-      {currentStep === 3 && (
-        <div style={{
-          background: '#fef3c7',
-          border: '1px solid #fde68a',
-          borderRadius: 8,
-          padding: '1.5rem',
-          margin: '2rem 0',
-          color: '#92400e',
-          fontSize: 16
-        }}>
-          <div style={{ marginBottom: 12 }}>
-            For KYC document verification, please send your documents by email. We will be happy to assist you.
           </div>
-          <strong>Email: <a href="mailto:kyc@glgcapitalgroup.com" style={{ color: '#b45309', textDecoration: 'underline' }}>kyc@glgcapitalgroup.com</a></strong>
-          <div style={{ marginTop: 16 }}>
-            <em>You will receive a confirmation email once your documents have been verified.</em>
+        )}
+        {currentStep === 3 && (
+          <div> {/* ...Document Upload step... */}
+            <h2 style={{ fontSize: 24, fontWeight: 700, color: '#1f2937', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: 8 }}><FileText size={24} />Document Upload</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>ID Document <span style={{ color: '#ef4444' }}>*</span></label>
+                <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => handleFileUpload('idDocument', e.target.files?.[0] || null)} style={{ width: '100%', padding: '0.75rem', border: errors['documents.idDocument'] ? '1px solid #ef4444' : '1px solid #d1d5db', borderRadius: 8, fontSize: 16 }} />
+                {errors['documents.idDocument'] && (<p style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>{errors['documents.idDocument']}</p>)}
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>Proof of Address <span style={{ color: '#ef4444' }}>*</span></label>
+                <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => handleFileUpload('proofOfAddress', e.target.files?.[0] || null)} style={{ width: '100%', padding: '0.75rem', border: errors['documents.proofOfAddress'] ? '1px solid #ef4444' : '1px solid #d1d5db', borderRadius: 8, fontSize: 16 }} />
+                {errors['documents.proofOfAddress'] && (<p style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>{errors['documents.proofOfAddress']}</p>)}
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>Bank Statement <span style={{ color: '#ef4444' }}>*</span></label>
+                <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => handleFileUpload('bankStatement', e.target.files?.[0] || null)} style={{ width: '100%', padding: '0.75rem', border: errors['documents.bankStatement'] ? '1px solid #ef4444' : '1px solid #d1d5db', borderRadius: 8, fontSize: 16 }} />
+                {errors['documents.bankStatement'] && (<p style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>{errors['documents.bankStatement']}</p>)}
+              </div>
+            </div>
           </div>
-          <button style={{ marginTop: 32 }} onClick={handleNext}>Next</button>
-          <button style={{ marginTop: 32, marginLeft: 16 }} onClick={handlePrevious}>Back</button>
-        </div>
-      )}
-
-      {/* Step 4: Conferma invio dati */}
-      {currentStep === 4 && (
-        <div style={{ textAlign: 'center', marginTop: 64 }}>
-          <CheckCircle size={48} color="#059669" style={{ marginBottom: 16 }} />
-          <h2>Thank you!</h2>
-          <p>Your KYC data has been submitted. Our team will review your information and contact you soon.</p>
-        </div>
-      )}
+        )}
+        {currentStep === 4 && (
+          <div> {/* ...Verification Summary step... */}
+            <h2 style={{ fontSize: 24, fontWeight: 700, color: '#1f2937', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: 8 }}><Shield size={24} />Verification Summary</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+              <div>
+                <h3 style={{ fontSize: 18, fontWeight: 600, color: '#374151', marginBottom: '0.5rem' }}>Personal Information</h3>
+                <p><strong>First Name:</strong> {kycData.personalInfo.firstName}</p>
+                <p><strong>Last Name:</strong> {kycData.personalInfo.lastName}</p>
+                <p><strong>Date of Birth:</strong> {kycData.personalInfo.dateOfBirth}</p>
+                <p><strong>Nationality:</strong> {kycData.personalInfo.nationality}</p>
+                <p><strong>Address:</strong> {kycData.personalInfo.address}, {kycData.personalInfo.city}, {kycData.personalInfo.country}</p>
+                <p><strong>Phone:</strong> {kycData.personalInfo.phone}</p>
+                <p><strong>Email:</strong> {kycData.personalInfo.email}</p>
+              </div>
+              <div>
+                <h3 style={{ fontSize: 18, fontWeight: 600, color: '#374151', marginBottom: '0.5rem' }}>Financial Profile</h3>
+                <p><strong>Employment Status:</strong> {kycData.financialProfile.employmentStatus}</p>
+                <p><strong>Annual Income:</strong> {kycData.financialProfile.annualIncome}</p>
+                <p><strong>Source of Funds:</strong> {kycData.financialProfile.sourceOfFunds}</p>
+                <p><strong>Investment Experience:</strong> {kycData.financialProfile.investmentExperience}</p>
+                <p><strong>Risk Tolerance:</strong> {kycData.financialProfile.riskTolerance}</p>
+                <p><strong>Investment Goals:</strong> {kycData.financialProfile.investmentGoals.join(', ')}</p>
+              </div>
+              <div>
+                <h3 style={{ fontSize: 18, fontWeight: 600, color: '#374151', marginBottom: '0.5rem' }}>Documents</h3>
+                <p><strong>ID Document:</strong> {kycData.documents.idDocument ? kycData.documents.idDocument.name : 'Not uploaded'}</p>
+                <p><strong>Proof of Address:</strong> {kycData.documents.proofOfAddress ? kycData.documents.proofOfAddress.name : 'Not uploaded'}</p>
+                <p><strong>Bank Statement:</strong> {kycData.documents.bankStatement ? kycData.documents.bankStatement.name : 'Not uploaded'}</p>
+              </div>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '2rem' }}>
+              <button onClick={handlePrevious} style={{ padding: '0.75rem 1.5rem', border: '1px solid #d1d5db', borderRadius: 8, background: 'white', color: '#374151', fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}><ArrowLeft size={16} />Previous</button>
+              <button onClick={handleSubmit} disabled={isSubmitting} style={{ padding: '0.75rem 1.5rem', border: 'none', borderRadius: 8, background: isSubmitting ? '#9ca3af' : '#059669', color: 'white', fontSize: 14, fontWeight: 600, cursor: isSubmitting ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>{isSubmitting ? 'Submitting...' : 'Submit KYC Application'}</button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
