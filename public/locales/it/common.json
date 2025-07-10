@@ -1,0 +1,13 @@
+{
+  "kyc_title": "Verifica KYC",
+  "kyc_email": "Per qualsiasi richiesta di verifica KYC, contattaci via email. Saremo lieti di aiutarti.",
+  "kyc_email_label": "Email",
+  "kyc_confirmation": "Riceverai una conferma via email una volta che i tuoi documenti saranno stati verificati.",
+  "personal_info": "Informazioni personali",
+  "financial_profile": "Profilo finanziario",
+  "documents": "Documenti",
+  "confirmation": "Conferma",
+  "thank_you": "Grazie!",
+  "kyc_submitted": "I tuoi dati KYC sono stati inviati. Il nostro team li esaminerà e ti contatterà a breve.",
+  "required_fields_error": "Per favore compila tutti i campi obbligatori prima di continuare."
+} 

@@ -20,6 +20,7 @@ import {
   Mail
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { useTranslation } from 'next-i18next';
 
 interface KYCData {
   personalInfo: {
@@ -98,6 +99,7 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   // Stato per messaggio di errore UX
   const [showStepError, setShowStepError] = useState(false);
+  const { t } = useTranslation('common');
 
   // Rimuovo lo step 3 (Document Upload) e la validazione dei documenti
   const steps = [
@@ -266,7 +268,7 @@ export default function KYCProcess({ userId, onComplete }: KYCProcessProps) {
           <button onClick={handleNext}>Next</button>
           {showStepError && (
             <div style={{ color: '#dc2626', marginTop: 12, fontWeight: 500 }}>
-              Please fill in all required fields before continuing.
+              {t('required_fields_error')}
             </div>
           )}
         </div>
