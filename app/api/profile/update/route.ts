@@ -56,8 +56,9 @@ export async function PUT(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    // Risolto: uso searchParams direttamente dal parametro request
-    const userId = request.nextUrl.searchParams.get('userId');
+    // Risolto: uso un approccio che non causa problemi di rendering statico
+    const url = new URL(request.url);
+    const userId = url.searchParams.get('userId');
 
     if (!userId) {
       return NextResponse.json(

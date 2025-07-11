@@ -12,9 +12,6 @@ const nextConfig = {
     serverComponentsExternalPackages: ['@supabase/supabase-js'],
   },
 
-  // Configurazione per l'App Router
-  appDir: true,
-
   // FORZA TUTTO IL RENDERING DINAMICO
   output: 'standalone',
   
