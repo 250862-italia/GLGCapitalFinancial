@@ -51,7 +51,6 @@ export default function RootLayout({
               <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700 }}>GLG Capital Group LLC</h1>
               <a href="/" style={{ color: '#fff', textDecoration: 'none' }}>Home</a>
               {isLoggedIn && <a href="/dashboard" style={{ color: '#fff', textDecoration: 'none' }}>Dashboard</a>}
-              {isAdminLoggedIn && <a href="/admin" style={{ color: '#fff', textDecoration: 'none' }}>Admin</a>}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
               {!isLoggedIn && !isAdminLoggedIn && (
@@ -85,6 +84,20 @@ export default function RootLayout({
               )}
               {isLoggedIn && (
                 <ClientLogoutButton onLogout={() => setIsLoggedIn(false)} />
+              )}
+              {isAdminLoggedIn && (
+                <a href="/admin" style={{
+                  background: '#dc2626',
+                  color: '#fff',
+                  padding: '0.5rem 1rem',
+                  borderRadius: 6,
+                  textDecoration: 'none',
+                  fontWeight: 600,
+                  fontSize: '0.9rem',
+                  transition: 'all 0.3s ease'
+                }}>
+                  Admin Panel
+                </a>
               )}
             </div>
           </nav>
