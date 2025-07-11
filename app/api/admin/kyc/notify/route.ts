@@ -4,8 +4,6 @@ import { createAuditTrailService } from '@/lib/audit-trail';
 
 export const dynamic = 'force-dynamic';
 
-const supabase = supabase;
-
 export async function POST(request: NextRequest) {
   const auditTrail = createAuditTrailService(supabase);
   
