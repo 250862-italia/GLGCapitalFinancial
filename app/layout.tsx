@@ -130,7 +130,10 @@ export default function RootLayout({
                     Sheridan, Wyoming 82801 (USA)
                   </p>
                   <p style={{ marginBottom: '0.5rem', fontSize: '0.9rem' }}>
-                    <strong>Telefono:</strong> +1 (307) 674-XXXX
+                    <strong>Telefono:</strong> +1 (307) 263-0876
+                  </p>
+                  <p style={{ marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+                    <strong>Email:</strong> corefound@glgcapitalgroupllc.com
                   </p>
                 </div>
               </div>
