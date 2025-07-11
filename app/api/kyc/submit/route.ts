@@ -271,15 +271,6 @@ export async function POST(request: NextRequest) {
         console.log('KYC data stored in client profile as fallback');
         kycInsertSuccess = true; // Consider it successful since we stored the data
       }
-    } catch (kycInsertException) {
-      console.error('Exception during KYC records insertion:', kycInsertException);
-      kycErrorDetails = kycInsertException instanceof Error ? kycInsertException.message : 'Unknown error';
-      
-      await auditTrail.logSystemError(
-        kycInsertException as Error,
-        'KYC submission - records insertion exception',
-        'warning'
-      );
     }
 
     // Update client KYC status and personal info
