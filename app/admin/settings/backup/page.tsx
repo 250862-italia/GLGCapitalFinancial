@@ -1,42 +1,44 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { backupService, type BackupMetadata } from '@/lib/backup-service';
+import { createBackupService, type BackupData } from '@/lib/backup-service';
+import { supabase } from '@/lib/supabase';
+
+const backupService = createBackupService(supabase);
 
 export default function AdminSettingsBackupPage() {
-  const [backups, setBackups] = useState<BackupMetadata[]>([]);
+  const [backups, setBackups] = useState<BackupData[]>([]);
   const [isCreatingBackup, setIsCreatingBackup] = useState(false);
-  const [currentBackup, setCurrentBackup] = useState<BackupMetadata | null>(null);
+  const [currentBackup, setCurrentBackup] = useState<BackupData | null>(null);
   const [stats, setStats] = useState<any>(null);
 
   useEffect(() => {
     loadBackups();
   }, []);
 
-  const loadBackups = () => {
-    const backupList = backupService.getBackups();
-    setBackups(backupList);
-    setStats(backupService.getBackupStats());
+  const loadBackups = async () => {
+    try {
+      const backupList = await backupService.getBackups();
+      setBackups(backupList);
+      const stats = await backupService.getBackupStatistics();
+      setStats(stats);
+    } catch (error) {
+      console.error('Failed to load backups:', error);
+    }
   };
 
   const handleCreateBackup = async () => {
     setIsCreatingBackup(true);
     try {
-      const newBackup = await backupService.createBackup('Manual backup from admin panel');
+      const newBackup = await backupService.createBackup(
+        'Manual backup from admin panel',
+        'Backup created manually from admin panel',
+        { include_clients: true, include_kyc_records: true, include_audit_trail: true },
+        'admin'
+      );
       setCurrentBackup(newBackup);
-      
-      // Wait for backup to complete
-      const checkStatus = setInterval(() => {
-        const updatedBackups = backupService.getBackups();
-        const updatedBackup = updatedBackups.find(b => b.id === newBackup.id);
-        
-        if (updatedBackup && updatedBackup.status === 'completed') {
-          setCurrentBackup(null);
-          loadBackups();
-          clearInterval(checkStatus);
-        }
-      }, 1000);
-      
+      await loadBackups();
+      setCurrentBackup(null);
     } catch (error) {
       console.error('Backup failed:', error);
     } finally {
@@ -70,22 +72,12 @@ export default function AdminSettingsBackupPage() {
     return `${mb.toFixed(1)} MB`;
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'text-green-600';
-      case 'failed': return 'text-red-600';
-      case 'in_progress': return 'text-yellow-600';
-      default: return 'text-gray-600';
-    }
+  const getStatusColor = () => {
+    return 'text-green-600';
   };
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'completed': return 'Completato';
-      case 'failed': return 'Fallito';
-      case 'in_progress': return 'In corso';
-      default: return 'Sconosciuto';
-    }
+  const getStatusText = () => {
+    return 'Completato';
   };
 
   return (
