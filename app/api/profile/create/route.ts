@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -17,7 +19,7 @@ export async function POST(request: NextRequest) {
     const { data: existingProfile, error: checkError } = await supabase
       .from('clients')
       .select('id')
-      .eq('"userId"', userId)
+      .eq('user_id', userId)
       .single();
 
     if (checkError && checkError.code !== 'PGRST116') {
@@ -88,7 +90,7 @@ export async function POST(request: NextRequest) {
         if (minimalCreateError) {
           console.error('Error creating minimal profile:', minimalCreateError);
           return NextResponse.json(
-            { error: 'Failed to create profile - database schema issue' },
+            { error: 'Failed to create profile - database schema issue', details: minimalCreateError.message },
             { status: 500 }
           );
         }
@@ -102,7 +104,7 @@ export async function POST(request: NextRequest) {
       }
 
       return NextResponse.json(
-        { error: 'Failed to create profile' },
+        { error: 'Failed to create profile', details: createError.message },
         { status: 500 }
       );
     }
