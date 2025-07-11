@@ -366,6 +366,9 @@ export default function KYCProcess({ userId, onComplete }: { userId: string; onC
                 {errors['personalInfo.email'] && (<p style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>{errors['personalInfo.email']}</p>)}
               </div>
             </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '2rem' }}>
+              <button onClick={handleNext} style={{ padding: '0.75rem 1.5rem', border: 'none', borderRadius: 8, background: '#3b82f6', color: 'white', fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>Next <ArrowRight size={16} /></button>
+            </div>
           </div>
         )}
         {currentStep === 2 && (
@@ -435,6 +438,10 @@ export default function KYCProcess({ userId, onComplete }: { userId: string; onC
                 {errors['financialProfile.investmentGoals'] && (<p style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>{errors['financialProfile.investmentGoals']}</p>)}
               </div>
             </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2rem' }}>
+              <button onClick={handlePrevious} style={{ padding: '0.75rem 1.5rem', border: '1px solid #d1d5db', borderRadius: 8, background: 'white', color: '#374151', fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}><ArrowLeft size={16} />Previous</button>
+              <button onClick={handleNext} style={{ padding: '0.75rem 1.5rem', border: 'none', borderRadius: 8, background: '#3b82f6', color: 'white', fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>Next <ArrowRight size={16} /></button>
+            </div>
           </div>
         )}
         {currentStep === 3 && (
@@ -463,6 +470,10 @@ export default function KYCProcess({ userId, onComplete }: { userId: string; onC
                   )}
                 </div>
               ))}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2rem' }}>
+              <button onClick={handlePrevious} style={{ padding: '0.75rem 1.5rem', border: '1px solid #d1d5db', borderRadius: 8, background: 'white', color: '#374151', fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}><ArrowLeft size={16} />Previous</button>
+              <button onClick={handleNext} style={{ padding: '0.75rem 1.5rem', border: 'none', borderRadius: 8, background: '#3b82f6', color: 'white', fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>Next <ArrowRight size={16} /></button>
             </div>
           </div>
         )}

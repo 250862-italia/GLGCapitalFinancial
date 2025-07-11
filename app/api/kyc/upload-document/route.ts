@@ -1,6 +1,9 @@
 import { supabaseAdmin } from '@/lib/supabase';
 import { NextRequest, NextResponse } from 'next/server';
 
+// Force dynamic rendering to avoid static generation issues
+export const dynamic = 'force-dynamic';
+
 const supabase = supabaseAdmin;
 
 export async function POST(request: NextRequest) {
