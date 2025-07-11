@@ -50,6 +50,9 @@ export default function RootLayout({
             <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
               <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700 }}>GLG Capital Group LLC</h1>
               <a href="/" style={{ color: '#fff', textDecoration: 'none' }}>Home</a>
+              <a href="/about" style={{ color: '#fff', textDecoration: 'none' }}>About Us</a>
+              <a href="/contact" style={{ color: '#fff', textDecoration: 'none' }}>Contact</a>
+              <a href="/equity-pledge" style={{ color: '#fff', textDecoration: 'none' }}>Equity Pledge</a>
               {isLoggedIn && <a href="/dashboard" style={{ color: '#fff', textDecoration: 'none' }}>Dashboard</a>}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -138,24 +141,10 @@ export default function RootLayout({
                 </div>
               </div>
               <div>
-                <h4 style={{ marginBottom: '1rem', fontSize: '1rem' }}>Quick Links</h4>
-                <ul style={{ listStyle: 'none', padding: 0 }}>
-                  <li style={{ marginBottom: '0.5rem' }}>
-                    <a href="/about" style={{ color: '#fff', textDecoration: 'none', opacity: 0.8 }}>About Us</a>
-                  </li>
-                  <li style={{ marginBottom: '0.5rem' }}>
-                    <a href="/contact" style={{ color: '#fff', textDecoration: 'none', opacity: 0.8 }}>Contact</a>
-                  </li>
-                  <li style={{ marginBottom: '0.5rem' }}>
-                    <a href="/investments" style={{ color: '#fff', textDecoration: 'none', opacity: 0.8 }}>Investments</a>
-                  </li>
-                </ul>
-              </div>
-              <div>
                 <h4 style={{ marginBottom: '1rem', fontSize: '1rem' }}>Services</h4>
                 <ul style={{ listStyle: 'none', padding: 0 }}>
                   <li style={{ marginBottom: '0.5rem' }}>
-                    <a href="/equity-pledge" style={{ color: '#fff', textDecoration: 'none', opacity: 0.8 }}>Equity Pledge</a>
+                    <a href="/investments" style={{ color: '#fff', textDecoration: 'none', opacity: 0.8 }}>Investments</a>
                   </li>
                   <li style={{ marginBottom: '0.5rem' }}>
                     <a href="/live-markets" style={{ color: '#fff', textDecoration: 'none', opacity: 0.8 }}>Live Markets</a>
