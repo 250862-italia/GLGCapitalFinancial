@@ -205,7 +205,7 @@ export default function AdminSettingsBackupPage() {
                 <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
                   <button
                     onClick={() => backupService.exportBackup(backup.id)}
-                    disabled={backup.status !== 'completed'}
+                    disabled={false}
                     style={{
                       background: '#28a745',
                       color: 'white',
