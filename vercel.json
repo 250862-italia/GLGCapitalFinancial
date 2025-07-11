@@ -1,14 +1,27 @@
 {
-  "version": 2,
-  "routes": [
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "framework": "nextjs",
+  "functions": {
+    "app/api/**/*.ts": {
+      "maxDuration": 30
+    }
+  },
+  "headers": [
     {
-      "src": "/admin/(.*)",
-      "headers": {
-        "X-Robots-Tag": "noindex, nofollow, noarchive, nosnippet"
-      }
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, must-revalidate"
+        }
+      ]
     }
   ],
-  "env": {
-    "NODE_ENV": "production"
-  }
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/"
+    }
+  ]
 } 

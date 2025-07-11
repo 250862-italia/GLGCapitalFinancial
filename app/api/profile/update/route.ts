@@ -56,8 +56,8 @@ export async function PUT(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
+    // Risolto: uso searchParams direttamente dal parametro request
+    const userId = request.nextUrl.searchParams.get('userId');
 
     if (!userId) {
       return NextResponse.json(

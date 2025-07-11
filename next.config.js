@@ -6,9 +6,24 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
 
-  // Security Headers Configuration
+  // Configurazione per risolvere problemi di deploy Vercel
+  experimental: {
+    // Impedisce il rendering statico delle API routes
+    serverComponentsExternalPackages: ['@supabase/supabase-js'],
+  },
+
+  // Configurazione per le API routes
   async headers() {
     return [
+      {
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-store, must-revalidate',
+          },
+        ],
+      },
       {
         source: '/(.*)',
         headers: [
