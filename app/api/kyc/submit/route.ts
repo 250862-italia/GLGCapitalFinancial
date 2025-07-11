@@ -12,6 +12,8 @@ export async function POST(request: NextRequest) {
   const auditTrail = createAuditTrailService(supabase);
   
   try {
+    console.log('=== KYC SUBMIT START ===');
+    
     // Test database connection
     const { data: testData, error: testError } = await supabase
       .from('clients')
@@ -36,6 +38,8 @@ export async function POST(request: NextRequest) {
     }
     
     const body = await request.json()
+    console.log('Request body received:', JSON.stringify(body, null, 2));
+    
     const {
       userId,
       personalInfo,
@@ -44,8 +48,16 @@ export async function POST(request: NextRequest) {
       verification
     } = body
 
+    console.log('Extracted data:', {
+      userId,
+      personalInfoKeys: personalInfo ? Object.keys(personalInfo) : 'null',
+      financialProfileKeys: financialProfile ? Object.keys(financialProfile) : 'null',
+      documentsKeys: documents ? Object.keys(documents) : 'null'
+    });
+
     // Validation
     if (!userId || !personalInfo || !financialProfile) {
+      console.log('Validation failed:', { userId: !!userId, personalInfo: !!personalInfo, financialProfile: !!financialProfile });
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -56,6 +68,8 @@ export async function POST(request: NextRequest) {
     let clientData = null;
     let clientError = null;
 
+    console.log('Looking for client with userId:', userId, 'and email:', personalInfo.email);
+
     // First try to find by user_id
     const { data: clientByUserId, error: errorByUserId } = await supabase
       .from('clients')
@@ -63,8 +77,11 @@ export async function POST(request: NextRequest) {
       .eq('user_id', userId)
       .single();
 
+    console.log('Client lookup by user_id result:', { clientByUserId, errorByUserId });
+
     if (clientByUserId) {
       clientData = clientByUserId;
+      console.log('Found client by user_id:', clientData);
     } else {
       // If not found by user_id, try to find by email
       const { data: clientByEmail, error: errorByEmail } = await supabase
@@ -73,10 +90,14 @@ export async function POST(request: NextRequest) {
         .eq('email', personalInfo.email)
         .single();
 
+      console.log('Client lookup by email result:', { clientByEmail, errorByEmail });
+
       if (clientByEmail) {
         clientData = clientByEmail;
+        console.log('Found client by email:', clientData);
       } else {
         clientError = errorByEmail || errorByUserId;
+        console.log('No client found, will create new one');
       }
     }
 
@@ -86,24 +107,31 @@ export async function POST(request: NextRequest) {
       
       // Try to create a client if not found
       console.log('Attempting to create client for email:', personalInfo.email);
+      
+      const clientInsertData = {
+        user_id: userId,
+        email: personalInfo.email,
+        first_name: personalInfo.firstName,
+        last_name: personalInfo.lastName,
+        phone: personalInfo.phone,
+        date_of_birth: personalInfo.dateOfBirth,
+        nationality: personalInfo.nationality,
+        address: personalInfo.address,
+        city: personalInfo.city,
+        country: personalInfo.country,
+        status: 'active',
+        kyc_status: 'pending'
+      };
+      
+      console.log('Client insert data:', clientInsertData);
+      
       const { data: newClient, error: createError } = await supabase
         .from('clients')
-        .insert({
-          user_id: userId,
-          email: personalInfo.email,
-          first_name: personalInfo.firstName,
-          last_name: personalInfo.lastName,
-          phone: personalInfo.phone,
-          date_of_birth: personalInfo.dateOfBirth,
-          nationality: personalInfo.nationality,
-          address: personalInfo.address,
-          city: personalInfo.city,
-          country: personalInfo.country,
-          status: 'active',
-          kyc_status: 'pending'
-        })
+        .insert(clientInsertData)
         .select('id')
         .single();
+
+      console.log('Client creation result:', { newClient, createError });
 
       if (createError || !newClient) {
         console.error('Client creation error:', createError);
@@ -248,7 +276,7 @@ export async function POST(request: NextRequest) {
     // Log KYC submission
     await auditTrail.logKYCSubmission(userId, body, body.validationScore);
 
-    return NextResponse.json({
+    const response = {
       success: true,
       message: kycInsertSuccess 
         ? 'KYC data submitted successfully' 
@@ -258,10 +286,21 @@ export async function POST(request: NextRequest) {
       kyc_records_created: kycInsertSuccess,
       kyc_data_stored_in_profile: true,
       warning: kycErrorDetails ? `KYC records table issue: ${kycErrorDetails}` : null
-    })
+    };
+
+    console.log('=== KYC SUBMIT SUCCESS ===');
+    console.log('Final response:', response);
+
+    return NextResponse.json(response);
 
   } catch (error) {
-    console.error('KYC submission error:', error)
+    console.error('=== KYC SUBMIT ERROR ===');
+    console.error('KYC submission error:', error);
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : 'No stack trace'
+    });
+    
     // Log system error
     await auditTrail.logSystemError(
       error as Error,
