@@ -1,14 +1,21 @@
 "use client";
 
-import { useRouter } from 'next/router';
+import { useRouter, usePathname } from 'next/navigation';
 import { useTranslation } from 'next-i18next';
 
 export default function LanguageSwitcher() {
   const router = useRouter();
+  const pathname = usePathname();
   const { i18n } = useTranslation();
 
   const changeLanguage = (lng: string) => {
-    router.push(router.pathname, router.asPath, { locale: lng });
+    // Per l'App Router, usiamo un approccio diverso
+    // Reindirizziamo alla stessa pagina con il nuovo locale
+    const currentPath = pathname || '/';
+    router.push(currentPath);
+    
+    // Cambia la lingua nell'i18n
+    i18n.changeLanguage(lng);
   };
 
   return (

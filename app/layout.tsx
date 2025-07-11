@@ -1,155 +1,58 @@
-"use client"
-
-import { Inter } from 'next/font/google'
-import './globals.css'
-import Link from 'next/link'
-import Image from 'next/image'
-import { useEffect, useState } from 'react'
-// RIMOSSO: import { useRouter } from 'next/navigation'
-import { AuthProvider } from '@/hooks/use-auth'
-import ConnectionStatus from '@/components/ui/ConnectionStatus'
-import LanguageSwitcher from '../components/ui/LanguageSwitcher';
+"use client";
+import { useState, useEffect } from 'react';
+import { Inter } from 'next/font/google';
+import './globals.css';
 import ClientLogoutButton from '../components/ClientLogoutButton';
+// RIMOSSO: import { useRouter } from 'next/navigation'
+import LanguageSwitcher from '../components/ui/LanguageSwitcher';
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ subsets: ['latin'] });
+
+// Forza il rendering dinamico per evitare problemi con useRouter
+export const dynamic = 'force-dynamic';
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [isInReservedArea, setIsInReservedArea] = useState(false)
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false)
-  const [isConnected, setIsConnected] = useState(true)
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   // RIMOSSO: const router = useRouter()
 
   useEffect(() => {
-    console.log('🔑 SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
-    console.log('🔑 SUPABASE_KEY:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-    // Check if there is a logged in user (user or admin)
-    const user = localStorage.getItem('user')
-    const adminUser = localStorage.getItem('admin_user')
-    setIsLoggedIn(!!user || !!adminUser)
-    
-    // Check if user is superadmin
-    if (adminUser) {
-      try {
-        const adminData = JSON.parse(adminUser)
-        // Solo se il ruolo è esattamente super_admin o superadmin
-        if (adminData.role === 'super_admin' || adminData.role === 'superadmin') {
-          setIsSuperAdmin(true)
-        } else {
-          setIsSuperAdmin(false)
-          localStorage.removeItem('admin_user')
-          localStorage.removeItem('admin_token')
-        }
-      } catch (e) {
-        setIsSuperAdmin(false)
-        localStorage.removeItem('admin_user')
-        localStorage.removeItem('admin_token')
-      }
-    } else {
-      setIsSuperAdmin(false)
-    }
-    
-    // Check if we're in a reserved area
-    const pathname = window.location.pathname
-    const reservedPaths = ['/dashboard', '/profile', '/kyc', '/investments', '/admin']
-    setIsInReservedArea(reservedPaths.some(path => pathname.startsWith(path)))
-
-    // Check database connection
-    const checkConnection = async () => {
-      try {
-        const response = await fetch('/api/admin/analytics');
-        setIsConnected(response.ok);
-      } catch (error) {
-        console.log('Database connection check failed:', error);
-        setIsConnected(false);
-      }
-    };
-
-    if (isInReservedArea) {
-      checkConnection();
-    }
-  }, [isInReservedArea])
-
-  // RIMOSSO: handleLogout = () => {
-  //   localStorage.removeItem('user')
-  //   localStorage.removeItem('token')
-  //   localStorage.removeItem('admin_user')
-  //   localStorage.removeItem('admin_token')
-  //   router.push('/')
-  //   setIsLoggedIn(false)
-  // }
+    const user = localStorage.getItem('user');
+    const adminUser = localStorage.getItem('admin_user');
+    setIsLoggedIn(!!user);
+    setIsAdminLoggedIn(!!adminUser);
+  }, []);
 
   return (
     <html lang="en">
-      <body style={{ background: 'var(--background)', minHeight: '100vh', fontFamily: 'Inter, Open Sans, Roboto, sans-serif' }}>
+      <body className={inter.className}>
+        <nav style={{
+          background: '#1f2937',
+          color: '#fff',
+          padding: '1rem 2rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+            <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700 }}>GLG Capital Group LLC</h1>
+            <a href="/" style={{ color: '#fff', textDecoration: 'none' }}>Home</a>
+            {isLoggedIn && <a href="/dashboard" style={{ color: '#fff', textDecoration: 'none' }}>Dashboard</a>}
+            {isAdminLoggedIn && <a href="/admin" style={{ color: '#fff', textDecoration: 'none' }}>Admin</a>}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            {isLoggedIn && (
+              <ClientLogoutButton onLogout={() => setIsLoggedIn(false)} />
+            )}
+          </div>
+        </nav>
         <LanguageSwitcher />
-        <AuthProvider>
-        {/* Connection Status */}
-        <ConnectionStatus 
-          isConnected={isConnected} 
-          message="Database connection failed. Using demo data for demonstration purposes."
-        />
-        
-        {/* HEADER - Hidden in reserved areas */}
-        {!isInReservedArea && (
-          <header style={{ background: 'var(--primary)', padding: '2rem 0', textAlign: 'center', borderBottom: '1px solid #e0e3eb' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
-              <Image src="/glg capital group llcbianco.png" alt="GLG Capital Group LLC" width={60} height={60} style={{ borderRadius: 8, background: '#fff' }} />
-              <h1 style={{ color: 'var(--primary)', fontSize: 32, fontWeight: 700, margin: 0, background: 'var(--secondary)', padding: '0.5rem 1.5rem', borderRadius: 8 }}>GLG Capital Group LLC</h1>
-            </div>
-            <p style={{ color: 'var(--foreground)', fontSize: 18, marginTop: 8 }}>Empowering Your Financial Future</p>
-          </header>
-        )}
-        
-        {/* CLIENT NAVIGATION - Hidden in reserved areas */}
-        {!isInReservedArea && (
-          <nav style={{ display: 'flex', justifyContent: 'center', gap: '2rem', padding: '1.25rem 0', background: 'var(--secondary)', color: 'var(--primary)', fontWeight: 600, fontSize: 18, borderBottom: '1px solid #e0e3eb' }}>
-            <Link href="/" style={{ color: 'var(--primary)', textDecoration: 'none' }}>Home</Link>
-            <Link href="/equity-pledge" style={{ color: 'var(--primary)' }}>Equity-Pledge</Link>
-            <Link href="/about" style={{ color: 'var(--primary)' }}>About Us</Link>
-            <Link href="/contact" style={{ color: 'var(--primary)' }}>Contact</Link>
-            <div style={{ marginLeft: '2rem', display: 'flex', gap: '1rem' }}>
-              {isSuperAdmin && (
-                <Link href="/admin" style={{ background: 'var(--accent)', color: 'var(--primary)', padding: '0.5rem 1.25rem', borderRadius: 6, fontWeight: 700, textDecoration: 'none', boxShadow: '0 2px 8px rgba(34,40,49,0.07)' }}>Admin Panel</Link>
-              )}
-              <Link href="/admin/login" style={{ background: '#8b5cf6', color: '#fff', padding: '0.5rem 1.25rem', borderRadius: 6, fontWeight: 700, textDecoration: 'none', boxShadow: '0 2px 8px rgba(34,40,49,0.07)' }}>Admin Login</Link>
-              <Link href="/login" style={{ background: '#059669', color: '#fff', padding: '0.5rem 1.25rem', borderRadius: 6, fontWeight: 700, textDecoration: 'none', boxShadow: '0 2px 8px rgba(34,40,49,0.07)' }}>Login</Link>
-              {isLoggedIn && (
-                <ClientLogoutButton onLogout={() => setIsLoggedIn(false)} />
-              )}
-            </div>
-          </nav>
-        )}
-        
-        <main style={{ 
-          minHeight: isInReservedArea ? '100vh' : '70vh',
-          marginTop: isInReservedArea ? 0 : undefined
-        }}>{children}</main>
-        
-        {/* FOOTER - Hidden in reserved areas */}
-        {!isInReservedArea && (
-          <footer style={{ background: 'var(--primary)', color: 'var(--secondary)', padding: '2rem 0', textAlign: 'center', borderTop: '1px solid #e0e3eb', marginTop: 40 }}>
-            <div style={{ marginBottom: 8 }}>
-              <Image src="/glg capital group llcbianco.png" alt="GLG Capital Group LLC" width={40} height={40} style={{ verticalAlign: 'middle', background: '#fff', borderRadius: 6 }} />
-            </div>
-            <div style={{ fontWeight: 600, fontSize: 18 }}>GLG Capital Group LLC</div>
-            <div style={{ margin: '0.5rem 0', color: 'var(--accent)' }}>Empowering Your Financial Future</div>
-            <div style={{ fontSize: 14, color: 'var(--secondary)' }}>&copy; {new Date().getFullYear()} GLG Capital Group LLC. All rights reserved.</div>
-            <div style={{ marginTop: 24, fontSize: 15, color: 'var(--secondary)', lineHeight: 1.7 }}>
-              <div><b>GLG CAPITAL GROUP LLC</b></div>
-              <div>1309 Coffeen Avenue STE 1200</div>
-              <div>Sheridan, Wyoming 82801</div>
-              <div><a href="mailto:corefound@glgcapitalgroupllc.com" style={{ color: 'var(--accent)' }}>corefound@glgcapitalgroupllc.com</a></div>
-              <div>Phone: +1 307 263 0876</div>
-            </div>
-          </footer>
-        )}
-        </AuthProvider>
+        {children}
       </body>
     </html>
-  )
+  );
 }

@@ -12,6 +12,9 @@ const nextConfig = {
     serverComponentsExternalPackages: ['@supabase/supabase-js'],
   },
 
+  // Configurazione per l'App Router
+  appDir: true,
+
   // Configurazione per le API routes
   async headers() {
     return [
