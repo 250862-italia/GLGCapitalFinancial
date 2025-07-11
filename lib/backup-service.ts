@@ -1,387 +1,435 @@
-interface BackupData {
-  users: any[];
-  investments: any[];
-  transactions: any[];
-  kycData: any[];
-  securityEvents: any[];
-  settings: any;
-  timestamp: Date;
-  version: string;
-}
-
-interface BackupMetadata {
+// Backup and Recovery Service for KYC Data
+export interface BackupData {
   id: string;
-  timestamp: Date;
-  size: number;
-  type: 'full' | 'incremental';
-  status: 'completed' | 'failed' | 'in_progress';
+  name: string;
   description: string;
-  checksum: string;
+  timestamp: string;
+  data: {
+    clients: any[];
+    kyc_records: any[];
+    audit_trail: any[];
+  };
+  metadata: {
+    version: string;
+    total_clients: number;
+    total_kyc_records: number;
+    total_audit_events: number;
+    created_by: string;
+  };
 }
 
-class BackupService {
-  private backups: BackupMetadata[] = [];
-  private readonly BACKUP_VERSION = '1.0.0';
+export interface BackupOptions {
+  include_clients?: boolean;
+  include_kyc_records?: boolean;
+  include_audit_trail?: boolean;
+  compress?: boolean;
+  encrypt?: boolean;
+}
 
-  // Create a full backup of all data
-  async createBackup(description: string = 'Manual backup'): Promise<BackupMetadata> {
+export interface RestoreOptions {
+  overwrite_existing?: boolean;
+  validate_data?: boolean;
+  create_backup_before_restore?: boolean;
+}
+
+// Backup Service
+export class BackupService {
+  private supabase: any;
+
+  constructor(supabase: any) {
+    this.supabase = supabase;
+  }
+
+  // Create a new backup
+  async createBackup(
+    name: string, 
+    description: string, 
+    options: BackupOptions = {},
+    createdBy: string = 'system'
+  ): Promise<BackupData> {
     try {
-      console.log('🔄 Starting backup process...');
-      
-      // Simulate data collection
-      const backupData: BackupData = {
-        users: await this.getUsersData(),
-        investments: await this.getInvestmentsData(),
-        transactions: await this.getTransactionsData(),
-        kycData: await this.getKYCData(),
-        securityEvents: await this.getSecurityEventsData(),
-        settings: await this.getSettingsData(),
-        timestamp: new Date(),
-        version: this.BACKUP_VERSION
-      };
-
-      // Generate backup metadata
       const backupId = `backup_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      const checksum = this.generateChecksum(JSON.stringify(backupData));
+      const timestamp = new Date().toISOString();
       
-      const backupMetadata: BackupMetadata = {
-        id: backupId,
-        timestamp: new Date(),
-        size: JSON.stringify(backupData).length,
-        type: 'full',
-        status: 'in_progress',
-        description,
-        checksum
+      const data: any = {};
+      const metadata: any = {
+        version: '1.0.0',
+        total_clients: 0,
+        total_kyc_records: 0,
+        total_audit_events: 0,
+        created_by: createdBy
       };
 
-      // Simulate backup process
-      await this.simulateBackupProcess(backupData, backupMetadata);
-      
-      // Store backup metadata
-      this.backups.push(backupMetadata);
-      
-      console.log('✅ Backup completed successfully:', backupId);
-      return backupMetadata;
-      
+      // Backup clients if requested
+      if (options.include_clients !== false) {
+        const { data: clients, error: clientsError } = await this.supabase
+          .from('clients')
+          .select('*');
+        
+        if (clientsError) throw clientsError;
+        data.clients = clients || [];
+        metadata.total_clients = data.clients.length;
+      }
+
+      // Backup KYC records if requested
+      if (options.include_kyc_records !== false) {
+        const { data: kycRecords, error: kycError } = await this.supabase
+          .from('kyc_records')
+          .select('*');
+        
+        if (kycError) throw kycError;
+        data.kyc_records = kycRecords || [];
+        metadata.total_kyc_records = data.kyc_records.length;
+      }
+
+      // Backup audit trail if requested
+      if (options.include_audit_trail !== false) {
+        const { data: auditTrail, error: auditError } = await this.supabase
+          .from('audit_trail')
+          .select('*');
+        
+        if (auditError) throw auditError;
+        data.audit_trail = auditTrail || [];
+        metadata.total_audit_events = data.audit_trail.length;
+      }
+
+      const backup: BackupData = {
+        id: backupId,
+        name,
+        description,
+        timestamp,
+        data,
+        metadata
+      };
+
+      // Store backup in database
+      const { error: storeError } = await this.supabase
+        .from('backups')
+        .insert({
+          id: backupId,
+          name,
+          description,
+          timestamp,
+          data: JSON.stringify(data),
+          metadata: JSON.stringify(metadata)
+        });
+
+      if (storeError) throw storeError;
+
+      return backup;
     } catch (error) {
-      console.error('❌ Backup failed:', error);
-      throw new Error('Backup process failed');
+      console.error('Backup creation failed:', error);
+      throw new Error(`Failed to create backup: ${error}`);
     }
   }
 
-  // Restore data from backup
-  async restoreBackup(backupId: string): Promise<boolean> {
+  // Get all backups
+  async getBackups(): Promise<BackupData[]> {
     try {
-      console.log('🔄 Starting restore process...');
-      
-      const backup = this.backups.find(b => b.id === backupId);
+      const { data, error } = await this.supabase
+        .from('backups')
+        .select('*')
+        .order('timestamp', { ascending: false });
+
+      if (error) throw error;
+
+      return (data || []).map((backup: any) => ({
+        id: backup.id,
+        name: backup.name,
+        description: backup.description,
+        timestamp: backup.timestamp,
+        data: JSON.parse(backup.data),
+        metadata: JSON.parse(backup.metadata)
+      }));
+    } catch (error) {
+      console.error('Failed to fetch backups:', error);
+      throw new Error(`Failed to fetch backups: ${error}`);
+    }
+  }
+
+  // Get specific backup
+  async getBackup(backupId: string): Promise<BackupData | null> {
+    try {
+      const { data, error } = await this.supabase
+        .from('backups')
+        .select('*')
+        .eq('id', backupId)
+        .single();
+
+      if (error) throw error;
+      if (!data) return null;
+
+      return {
+        id: data.id,
+        name: data.name,
+        description: data.description,
+        timestamp: data.timestamp,
+        data: JSON.parse(data.data),
+        metadata: JSON.parse(data.metadata)
+      };
+    } catch (error) {
+      console.error('Failed to fetch backup:', error);
+      throw new Error(`Failed to fetch backup: ${error}`);
+    }
+  }
+
+  // Restore from backup
+  async restoreBackup(
+    backupId: string, 
+    options: RestoreOptions = {}
+  ): Promise<void> {
+    try {
+      const backup = await this.getBackup(backupId);
       if (!backup) {
         throw new Error('Backup not found');
       }
 
-      if (backup.status !== 'completed') {
-        throw new Error('Backup is not ready for restoration');
+      // Create backup before restore if requested
+      if (options.create_backup_before_restore) {
+        await this.createBackup(
+          `pre_restore_backup_${Date.now()}`,
+          `Backup created before restoring ${backup.name}`,
+          { include_clients: true, include_kyc_records: true, include_audit_trail: true },
+          'system'
+        );
       }
 
-      // Simulate restore process
-      await this.simulateRestoreProcess(backup);
-      
-      console.log('✅ Restore completed successfully');
-      return true;
-      
+      // Validate data if requested
+      if (options.validate_data) {
+        const validationResult = this.validateBackupData(backup.data);
+        if (!validationResult.isValid) {
+          throw new Error(`Backup data validation failed: ${validationResult.errors.join(', ')}`);
+        }
+      }
+
+      // Restore clients
+      if (backup.data.clients && backup.data.clients.length > 0) {
+        if (options.overwrite_existing) {
+          // Clear existing clients
+          await this.supabase.from('clients').delete().neq('id', '');
+        }
+        
+        // Insert clients from backup
+        const { error: clientsError } = await this.supabase
+          .from('clients')
+          .upsert(backup.data.clients, { onConflict: 'id' });
+        
+        if (clientsError) throw clientsError;
+      }
+
+      // Restore KYC records
+      if (backup.data.kyc_records && backup.data.kyc_records.length > 0) {
+        if (options.overwrite_existing) {
+          // Clear existing KYC records
+          await this.supabase.from('kyc_records').delete().neq('id', '');
+        }
+        
+        // Insert KYC records from backup
+        const { error: kycError } = await this.supabase
+          .from('kyc_records')
+          .upsert(backup.data.kyc_records, { onConflict: 'id' });
+        
+        if (kycError) throw kycError;
+      }
+
+      // Restore audit trail
+      if (backup.data.audit_trail && backup.data.audit_trail.length > 0) {
+        if (options.overwrite_existing) {
+          // Clear existing audit trail
+          await this.supabase.from('audit_trail').delete().neq('id', '');
+        }
+        
+        // Insert audit trail from backup
+        const { error: auditError } = await this.supabase
+          .from('audit_trail')
+          .upsert(backup.data.audit_trail, { onConflict: 'id' });
+        
+        if (auditError) throw auditError;
+      }
+
+      console.log(`Successfully restored backup: ${backup.name}`);
     } catch (error) {
-      console.error('❌ Restore failed:', error);
-      throw new Error('Restore process failed');
+      console.error('Backup restoration failed:', error);
+      throw new Error(`Failed to restore backup: ${error}`);
     }
   }
 
-  // Get list of available backups
-  getBackups(): BackupMetadata[] {
-    return this.backups.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-  }
-
-  // Delete a backup
-  async deleteBackup(backupId: string): Promise<boolean> {
+  // Delete backup
+  async deleteBackup(backupId: string): Promise<void> {
     try {
-      const index = this.backups.findIndex(b => b.id === backupId);
-      if (index === -1) {
-        throw new Error('Backup not found');
-      }
+      const { error } = await this.supabase
+        .from('backups')
+        .delete()
+        .eq('id', backupId);
 
-      // Simulate deletion process
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      this.backups.splice(index, 1);
-      console.log('✅ Backup deleted successfully:', backupId);
-      return true;
-      
+      if (error) throw error;
     } catch (error) {
-      console.error('❌ Backup deletion failed:', error);
-      throw new Error('Backup deletion failed');
+      console.error('Failed to delete backup:', error);
+      throw new Error(`Failed to delete backup: ${error}`);
     }
   }
 
-  // Export backup data
+  // Export backup to file
   async exportBackup(backupId: string): Promise<string> {
     try {
-      const backup = this.backups.find(b => b.id === backupId);
+      const backup = await this.getBackup(backupId);
       if (!backup) {
         throw new Error('Backup not found');
       }
 
-      // Simulate data export
-      const exportData = {
-        metadata: backup,
-        data: await this.getMockBackupData(),
-        exportTimestamp: new Date(),
-        exportVersion: this.BACKUP_VERSION
-      };
-
-      return JSON.stringify(exportData, null, 2);
-      
+      return JSON.stringify(backup, null, 2);
     } catch (error) {
-      console.error('❌ Export failed:', error);
-      throw new Error('Export failed');
+      console.error('Failed to export backup:', error);
+      throw new Error(`Failed to export backup: ${error}`);
     }
   }
 
-  // Import backup data
-  async importBackup(backupData: string): Promise<BackupMetadata> {
+  // Import backup from file
+  async importBackup(backupData: string): Promise<BackupData> {
     try {
-      console.log('🔄 Starting import process...');
+      const backup: BackupData = JSON.parse(backupData);
       
-      const parsedData = JSON.parse(backupData);
-      
-      // Validate backup data
-      if (!this.validateBackupData(parsedData)) {
-        throw new Error('Invalid backup data format');
+      // Validate backup structure
+      if (!backup.id || !backup.name || !backup.data) {
+        throw new Error('Invalid backup format');
       }
 
-      // Simulate import process
-      await this.simulateImportProcess(parsedData);
-      
-      const backupMetadata: BackupMetadata = {
-        id: `imported_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        timestamp: new Date(),
-        size: backupData.length,
-        type: 'full',
-        status: 'completed',
-        description: 'Imported backup',
-        checksum: this.generateChecksum(backupData)
-      };
+      // Store imported backup
+      const { error } = await this.supabase
+        .from('backups')
+        .insert({
+          id: backup.id,
+          name: backup.name,
+          description: backup.description,
+          timestamp: backup.timestamp,
+          data: JSON.stringify(backup.data),
+          metadata: JSON.stringify(backup.metadata)
+        });
 
-      this.backups.push(backupMetadata);
-      
-      console.log('✅ Import completed successfully');
-      return backupMetadata;
-      
+      if (error) throw error;
+
+      return backup;
     } catch (error) {
-      console.error('❌ Import failed:', error);
-      throw new Error('Import process failed');
+      console.error('Failed to import backup:', error);
+      throw new Error(`Failed to import backup: ${error}`);
     }
   }
 
-  // Schedule automatic backups
-  scheduleAutomaticBackup(schedule: 'daily' | 'weekly' | 'monthly'): void {
-    console.log(`📅 Scheduled automatic backup: ${schedule}`);
-    
-    // In a real implementation, this would set up a cron job or similar
-    const interval = this.getScheduleInterval(schedule);
-    
-    setInterval(async () => {
-      try {
-        await this.createBackup(`Automatic ${schedule} backup`);
-      } catch (error) {
-        console.error('Automatic backup failed:', error);
+  // Validate backup data
+  validateBackupData(data: any): { isValid: boolean; errors: string[] } {
+    const errors: string[] = [];
+
+    // Validate clients data
+    if (data.clients) {
+      if (!Array.isArray(data.clients)) {
+        errors.push('Clients data must be an array');
+      } else {
+        data.clients.forEach((client: any, index: number) => {
+          if (!client.id) errors.push(`Client at index ${index} missing ID`);
+          if (!client.email) errors.push(`Client at index ${index} missing email`);
+        });
       }
-    }, interval);
+    }
+
+    // Validate KYC records data
+    if (data.kyc_records) {
+      if (!Array.isArray(data.kyc_records)) {
+        errors.push('KYC records data must be an array');
+      } else {
+        data.kyc_records.forEach((record: any, index: number) => {
+          if (!record.id) errors.push(`KYC record at index ${index} missing ID`);
+          if (!record.client_id) errors.push(`KYC record at index ${index} missing client_id`);
+        });
+      }
+    }
+
+    // Validate audit trail data
+    if (data.audit_trail) {
+      if (!Array.isArray(data.audit_trail)) {
+        errors.push('Audit trail data must be an array');
+      } else {
+        data.audit_trail.forEach((event: any, index: number) => {
+          if (!event.id) errors.push(`Audit event at index ${index} missing ID`);
+          if (!event.action) errors.push(`Audit event at index ${index} missing action`);
+          if (!event.timestamp) errors.push(`Audit event at index ${index} missing timestamp`);
+        });
+      }
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
   }
 
   // Get backup statistics
-  getBackupStats(): {
-    totalBackups: number;
-    totalSize: number;
-    lastBackup: Date | null;
-    averageSize: number;
-    successRate: number;
-  } {
-    const completedBackups = this.backups.filter(b => b.status === 'completed');
-    const totalSize = completedBackups.reduce((sum, b) => sum + b.size, 0);
-    
-    return {
-      totalBackups: this.backups.length,
-      totalSize,
-      lastBackup: completedBackups.length > 0 ? completedBackups[0].timestamp : null,
-      averageSize: completedBackups.length > 0 ? totalSize / completedBackups.length : 0,
-      successRate: this.backups.length > 0 ? 
-        (completedBackups.length / this.backups.length) * 100 : 0
-    };
-  }
+  async getBackupStatistics(): Promise<any> {
+    try {
+      const backups = await this.getBackups();
+      
+      const stats = {
+        total_backups: backups.length,
+        total_size: 0,
+        oldest_backup: null,
+        newest_backup: null,
+        by_month: {} as Record<string, number>
+      };
 
-  // Private helper methods
-  private async getUsersData(): Promise<any[]> {
-    // Simulate fetching users data
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return [
-      { id: '1', email: 'user1@example.com', name: 'User 1' },
-      { id: '2', email: 'user2@example.com', name: 'User 2' }
-    ];
-  }
+      if (backups.length > 0) {
+        stats.oldest_backup = backups[backups.length - 1];
+        stats.newest_backup = backups[0];
 
-  private async getInvestmentsData(): Promise<any[]> {
-    // Simulate fetching investments data
-    await new Promise(resolve => setTimeout(resolve, 300));
-    return [
-      { id: '1', userId: '1', amount: 10000, package: 'Conservative' },
-      { id: '2', userId: '2', amount: 25000, package: 'Aggressive' }
-    ];
-  }
+        backups.forEach(backup => {
+          // Calculate size (approximate)
+          const size = JSON.stringify(backup).length;
+          stats.total_size += size;
 
-  private async getTransactionsData(): Promise<any[]> {
-    // Simulate fetching transactions data
-    await new Promise(resolve => setTimeout(resolve, 200));
-    return [
-      { id: '1', type: 'investment', amount: 10000, status: 'completed' },
-      { id: '2', type: 'withdrawal', amount: 5000, status: 'pending' }
-    ];
-  }
+          // Count by month
+          const month = backup.timestamp.substring(0, 7); // YYYY-MM
+          stats.by_month[month] = (stats.by_month[month] || 0) + 1;
+        });
+      }
 
-  private async getKYCData(): Promise<any[]> {
-    // Simulate fetching KYC data
-    await new Promise(resolve => setTimeout(resolve, 400));
-    return [
-      { id: '1', userId: '1', status: 'approved', documents: ['id', 'address'] },
-      { id: '2', userId: '2', status: 'pending', documents: ['id'] }
-    ];
-  }
-
-  private async getSecurityEventsData(): Promise<any[]> {
-    // Simulate fetching security events data
-    await new Promise(resolve => setTimeout(resolve, 100));
-    return [
-      { id: '1', type: 'login_attempt', timestamp: new Date(), ip: '192.168.1.1' },
-      { id: '2', type: 'failed_login', timestamp: new Date(), ip: '192.168.1.2' }
-    ];
-  }
-
-  private async getSettingsData(): Promise<any> {
-    // Simulate fetching settings data
-    await new Promise(resolve => setTimeout(resolve, 50));
-    return {
-      maintenanceMode: false,
-      securityLevel: 'high',
-      backupRetention: 30
-    };
-  }
-
-  private async getMockBackupData(): Promise<BackupData> {
-    return {
-      users: await this.getUsersData(),
-      investments: await this.getInvestmentsData(),
-      transactions: await this.getTransactionsData(),
-      kycData: await this.getKYCData(),
-      securityEvents: await this.getSecurityEventsData(),
-      settings: await this.getSettingsData(),
-      timestamp: new Date(),
-      version: this.BACKUP_VERSION
-    };
-  }
-
-  private generateChecksum(data: string): string {
-    // Simple checksum generation (in real implementation, use proper hashing)
-    let hash = 0;
-    for (let i = 0; i < data.length; i++) {
-      const char = data.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convert to 32-bit integer
-    }
-    return hash.toString(16);
-  }
-
-  private async simulateBackupProcess(data: BackupData, metadata: BackupMetadata): Promise<void> {
-    // Simulate backup process steps
-    const steps = [
-      'Validating data integrity...',
-      'Compressing data...',
-      'Encrypting backup...',
-      'Uploading to storage...',
-      'Verifying backup...'
-    ];
-
-    for (const step of steps) {
-      console.log(`  ${step}`);
-      await new Promise(resolve => setTimeout(resolve, 500));
-    }
-
-    metadata.status = 'completed';
-  }
-
-  private async simulateRestoreProcess(backup: BackupMetadata): Promise<void> {
-    // Simulate restore process steps
-    const steps = [
-      'Downloading backup...',
-      'Decrypting data...',
-      'Validating backup integrity...',
-      'Restoring users...',
-      'Restoring investments...',
-      'Restoring transactions...',
-      'Restoring KYC data...',
-      'Restoring security events...',
-      'Restoring settings...',
-      'Verifying restoration...'
-    ];
-
-    for (const step of steps) {
-      console.log(`  ${step}`);
-      await new Promise(resolve => setTimeout(resolve, 300));
+      return stats;
+    } catch (error) {
+      console.error('Failed to get backup statistics:', error);
+      throw new Error(`Failed to get backup statistics: ${error}`);
     }
   }
 
-  private async simulateImportProcess(data: any): Promise<void> {
-    // Simulate import process steps
-    const steps = [
-      'Validating import data...',
-      'Checking for conflicts...',
-      'Importing users...',
-      'Importing investments...',
-      'Importing transactions...',
-      'Importing KYC data...',
-      'Importing security events...',
-      'Importing settings...',
-      'Finalizing import...'
-    ];
+  // Clean up old backups
+  async cleanupOldBackups(keepDays: number = 30): Promise<number> {
+    try {
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - keepDays);
 
-    for (const step of steps) {
-      console.log(`  ${step}`);
-      await new Promise(resolve => setTimeout(resolve, 400));
-    }
-  }
+      const { data: oldBackups, error } = await this.supabase
+        .from('backups')
+        .select('id')
+        .lt('timestamp', cutoffDate.toISOString());
 
-  private validateBackupData(data: any): boolean {
-    // Basic validation of backup data structure
-    return data && 
-           data.metadata && 
-           data.data && 
-           data.data.version && 
-           data.data.timestamp;
-  }
+      if (error) throw error;
 
-  private getScheduleInterval(schedule: string): number {
-    switch (schedule) {
-      case 'daily':
-        return 24 * 60 * 60 * 1000; // 24 hours
-      case 'weekly':
-        return 7 * 24 * 60 * 60 * 1000; // 7 days
-      case 'monthly':
-        return 30 * 24 * 60 * 60 * 1000; // 30 days
-      default:
-        return 24 * 60 * 60 * 1000; // Default to daily
+      const deletedCount = oldBackups?.length || 0;
+
+      if (deletedCount > 0) {
+        const { error: deleteError } = await this.supabase
+          .from('backups')
+          .delete()
+          .lt('timestamp', cutoffDate.toISOString());
+
+        if (deleteError) throw deleteError;
+      }
+
+      return deletedCount;
+    } catch (error) {
+      console.error('Failed to cleanup old backups:', error);
+      throw new Error(`Failed to cleanup old backups: ${error}`);
     }
   }
 }
 
-// Export singleton instance
-export const backupService = new BackupService();
-
-// Export types
-export type { BackupData, BackupMetadata }; 
+// Create backup service instance
+export const createBackupService = (supabase: any): BackupService => {
+  return new BackupService(supabase);
+}; 
