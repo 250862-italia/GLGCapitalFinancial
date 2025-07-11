@@ -106,6 +106,24 @@ export function validateAge(dateOfBirth: string): boolean {
 
 // Validazione reddito annuale
 export function validateAnnualIncome(income: string): boolean {
+  // Accetta fasce precompilate
+  const validRanges = [
+    'Under €25,000',
+    '€25,000 - €50,000',
+    '€50,000 - €75,000',
+    '€75,000 - €100,000',
+    '€100,000 - €150,000',
+    '€150,000 - €200,000',
+    '€200,000 - €500,000',
+    'Over €500,000'
+  ];
+  
+  // Se è una fascia precompilata, è valida
+  if (validRanges.includes(income)) {
+    return true;
+  }
+  
+  // Altrimenti, prova a validare come numero
   const numIncome = parseFloat(income.replace(/[^\d.]/g, ''));
   return !isNaN(numIncome) && numIncome > 0 && numIncome <= 10000000; // Max 10M
 }
@@ -114,20 +132,22 @@ export function validateAnnualIncome(income: string): boolean {
 export function validateIdDocument(documentUrl: string | null): KYCDocumentValidation {
   const result: KYCDocumentValidation = {
     documentType: 'ID_DOCUMENT',
-    isValid: false,
+    isValid: true, // Documenti sono ora opzionali
     errors: [],
     warnings: [],
-    confidence: 0
+    confidence: 100
   };
 
   if (!documentUrl) {
-    result.errors.push('Documento di identità richiesto');
+    result.warnings.push('Documento di identità non fornito - può essere inviato via email');
+    result.confidence = 70; // Riduce la confidenza ma non invalida
     return result;
   }
 
   // Controlli base
   if (!documentUrl.startsWith('http')) {
     result.errors.push('URL documento non valido');
+    result.isValid = false;
     return result;
   }
 
@@ -135,6 +155,7 @@ export function validateIdDocument(documentUrl: string | null): KYCDocumentValid
   const extension = documentUrl.split('.').pop()?.toLowerCase();
   if (!extension || !['jpg', 'jpeg', 'png', 'pdf'].includes(extension)) {
     result.errors.push('Formato file non supportato. Usa JPG, PNG o PDF');
+    result.isValid = false;
     return result;
   }
 
@@ -154,26 +175,29 @@ export function validateIdDocument(documentUrl: string | null): KYCDocumentValid
 export function validateProofOfAddress(documentUrl: string | null): KYCDocumentValidation {
   const result: KYCDocumentValidation = {
     documentType: 'PROOF_OF_ADDRESS',
-    isValid: false,
+    isValid: true, // Documenti sono ora opzionali
     errors: [],
     warnings: [],
-    confidence: 0
+    confidence: 100
   };
 
   if (!documentUrl) {
-    result.errors.push('Prova di residenza richiesta');
+    result.warnings.push('Prova di residenza non fornita - può essere inviata via email');
+    result.confidence = 70; // Riduce la confidenza ma non invalida
     return result;
   }
 
   // Controlli base
   if (!documentUrl.startsWith('http')) {
     result.errors.push('URL documento non valido');
+    result.isValid = false;
     return result;
   }
 
   const extension = documentUrl.split('.').pop()?.toLowerCase();
   if (!extension || !['jpg', 'jpeg', 'png', 'pdf'].includes(extension)) {
     result.errors.push('Formato file non supportato. Usa JPG, PNG o PDF');
+    result.isValid = false;
     return result;
   }
 
@@ -187,14 +211,15 @@ export function validateProofOfAddress(documentUrl: string | null): KYCDocumentV
 export function validateBankStatement(documentUrl: string | null): KYCDocumentValidation {
   const result: KYCDocumentValidation = {
     documentType: 'BANK_STATEMENT',
-    isValid: false,
+    isValid: true, // Documenti sono ora opzionali
     errors: [],
     warnings: [],
-    confidence: 0
+    confidence: 100
   };
 
   if (!documentUrl) {
-    result.errors.push('Estratto conto bancario richiesto');
+    result.warnings.push('Estratto conto bancario non fornito - può essere inviato via email');
+    result.confidence = 70; // Riduce la confidenza ma non invalida
     return result;
   }
 
@@ -322,25 +347,27 @@ export function validateKYC(kycData: any): ValidationResult {
     score -= 5;
   }
 
-  // Validazione documenti
+  // Validazione documenti (ora opzionali)
   const idDocValidation = validateIdDocument(kycData.documents.idDocument);
   const addressDocValidation = validateProofOfAddress(kycData.documents.proofOfAddress);
   const bankDocValidation = validateBankStatement(kycData.documents.bankStatement);
 
+  // I documenti sono opzionali, quindi non aggiungiamo errori se mancanti
+  // Solo se ci sono errori di formato o URL non validi
   if (!idDocValidation.isValid) {
     errors.push(...idDocValidation.errors);
-    score -= 15;
+    score -= 5; // Ridotto il peso degli errori documenti
   }
   if (!addressDocValidation.isValid) {
     errors.push(...addressDocValidation.errors);
-    score -= 10;
+    score -= 5;
   }
   if (!bankDocValidation.isValid) {
     errors.push(...bankDocValidation.errors);
-    score -= 10;
+    score -= 5;
   }
 
-  // Aggiungi warning dai documenti
+  // Aggiungi warning dai documenti (per documenti mancanti)
   warnings.push(...idDocValidation.warnings);
   warnings.push(...addressDocValidation.warnings);
   warnings.push(...bankDocValidation.warnings);

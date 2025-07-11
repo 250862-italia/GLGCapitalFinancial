@@ -387,7 +387,17 @@ export default function KYCProcess({ userId, onComplete }: { userId: string; onC
               </div>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>Annual Income <span style={{ color: '#ef4444' }}>*</span></label>
-                <input type="text" value={kycData.financialProfile.annualIncome} onChange={(e) => handleInputChange('financialProfile', 'annualIncome', e.target.value)} style={{ width: '100%', padding: '0.75rem', border: errors['financialProfile.annualIncome'] ? '1px solid #ef4444' : '1px solid #d1d5db', borderRadius: 8, fontSize: 16 }} placeholder="Enter your annual income" />
+                <select value={kycData.financialProfile.annualIncome} onChange={(e) => handleInputChange('financialProfile', 'annualIncome', e.target.value)} style={{ width: '100%', padding: '0.75rem', border: errors['financialProfile.annualIncome'] ? '1px solid #ef4444' : '1px solid #d1d5db', borderRadius: 8, fontSize: 16 }}>
+                  <option value="">Select annual income range</option>
+                  <option value="Under €25,000">Under €25,000</option>
+                  <option value="€25,000 - €50,000">€25,000 - €50,000</option>
+                  <option value="€50,000 - €75,000">€50,000 - €75,000</option>
+                  <option value="€75,000 - €100,000">€75,000 - €100,000</option>
+                  <option value="€100,000 - €150,000">€100,000 - €150,000</option>
+                  <option value="€150,000 - €200,000">€150,000 - €200,000</option>
+                  <option value="€200,000 - €500,000">€200,000 - €500,000</option>
+                  <option value="Over €500,000">Over €500,000</option>
+                </select>
                 {errors['financialProfile.annualIncome'] && (<p style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>{errors['financialProfile.annualIncome']}</p>)}
               </div>
               <div>
