@@ -15,6 +15,12 @@ const nextConfig = {
   // Configurazione per l'App Router
   appDir: true,
 
+  // FORZA TUTTO IL RENDERING DINAMICO
+  output: 'standalone',
+  
+  // Disabilita completamente il rendering statico
+  trailingSlash: false,
+  
   // Configurazione per le API routes
   async headers() {
     return [

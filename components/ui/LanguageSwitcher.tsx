@@ -1,10 +1,11 @@
 "use client";
 
-import { useRouter, usePathname } from 'next/navigation';
+import { useSafeRouter } from '@/lib/safe-router';
+import { usePathname } from 'next/navigation';
 import { useTranslation } from 'next-i18next';
 
 export default function LanguageSwitcher() {
-  const router = useRouter();
+  const router = useSafeRouter();
   const pathname = usePathname();
   const { i18n } = useTranslation();
 

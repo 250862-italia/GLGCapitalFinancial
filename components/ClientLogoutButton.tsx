@@ -1,8 +1,8 @@
 "use client";
-import { useRouter } from 'next/navigation';
+import { useSafeRouter } from '@/lib/safe-router';
 
 export default function ClientLogoutButton({ onLogout }: { onLogout?: () => void }) {
-  const router = useRouter();
+  const router = useSafeRouter();
 
   const handleLogout = () => {
     localStorage.removeItem('user');
