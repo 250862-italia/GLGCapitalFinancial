@@ -218,20 +218,32 @@ export default function KYCProcess({ userId, onComplete }: { userId: string; onC
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      setKycData(prev => ({
-        ...prev,
-        verification: {
-          personalInfoVerified: true,
-          documentsVerified: true,
-          financialProfileVerified: true,
-          overallStatus: 'in_review'
-        }
-      }));
-      onComplete('in_review');
+      const response = await fetch('/api/kyc/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: userId,
+          personalInfo: kycData.personalInfo,
+          financialProfile: kycData.financialProfile,
+          documents: kycData.documents,
+          verification: kycData.verification
+        })
+      });
+      const result = await response.json();
+      if (result.success) {
+        setKycData(prev => ({
+          ...prev,
+          verification: {
+            ...prev.verification,
+            overallStatus: 'in_review'
+          }
+        }));
+        onComplete('in_review');
+      } else {
+        setErrors({ submit: result.error || 'Errore invio KYC' });
+      }
     } catch (error) {
-      console.error('KYC submission error:', error);
+      setErrors({ submit: 'Errore di rete o server' });
     } finally {
       setIsSubmitting(false);
     }
