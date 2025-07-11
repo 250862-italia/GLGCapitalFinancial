@@ -47,6 +47,7 @@ interface ClientProfile {
   country?: string;
   city?: string;
   address?: string;
+  kyc_data?: string; // JSON string containing full KYC data
   created_at: string;
   updated_at: string;
 }
@@ -986,6 +987,127 @@ export default function ProfilePage() {
                     </button>
                   </div>
                 )}
+              </div>
+
+              {/* Complete KYC Data */}
+              {profile.kyc_data && (
+                <div style={{ 
+                  background: '#f8fafc', 
+                  borderRadius: 12, 
+                  padding: '1.5rem',
+                  border: '1px solid #e2e8f0'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                    <FileText size={20} color="#059669" />
+                    <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#1f2937', margin: 0 }}>
+                      Complete KYC Information
+                    </h3>
+                  </div>
+                  
+                  <div style={{ 
+                    background: 'white', 
+                    borderRadius: 8, 
+                    padding: '1rem',
+                    border: '1px solid #e5e7eb'
+                  }}>
+                    {(() => {
+                      try {
+                        const kycData = JSON.parse(profile.kyc_data);
+                        return (
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                            {/* Personal Information */}
+                            <div>
+                              <h4 style={{ fontSize: '16px', fontWeight: 600, color: '#374151', marginBottom: '1rem' }}>
+                                Personal Information
+                              </h4>
+                              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.5rem' }}>
+                                <div><strong>Name:</strong> {kycData.personalInfo?.firstName} {kycData.personalInfo?.lastName}</div>
+                                <div><strong>Date of Birth:</strong> {kycData.personalInfo?.dateOfBirth}</div>
+                                <div><strong>Nationality:</strong> {kycData.personalInfo?.nationality}</div>
+                                <div><strong>Address:</strong> {kycData.personalInfo?.address}</div>
+                                <div><strong>City:</strong> {kycData.personalInfo?.city}</div>
+                                <div><strong>Country:</strong> {kycData.personalInfo?.country}</div>
+                                <div><strong>Phone:</strong> {kycData.personalInfo?.phone}</div>
+                                <div><strong>Email:</strong> {kycData.personalInfo?.email}</div>
+                                {kycData.personalInfo?.codiceFiscale && (
+                                  <div><strong>Codice Fiscale:</strong> {kycData.personalInfo.codiceFiscale}</div>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Financial Profile */}
+                            <div>
+                              <h4 style={{ fontSize: '16px', fontWeight: 600, color: '#374151', marginBottom: '1rem' }}>
+                                Financial Profile
+                              </h4>
+                              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.5rem' }}>
+                                <div><strong>Employment:</strong> {kycData.financialProfile?.employmentStatus}</div>
+                                <div><strong>Annual Income:</strong> {kycData.financialProfile?.annualIncome}</div>
+                                <div><strong>Source of Funds:</strong> {kycData.financialProfile?.sourceOfFunds}</div>
+                                <div><strong>Investment Experience:</strong> {kycData.financialProfile?.investmentExperience}</div>
+                                <div><strong>Risk Tolerance:</strong> {kycData.financialProfile?.riskTolerance}</div>
+                                <div><strong>Investment Goals:</strong> {kycData.financialProfile?.investmentGoals?.join(', ')}</div>
+                              </div>
+                            </div>
+
+                            {/* Documents */}
+                            <div style={{ gridColumn: '1 / -1' }}>
+                              <h4 style={{ fontSize: '16px', fontWeight: 600, color: '#374151', marginBottom: '1rem' }}>
+                                Documents
+                              </h4>
+                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+                                <div>
+                                  <strong>ID Document:</strong>
+                                  {kycData.documents?.idDocument ? (
+                                    <a href={kycData.documents.idDocument} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline', display: 'block', marginTop: '0.25rem' }}>
+                                      View Document
+                                    </a>
+                                  ) : (
+                                    <span style={{ color: '#6b7280', display: 'block', marginTop: '0.25rem' }}>Not provided</span>
+                                  )}
+                                </div>
+                                <div>
+                                  <strong>Proof of Address:</strong>
+                                  {kycData.documents?.proofOfAddress ? (
+                                    <a href={kycData.documents.proofOfAddress} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline', display: 'block', marginTop: '0.25rem' }}>
+                                      View Document
+                                    </a>
+                                  ) : (
+                                    <span style={{ color: '#6b7280', display: 'block', marginTop: '0.25rem' }}>Not provided</span>
+                                  )}
+                                </div>
+                                <div>
+                                  <strong>Bank Statement:</strong>
+                                  {kycData.documents?.bankStatement ? (
+                                    <a href={kycData.documents.bankStatement} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline', display: 'block', marginTop: '0.25rem' }}>
+                                      View Document
+                                    </a>
+                                  ) : (
+                                    <span style={{ color: '#6b7280', display: 'block', marginTop: '0.25rem' }}>Not provided</span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Submission Info */}
+                            <div style={{ gridColumn: '1 / -1', marginTop: '1rem', padding: '1rem', background: '#f0f9ff', borderRadius: 8, border: '1px solid #0ea5e9' }}>
+                              <div style={{ fontSize: '14px', color: '#0369a1' }}>
+                                <strong>Submitted:</strong> {kycData.submittedAt ? new Date(kycData.submittedAt).toLocaleString() : 'Unknown'}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      } catch (error) {
+                        return (
+                          <div style={{ color: '#dc2626', fontSize: '14px' }}>
+                            Error parsing KYC data: {error instanceof Error ? error.message : 'Unknown error'}
+                          </div>
+                        );
+                      }
+                    })()}
+                  </div>
+                </div>
+              )}
               </div>
             </div>
           </div>

@@ -43,7 +43,8 @@ export async function GET() {
   try {
     // Try to connect to Supabase
     try {
-      const { data, error } = await supabaseAdmin
+      // First, get KYC records from kyc_records table
+      const { data: kycRecords, error: kycError } = await supabaseAdmin
         .from('kyc_records')
         .select(`
           *,
@@ -58,12 +59,67 @@ export async function GET() {
         `)
         .order('"created_at"', { ascending: false });
 
-      if (error) {
-        console.error('Supabase error, using mock data:', error);
+      // Then, get clients with KYC data in their profile
+      const { data: clientsWithKYC, error: clientsError } = await supabaseAdmin
+        .from('clients')
+        .select('*')
+        .not('kyc_data', 'is', null)
+        .order('updated_at', { ascending: false });
+
+      if (kycError && clientsError) {
+        console.error('Supabase error, using mock data:', { kycError, clientsError });
         return NextResponse.json(mockKYCRecords);
       }
 
-      return NextResponse.json(data || []);
+      // Combine and deduplicate data
+      const allKYCData = [];
+
+      // Add KYC records from kyc_records table
+      if (kycRecords && kycRecords.length > 0) {
+        allKYCData.push(...kycRecords);
+      }
+
+      // Add KYC data from client profiles
+      if (clientsWithKYC && clientsWithKYC.length > 0) {
+        for (const client of clientsWithKYC) {
+          try {
+            const kycData = JSON.parse(client.kyc_data);
+            if (kycData.personalInfo) {
+              // Create a KYC record from profile data
+              allKYCData.push({
+                id: `profile-${client.id}`,
+                client_id: client.id,
+                document_type: 'PROFILE_KYC',
+                document_number: 'Complete KYC Profile',
+                document_image_url: kycData.documents?.idDocument || null,
+                status: client.kyc_status || 'pending',
+                notes: `Profile KYC: ${kycData.personalInfo.firstName} ${kycData.personalInfo.lastName}`,
+                created_at: kycData.submittedAt || client.created_at,
+                updated_at: client.updated_at,
+                clients: {
+                  first_name: client.first_name,
+                  last_name: client.last_name,
+                  email: client.email,
+                  phone: client.phone,
+                  date_of_birth: client.date_of_birth,
+                  nationality: client.nationality
+                },
+                // Add full KYC data for detailed view
+                full_kyc_data: kycData
+              });
+            }
+          } catch (parseError) {
+            console.error('Error parsing KYC data for client:', client.id, parseError);
+          }
+        }
+      }
+
+      // Remove duplicates (prefer kyc_records over profile data)
+      const uniqueData = allKYCData.filter((item, index, self) => 
+        index === self.findIndex(t => t.client_id === item.client_id && t.document_type === item.document_type)
+      );
+
+      return NextResponse.json(uniqueData || []);
     } catch (supabaseError) {
       console.error('Supabase connection failed, using mock data:', supabaseError);
       return NextResponse.json(mockKYCRecords);
@@ -89,8 +145,32 @@ export async function PUT(request: NextRequest) {
       updateData.verified_at = new Date().toISOString();
     }
 
-    // Try to connect to Supabase
-    try {
+    // Check if this is a profile-based KYC record
+    if (id.startsWith('profile-')) {
+      const clientId = id.replace('profile-', '');
+      
+      // Update client's KYC status
+      const { data: clientData, error: clientError } = await supabaseAdmin
+        .from('clients')
+        .update({ 
+          kyc_status: status,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', clientId)
+        .select()
+        .single();
+
+      if (clientError) {
+        console.error('Supabase error updating client KYC status:', clientError);
+        return NextResponse.json({ 
+          error: 'Database connection failed, but update was validated',
+          mockData: { id, ...updateData }
+        }, { status: 503 });
+      }
+
+      return NextResponse.json({ ...clientData, document_type: 'PROFILE_KYC' });
+    } else {
+      // Regular KYC record update
       const { data, error } = await supabaseAdmin
         .from('kyc_records')
         .update(updateData)
@@ -107,12 +187,6 @@ export async function PUT(request: NextRequest) {
       }
 
       return NextResponse.json(data);
-    } catch (supabaseError) {
-      console.error('Supabase connection failed in PUT:', supabaseError);
-      return NextResponse.json({ 
-        error: 'Database connection failed, but update was validated',
-        mockData: { id, ...updateData }
-      }, { status: 503 });
     }
   } catch (error) {
     console.error('Error in KYC PUT:', error);
