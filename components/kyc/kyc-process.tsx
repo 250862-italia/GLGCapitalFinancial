@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from 'react';
-import { User, Shield, FileText, CreditCard, CheckCircle, AlertCircle, Upload, ArrowRight, ArrowLeft } from 'lucide-react';
+import { User, Shield, FileText, CreditCard, CheckCircle, AlertCircle, Upload, ArrowRight, ArrowLeft, AlertTriangle, CheckSquare } from 'lucide-react';
 import { useAuth } from '../../hooks/use-auth';
+import { validateKYC, generateValidationReport, ValidationResult } from '../../lib/kyc-validation';
 
 interface KYCData {
   personalInfo: {
@@ -85,6 +86,8 @@ export default function KYCProcess({ userId, onComplete }: { userId: string; onC
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [uploadStatus, setUploadStatus] = useState<{ [key: string]: 'idle' | 'uploading' | 'success' | 'error' }>({});
   const [uploadError, setUploadError] = useState<{ [key: string]: string }>({});
+  const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
+  const [showValidationReport, setShowValidationReport] = useState(false);
 
   const validateStep = (step: number): boolean => {
     const newErrors: Record<string, string> = {};
@@ -216,6 +219,15 @@ export default function KYCProcess({ userId, onComplete }: { userId: string; onC
   };
 
   const handleSubmit = async () => {
+    // Esegui validazione avanzata prima dell'invio
+    const validation = validateKYC(kycData);
+    setValidationResult(validation);
+    
+    if (!validation.isValid) {
+      setShowValidationReport(true);
+      return;
+    }
+    
     setIsSubmitting(true);
     try {
       const response = await fetch('/api/kyc/submit', {
@@ -226,7 +238,8 @@ export default function KYCProcess({ userId, onComplete }: { userId: string; onC
           personalInfo: kycData.personalInfo,
           financialProfile: kycData.financialProfile,
           documents: kycData.documents,
-          verification: kycData.verification
+          verification: kycData.verification,
+          validationScore: validation.score
         })
       });
       const result = await response.json();
@@ -490,6 +503,167 @@ export default function KYCProcess({ userId, onComplete }: { userId: string; onC
           </div>
         )}
       </div>
+
+      {/* Modal Report Validazione */}
+      {showValidationReport && validationResult && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: 8,
+            padding: '2rem',
+            maxWidth: 600,
+            maxHeight: '90vh',
+            overflow: 'auto',
+            position: 'relative'
+          }}>
+            <button 
+              onClick={() => setShowValidationReport(false)}
+              style={{
+                position: 'absolute',
+                top: '1rem',
+                right: '1rem',
+                background: 'none',
+                border: 'none',
+                fontSize: '1.5rem',
+                cursor: 'pointer'
+              }}
+            >
+              ×
+            </button>
+            
+            <div style={{ marginBottom: '1.5rem' }}>
+              <h2 style={{ 
+                fontSize: '24px', 
+                fontWeight: 700, 
+                color: validationResult.isValid ? '#16a34a' : '#dc2626',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}>
+                {validationResult.isValid ? <CheckSquare size={24} /> : <AlertTriangle size={24} />}
+                Report Validazione KYC
+              </h2>
+            </div>
+            
+            <div style={{ 
+              background: validationResult.isValid ? '#f0fdf4' : '#fef2f2', 
+              padding: '1rem', 
+              borderRadius: 8, 
+              marginBottom: '1.5rem',
+              border: `1px solid ${validationResult.isValid ? '#bbf7d0' : '#fecaca'}`
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <span style={{ fontWeight: 600, color: validationResult.isValid ? '#16a34a' : '#dc2626' }}>
+                  Punteggio: {validationResult.score}/100
+                </span>
+                <span style={{ 
+                  background: validationResult.isValid ? '#16a34a' : '#dc2626',
+                  color: 'white',
+                  padding: '0.25rem 0.75rem',
+                  borderRadius: 4,
+                  fontSize: 12,
+                  fontWeight: 600
+                }}>
+                  {validationResult.isValid ? 'VALIDO' : 'NON VALIDO'}
+                </span>
+              </div>
+            </div>
+
+            {validationResult.errors.length > 0 && (
+              <div style={{ marginBottom: '1.5rem' }}>
+                <h3 style={{ color: '#dc2626', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <AlertTriangle size={16} />
+                  Errori ({validationResult.errors.length})
+                </h3>
+                <div style={{ background: '#fef2f2', padding: '1rem', borderRadius: 8 }}>
+                  {validationResult.errors.map((error, index) => (
+                    <div key={index} style={{ 
+                      color: '#dc2626', 
+                      marginBottom: '0.5rem',
+                      padding: '0.5rem',
+                      background: 'white',
+                      borderRadius: 4,
+                      border: '1px solid #fecaca'
+                    }}>
+                      {index + 1}. {error}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {validationResult.warnings.length > 0 && (
+              <div style={{ marginBottom: '1.5rem' }}>
+                <h3 style={{ color: '#b45309', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <AlertTriangle size={16} />
+                  Avvisi ({validationResult.warnings.length})
+                </h3>
+                <div style={{ background: '#fffbeb', padding: '1rem', borderRadius: 8 }}>
+                  {validationResult.warnings.map((warning, index) => (
+                    <div key={index} style={{ 
+                      color: '#b45309', 
+                      marginBottom: '0.5rem',
+                      padding: '0.5rem',
+                      background: 'white',
+                      borderRadius: 4,
+                      border: '1px solid #fef3c7'
+                    }}>
+                      {index + 1}. {warning}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setShowValidationReport(false)}
+                style={{
+                  background: '#6b7280',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 4,
+                  padding: '0.75rem 1.5rem',
+                  cursor: 'pointer',
+                  fontWeight: 600
+                }}
+              >
+                Chiudi
+              </button>
+              {validationResult.isValid && (
+                <button
+                  onClick={() => {
+                    setShowValidationReport(false);
+                    handleSubmit();
+                  }}
+                  style={{
+                    background: '#059669',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: 4,
+                    padding: '0.75rem 1.5rem',
+                    cursor: 'pointer',
+                    fontWeight: 600
+                  }}
+                >
+                  Procedi con l'Invio
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
