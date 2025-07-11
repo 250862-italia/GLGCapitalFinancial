@@ -1,9 +1,12 @@
 import { supabaseAdmin } from '@/lib/supabase'
 import { NextRequest, NextResponse } from 'next/server'
+import { createAuditTrailService } from '@/lib/audit-trail'
 
 const supabase = supabaseAdmin;
 
 export async function POST(request: NextRequest) {
+  const auditTrail = createAuditTrailService(supabase);
+  
   try {
     // Test database connection
     const { data: testData, error: testError } = await supabase
@@ -13,6 +16,12 @@ export async function POST(request: NextRequest) {
     
     if (testError) {
       console.log('Database connection test failed, using offline mode');
+      // Log system error
+      await auditTrail.logSystemError(
+        new Error('Database connection failed'),
+        'KYC submission - database connection test',
+        'system'
+      );
       // Return mock success response for offline mode
       return NextResponse.json({
         success: true,
@@ -183,6 +192,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Log KYC submission
+    await auditTrail.logKYCSubmission(userId, body, body.validationScore);
+
     return NextResponse.json({
       success: true,
       message: 'KYC data submitted successfully',
@@ -192,6 +204,12 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('KYC submission error:', error)
+    // Log system error
+    await auditTrail.logSystemError(
+      error as Error,
+      'KYC submission - general error',
+      'system'
+    );
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { createAuditTrailService } from '@/lib/audit-trail';
 
 const supabase = supabaseAdmin;
 
 export async function POST(request: NextRequest) {
+  const auditTrail = createAuditTrailService(supabase);
+  
   try {
     const body = await request.json();
     const { kycId, action, message, adminEmail } = body;
@@ -163,6 +166,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Get current KYC record status for audit trail
+    const { data: currentKYC } = await supabase
+      .from('kyc_records')
+      .select('status')
+      .eq('id', kycId)
+      .single();
+
+    const oldStatus = currentKYC?.status || 'unknown';
+
     // Update KYC record with notification sent
     const { error: updateError } = await supabase
       .from('kyc_records')
@@ -174,6 +186,16 @@ export async function POST(request: NextRequest) {
 
     if (updateError) {
       console.error('Failed to update KYC record:', updateError);
+    } else {
+      // Log KYC status change
+      await auditTrail.logKYCStatusChange(
+        adminEmail,
+        kycId,
+        oldStatus,
+        action === 'pending_review' ? 'pending' : action,
+        message,
+        client.email
+      );
     }
 
     return NextResponse.json({
