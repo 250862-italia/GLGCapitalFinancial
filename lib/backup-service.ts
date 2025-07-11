@@ -370,8 +370,8 @@ export class BackupService {
       const stats = {
         total_backups: backups.length,
         total_size: 0,
-        oldest_backup: null,
-        newest_backup: null,
+        oldest_backup: null as BackupData | null,
+        newest_backup: null as BackupData | null,
         by_month: {} as Record<string, number>
       };
 
