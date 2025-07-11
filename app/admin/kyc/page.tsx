@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from 'react';
-import { CheckCircle, XCircle, Clock, Eye, Download, User, Shield, Plus, Edit, Trash2, Search, Filter, Upload, Image as ImageIcon, Calendar, Mail, Phone } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Eye, Download, User, Shield, Plus, Edit, Trash2, Search, Filter, Upload, Image as ImageIcon, Calendar, Mail, Phone, BarChart3, FileText, TrendingUp, AlertTriangle, CheckSquare, Square, RefreshCw } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 interface KYCRecord {
@@ -27,6 +27,15 @@ interface KYCRecord {
   };
 }
 
+interface KYCStats {
+  total: number;
+  pending: number;
+  approved: number;
+  rejected: number;
+  today: number;
+  thisWeek: number;
+}
+
 export default function AdminKYCPage() {
   const [records, setRecords] = useState<KYCRecord[]>([]);
   const [filteredRecords, setFilteredRecords] = useState<KYCRecord[]>([]);
@@ -36,8 +45,19 @@ export default function AdminKYCPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [documentTypeFilter, setDocumentTypeFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState('all');
   const [selectedRecord, setSelectedRecord] = useState<KYCRecord | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [stats, setStats] = useState<KYCStats>({
+    total: 0,
+    pending: 0,
+    approved: 0,
+    rejected: 0,
+    today: 0,
+    thisWeek: 0
+  });
+  const [selectedRecords, setSelectedRecords] = useState<string[]>([]);
+  const [bulkAction, setBulkAction] = useState('');
 
   useEffect(() => {
     const fetchKYC = async () => {
@@ -70,6 +90,21 @@ export default function AdminKYCPage() {
 
         setRecords(recordsWithClients);
         setFilteredRecords(recordsWithClients);
+        
+        // Calculate stats
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+        
+        const stats: KYCStats = {
+          total: recordsWithClients.length,
+          pending: recordsWithClients.filter(r => r.status === 'pending').length,
+          approved: recordsWithClients.filter(r => r.status === 'approved').length,
+          rejected: recordsWithClients.filter(r => r.status === 'rejected').length,
+          today: recordsWithClients.filter(r => new Date(r.created_at) >= today).length,
+          thisWeek: recordsWithClients.filter(r => new Date(r.created_at) >= weekAgo).length
+        };
+        setStats(stats);
       } catch (err: any) {
         setError(err.message || 'Errore nel caricamento delle KYC');
       } finally {
@@ -103,8 +138,28 @@ export default function AdminKYCPage() {
       filtered = filtered.filter(record => record.document_type === documentTypeFilter);
     }
 
+    // Filtro per data
+    if (dateFilter !== 'all') {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+      switch (dateFilter) {
+        case 'today':
+          filtered = filtered.filter(record => new Date(record.created_at) >= today);
+          break;
+        case 'week':
+          filtered = filtered.filter(record => new Date(record.created_at) >= weekAgo);
+          break;
+        case 'month':
+          filtered = filtered.filter(record => new Date(record.created_at) >= monthAgo);
+          break;
+      }
+    }
+
     setFilteredRecords(filtered);
-  }, [records, searchTerm, statusFilter, documentTypeFilter]);
+  }, [records, searchTerm, statusFilter, documentTypeFilter, dateFilter]);
 
   // Funzione per aggiornare lo stato della KYC
   const updateStatus = async (id: string, status: string) => {
@@ -121,6 +176,58 @@ export default function AdminKYCPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Bulk actions
+  const handleBulkAction = async () => {
+    if (!bulkAction || selectedRecords.length === 0) return;
+    
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('kyc_records')
+        .update({ status: bulkAction })
+        .in('id', selectedRecords);
+      
+      if (error) throw error;
+      
+      setRecords(prev => prev.map(record => 
+        selectedRecords.includes(record.id) ? { ...record, status: bulkAction } : record
+      ));
+      
+      setSelectedRecords([]);
+      setBulkAction('');
+      alert(`Aggiornati ${selectedRecords.length} record`);
+    } catch (err: any) {
+      alert('Errore durante l\'aggiornamento bulk: ' + (err.message || err));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Export data
+  const exportData = () => {
+    const csvData = filteredRecords.map(record => ({
+      'Nome': record.clients?.first_name || '',
+      'Cognome': record.clients?.last_name || '',
+      'Email': record.clients?.email || '',
+      'Tipo Documento': record.document_type,
+      'Stato': record.status,
+      'Data Creazione': formatDate(record.created_at),
+      'Note': record.notes || ''
+    }));
+
+    const csv = [
+      Object.keys(csvData[0]).join(','),
+      ...csvData.map(row => Object.values(row).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `kyc-data-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
   };
 
   // Funzione per ricaricare il cache dello schema
@@ -169,27 +276,108 @@ export default function AdminKYCPage() {
     });
   };
 
+  const toggleRecordSelection = (id: string) => {
+    setSelectedRecords(prev => 
+      prev.includes(id) 
+        ? prev.filter(recordId => recordId !== id)
+        : [...prev, id]
+    );
+  };
+
+  const toggleAllRecords = () => {
+    if (selectedRecords.length === filteredRecords.length) {
+      setSelectedRecords([]);
+    } else {
+      setSelectedRecords(filteredRecords.map(r => r.id));
+    }
+  };
+
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto', padding: '2rem' }}>
+    <div style={{ maxWidth: 1400, margin: '0 auto', padding: '2rem' }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <h1 style={{ fontSize: 32, fontWeight: 800, margin: 0 }}>KYC Management</h1>
-        <button 
-          onClick={reloadSchema}
-          disabled={reloadingSchema}
-          style={{
-            background: '#3b82f6',
-            color: 'white',
-            border: 'none',
-            borderRadius: 6,
-            padding: '0.5rem 1rem',
-            cursor: reloadingSchema ? 'not-allowed' : 'pointer',
-            fontWeight: 600,
-            fontSize: 14
-          }}
-        >
-          {reloadingSchema ? 'Reloading...' : 'Reload Schema'}
-        </button>
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <button 
+            onClick={exportData}
+            style={{
+              background: '#059669',
+              color: 'white',
+              border: 'none',
+              borderRadius: 6,
+              padding: '0.5rem 1rem',
+              cursor: 'pointer',
+              fontWeight: 600,
+              fontSize: 14,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}
+          >
+            <Download size={16} />
+            Esporta CSV
+          </button>
+          <button 
+            onClick={reloadSchema}
+            disabled={reloadingSchema}
+            style={{
+              background: '#3b82f6',
+              color: 'white',
+              border: 'none',
+              borderRadius: 6,
+              padding: '0.5rem 1rem',
+              cursor: reloadingSchema ? 'not-allowed' : 'pointer',
+              fontWeight: 600,
+              fontSize: 14
+            }}
+          >
+            {reloadingSchema ? 'Reloading...' : 'Reload Schema'}
+          </button>
+        </div>
+      </div>
+
+      {/* Statistics Cards */}
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+        gap: '1rem', 
+        marginBottom: '2rem' 
+      }}>
+        <div style={{ background: 'white', padding: '1.5rem', borderRadius: 8, boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+            <BarChart3 size={20} color="#3b82f6" />
+            <span style={{ fontSize: 14, color: '#6b7280' }}>Totale</span>
+          </div>
+          <div style={{ fontSize: 24, fontWeight: 700, color: '#1f2937' }}>{stats.total}</div>
+        </div>
+        <div style={{ background: 'white', padding: '1.5rem', borderRadius: 8, boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+            <Clock size={20} color="#b45309" />
+            <span style={{ fontSize: 14, color: '#6b7280' }}>In Attesa</span>
+          </div>
+          <div style={{ fontSize: 24, fontWeight: 700, color: '#b45309' }}>{stats.pending}</div>
+        </div>
+        <div style={{ background: 'white', padding: '1.5rem', borderRadius: 8, boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+            <CheckCircle size={20} color="#16a34a" />
+            <span style={{ fontSize: 14, color: '#6b7280' }}>Approvati</span>
+          </div>
+          <div style={{ fontSize: 24, fontWeight: 700, color: '#16a34a' }}>{stats.approved}</div>
+        </div>
+        <div style={{ background: 'white', padding: '1.5rem', borderRadius: 8, boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+            <XCircle size={20} color="#dc2626" />
+            <span style={{ fontSize: 14, color: '#6b7280' }}>Rifiutati</span>
+          </div>
+          <div style={{ fontSize: 24, fontWeight: 700, color: '#dc2626' }}>{stats.rejected}</div>
+        </div>
+        <div style={{ background: 'white', padding: '1.5rem', borderRadius: 8, boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+            <TrendingUp size={20} color="#8b5cf6" />
+            <span style={{ fontSize: 14, color: '#6b7280' }}>Questa Settimana</span>
+          </div>
+          <div style={{ fontSize: 24, fontWeight: 700, color: '#8b5cf6' }}>{stats.thisWeek}</div>
+        </div>
       </div>
 
       {/* Filtri e Ricerca */}
@@ -251,10 +439,72 @@ export default function AdminKYCPage() {
           <option value="BANK_STATEMENT">Bank Statement</option>
         </select>
 
+        <select
+          value={dateFilter}
+          onChange={(e) => setDateFilter(e.target.value)}
+          style={{
+            padding: '0.5rem',
+            border: '1px solid #d1d5db',
+            borderRadius: 4,
+            background: 'white'
+          }}
+        >
+          <option value="all">Tutte le date</option>
+          <option value="today">Oggi</option>
+          <option value="week">Ultima settimana</option>
+          <option value="month">Ultimo mese</option>
+        </select>
+
         <div style={{ marginLeft: 'auto', fontSize: 14, color: '#6b7280' }}>
           {filteredRecords.length} di {records.length} record
         </div>
       </div>
+
+      {/* Bulk Actions */}
+      {selectedRecords.length > 0 && (
+        <div style={{ 
+          background: '#eff6ff', 
+          padding: '1rem', 
+          borderRadius: 8, 
+          marginBottom: '1rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '1rem'
+        }}>
+          <span style={{ fontWeight: 600, color: '#1e40af' }}>
+            {selectedRecords.length} record selezionati
+          </span>
+          <select
+            value={bulkAction}
+            onChange={(e) => setBulkAction(e.target.value)}
+            style={{
+              padding: '0.5rem',
+              border: '1px solid #d1d5db',
+              borderRadius: 4,
+              background: 'white'
+            }}
+          >
+            <option value="">Seleziona azione</option>
+            <option value="approved">Approva tutti</option>
+            <option value="rejected">Rifiuta tutti</option>
+          </select>
+          <button
+            onClick={handleBulkAction}
+            disabled={!bulkAction}
+            style={{
+              background: '#059669',
+              color: 'white',
+              border: 'none',
+              borderRadius: 4,
+              padding: '0.5rem 1rem',
+              cursor: bulkAction ? 'pointer' : 'not-allowed',
+              fontWeight: 600
+            }}
+          >
+            Applica
+          </button>
+        </div>
+      )}
 
       {loading ? (
         <div style={{ textAlign: 'center', padding: '2rem' }}>
@@ -270,6 +520,14 @@ export default function AdminKYCPage() {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: '#f3f4f6' }}>
+                <th style={{ padding: 12, borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedRecords.length === filteredRecords.length && filteredRecords.length > 0}
+                    onChange={toggleAllRecords}
+                    style={{ marginRight: '0.5rem' }}
+                  />
+                </th>
                 <th style={{ padding: 12, borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Cliente</th>
                 <th style={{ padding: 12, borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Tipo Documento</th>
                 <th style={{ padding: 12, borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Stato</th>
@@ -281,6 +539,13 @@ export default function AdminKYCPage() {
             <tbody>
               {filteredRecords.map(record => (
                 <tr key={record.id} style={{ borderBottom: '1px solid #f3f4f6', cursor: 'pointer' }} onClick={() => { setSelectedRecord(record); setShowModal(true); }}>
+                  <td style={{ padding: 12 }} onClick={(e) => e.stopPropagation()}>
+                    <input
+                      type="checkbox"
+                      checked={selectedRecords.includes(record.id)}
+                      onChange={() => toggleRecordSelection(record.id)}
+                    />
+                  </td>
                   <td style={{ padding: 12 }}>
                     <div>
                       <strong>{record.clients?.first_name} {record.clients?.last_name}</strong>
