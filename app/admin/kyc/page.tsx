@@ -14,6 +14,8 @@ interface KYCRecord {
   "verified_at"?: string;
   "created_at": string;
   "updated_at": string;
+  source?: 'kyc_records_table' | 'client_profile';
+  kyc_data?: any;
   clients?: {
     "first_name": string;
     "last_name": string;
