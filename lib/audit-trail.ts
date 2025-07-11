@@ -382,7 +382,7 @@ export class AuditTrailService {
     }
   }
 
-  private getStatusChangeSeverity(newStatus: string): string {
+  private getStatusChangeSeverity(newStatus: string): 'low' | 'medium' | 'high' | 'critical' {
     switch (newStatus) {
       case 'approved':
       case 'rejected':
