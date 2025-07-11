@@ -55,14 +55,15 @@ export default function AdminSettingsBackupPage() {
     }
   };
 
-  const formatDate = (date: Date) => {
+  const formatDate = (date: string | Date) => {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
     return new Intl.DateTimeFormat('it-IT', {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
       hour: '2-digit',
       minute: '2-digit'
-    }).format(date);
+    }).format(dateObj);
   };
 
   const formatSize = (bytes: number) => {
@@ -105,7 +106,7 @@ export default function AdminSettingsBackupPage() {
           <div>
             <h3 style={{ fontSize: '14px', color: '#666', marginBottom: '4px' }}>Ultimo Backup</h3>
             <p style={{ fontSize: '16px', fontWeight: 'bold' }}>
-              {stats.lastBackup ? formatDate(stats.lastBackup) : 'Nessuno'}
+              {stats.lastBackup ? formatDate(new Date(stats.lastBackup)) : 'Nessuno'}
             </p>
           </div>
           <div>
