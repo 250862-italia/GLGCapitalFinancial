@@ -193,11 +193,11 @@ export default function AdminSettingsBackupPage() {
                     </p>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <span className={getStatusColor(backup.status)} style={{ fontWeight: 'bold' }}>
-                      {getStatusText(backup.status)}
+                    <span className={getStatusColor()} style={{ fontWeight: 'bold' }}>
+                      {getStatusText()}
                     </span>
                     <p style={{ fontSize: '14px', color: '#666', marginTop: '4px' }}>
-                      {formatSize(backup.size)}
+                      {formatSize(JSON.stringify(backup.data).length)}
                     </p>
                   </div>
                 </div>
