@@ -68,7 +68,7 @@ export default function RootLayout({
                     fontSize: '0.9rem',
                     transition: 'all 0.3s ease'
                   }}>
-                    Registrazione Clienti
+                    Client Registration
                   </a>
                   <a href="/login" style={{
                     background: 'transparent',
@@ -102,6 +102,20 @@ export default function RootLayout({
                   Admin Panel
                 </a>
               )}
+              {!isAdminLoggedIn && (
+                <a href="/admin/login" style={{
+                  background: '#059669',
+                  color: '#fff',
+                  padding: '0.5rem 1rem',
+                  borderRadius: 6,
+                  textDecoration: 'none',
+                  fontWeight: 600,
+                  fontSize: '0.9rem',
+                  transition: 'all 0.3s ease'
+                }}>
+                  Admin Access
+                </a>
+              )}
             </div>
           </nav>
           <LanguageSwitcher />
@@ -128,12 +142,12 @@ export default function RootLayout({
                 </p>
                 <div style={{ opacity: 0.8 }}>
                   <p style={{ marginBottom: '0.5rem', fontSize: '0.9rem' }}>
-                    <strong>Sede Legale:</strong><br />
+                    <strong>Legal Address:</strong><br />
                     1309 Coffeen Avenue, STE 1200<br />
                     Sheridan, Wyoming 82801 (USA)
                   </p>
                   <p style={{ marginBottom: '0.5rem', fontSize: '0.9rem' }}>
-                    <strong>Telefono:</strong> +1 (307) 263-0876
+                    <strong>Phone:</strong> +1 (307) 263-0876
                   </p>
                   <p style={{ marginBottom: '0.5rem', fontSize: '0.9rem' }}>
                     <strong>Email:</strong> corefound@glgcapitalgroupllc.com
