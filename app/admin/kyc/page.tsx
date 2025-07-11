@@ -58,6 +58,10 @@ export default function AdminKYCPage() {
   });
   const [selectedRecords, setSelectedRecords] = useState<string[]>([]);
   const [bulkAction, setBulkAction] = useState('');
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [notificationAction, setNotificationAction] = useState('');
+  const [notificationMessage, setNotificationMessage] = useState('');
+  const [sendingNotification, setSendingNotification] = useState(false);
 
   useEffect(() => {
     const fetchKYC = async () => {
@@ -175,6 +179,43 @@ export default function AdminKYCPage() {
       alert('Errore durante l\'aggiornamento dello stato: ' + (err.message || err));
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Funzione per inviare notifiche email
+  const sendNotification = async (kycId: string, action: string, message: string) => {
+    setSendingNotification(true);
+    try {
+      const response = await fetch('/api/admin/kyc/notify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          kycId,
+          action,
+          message,
+          adminEmail: 'admin@glgcapitalgroup.com'
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to send notification');
+      }
+
+      alert(`Notification sent successfully to ${result.clientEmail}`);
+      setShowNotificationModal(false);
+      setNotificationAction('');
+      setNotificationMessage('');
+      
+      // Refresh the records to show updated status
+      window.location.reload();
+    } catch (error: any) {
+      alert('Error sending notification: ' + error.message);
+    } finally {
+      setSendingNotification(false);
     }
   };
 
@@ -629,9 +670,14 @@ export default function AdminKYCPage() {
                   </td>
                   <td style={{ padding: 12 }}>
                     {record.status === 'pending' && (
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                         <button 
-                          onClick={(e) => { e.stopPropagation(); updateStatus(record.id, 'approved'); }} 
+                          onClick={(e) => { 
+                            e.stopPropagation(); 
+                            setSelectedRecord(record);
+                            setNotificationAction('approved');
+                            setShowNotificationModal(true);
+                          }} 
                           style={{ 
                             background: '#10b981', 
                             color: '#fff', 
@@ -643,10 +689,15 @@ export default function AdminKYCPage() {
                             fontSize: 12
                           }}
                         >
-                          Approva
+                          Approva & Notifica
                         </button>
                         <button 
-                          onClick={(e) => { e.stopPropagation(); updateStatus(record.id, 'rejected'); }} 
+                          onClick={(e) => { 
+                            e.stopPropagation(); 
+                            setSelectedRecord(record);
+                            setNotificationAction('rejected');
+                            setShowNotificationModal(true);
+                          }} 
                           style={{ 
                             background: '#ef4444', 
                             color: '#fff', 
@@ -658,12 +709,36 @@ export default function AdminKYCPage() {
                             fontSize: 12
                           }}
                         >
-                          Rifiuta
+                          Rifiuta & Notifica
+                        </button>
+                        <button 
+                          onClick={(e) => { 
+                            e.stopPropagation(); 
+                            setSelectedRecord(record);
+                            setNotificationAction('pending_review');
+                            setShowNotificationModal(true);
+                          }} 
+                          style={{ 
+                            background: '#f59e0b', 
+                            color: '#fff', 
+                            border: 'none', 
+                            borderRadius: 4, 
+                            padding: '0.25rem 0.5rem', 
+                            cursor: 'pointer', 
+                            fontWeight: 600,
+                            fontSize: 12
+                          }}
+                        >
+                          In Revisione
                         </button>
                       </div>
                     )}
-                    {record.status === 'approved' && <span style={{ color: '#10b981', fontWeight: 700, fontSize: 12 }}>Approvato</span>}
-                    {record.status === 'rejected' && <span style={{ color: '#ef4444', fontWeight: 700, fontSize: 12 }}>Rifiutato</span>}
+                    {record.status === 'approved' && (
+                      <span style={{ color: '#10b981', fontWeight: 700, fontSize: 12 }}>Approvato</span>
+                    )}
+                    {record.status === 'rejected' && (
+                      <span style={{ color: '#ef4444', fontWeight: 700, fontSize: 12 }}>Rifiutato</span>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -823,6 +898,125 @@ export default function AdminKYCPage() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal per notifiche email */}
+      {showNotificationModal && selectedRecord && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: 8,
+            padding: '2rem',
+            maxWidth: 500,
+            width: '90%',
+            position: 'relative'
+          }}>
+            <button 
+              onClick={() => setShowNotificationModal(false)}
+              style={{
+                position: 'absolute',
+                top: '1rem',
+                right: '1rem',
+                background: 'none',
+                border: 'none',
+                fontSize: '1.5rem',
+                cursor: 'pointer'
+              }}
+            >
+              ×
+            </button>
+            
+            <h2 style={{ marginBottom: '1.5rem' }}>
+              Invia Notifica Email
+            </h2>
+            
+            <div style={{ marginBottom: '1rem' }}>
+              <strong>Cliente:</strong> {selectedRecord.clients?.first_name} {selectedRecord.clients?.last_name}
+            </div>
+            <div style={{ marginBottom: '1rem' }}>
+              <strong>Email:</strong> {selectedRecord.clients?.email}
+            </div>
+            <div style={{ marginBottom: '1rem' }}>
+              <strong>Azione:</strong> 
+              <span style={{
+                background: notificationAction === 'approved' ? '#bbf7d0' : 
+                           notificationAction === 'rejected' ? '#fee2e2' : '#fef3c7',
+                color: notificationAction === 'approved' ? '#16a34a' : 
+                       notificationAction === 'rejected' ? '#dc2626' : '#b45309',
+                padding: '4px 8px',
+                borderRadius: 4,
+                marginLeft: '0.5rem',
+                fontSize: 12,
+                fontWeight: 600
+              }}>
+                {notificationAction === 'approved' ? 'Approvato' : 
+                 notificationAction === 'rejected' ? 'Rifiutato' : 'In Revisione'}
+              </span>
+            </div>
+            
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600 }}>
+                Messaggio aggiuntivo (opzionale):
+              </label>
+              <textarea
+                value={notificationMessage}
+                onChange={(e) => setNotificationMessage(e.target.value)}
+                placeholder="Inserisci un messaggio personalizzato..."
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  border: '1px solid #d1d5db',
+                  borderRadius: 4,
+                  minHeight: 100,
+                  resize: 'vertical'
+                }}
+              />
+            </div>
+            
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setShowNotificationModal(false)}
+                style={{
+                  background: '#6b7280',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 4,
+                  padding: '0.75rem 1.5rem',
+                  cursor: 'pointer',
+                  fontWeight: 600
+                }}
+              >
+                Annulla
+              </button>
+              <button
+                onClick={() => sendNotification(selectedRecord.id, notificationAction, notificationMessage)}
+                disabled={sendingNotification}
+                style={{
+                  background: '#059669',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 4,
+                  padding: '0.75rem 1.5rem',
+                  cursor: sendingNotification ? 'not-allowed' : 'pointer',
+                  fontWeight: 600
+                }}
+              >
+                {sendingNotification ? 'Invio in corso...' : 'Invia Notifica'}
+              </button>
+            </div>
           </div>
         </div>
       )}
