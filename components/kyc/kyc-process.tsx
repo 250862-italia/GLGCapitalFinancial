@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { User, Shield, FileText, CreditCard, CheckCircle, AlertCircle, Upload, ArrowRight, ArrowLeft, AlertTriangle, CheckSquare } from 'lucide-react';
+import { User, Shield, FileText, CreditCard, CheckCircle, AlertCircle, Upload, ArrowRight, ArrowLeft, AlertTriangle, CheckSquare, Info } from 'lucide-react';
 import { useAuth } from '../../hooks/use-auth';
 import { validateKYC, generateValidationReport, ValidationResult } from '../../lib/kyc-validation';
 
@@ -117,10 +117,8 @@ export default function KYCProcess({ userId, onComplete }: { userId: string; onC
       if (financialProfile.investmentGoals.length === 0) newErrors['financialProfile.investmentGoals'] = 'At least one investment goal is required';
     }
     if (step === 3) {
-      const { documents } = kycData;
-      if (!documents.idDocument) newErrors['documents.idDocument'] = 'ID document is required';
-      if (!documents.proofOfAddress) newErrors['documents.proofOfAddress'] = 'Proof of address is required';
-      if (!documents.bankStatement) newErrors['documents.bankStatement'] = 'Bank statement is required';
+      // Documents are now optional - no validation required
+      // Users can submit KYC without documents and send them via email later
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -447,13 +445,32 @@ export default function KYCProcess({ userId, onComplete }: { userId: string; onC
         {currentStep === 3 && (
           <div> {/* ...Document Upload step... */}
             <h2 style={{ fontSize: 24, fontWeight: 700, color: '#1f2937', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: 8 }}><FileText size={24} />Document Upload</h2>
+            
+            {/* Info Box */}
+            <div style={{ 
+              background: '#f0f9ff', 
+              border: '1px solid #0ea5e9', 
+              borderRadius: 8, 
+              padding: '1rem', 
+              marginBottom: '1.5rem' 
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                <Info size={16} color="#0ea5e9" />
+                <strong style={{ color: '#0ea5e9' }}>Document Upload Information</strong>
+              </div>
+              <p style={{ color: '#0369a1', fontSize: 14, margin: 0 }}>
+                Documents are optional for initial submission. If you experience upload issues, you can send your documents via email to: <strong>kyc@glgcapitalgroupllc.com</strong>
+              </p>
+            </div>
+            
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
               {(['idDocument', 'proofOfAddress', 'bankStatement'] as const).map((field) => (
                 <div key={field}>
                   <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>
                     {field === 'idDocument' && 'ID Document'}
                     {field === 'proofOfAddress' && 'Proof of Address'}
-                    {field === 'bankStatement' && 'Bank Statement'} <span style={{ color: '#ef4444' }}>*</span>
+                    {field === 'bankStatement' && 'Bank Statement'}
+                    <span style={{ color: '#6b7280', fontSize: 12, fontWeight: 400 }}> (Optional)</span>
                   </label>
                   <input
                     type="file"
@@ -471,6 +488,7 @@ export default function KYCProcess({ userId, onComplete }: { userId: string; onC
                 </div>
               ))}
             </div>
+            
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '2rem' }}>
               <button onClick={handlePrevious} style={{ padding: '0.75rem 1.5rem', border: '1px solid #d1d5db', borderRadius: 8, background: 'white', color: '#374151', fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}><ArrowLeft size={16} />Previous</button>
               <button onClick={handleNext} style={{ padding: '0.75rem 1.5rem', border: 'none', borderRadius: 8, background: '#3b82f6', color: 'white', fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>Next <ArrowRight size={16} /></button>
