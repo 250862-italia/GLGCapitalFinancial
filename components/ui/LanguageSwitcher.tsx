@@ -1,105 +1,110 @@
 "use client";
 
-import { useSafeRouter } from '@/lib/safe-router';
-import { usePathname } from 'next/navigation';
-import { useTranslation } from 'next-i18next';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { Globe } from 'lucide-react';
+
+// Wrapper sicuro per useTranslation
+const useSafeTranslation = () => {
+  try {
+    // Dynamic import per evitare errori di SSR
+    const { useTranslation } = require('next-i18next');
+    return useTranslation();
+  } catch (error) {
+    // Fallback se i18next non è disponibile
+    return {
+      t: (key: string) => key,
+      i18n: { language: 'en' }
+    };
+  }
+};
 
 export default function LanguageSwitcher() {
-  const router = useSafeRouter();
-  const pathname = usePathname();
-  const [isI18nReady, setIsI18nReady] = useState(false);
-  
-  // Wrapper sicuro per useTranslation
-  let i18n: any = null;
-  try {
-    const translation = useTranslation();
-    i18n = translation.i18n;
-    if (i18n && !isI18nReady) {
-      setIsI18nReady(true);
-    }
-  } catch (error) {
-    console.log('i18n not ready yet');
-  }
+  const translation = useSafeTranslation();
+  const [isOpen, setIsOpen] = useState(false);
 
-  const changeLanguage = (lng: string) => {
-    // Per l'App Router, usiamo un approccio diverso
-    // Reindirizziamo alla stessa pagina con il nuovo locale
-    const currentPath = pathname || '/';
-    router.push(currentPath);
-    
-    // Cambia la lingua nell'i18n se disponibile
-    if (i18n && i18n.changeLanguage) {
-      i18n.changeLanguage(lng);
+  const languages = [
+    { code: 'en', name: 'English', flag: '🇺🇸' },
+    { code: 'it', name: 'Italiano', flag: '🇮🇹' }
+  ];
+
+  const currentLanguage = languages.find(lang => lang.code === translation.i18n.language) || languages[0];
+
+  const handleLanguageChange = (languageCode: string) => {
+    try {
+      translation.i18n.changeLanguage(languageCode);
+    } catch (error) {
+      console.log('Language change not available in this context');
     }
+    setIsOpen(false);
   };
 
-  // Se i18n non è pronto, mostra una versione semplificata
-  if (!isI18nReady) {
-    return (
-      <div style={{ position: 'fixed', top: 16, right: 24, zIndex: 1000, display: 'flex', gap: 8 }}>
-        <button
-          onClick={() => changeLanguage('en')}
-          style={{
-            background: '#6366f1',
-            color: '#fff',
-            border: '1px solid #6366f1',
-            borderRadius: 6,
-            padding: '4px 12px',
-            fontWeight: 600,
-            cursor: 'pointer',
-          }}
-        >
-          EN
-        </button>
-        <button
-          onClick={() => changeLanguage('it')}
-          style={{
-            background: '#fff',
-            color: '#6366f1',
-            border: '1px solid #6366f1',
-            borderRadius: 6,
-            padding: '4px 12px',
-            fontWeight: 600,
-            cursor: 'pointer',
-          }}
-        >
-          IT
-        </button>
-      </div>
-    );
-  }
-
   return (
-    <div style={{ position: 'fixed', top: 16, right: 24, zIndex: 1000, display: 'flex', gap: 8 }}>
+    <div style={{ position: 'relative' }}>
       <button
-        onClick={() => changeLanguage('en')}
+        onClick={() => setIsOpen(!isOpen)}
         style={{
-          background: i18n.language === 'en' ? '#6366f1' : '#fff',
-          color: i18n.language === 'en' ? '#fff' : '#6366f1',
-          border: '1px solid #6366f1',
-          borderRadius: 6,
-          padding: '4px 12px',
-          fontWeight: 600,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          padding: '0.5rem 1rem',
+          background: 'white',
+          border: '1px solid #e5e7eb',
+          borderRadius: '8px',
           cursor: 'pointer',
+          fontSize: '14px',
+          fontWeight: 500,
+          color: '#374151'
         }}
       >
-        EN
+        <Globe size={16} />
+        <span>{currentLanguage.flag}</span>
+        <span>{currentLanguage.name}</span>
       </button>
-      <button
-        onClick={() => changeLanguage('it')}
-        style={{
-          background: i18n.language === 'it' ? '#6366f1' : '#fff',
-          color: i18n.language === 'it' ? '#fff' : '#6366f1',
-          border: '1px solid #6366f1',
-          borderRadius: 6,
-          padding: '4px 12px',
-          fontWeight: 600,
-          cursor: 'pointer',
-        }}
-      >
-        IT
-      </button>
+
+      {isOpen && (
+        <div style={{
+          position: 'absolute',
+          top: '100%',
+          right: 0,
+          marginTop: '0.5rem',
+          background: 'white',
+          border: '1px solid #e5e7eb',
+          borderRadius: '8px',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+          zIndex: 1000,
+          minWidth: '150px'
+        }}>
+          {languages.map((language) => (
+            <button
+              key={language.code}
+              onClick={() => handleLanguageChange(language.code)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                width: '100%',
+                padding: '0.75rem 1rem',
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '14px',
+                color: '#374151',
+                textAlign: 'left',
+                transition: 'background-color 0.2s'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#f3f4f6';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+              }}
+            >
+              <span>{language.flag}</span>
+              <span>{language.name}</span>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 } 
