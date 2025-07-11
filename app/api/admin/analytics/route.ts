@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dbManager } from '@/lib/database-manager';
 
+export const dynamic = 'force-dynamic';
+
 // Mock data fallback
 const mockAnalytics = [
   {

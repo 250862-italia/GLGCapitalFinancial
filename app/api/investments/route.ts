@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { emailNotificationService } from '@/lib/email-service';
 
+export const dynamic = 'force-dynamic';
+
 // GET: lista o dettaglio investimento
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);

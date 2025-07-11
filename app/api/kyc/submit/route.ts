@@ -2,6 +2,8 @@ import { supabaseAdmin } from '@/lib/supabase'
 import { NextRequest, NextResponse } from 'next/server'
 import { createAuditTrailService } from '@/lib/audit-trail'
 
+export const dynamic = 'force-dynamic';
+
 const supabase = supabaseAdmin;
 
 export async function POST(request: NextRequest) {
