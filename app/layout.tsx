@@ -33,11 +33,12 @@ export default function RootLayout({
         flexDirection: 'column', 
         minHeight: '100vh' 
       }}>
-        <AuthProvider style={{ 
-          display: 'flex', 
-          flexDirection: 'column', 
-          flex: 1 
-        }}>
+        <AuthProvider>
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            flex: 1 
+          }}>
           <nav style={{
             background: '#1f2937',
             color: '#fff',
@@ -149,6 +150,7 @@ export default function RootLayout({
               <p>&copy; 2024 GLG Capital Group LLC. All rights reserved.</p>
             </div>
           </footer>
+          </div>
         </AuthProvider>
       </body>
     </html>
