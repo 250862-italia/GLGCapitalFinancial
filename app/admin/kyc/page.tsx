@@ -298,6 +298,33 @@ export default function AdminKYCPage() {
     }
   };
 
+  // Funzione per creare la tabella KYC
+  const createKYCTable = async () => {
+    setReloadingSchema(true);
+    try {
+      const response = await fetch('/api/admin/create-kyc-table', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to create KYC table');
+      }
+
+      alert('KYC table created successfully!');
+      window.location.reload();
+    } catch (error) {
+      console.error('Create KYC table error:', error);
+      alert('Error creating KYC table. Please try again.');
+    } finally {
+      setReloadingSchema(false);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'approved': return { bg: '#bbf7d0', color: '#16a34a' };
@@ -373,6 +400,22 @@ export default function AdminKYCPage() {
             }}
           >
             {reloadingSchema ? 'Reloading...' : 'Reload Schema'}
+          </button>
+          <button 
+            onClick={createKYCTable}
+            disabled={reloadingSchema}
+            style={{
+              background: '#dc2626',
+              color: 'white',
+              border: 'none',
+              borderRadius: 6,
+              padding: '0.5rem 1rem',
+              cursor: reloadingSchema ? 'not-allowed' : 'pointer',
+              fontWeight: 600,
+              fontSize: 14
+            }}
+          >
+            {reloadingSchema ? 'Creating...' : 'Create KYC Table'}
           </button>
         </div>
       </div>
