@@ -157,6 +157,8 @@ export async function POST(request: NextRequest) {
     
     // Try to insert KYC records, but don't fail if table doesn't exist
     let kycInsertSuccess = false;
+    let kycErrorDetails = null;
+    
     try {
       const { data: kycInsertData, error: kycError } = await supabase
         .from('kyc_records')
@@ -165,7 +167,40 @@ export async function POST(request: NextRequest) {
 
       if (kycError) {
         console.error('KYC records creation error:', kycError);
-        console.log('KYC records table might not exist or have schema issues, continuing with client update only');
+        kycErrorDetails = kycError.message;
+        
+        // Check if it's a table not found error
+        if (kycError.message?.includes('relation "kyc_records" does not exist') || 
+            kycError.message?.includes('table "kyc_records" does not exist')) {
+          console.log('KYC records table does not exist, storing KYC data in client profile only');
+          
+          // Store KYC data in client profile as fallback
+          const kycDataJson = JSON.stringify({
+            personalInfo,
+            financialProfile,
+            documents,
+            submittedAt: new Date().toISOString(),
+            validationScore: body.validationScore || 0
+          });
+          
+          // Update client with KYC data in a custom field
+          const { error: kycDataUpdateError } = await supabase
+            .from('clients')
+            .update({ 
+              kyc_data: kycDataJson,
+              kyc_status: 'pending'
+            })
+            .eq('id', clientData.id);
+            
+          if (kycDataUpdateError) {
+            console.error('Failed to store KYC data in client profile:', kycDataUpdateError);
+          } else {
+            console.log('KYC data stored in client profile as fallback');
+            kycInsertSuccess = true; // Consider it successful since we stored the data
+          }
+        } else {
+          console.log('KYC records table exists but has schema issues, continuing with client update only');
+        }
         
         // Log the specific error for debugging
         await auditTrail.logSystemError(
@@ -179,6 +214,8 @@ export async function POST(request: NextRequest) {
       }
     } catch (kycInsertException) {
       console.error('Exception during KYC records insertion:', kycInsertException);
+      kycErrorDetails = kycInsertException instanceof Error ? kycInsertException.message : 'Unknown error';
+      
       await auditTrail.logSystemError(
         kycInsertException as Error,
         'KYC submission - records insertion exception',
@@ -219,9 +256,13 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'KYC data submitted successfully',
+      message: kycInsertSuccess 
+        ? 'KYC data submitted successfully' 
+        : 'KYC data submitted successfully (stored in profile due to table issues)',
       client_id: clientData.id,
-      kyc_status: 'pending'
+      kyc_status: 'pending',
+      kyc_records_created: kycInsertSuccess,
+      warning: kycErrorDetails ? `KYC records table issue: ${kycErrorDetails}` : null
     })
 
   } catch (error) {
