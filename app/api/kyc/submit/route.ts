@@ -78,11 +78,14 @@ export async function POST(request: NextRequest) {
         .insert({
           user_id: userId,
           email: personalInfo.email,
-          first_name: personalInfo.first_name,
-          last_name: personalInfo.last_name,
+          first_name: personalInfo.firstName,
+          last_name: personalInfo.lastName,
           phone: personalInfo.phone,
-          date_of_birth: personalInfo.date_of_birth,
+          date_of_birth: personalInfo.dateOfBirth,
           nationality: personalInfo.nationality,
+          address: personalInfo.address,
+          city: personalInfo.city,
+          country: personalInfo.country,
           status: 'active',
           kyc_status: 'pending'
         })
@@ -108,33 +111,33 @@ export async function POST(request: NextRequest) {
     kycRecords.push({
       client_id: clientData.id,
       document_type: 'PERSONAL_INFO',
-      document_number: `ID: ${personalInfo.id_document || 'Not provided'}`,
-      document_image_url: personalInfo.id_document || null,
+      document_number: `ID: ${personalInfo.codiceFiscale || 'Not provided'}`,
+      document_image_url: documents.idDocument || null,
       status: 'pending',
-      notes: `Personal Info: ${personalInfo.first_name} ${personalInfo.last_name}, DOB: ${personalInfo.date_of_birth}, Nationality: ${personalInfo.nationality}, Address: ${personalInfo.address}, ${personalInfo.city}, ${personalInfo.country}`
+      notes: `Personal Info: ${personalInfo.firstName} ${personalInfo.lastName}, DOB: ${personalInfo.dateOfBirth}, Nationality: ${personalInfo.nationality}, Address: ${personalInfo.address}, ${personalInfo.city}, ${personalInfo.country}`
     });
 
     // Proof of Address KYC Record
-    if (documents.proof_of_address) {
+    if (documents.proofOfAddress) {
       kycRecords.push({
         "client_id": clientData.id,
         "document_type": 'PROOF_OF_ADDRESS',
         "document_number": `Address: ${personalInfo.address}, ${personalInfo.city}, ${personalInfo.country}`,
-        "document_image_url": documents.proof_of_address,
+        "document_image_url": documents.proofOfAddress,
         status: 'pending',
         notes: `Address: ${personalInfo.address}, ${personalInfo.city}, ${personalInfo.country}`
       });
     }
 
     // Bank Statement KYC Record
-    if (documents.bank_statement) {
+    if (documents.bankStatement) {
       kycRecords.push({
         "client_id": clientData.id,
         "document_type": 'BANK_STATEMENT',
         "document_number": 'Bank Statement',
-        "document_image_url": documents.bank_statement,
+        "document_image_url": documents.bankStatement,
         status: 'pending',
-        notes: `Financial Profile: Employment: ${financialProfile.employment_status}, Income: ${financialProfile.annual_income}, Source: ${financialProfile.source_of_funds}`
+        notes: `Financial Profile: Employment: ${financialProfile.employmentStatus}, Income: ${financialProfile.annualIncome}, Source: ${financialProfile.sourceOfFunds}`
       });
     }
 
@@ -152,13 +155,23 @@ export async function POST(request: NextRequest) {
       // Don't return error, just log it and continue
     }
 
-    // Update client KYC status
+    // Update client KYC status and personal info
     const { error: updateError } = await supabase
       .from('clients')
       .update({ 
         kyc_status: 'pending',
-        "date_of_birth": personalInfo.date_of_birth,
-        nationality: personalInfo.nationality
+        "date_of_birth": personalInfo.dateOfBirth,
+        nationality: personalInfo.nationality,
+        address: personalInfo.address,
+        city: personalInfo.city,
+        country: personalInfo.country,
+        // Store financial profile data in client record
+        employment_status: financialProfile.employmentStatus,
+        annual_income: financialProfile.annualIncome,
+        source_of_funds: financialProfile.sourceOfFunds,
+        investment_experience: financialProfile.investmentExperience,
+        risk_tolerance: financialProfile.riskTolerance,
+        investment_goals: financialProfile.investmentGoals
       })
       .eq('id', clientData.id);
 
@@ -213,32 +226,32 @@ export async function GET(request: NextRequest) {
 
     // Ricostruisci la struttura attesa dal frontend
     const personalInfo = {
-      first_name: client.first_name || '',
-      last_name: client.last_name || '',
-      date_of_birth: client.date_of_birth || '',
+      firstName: client.first_name || '',
+      lastName: client.last_name || '',
+      dateOfBirth: client.date_of_birth || '',
       nationality: client.nationality || '',
       address: client.address || '',
       city: client.city || '',
       country: client.country || '',
       phone: client.phone || '',
-      email: client.email || ''
+      email: client.email || '',
+      codiceFiscale: client.codice_fiscale || ''
     };
-    // NB: i campi address/city/country potrebbero non essere presenti in clients, fallback vuoto
+
     const financialProfile = {
-      employment_status: client.employment_status || '',
-      annual_income: client.annual_income || '',
-      source_of_funds: client.source_of_funds || '',
-      investment_experience: client.investment_experience || '',
-      risk_tolerance: client.risk_tolerance || '',
-      investment_goals: client.investment_goals || []
+      employmentStatus: client.employment_status || '',
+      annualIncome: client.annual_income || '',
+      sourceOfFunds: client.source_of_funds || '',
+      investmentExperience: client.investment_experience || '',
+      riskTolerance: client.risk_tolerance || '',
+      investmentGoals: client.investment_goals || []
     };
-    // NB: i campi financial potrebbero non essere presenti in clients, fallback vuoto
 
     // Documenti (se presenti)
     const documents = {
-      id_document: kycRecords?.find(r => r.document_type === 'PERSONAL_INFO')?.document_image_url || null,
-      proof_of_address: kycRecords?.find(r => r.document_type === 'PROOF_OF_ADDRESS')?.document_image_url || null,
-      bank_statement: kycRecords?.find(r => r.document_type === 'BANK_STATEMENT')?.document_image_url || null
+      idDocument: kycRecords?.find(r => r.document_type === 'PERSONAL_INFO')?.document_image_url || null,
+      proofOfAddress: kycRecords?.find(r => r.document_type === 'PROOF_OF_ADDRESS')?.document_image_url || null,
+      bankStatement: kycRecords?.find(r => r.document_type === 'BANK_STATEMENT')?.document_image_url || null
     };
 
     return NextResponse.json({
