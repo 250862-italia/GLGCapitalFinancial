@@ -85,6 +85,13 @@ export default function ProfilePage() {
   const loadProfile = async () => {
     if (!user) return;
     
+    // If user is admin, don't try to load client profile
+    if (user.role === 'admin' || user.role === 'superadmin') {
+      console.log('User is admin, skipping client profile load');
+      setLoading(false);
+      return;
+    }
+    
     setLoading(true);
     setError(null);
     
@@ -139,7 +146,7 @@ export default function ProfilePage() {
               clientData = newClientData;
             }
           } else {
-            console.error('Failed to create profile automatically');
+            console.error('Failed to create profile:', response.statusText);
             // Create a basic profile object to prevent errors
             clientData = {
               id: user.id,
@@ -155,7 +162,7 @@ export default function ProfilePage() {
             } as ClientProfile;
           }
         } catch (createError) {
-          console.error('Error creating profile automatically:', createError);
+          console.error('Error creating profile:', createError);
           // Create a basic profile object to prevent errors
           clientData = {
             id: user.id,
@@ -251,6 +258,13 @@ export default function ProfilePage() {
 
   const handleSave = async () => {
     if (!profile || !user) return;
+    
+    // If user is admin, don't try to update client profile
+    if (user.role === 'admin' || user.role === 'superadmin') {
+      console.log('User is admin, skipping client profile update');
+      setEditing(false);
+      return;
+    }
     
     setSaving(true);
     
@@ -442,6 +456,51 @@ export default function ProfilePage() {
             }}
           >
             Start KYC Process
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // If user is admin, show admin message
+  if (user && (user.role === 'admin' || user.role === 'superadmin')) {
+    return (
+      <div style={{ 
+        minHeight: '100vh', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        background: '#f9fafb'
+      }}>
+        <div style={{ 
+          background: 'white', 
+          borderRadius: 16, 
+          padding: '3rem',
+          boxShadow: '0 4px 24px rgba(10,37,64,0.10)',
+          textAlign: 'center',
+          maxWidth: 500
+        }}>
+          <Shield size={64} color="#3b82f6" style={{ marginBottom: '1rem' }} />
+          <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#1f2937', marginBottom: '1rem' }}>
+            Admin Profile
+          </h1>
+          <p style={{ color: '#6b7280', marginBottom: '2rem' }}>
+            You are logged in as an administrator. Client profiles are managed through the admin dashboard.
+          </p>
+          <button
+            onClick={() => router.push('/admin')}
+            style={{
+              background: '#3b82f6',
+              color: 'white',
+              border: 'none',
+              borderRadius: 8,
+              padding: '0.75rem 1.5rem',
+              fontSize: 16,
+              fontWeight: 600,
+              cursor: 'pointer'
+            }}
+          >
+            Go to Admin Dashboard
           </button>
         </div>
       </div>

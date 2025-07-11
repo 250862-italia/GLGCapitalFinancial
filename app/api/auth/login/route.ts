@@ -2,6 +2,8 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const { email, password } = await request.json();
@@ -11,19 +13,97 @@ export async function POST(request: NextRequest) {
     const validPassword = "Admin123!@#";
 
     if (email === validEmail && password === validPassword) {
-      const adminUser = {
-        id: "superadmin-1",
-        email: email,
-        name: "Super Admin",
-        role: "superadmin",
-      };
+      // Try to get or create admin user from database
+      try {
+        // First, try to find existing admin user
+        const { data: existingAdmin, error: findError } = await supabaseAdmin
+          .from('users')
+          .select('id, email, first_name, last_name, role, is_active')
+          .eq('email', validEmail)
+          .single();
 
-      // Store admin session in localStorage (client-side)
-      return NextResponse.json({
-        success: true,
-        user: adminUser,
-        message: "Login successful",
-      });
+        if (existingAdmin && !findError) {
+          // Admin user exists, return it
+          const adminUser = {
+            id: existingAdmin.id,
+            email: existingAdmin.email,
+            name: existingAdmin.first_name && existingAdmin.last_name 
+              ? `${existingAdmin.first_name} ${existingAdmin.last_name}`
+              : "Super Admin",
+            role: existingAdmin.role,
+          };
+
+          return NextResponse.json({
+            success: true,
+            user: adminUser,
+            message: "Login successful",
+          });
+        } else {
+          // Admin user doesn't exist, create it
+          const hashedPassword = await bcrypt.hash(validPassword, 12);
+          
+          const { data: newAdmin, error: createError } = await supabaseAdmin
+            .from('users')
+            .insert({
+              email: validEmail,
+              password_hash: hashedPassword,
+              first_name: 'Super',
+              last_name: 'Admin',
+              role: 'superadmin',
+              is_active: true,
+              email_verified: true,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
+            .select('id, email, first_name, last_name, role, is_active')
+            .single();
+
+          if (createError || !newAdmin) {
+            console.error('Failed to create admin user:', createError);
+            // Fallback to hardcoded admin (temporary)
+            const adminUser = {
+              id: "superadmin-1",
+              email: email,
+              name: "Super Admin",
+              role: "superadmin",
+            };
+
+            return NextResponse.json({
+              success: true,
+              user: adminUser,
+              message: "Login successful (fallback mode)",
+            });
+          }
+
+          const adminUser = {
+            id: newAdmin.id,
+            email: newAdmin.email,
+            name: `${newAdmin.first_name} ${newAdmin.last_name}`,
+            role: newAdmin.role,
+          };
+
+          return NextResponse.json({
+            success: true,
+            user: adminUser,
+            message: "Login successful",
+          });
+        }
+      } catch (dbError) {
+        console.error('Database error for admin login:', dbError);
+        // Fallback to hardcoded admin (temporary)
+        const adminUser = {
+          id: "superadmin-1",
+          email: email,
+          name: "Super Admin",
+          role: "superadmin",
+        };
+
+        return NextResponse.json({
+          success: true,
+          user: adminUser,
+          message: "Login successful (fallback mode)",
+        });
+      }
     } else {
       // Try Supabase authentication as fallback
       let supabase = supabaseAdmin;
