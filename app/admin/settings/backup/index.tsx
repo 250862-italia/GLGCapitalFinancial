@@ -210,11 +210,10 @@ export default function AdminSettingsBackupPage() {
                       background: '#28a745',
                       color: 'white',
                       border: 'none',
-                      padding: '6px 12px',
                       borderRadius: '4px',
                       fontSize: '12px',
-                      cursor: backup.status !== 'completed' ? 'not-allowed' : 'pointer',
-                      opacity: backup.status !== 'completed' ? 0.5 : 1
+                      cursor: 'pointer',
+                      opacity: 1
                     }}
                   >
                     Esporta
