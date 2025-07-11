@@ -28,8 +28,16 @@ export default function RootLayout({
 
   return (
     <html lang="en">
-      <body className={inter.className}>
-        <AuthProvider>
+      <body className={inter.className} style={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        minHeight: '100vh' 
+      }}>
+        <AuthProvider style={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          flex: 1 
+        }}>
           <nav style={{
             background: '#1f2937',
             color: '#fff',
@@ -44,7 +52,36 @@ export default function RootLayout({
               {isLoggedIn && <a href="/dashboard" style={{ color: '#fff', textDecoration: 'none' }}>Dashboard</a>}
               {isAdminLoggedIn && <a href="/admin" style={{ color: '#fff', textDecoration: 'none' }}>Admin</a>}
             </div>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              {!isLoggedIn && !isAdminLoggedIn && (
+                <>
+                  <a href="/iscriviti" style={{
+                    background: 'var(--accent)',
+                    color: 'var(--primary)',
+                    padding: '0.5rem 1rem',
+                    borderRadius: 6,
+                    textDecoration: 'none',
+                    fontWeight: 600,
+                    fontSize: '0.9rem',
+                    transition: 'all 0.3s ease'
+                  }}>
+                    Registrazione Clienti
+                  </a>
+                  <a href="/login" style={{
+                    background: 'transparent',
+                    color: '#fff',
+                    padding: '0.5rem 1rem',
+                    borderRadius: 6,
+                    textDecoration: 'none',
+                    fontWeight: 600,
+                    fontSize: '0.9rem',
+                    border: '1px solid #fff',
+                    transition: 'all 0.3s ease'
+                  }}>
+                    Login
+                  </a>
+                </>
+              )}
               {isLoggedIn && (
                 <ClientLogoutButton onLogout={() => setIsLoggedIn(false)} />
               )}
@@ -52,6 +89,66 @@ export default function RootLayout({
           </nav>
           <LanguageSwitcher />
           {children}
+          
+          {/* Footer */}
+          <footer style={{
+            background: '#1f2937',
+            color: '#fff',
+            padding: '2rem',
+            marginTop: 'auto'
+          }}>
+            <div style={{ 
+              maxWidth: 1200, 
+              margin: '0 auto',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+              gap: '2rem'
+            }}>
+              <div>
+                <h3 style={{ marginBottom: '1rem', fontSize: '1.2rem' }}>GLG Capital Group LLC</h3>
+                <p style={{ lineHeight: 1.6, opacity: 0.8 }}>
+                  Empowering your financial future with innovative investment solutions and strategic capital management.
+                </p>
+              </div>
+              <div>
+                <h4 style={{ marginBottom: '1rem', fontSize: '1rem' }}>Quick Links</h4>
+                <ul style={{ listStyle: 'none', padding: 0 }}>
+                  <li style={{ marginBottom: '0.5rem' }}>
+                    <a href="/about" style={{ color: '#fff', textDecoration: 'none', opacity: 0.8 }}>About Us</a>
+                  </li>
+                  <li style={{ marginBottom: '0.5rem' }}>
+                    <a href="/contact" style={{ color: '#fff', textDecoration: 'none', opacity: 0.8 }}>Contact</a>
+                  </li>
+                  <li style={{ marginBottom: '0.5rem' }}>
+                    <a href="/investments" style={{ color: '#fff', textDecoration: 'none', opacity: 0.8 }}>Investments</a>
+                  </li>
+                </ul>
+              </div>
+              <div>
+                <h4 style={{ marginBottom: '1rem', fontSize: '1rem' }}>Services</h4>
+                <ul style={{ listStyle: 'none', padding: 0 }}>
+                  <li style={{ marginBottom: '0.5rem' }}>
+                    <a href="/equity-pledge" style={{ color: '#fff', textDecoration: 'none', opacity: 0.8 }}>Equity Pledge</a>
+                  </li>
+                  <li style={{ marginBottom: '0.5rem' }}>
+                    <a href="/live-markets" style={{ color: '#fff', textDecoration: 'none', opacity: 0.8 }}>Live Markets</a>
+                  </li>
+                  <li style={{ marginBottom: '0.5rem' }}>
+                    <a href="/kyc" style={{ color: '#fff', textDecoration: 'none', opacity: 0.8 }}>KYC</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div style={{ 
+              borderTop: '1px solid #374151', 
+              marginTop: '2rem', 
+              paddingTop: '1rem',
+              textAlign: 'center',
+              opacity: 0.6
+            }}>
+              <p>&copy; 2024 GLG Capital Group LLC. All rights reserved.</p>
+            </div>
+          </footer>
         </AuthProvider>
       </body>
     </html>
