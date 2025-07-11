@@ -6,55 +6,7 @@ export const dynamic = 'force-dynamic';
 
 const supabase = supabaseAdmin;
 
-// Function to create KYC records table if it doesn't exist
-async function ensureKYCTableExists() {
-  try {
-    // Test if table exists
-    const { data: testData, error: testError } = await supabase
-      .from('kyc_records')
-      .select('id')
-      .limit(1);
 
-    if (testError && testError.message?.includes('relation "kyc_records" does not exist')) {
-      console.log('KYC records table does not exist, creating it...');
-      
-      // Create the table
-      const { error: createError } = await supabase.rpc('exec_sql', {
-        sql: `
-          CREATE TABLE IF NOT EXISTS kyc_records (
-            id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-            client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
-            document_type VARCHAR(50) NOT NULL,
-            document_number VARCHAR(255),
-            document_image_url TEXT,
-            status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected', 'in_review')),
-            notes TEXT,
-            verified_at TIMESTAMP WITH TIME ZONE,
-            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-            updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-          );
-          
-          CREATE INDEX IF NOT EXISTS idx_kyc_records_client_id ON kyc_records(client_id);
-          CREATE INDEX IF NOT EXISTS idx_kyc_records_document_type ON kyc_records(document_type);
-          CREATE INDEX IF NOT EXISTS idx_kyc_records_status ON kyc_records(status);
-        `
-      });
-
-      if (createError) {
-        console.error('Failed to create KYC records table:', createError);
-        return false;
-      }
-      
-      console.log('KYC records table created successfully');
-      return true;
-    }
-    
-    return true; // Table exists
-  } catch (error) {
-    console.error('Error checking/creating KYC table:', error);
-    return false;
-  }
-}
 
 export async function POST(request: NextRequest) {
   const auditTrail = createAuditTrailService(supabase);
@@ -205,72 +157,64 @@ export async function POST(request: NextRequest) {
     // Insert KYC records (we always have at least the personal info record)
     console.log('Inserting KYC records:', kycRecords.length, 'records');
     
-    // Ensure KYC table exists before inserting
-    const tableExists = await ensureKYCTableExists();
-    
-    // Try to insert KYC records
+    // Try to insert KYC records, but always have a fallback
     let kycInsertSuccess = false;
     let kycErrorDetails = null;
     
-    if (tableExists) {
-      try {
-        const { data: kycInsertData, error: kycError } = await supabase
-          .from('kyc_records')
-          .insert(kycRecords)
-          .select();
+    try {
+      const { data: kycInsertData, error: kycError } = await supabase
+        .from('kyc_records')
+        .insert(kycRecords)
+        .select();
 
-        if (kycError) {
-          console.error('KYC records creation error:', kycError);
-          kycErrorDetails = kycError.message;
-          
-          // Log the specific error for debugging
-          await auditTrail.logSystemError(
-            new Error(`KYC records creation failed: ${kycError.message}`),
-            'KYC submission - records creation',
-            'warning'
-          );
-        } else {
-          console.log('KYC records created successfully:', kycInsertData?.length, 'records');
-          kycInsertSuccess = true;
-        }
-      } catch (kycInsertException) {
-        console.error('Exception during KYC records insertion:', kycInsertException);
-        kycErrorDetails = kycInsertException instanceof Error ? kycInsertException.message : 'Unknown error';
+      if (kycError) {
+        console.error('KYC records creation error:', kycError);
+        kycErrorDetails = kycError.message;
         
+        // Log the specific error for debugging
         await auditTrail.logSystemError(
-          kycInsertException as Error,
-          'KYC submission - records insertion exception',
+          new Error(`KYC records creation failed: ${kycError.message}`),
+          'KYC submission - records creation',
           'warning'
         );
-      }
-    } else {
-      console.log('KYC table creation failed, storing KYC data in client profile only');
-      kycErrorDetails = 'Failed to create KYC records table';
-      
-      // Store KYC data in client profile as fallback
-      const kycDataJson = JSON.stringify({
-        personalInfo,
-        financialProfile,
-        documents,
-        submittedAt: new Date().toISOString(),
-        validationScore: body.validationScore || 0
-      });
-      
-      // Update client with KYC data in a custom field
-      const { error: kycDataUpdateError } = await supabase
-        .from('clients')
-        .update({ 
-          kyc_data: kycDataJson,
-          kyc_status: 'pending'
-        })
-        .eq('id', clientData.id);
-        
-      if (kycDataUpdateError) {
-        console.error('Failed to store KYC data in client profile:', kycDataUpdateError);
       } else {
-        console.log('KYC data stored in client profile as fallback');
-        kycInsertSuccess = true; // Consider it successful since we stored the data
+        console.log('KYC records created successfully:', kycInsertData?.length, 'records');
+        kycInsertSuccess = true;
       }
+    } catch (kycInsertException) {
+      console.error('Exception during KYC records insertion:', kycInsertException);
+      kycErrorDetails = kycInsertException instanceof Error ? kycInsertException.message : 'Unknown error';
+      
+      await auditTrail.logSystemError(
+        kycInsertException as Error,
+        'KYC submission - records insertion exception',
+        'warning'
+      );
+    }
+
+    // Always store KYC data in client profile as backup/fallback
+    const kycDataJson = JSON.stringify({
+      personalInfo,
+      financialProfile,
+      documents,
+      submittedAt: new Date().toISOString(),
+      validationScore: body.validationScore || 0,
+      kycRecords: kycRecords // Store the records we tried to insert
+    });
+    
+    // Update client with KYC data in a custom field
+    const { error: kycDataUpdateError } = await supabase
+      .from('clients')
+      .update({ 
+        kyc_data: kycDataJson,
+        kyc_status: 'pending'
+      })
+      .eq('id', clientData.id);
+      
+    if (kycDataUpdateError) {
+      console.error('Failed to store KYC data in client profile:', kycDataUpdateError);
+    } else {
+      console.log('KYC data stored in client profile as backup');
     }
 
     // Update client KYC status and personal info
@@ -308,10 +252,11 @@ export async function POST(request: NextRequest) {
       success: true,
       message: kycInsertSuccess 
         ? 'KYC data submitted successfully' 
-        : 'KYC data submitted successfully (stored in profile due to table issues)',
+        : 'KYC data submitted successfully (stored in profile as backup)',
       client_id: clientData.id,
       kyc_status: 'pending',
       kyc_records_created: kycInsertSuccess,
+      kyc_data_stored_in_profile: true,
       warning: kycErrorDetails ? `KYC records table issue: ${kycErrorDetails}` : null
     })
 

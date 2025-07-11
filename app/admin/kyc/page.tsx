@@ -68,32 +68,89 @@ export default function AdminKYCPage() {
       setLoading(true);
       setError(null);
       try {
-        // First get KYC records
-        const { data: kycData, error: kycError } = await supabase
-          .from('kyc_records')
-          .select('*')
-          .order('"created_at"', { ascending: false });
+        let allRecords = [];
 
-        if (kycError) throw kycError;
+        // First try to get KYC records from kyc_records table
+        try {
+          const { data: kycData, error: kycError } = await supabase
+            .from('kyc_records')
+            .select('*')
+            .order('"created_at"', { ascending: false });
 
-        // Then get client data for each KYC record
-        const recordsWithClients = await Promise.all(
-          (kycData || []).map(async (record) => {
-            const { data: clientData } = await supabase
-              .from('clients')
-              .select('"first_name", "last_name", email, phone, "date_of_birth", nationality, address, city, country')
-              .eq('id', record.client_id)
-              .single();
+          if (!kycError && kycData) {
+            // Get client data for each KYC record
+            const recordsWithClients = await Promise.all(
+              kycData.map(async (record) => {
+                const { data: clientData } = await supabase
+                  .from('clients')
+                  .select('"first_name", "last_name", email, phone, "date_of_birth", nationality, address, city, country')
+                  .eq('id', record.client_id)
+                  .single();
 
-            return {
-              ...record,
-              clients: clientData || null
-            };
-          })
-        );
+                return {
+                  ...record,
+                  clients: clientData || null,
+                  source: 'kyc_records_table'
+                };
+              })
+            );
+            allRecords = recordsWithClients;
+          }
+        } catch (kycTableError) {
+          console.log('KYC records table not available, checking client profiles...');
+        }
 
-        setRecords(recordsWithClients);
-        setFilteredRecords(recordsWithClients);
+        // Also get KYC data from client profiles (fallback)
+        try {
+          const { data: clientsWithKYC, error: clientsError } = await supabase
+            .from('clients')
+            .select('id, "first_name", "last_name", email, phone, "date_of_birth", nationality, address, city, country, kyc_data, kyc_status, "created_at"')
+            .not('kyc_data', 'is', null);
+
+          if (!clientsError && clientsWithKYC) {
+            const profileRecords = clientsWithKYC.map(client => {
+              try {
+                const kycData = JSON.parse(client.kyc_data);
+                return {
+                  id: `profile-${client.id}`,
+                  client_id: client.id,
+                  document_type: 'PERSONAL_INFO',
+                  document_number: `Profile KYC - ${client.email}`,
+                  document_image_url: kycData.documents?.idDocument || null,
+                  status: client.kyc_status || 'pending',
+                  notes: `KYC data stored in profile: ${kycData.personalInfo?.firstName} ${kycData.personalInfo?.lastName}`,
+                  created_at: kycData.submittedAt || client.created_at,
+                  updated_at: client.created_at,
+                  clients: {
+                    first_name: client.first_name,
+                    last_name: client.last_name,
+                    email: client.email,
+                    phone: client.phone,
+                    date_of_birth: client.date_of_birth,
+                    nationality: client.nationality,
+                    address: client.address,
+                    city: client.city,
+                    country: client.country
+                  },
+                  source: 'client_profile',
+                  kyc_data: kycData
+                };
+              } catch (parseError) {
+                return null;
+              }
+            }).filter(record => record !== null);
+
+            // Merge records, avoiding duplicates
+            const existingClientIds = allRecords.map(r => r.client_id);
+            const newProfileRecords = profileRecords.filter(r => !existingClientIds.includes(r.client_id));
+            allRecords = [...allRecords, ...newProfileRecords];
+          }
+        } catch (profileError) {
+          console.log('Error fetching KYC data from profiles:', profileError);
+        }
+
+        setRecords(allRecords);
+        setFilteredRecords(allRecords);
         
         // Calculate stats
         const now = new Date();
@@ -101,12 +158,12 @@ export default function AdminKYCPage() {
         const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
         
         const stats: KYCStats = {
-          total: recordsWithClients.length,
-          pending: recordsWithClients.filter(r => r.status === 'pending').length,
-          approved: recordsWithClients.filter(r => r.status === 'approved').length,
-          rejected: recordsWithClients.filter(r => r.status === 'rejected').length,
-          today: recordsWithClients.filter(r => new Date(r.created_at) >= today).length,
-          thisWeek: recordsWithClients.filter(r => new Date(r.created_at) >= weekAgo).length
+          total: allRecords.length,
+          pending: allRecords.filter(r => r.status === 'pending').length,
+          approved: allRecords.filter(r => r.status === 'approved').length,
+          rejected: allRecords.filter(r => r.status === 'rejected').length,
+          today: allRecords.filter(r => new Date(r.created_at) >= today).length,
+          thisWeek: allRecords.filter(r => new Date(r.created_at) >= weekAgo).length
         };
         setStats(stats);
       } catch (err: any) {
@@ -169,11 +226,26 @@ export default function AdminKYCPage() {
   const updateStatus = async (id: string, status: string) => {
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from('kyc_records')
-        .update({ status })
-        .eq('id', id);
-      if (error) throw error;
+      const record = records.find(r => r.id === id);
+      
+      if (record?.source === 'client_profile') {
+        // Update status in client profile
+        const { error } = await supabase
+          .from('clients')
+          .update({ kyc_status: status })
+          .eq('id', record.client_id);
+        
+        if (error) throw error;
+      } else {
+        // Update status in kyc_records table
+        const { error } = await supabase
+          .from('kyc_records')
+          .update({ status })
+          .eq('id', id);
+        
+        if (error) throw error;
+      }
+      
       setRecords(prev => prev.map(app => app.id === id ? { ...app, status } : app));
     } catch (err: any) {
       alert('Errore durante l\'aggiornamento dello stato: ' + (err.message || err));
