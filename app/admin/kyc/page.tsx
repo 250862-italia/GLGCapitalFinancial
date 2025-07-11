@@ -74,28 +74,28 @@ export default function AdminKYCPage() {
 
         // First try to get KYC records from kyc_records table
         try {
-          const { data: kycData, error: kycError } = await supabase
-            .from('kyc_records')
-            .select('*')
-            .order('"created_at"', { ascending: false });
+        const { data: kycData, error: kycError } = await supabase
+          .from('kyc_records')
+          .select('*')
+          .order('"created_at"', { ascending: false });
 
           if (!kycError && kycData) {
             // Get client data for each KYC record
-            const recordsWithClients = await Promise.all(
+        const recordsWithClients = await Promise.all(
               kycData.map(async (record) => {
-                const { data: clientData } = await supabase
-                  .from('clients')
+            const { data: clientData } = await supabase
+              .from('clients')
                   .select('"first_name", "last_name", email, phone, "date_of_birth", nationality, address, city, country')
-                  .eq('id', record.client_id)
-                  .single();
+              .eq('id', record.client_id)
+              .single();
 
-                return {
-                  ...record,
+            return {
+              ...record,
                   clients: clientData || null,
                   source: 'kyc_records_table'
-                };
-              })
-            );
+            };
+          })
+        );
             allRecords = recordsWithClients;
           }
         } catch (kycTableError) {
@@ -240,12 +240,12 @@ export default function AdminKYCPage() {
         if (error) throw error;
       } else {
         // Update status in kyc_records table
-        const { error } = await supabase
-          .from('kyc_records')
-          .update({ status })
-          .eq('id', id);
+      const { error } = await supabase
+        .from('kyc_records')
+        .update({ status })
+        .eq('id', id);
         
-        if (error) throw error;
+      if (error) throw error;
       }
       
       setRecords(prev => prev.map(app => app.id === id ? { ...app, status } : app));
@@ -459,22 +459,22 @@ export default function AdminKYCPage() {
             <Download size={16} />
             Esporta CSV
           </button>
-          <button 
-            onClick={reloadSchema}
-            disabled={reloadingSchema}
-            style={{
-              background: '#3b82f6',
-              color: 'white',
-              border: 'none',
-              borderRadius: 6,
-              padding: '0.5rem 1rem',
-              cursor: reloadingSchema ? 'not-allowed' : 'pointer',
-              fontWeight: 600,
-              fontSize: 14
-            }}
-          >
-            {reloadingSchema ? 'Reloading...' : 'Reload Schema'}
-          </button>
+        <button 
+          onClick={reloadSchema}
+          disabled={reloadingSchema}
+          style={{
+            background: '#3b82f6',
+            color: 'white',
+            border: 'none',
+            borderRadius: 6,
+            padding: '0.5rem 1rem',
+            cursor: reloadingSchema ? 'not-allowed' : 'pointer',
+            fontWeight: 600,
+            fontSize: 14
+          }}
+        >
+          {reloadingSchema ? 'Reloading...' : 'Reload Schema'}
+        </button>
           <button 
             onClick={createKYCTable}
             disabled={reloadingSchema}
@@ -676,8 +676,8 @@ export default function AdminKYCPage() {
       ) : (
         <div style={{ background: '#fff', borderRadius: 8, boxShadow: '0 2px 8px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ background: '#f3f4f6' }}>
+          <thead>
+            <tr style={{ background: '#f3f4f6' }}>
                 <th style={{ padding: 12, borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>
                   <input
                     type="checkbox"
@@ -692,9 +692,9 @@ export default function AdminKYCPage() {
                 <th style={{ padding: 12, borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Data Invio</th>
                 <th style={{ padding: 12, borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Documento</th>
                 <th style={{ padding: 12, borderBottom: '1px solid #e5e7eb', textAlign: 'left' }}>Azioni</th>
-              </tr>
-            </thead>
-            <tbody>
+            </tr>
+          </thead>
+          <tbody>
               {filteredRecords.map(record => (
                 <tr key={record.id} style={{ borderBottom: '1px solid #f3f4f6', cursor: 'pointer' }} onClick={() => { setSelectedRecord(record); setShowModal(true); }}>
                   <td style={{ padding: 12 }} onClick={(e) => e.stopPropagation()}>
@@ -704,10 +704,10 @@ export default function AdminKYCPage() {
                       onChange={() => toggleRecordSelection(record.id)}
                     />
                   </td>
-                  <td style={{ padding: 12 }}>
-                    <div>
+                <td style={{ padding: 12 }}>
+                  <div>
                       <strong>{record.clients?.first_name} {record.clients?.last_name}</strong>
-                      <br />
+                    <br />
                       <small style={{ color: '#6b7280', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                         <Mail size={12} />
                         {record.clients?.email}
@@ -953,7 +953,7 @@ export default function AdminKYCPage() {
                 </div>
                 <div style={{ marginBottom: '1rem' }}>
                   <strong>Data invio:</strong> {formatDate(selectedRecord.created_at)}
-                </div>
+                      </div>
                 {selectedRecord.notes && (
                   <div style={{ marginBottom: '1rem' }}>
                     <strong>Note:</strong> {selectedRecord.notes}
@@ -979,40 +979,40 @@ export default function AdminKYCPage() {
                 <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem' }}>
                   <a 
                     href={selectedRecord.document_image_url} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    style={{ 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        style={{ 
                       background: '#3b82f6',
                       color: 'white',
                       padding: '0.5rem 1rem',
                       borderRadius: 4,
                       textDecoration: 'none',
-                      display: 'flex',
-                      alignItems: 'center',
+                          display: 'flex',
+                          alignItems: 'center',
                       gap: '0.5rem'
-                    }}
-                  >
-                    <Eye size={16} />
+                        }}
+                      >
+                        <Eye size={16} />
                     Visualizza in nuova finestra
-                  </a>
-                  <a 
+                      </a>
+                      <a 
                     href={selectedRecord.document_image_url} 
-                    download
-                    style={{ 
+                        download
+                        style={{ 
                       background: '#059669',
                       color: 'white',
                       padding: '0.5rem 1rem',
                       borderRadius: 4,
                       textDecoration: 'none',
-                      display: 'flex',
-                      alignItems: 'center',
+                          display: 'flex',
+                          alignItems: 'center',
                       gap: '0.5rem'
-                    }}
-                  >
-                    <Download size={16} />
+                        }}
+                      >
+                        <Download size={16} />
                     Scarica
-                  </a>
-                </div>
+                      </a>
+                    </div>
               </div>
             )}
           </div>
