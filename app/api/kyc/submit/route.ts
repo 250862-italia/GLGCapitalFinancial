@@ -156,14 +156,34 @@ export async function POST(request: NextRequest) {
     console.log('Inserting KYC records:', kycRecords.length, 'records');
     
     // Try to insert KYC records, but don't fail if table doesn't exist
-    const { error: kycError } = await supabase
-      .from('kyc_records')
-      .insert(kycRecords);
+    let kycInsertSuccess = false;
+    try {
+      const { data: kycInsertData, error: kycError } = await supabase
+        .from('kyc_records')
+        .insert(kycRecords)
+        .select();
 
-    if (kycError) {
-      console.error('KYC records creation error:', kycError);
-      console.log('KYC records table might not exist, continuing with client update only');
-      // Don't return error, just log it and continue
+      if (kycError) {
+        console.error('KYC records creation error:', kycError);
+        console.log('KYC records table might not exist or have schema issues, continuing with client update only');
+        
+        // Log the specific error for debugging
+        await auditTrail.logSystemError(
+          new Error(`KYC records creation failed: ${kycError.message}`),
+          'KYC submission - records creation',
+          'warning'
+        );
+      } else {
+        console.log('KYC records created successfully:', kycInsertData?.length, 'records');
+        kycInsertSuccess = true;
+      }
+    } catch (kycInsertException) {
+      console.error('Exception during KYC records insertion:', kycInsertException);
+      await auditTrail.logSystemError(
+        kycInsertException as Error,
+        'KYC submission - records insertion exception',
+        'warning'
+      );
     }
 
     // Update client KYC status and personal info

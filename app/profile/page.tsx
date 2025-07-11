@@ -307,6 +307,34 @@ export default function ProfilePage() {
     setEditing(false);
   };
 
+  // Format date for input field (YYYY-MM-DD format)
+  const formatDateForInput = (dateString: string | null | undefined) => {
+    if (!dateString) return '';
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return '';
+      return date.toISOString().split('T')[0];
+    } catch {
+      return '';
+    }
+  };
+
+  // Format date for display
+  const formatDateForDisplay = (dateString: string | null | undefined) => {
+    if (!dateString) return '';
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return '';
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch {
+      return dateString;
+    }
+  };
+
   const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !user) return;
@@ -762,7 +790,7 @@ export default function ProfilePage() {
                   />
                   <ProfileField 
                     label="Date of Birth" 
-                    value={editing ? editForm.date_of_birth : profile.date_of_birth}
+                    value={editing ? formatDateForInput(editForm.date_of_birth) : formatDateForDisplay(profile.date_of_birth)}
                     icon={<Calendar size={14} />}
                     editing={editing}
                     onChange={(value) => setEditForm(prev => ({ ...prev, date_of_birth: value }))}
@@ -980,6 +1008,22 @@ function ProfileField({
   editing?: boolean;
   onChange?: (value: string) => void;
 }) {
+  // Determine input type based on label
+  const getInputType = () => {
+    if (label.toLowerCase().includes('date of birth') || label.toLowerCase().includes('birth')) {
+      return 'date';
+    }
+    if (label.toLowerCase().includes('email')) {
+      return 'email';
+    }
+    if (label.toLowerCase().includes('phone')) {
+      return 'tel';
+    }
+    return 'text';
+  };
+
+  const inputType = getInputType();
+
   return (
     <div style={{ 
       background: 'white', 
@@ -1001,7 +1045,7 @@ function ProfileField({
       </div>
       {editing && onChange ? (
         <input
-          type="text"
+          type={inputType}
           value={value || ''}
           onChange={(e) => onChange(e.target.value)}
           style={{
