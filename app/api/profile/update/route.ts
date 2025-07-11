@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
+// Force dynamic rendering to avoid static generation issues
+export const dynamic = 'force-dynamic';
+
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
@@ -54,98 +57,4 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-export async function GET(request: NextRequest) {
-  try {
-    // Risolto: uso un approccio che non causa problemi di rendering statico
-    const url = new URL(request.url);
-    const userId = url.searchParams.get('userId');
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'User ID is required' },
-        { status: 400 }
-      );
-    }
-
-    // Get client profile
-    let { data, error } = await supabase
-      .from('clients')
-      .select('*')
-      .eq('"userId"', userId)
-      .single();
-
-    if (error && error.code === 'PGRST116') {
-      // Profile not found, create it automatically
-      console.log('Profile not found, creating new profile for user:', userId);
-      
-      // Get user data from auth.users
-      const { data: userData, error: userError } = await supabase
-        .from('auth.users')
-        .select('email, created_at')
-        .eq('id', userId)
-        .single();
-
-      if (userError) {
-        console.error('Error fetching user data:', userError);
-        return NextResponse.json(
-          { error: 'Failed to fetch user data' },
-          { status: 500 }
-        );
-      }
-
-      // Create new client profile
-      const newProfile = {
-        user_id: userId,
-        email: userData.email,
-        first_name: '',
-        last_name: '',
-        phone: '',
-        date_of_birth: null,
-        nationality: '',
-        address: '',
-        city: '',
-        postal_code: '',
-        country: '',
-        profile_photo: null,
-        kyc_status: 'PENDING',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-
-      const { data: createdProfile, error: createError } = await supabase
-        .from('clients')
-        .insert(newProfile)
-        .select()
-        .single();
-
-      if (createError) {
-        console.error('Error creating profile:', createError);
-        return NextResponse.json(
-          { error: 'Failed to create profile' },
-          { status: 500 }
-        );
-      }
-
-      data = createdProfile;
-      console.log('Profile created successfully:', createdProfile);
-    } else if (error) {
-      console.error('Profile fetch error:', error);
-      return NextResponse.json(
-        { error: 'Failed to fetch profile' },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      data
-    });
-
-  } catch (error) {
-    console.error('Profile fetch error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-} 
+ 
