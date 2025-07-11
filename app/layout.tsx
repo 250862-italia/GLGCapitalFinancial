@@ -119,10 +119,20 @@ export default function RootLayout({
               gap: '2rem'
             }}>
               <div>
-                <h3 style={{ marginBottom: '1rem', fontSize: '1.2rem' }}>GLG Capital Group LLC</h3>
-                <p style={{ lineHeight: 1.6, opacity: 0.8 }}>
+                <h3 style={{ marginBottom: '1rem', fontSize: '1.2rem' }}>GLG Capital Consulting LLC</h3>
+                <p style={{ lineHeight: 1.6, opacity: 0.8, marginBottom: '1rem' }}>
                   Empowering your financial future with innovative investment solutions and strategic capital management.
                 </p>
+                <div style={{ opacity: 0.8 }}>
+                  <p style={{ marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+                    <strong>Sede Legale:</strong><br />
+                    1309 Coffeen Avenue, STE 1200<br />
+                    Sheridan, Wyoming 82801 (USA)
+                  </p>
+                  <p style={{ marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+                    <strong>Telefono:</strong> +1 (307) 674-XXXX
+                  </p>
+                </div>
               </div>
               <div>
                 <h4 style={{ marginBottom: '1rem', fontSize: '1rem' }}>Quick Links</h4>
@@ -160,7 +170,7 @@ export default function RootLayout({
               textAlign: 'center',
               opacity: 0.6
             }}>
-              <p>&copy; 2024 GLG Capital Group LLC. All rights reserved.</p>
+              <p>&copy; 2024 GLG Capital Consulting LLC. All rights reserved.</p>
             </div>
           </footer>
           </div>
