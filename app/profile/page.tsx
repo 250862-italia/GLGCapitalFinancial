@@ -424,9 +424,9 @@ export default function ProfilePage() {
                   justifyContent: 'center',
                   border: '3px solid rgba(255,255,255,0.3)'
                 }}>
-                  {profile.photo_url ? (
+                  {profile.profilePhoto ? (
                     <img 
-                      src={profile.photo_url} 
+                      src={profile.profilePhoto} 
                       alt="Profile" 
                       style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
                     />
@@ -478,7 +478,7 @@ export default function ProfilePage() {
               </div>
               <div style={{ flex: 1 }}>
                 <h2 style={{ fontSize: '28px', fontWeight: 700, margin: 0, marginBottom: '0.5rem' }}>
-                  {profile.first_name} {profile.last_name}
+                  {profile.firstName} {profile.lastName}
                 </h2>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -593,22 +593,22 @@ export default function ProfilePage() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   <ProfileField 
                     label="First Name" 
-                    value={editing ? editForm.first_name : profile.first_name}
+                    value={editing ? editForm.firstName : profile.firstName}
                     editing={editing}
-                    onChange={(value) => setEditForm(prev => ({ ...prev, first_name: value }))}
+                    onChange={(value) => setEditForm(prev => ({ ...prev, firstName: value }))}
                   />
                   <ProfileField 
                     label="Last Name" 
-                    value={editing ? editForm.last_name : profile.last_name}
+                    value={editing ? editForm.lastName : profile.lastName}
                     editing={editing}
-                    onChange={(value) => setEditForm(prev => ({ ...prev, last_name: value }))}
+                    onChange={(value) => setEditForm(prev => ({ ...prev, lastName: value }))}
                   />
                   <ProfileField 
                     label="Date of Birth" 
-                    value={editing ? formatDateForInput(editForm.date_of_birth) : formatDateForDisplay(profile.date_of_birth)}
+                    value={editing ? formatDateForInput(editForm.dateOfBirth) : formatDateForDisplay(profile.dateOfBirth)}
                     icon={<Calendar size={14} />}
                     editing={editing}
-                    onChange={(value) => setEditForm(prev => ({ ...prev, date_of_birth: value }))}
+                    onChange={(value) => setEditForm(prev => ({ ...prev, dateOfBirth: value }))}
                   />
                   <ProfileField 
                     label="Nationality" 
