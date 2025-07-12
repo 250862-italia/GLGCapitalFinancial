@@ -199,7 +199,11 @@ class LocalDatabase {
       userData.role || 'user'
     ]);
 
-    return this.getUserById(id);
+    const user = await this.getUserById(id);
+    if (!user) {
+      throw new Error('Failed to create user');
+    }
+    return user;
   }
 
   async getUserByEmail(email: string): Promise<User | null> {
@@ -240,7 +244,11 @@ class LocalDatabase {
       clientData.postal_code
     ]);
 
-    return this.getClientById(id);
+    const client = await this.getClientById(id);
+    if (!client) {
+      throw new Error('Failed to create client');
+    }
+    return client;
   }
 
   async getClientById(id: string): Promise<Client | null> {
@@ -279,7 +287,11 @@ class LocalDatabase {
       kycData.verification_data ? JSON.stringify(kycData.verification_data) : null
     ]);
 
-    return this.getKYCRecordById(id);
+    const kycRecord = await this.getKYCRecordById(id);
+    if (!kycRecord) {
+      throw new Error('Failed to create KYC record');
+    }
+    return kycRecord;
   }
 
   async getKYCRecordById(id: string): Promise<KYCRecord | null> {
@@ -328,7 +340,11 @@ class LocalDatabase {
       investmentData.investment_type
     ]);
 
-    return this.getInvestmentById(id);
+    const investment = await this.getInvestmentById(id);
+    if (!investment) {
+      throw new Error('Failed to create investment');
+    }
+    return investment;
   }
 
   async getInvestmentById(id: string): Promise<Investment | null> {
