@@ -131,6 +131,40 @@ class LocalDatabase {
       `);
       console.log('KYC records table ready');
 
+      // Create simple_kyc table for the new simplified KYC system
+      await this.db.exec(`
+        CREATE TABLE IF NOT EXISTS simple_kyc (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          first_name TEXT NOT NULL,
+          last_name TEXT NOT NULL,
+          email TEXT NOT NULL,
+          phone TEXT NOT NULL,
+          country TEXT NOT NULL,
+          city TEXT,
+          address TEXT,
+          date_of_birth TEXT,
+          nationality TEXT,
+          employment_status TEXT,
+          annual_income TEXT,
+          source_of_funds TEXT,
+          investment_experience TEXT,
+          risk_tolerance TEXT,
+          investment_goals TEXT,
+          status TEXT DEFAULT 'pending',
+          email_verified INTEGER DEFAULT 0,
+          email_verification_code TEXT,
+          email_verification_expires TEXT,
+          submitted_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          reviewed_at TEXT,
+          reviewed_by TEXT,
+          rejection_reason TEXT,
+          notes TEXT,
+          FOREIGN KEY (user_id) REFERENCES users (id)
+        )
+      `);
+      console.log('Simple KYC table ready');
+
       // Create investments table
       await this.db.exec(`
         CREATE TABLE IF NOT EXISTS investments (
@@ -347,6 +381,138 @@ class LocalDatabase {
       SET status = ?, updated_at = CURRENT_TIMESTAMP 
       WHERE id = ?
     `, [status, id]);
+  }
+
+  // Simple KYC operations
+  async createSimpleKYC(kycData: any): Promise<any> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    const id = this.generateId();
+
+    await this.db.run(`
+      INSERT INTO simple_kyc (
+        id, user_id, first_name, last_name, email, phone, country, city, address,
+        date_of_birth, nationality, employment_status, annual_income, source_of_funds,
+        investment_experience, risk_tolerance, investment_goals, status, email_verified,
+        email_verification_code, email_verification_expires, submitted_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [
+      id,
+      kycData.user_id,
+      kycData.first_name,
+      kycData.last_name,
+      kycData.email,
+      kycData.phone,
+      kycData.country,
+      kycData.city || null,
+      kycData.address || null,
+      kycData.date_of_birth || null,
+      kycData.nationality || null,
+      kycData.employment_status || null,
+      kycData.annual_income || null,
+      kycData.source_of_funds || null,
+      kycData.investment_experience || null,
+      kycData.risk_tolerance || null,
+      kycData.investment_goals ? JSON.stringify(kycData.investment_goals) : null,
+      kycData.status || 'pending',
+      kycData.email_verified ? 1 : 0,
+      kycData.email_verification_code || null,
+      kycData.email_verification_expires || null,
+      kycData.submitted_at || new Date().toISOString()
+    ]);
+
+    const kycRecord = await this.getSimpleKYCById(id);
+    if (!kycRecord) {
+      throw new Error('Failed to create simple KYC record');
+    }
+    return kycRecord;
+  }
+
+  async getSimpleKYCById(id: string): Promise<any> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    const record = await this.db.get('SELECT * FROM simple_kyc WHERE id = ?', id);
+    if (record) {
+      // Parse investment_goals JSON
+      if (record.investment_goals) {
+        try {
+          record.investment_goals = JSON.parse(record.investment_goals);
+        } catch (e) {
+          record.investment_goals = [];
+        }
+      }
+      // Convert email_verified to boolean
+      record.email_verified = Boolean(record.email_verified);
+    }
+    return record;
+  }
+
+  async getSimpleKYCByUserId(userId: string): Promise<any> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    const record = await this.db.get('SELECT * FROM simple_kyc WHERE user_id = ?', userId);
+    if (record) {
+      // Parse investment_goals JSON
+      if (record.investment_goals) {
+        try {
+          record.investment_goals = JSON.parse(record.investment_goals);
+        } catch (e) {
+          record.investment_goals = [];
+        }
+      }
+      // Convert email_verified to boolean
+      record.email_verified = Boolean(record.email_verified);
+    }
+    return record;
+  }
+
+  async getAllSimpleKYC(): Promise<any[]> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    const records = await this.db.all('SELECT * FROM simple_kyc ORDER BY submitted_at DESC');
+    return records.map(record => {
+      // Parse investment_goals JSON
+      if (record.investment_goals) {
+        try {
+          record.investment_goals = JSON.parse(record.investment_goals);
+        } catch (e) {
+          record.investment_goals = [];
+        }
+      }
+      // Convert email_verified to boolean
+      record.email_verified = Boolean(record.email_verified);
+      return record;
+    });
+  }
+
+  async updateSimpleKYCStatus(id: string, status: string, reviewedBy?: string, rejectionReason?: string): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    await this.db.run(`
+      UPDATE simple_kyc 
+      SET status = ?, reviewed_at = CURRENT_TIMESTAMP, reviewed_by = ?, rejection_reason = ?
+      WHERE id = ?
+    `, [status, reviewedBy || null, rejectionReason || null, id]);
+  }
+
+  async verifySimpleKYCEmail(id: string): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    await this.db.run(`
+      UPDATE simple_kyc 
+      SET email_verified = 1, status = 'email_verified', updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `, [id]);
+  }
+
+  async updateSimpleKYCVerificationCode(id: string, code: string, expiresAt: string): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    await this.db.run(`
+      UPDATE simple_kyc 
+      SET email_verification_code = ?, email_verification_expires = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `, [code, expiresAt, id]);
   }
 
   // Investment operations

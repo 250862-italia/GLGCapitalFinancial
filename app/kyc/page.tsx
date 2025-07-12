@@ -1,174 +1,162 @@
 "use client";
-export const dynamic = "force-dynamic";
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import KYCProcess from '@/components/kyc/kyc-process';
-import { useRouter } from 'next/navigation';
-import { ArrowLeft, Shield, CheckCircle, AlertCircle } from 'lucide-react';
+import SimpleKYCForm from '@/components/kyc/SimpleKYCForm';
+import { getLocalDatabase } from '@/lib/local-database';
 
 export default function KYCPage() {
-  const { user } = useAuth();
-  const router = useRouter();
-  const [kycCompleted, setKycCompleted] = useState(false);
+  const { user } = useAuth ? useAuth() : { user: null };
+  const [kycStatus, setKycStatus] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) {
-      router.push('/login');
-    }
-  }, [user, router]);
+    const checkKYCStatus = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
 
-  const handleKycComplete = (status: string) => {
-    setKycCompleted(true);
-    // Mostra messaggio di successo per 3 secondi, poi torna alla dashboard
-    setTimeout(() => {
-      router.push('/dashboard');
-    }, 3000);
+      try {
+        // Check if using local database
+        const useLocalDatabase = process.env.USE_LOCAL_DATABASE === 'true';
+
+        if (useLocalDatabase) {
+          const db = await getLocalDatabase();
+          const kycRecord = await db.getSimpleKYCByUserId(user.id);
+          
+          if (kycRecord) {
+            setKycStatus(kycRecord.status);
+          } else {
+            setKycStatus('not_submitted');
+          }
+        } else {
+          // Mock status for non-local database
+          setKycStatus('not_submitted');
+        }
+      } catch (error) {
+        console.error('Error checking KYC status:', error);
+        setKycStatus('not_submitted');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkKYCStatus();
+  }, [user]);
+
+  const handleKYCComplete = (status: string) => {
+    setKycStatus(status);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Caricamento...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!user) {
     return (
-      <div style={{ 
-        minHeight: '100vh', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        background: '#f9fafb'
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <p>Loading...</p>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Accesso Richiesto</h1>
+          <p className="text-gray-600">Devi effettuare l'accesso per completare il processo KYC.</p>
         </div>
       </div>
     );
   }
 
-  if (kycCompleted) {
+  // Show different content based on KYC status
+  if (kycStatus === 'approved') {
     return (
-      <div style={{ 
-        minHeight: '100vh', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        background: '#f9fafb'
-      }}>
-        <div style={{ 
-          background: 'white', 
-          borderRadius: 16, 
-          padding: '3rem',
-          boxShadow: '0 4px 24px rgba(10,37,64,0.10)',
-          textAlign: 'center',
-          maxWidth: 500
-        }}>
-          <CheckCircle size={64} color="#059669" style={{ marginBottom: '1rem' }} />
-          <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#1f2937', marginBottom: '1rem' }}>
-            KYC Completed!
-          </h1>
-          <p style={{ color: '#6b7280', marginBottom: '2rem' }}>
-            Your KYC verification has been submitted successfully. You will receive a notification when the review is complete.
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6 text-center">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">KYC Approvato!</h1>
+          <p className="text-gray-600 mb-4">
+            Il tuo profilo KYC è stato approvato. Ora puoi accedere a tutti i nostri servizi di investimento.
           </p>
-          <p style={{ color: '#059669', fontWeight: 600 }}>
-            Redirecting to dashboard...
+          <a
+            href="/dashboard"
+            className="inline-block bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700"
+          >
+            Vai alla Dashboard
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  if (kycStatus === 'rejected') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6 text-center">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">KYC Rifiutato</h1>
+          <p className="text-gray-600 mb-4">
+            Il tuo profilo KYC non è stato approvato. Contatta il supporto per maggiori informazioni.
+          </p>
+          <a
+            href="/contact"
+            className="inline-block bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700"
+          >
+            Contatta il Supporto
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  if (kycStatus === 'email_verified' || kycStatus === 'pending') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6 text-center">
+          <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">KYC in Revisione</h1>
+          <p className="text-gray-600 mb-4">
+            Il tuo profilo KYC è stato inviato e sta essere esaminato dal nostro team. 
+            Riceverai una notifica via email quando sarà completata la revisione.
+          </p>
+          <p className="text-sm text-gray-500">
+            Tempo di elaborazione: 1-3 giorni lavorativi
           </p>
         </div>
       </div>
     );
   }
 
+  // Show the KYC form for new submissions
   return (
-    <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '2rem 1rem' }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-        
-        {/* Header */}
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '1rem',
-          marginBottom: '2rem'
-        }}>
-          <button
-            onClick={() => router.push('/dashboard')}
-            style={{
-              background: 'white',
-              border: '1px solid #e5e7eb',
-              borderRadius: 8,
-              padding: '0.5rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            <ArrowLeft size={20} color="#6b7280" />
-          </button>
-          <div>
-            <h1 style={{ fontSize: '32px', fontWeight: 800, color: '#1f2937', margin: 0 }}>
-              KYC Verification
-            </h1>
-            <p style={{ fontSize: '16px', color: '#6b7280', margin: 0 }}>
-              Complete verification to start investing
-            </p>
-          </div>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-4xl mx-auto px-4">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">
+            Verifica Identità (KYC)
+          </h1>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Completa il processo di verifica dell'identità per accedere ai nostri servizi di investimento. 
+            Questo processo è obbligatorio per conformità normativa.
+          </p>
         </div>
 
-        {/* KYC Process */}
-        <div style={{ 
-          background: 'white', 
-          borderRadius: 16, 
-          boxShadow: '0 4px 24px rgba(10,37,64,0.10)',
-          overflow: 'hidden'
-        }}>
-          <div style={{
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            padding: '2rem',
-            color: 'white',
-            textAlign: 'center'
-          }}>
-            <Shield size={48} style={{ marginBottom: '1rem' }} />
-            <h2 style={{ fontSize: '24px', fontWeight: 700, margin: 0, marginBottom: '0.5rem' }}>
-              Know Your Customer (KYC)
-            </h2>
-            <p style={{ margin: 0, opacity: 0.9 }}>
-              KYC verification is mandatory to ensure security and regulatory compliance
-            </p>
-          </div>
-          
-          <div style={{ padding: '2rem' }}>
-            <KYCProcess userId={user.id} onComplete={handleKycComplete} />
-          </div>
-        </div>
-
-        {/* Info Box */}
-        <div style={{
-          background: '#eff6ff',
-          border: '1px solid #bae6fd',
-          borderRadius: 12,
-          padding: '1.5rem',
-          marginTop: '2rem'
-        }}>
-          <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#1e40af', marginBottom: '1rem' }}>
-            Why is KYC required?
-          </h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
-            <div>
-              <strong style={{ color: '#1e40af' }}>Security:</strong>
-              <p style={{ color: '#374151', margin: '0.5rem 0 0 0', fontSize: '14px' }}>
-                We protect our clients from fraud and illegal activities
-              </p>
-            </div>
-            <div>
-              <strong style={{ color: '#1e40af' }}>Compliance:</strong>
-              <p style={{ color: '#374151', margin: '0.5rem 0 0 0', fontSize: '14px' }}>
-                We comply with anti-money laundering (AML) regulations
-              </p>
-            </div>
-            <div>
-              <strong style={{ color: '#1e40af' }}>Transparency:</strong>
-              <p style={{ color: '#374151', margin: '0.5rem 0 0 0', fontSize: '14px' }}>
-                We ensure a safe and transparent investment environment
-              </p>
-            </div>
-          </div>
-        </div>
+        <SimpleKYCForm onComplete={handleKYCComplete} />
       </div>
     </div>
   );
