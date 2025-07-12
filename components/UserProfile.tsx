@@ -21,17 +21,16 @@ import { useAuth } from '../hooks/use-auth';
 import { supabase } from '../lib/supabase';
 
 interface UserProfileProps {
-  onKycComplete?: () => void;
+  // Profile management only
 }
 
-export default function UserProfile({ onKycComplete }: UserProfileProps) {
+export default function UserProfile({}: UserProfileProps) {
   const { user } = useAuth();
   const router = useRouter();
-  // REMOVE: KYC status state and logic
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(false); // Only loading for demonstration, remove KYC loading logic
+    setLoading(false);
   }, [user]);
 
   if (loading) {

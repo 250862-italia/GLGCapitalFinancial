@@ -18,7 +18,7 @@ import {
 
 interface AdminNotification {
   id: string;
-  type: 'user_registration' | 'investment' | 'kyc_approval' | 'security_alert' | 'system_alert' | 'payment_processed';
+  type: 'user_registration' | 'investment' | 'security_alert' | 'system_alert' | 'payment_processed';
   title: string;
   message: string;
   timestamp: Date;
@@ -92,22 +92,6 @@ export default function AdminNotifications({ adminId }: AdminNotificationsProps)
       },
       {
         id: '3',
-        type: 'kyc_approval',
-        title: 'KYC Verification Required',
-        message: '5 users have submitted KYC documents and are awaiting approval.',
-        timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-        read: false,
-        priority: 'high',
-        action: {
-          label: 'Review KYC',
-          url: '/admin/kyc'
-        },
-        metadata: {
-          pendingCount: 5
-        }
-      },
-      {
-        id: '4',
         type: 'security_alert',
         title: 'Security Alert',
         message: 'Multiple failed login attempts detected from IP 192.168.1.100.',
@@ -124,7 +108,7 @@ export default function AdminNotifications({ adminId }: AdminNotificationsProps)
         }
       },
       {
-        id: '5',
+        id: '4',
         type: 'payment_processed',
         title: 'Payment Processed',
         message: 'Payment of $25,000 has been successfully processed for user Mike Johnson.',
@@ -154,7 +138,6 @@ export default function AdminNotifications({ adminId }: AdminNotificationsProps)
       const notificationTypes: AdminNotification['type'][] = [
         'user_registration',
         'investment',
-        'kyc_approval',
         'security_alert',
         'payment_processed'
       ];
@@ -181,8 +164,6 @@ export default function AdminNotifications({ adminId }: AdminNotificationsProps)
         return 'New User Registration';
       case 'investment':
         return 'Investment Completed';
-      case 'kyc_approval':
-        return 'KYC Verification Required';
       case 'security_alert':
         return 'Security Alert';
       case 'payment_processed':
@@ -200,8 +181,6 @@ export default function AdminNotifications({ adminId }: AdminNotificationsProps)
         return 'A new user has registered for an account.';
       case 'investment':
         return 'A user has completed an investment transaction.';
-      case 'kyc_approval':
-        return 'KYC documents are awaiting review.';
       case 'security_alert':
         return 'Suspicious activity has been detected.';
       case 'payment_processed':
@@ -241,8 +220,6 @@ export default function AdminNotifications({ adminId }: AdminNotificationsProps)
         return <UserPlus size={16} color="#3b82f6" />;
       case 'investment':
         return <DollarSign size={16} color="#059669" />;
-      case 'kyc_approval':
-        return <UserCheck size={16} color="#d97706" />;
       case 'security_alert':
         return <Shield size={16} color="#dc2626" />;
       case 'payment_processed':

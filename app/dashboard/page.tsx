@@ -365,7 +365,7 @@ export default function ClientDashboard() {
           </p>
         </div>
 
-        {/* User Profile & KYC Status */}
+        {/* User Profile */}
         <div style={{ marginBottom: '2rem' }}>
           {user ? (
             <UserProfile />
