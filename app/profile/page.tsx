@@ -83,109 +83,172 @@ export default function ProfilePage() {
     setError(null);
     
     try {
-      // Get client profile
-      let { data: clientData, error: clientError } = await supabase
-        .from('clients')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
+      let clientData: ClientProfile | null = null;
 
-      if (clientError && clientError.code === 'PGRST116') {
-        // Profile not found, create it automatically
-        console.log('No client profile found for user:', user.id, '- Creating profile automatically');
+      // Use local database if enabled
+      if (process.env.USE_LOCAL_DATABASE === 'true') {
+        const { getLocalDatabase } = await import('@/lib/local-database');
+        const db = await getLocalDatabase();
         
         try {
-          const response = await fetch('/api/profile/create', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ user_id: user.id }),
-          });
-
-          if (response.ok) {
-            const result = await response.json();
-            console.log('Profile created successfully:', result);
-            
-            // Fetch the newly created profile
-            const { data: newClientData, error: newClientError } = await supabase
-              .from('clients')
-              .select('*')
-              .eq('user_id', user.id)
-              .single();
-
-            if (newClientError) {
-              console.error('Error fetching newly created profile:', newClientError);
-              // Create a basic profile object to prevent errors
-              clientData = {
-                id: user.id,
-                user_id: user.id,
-                email: user.email || '',
-                first_name: '',
-                last_name: '',
-                phone: '',
-                status: 'ACTIVE',
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-              } as ClientProfile;
-            } else {
-              clientData = newClientData;
-            }
-          } else {
-            console.error('Failed to create profile:', response.statusText);
-            // Create a basic profile object to prevent errors
+          // Get client profile from local database
+          const localClientData = await db.getClientByUserId(user.id);
+          
+          if (localClientData) {
+            // Convert local database format to ClientProfile format
             clientData = {
-              id: user.id,
-              user_id: user.id,
+              id: localClientData.id,
+              user_id: localClientData.user_id,
               email: user.email || '',
-              first_name: '',
-              last_name: '',
-              phone: '',
+              first_name: user.first_name || '',
+              last_name: user.last_name || '',
+              phone: user.phone || '',
+              company: localClientData.company_name || '',
+              position: '',
+              date_of_birth: '',
+              nationality: '',
+              photo_url: '',
+              tax_id: localClientData.tax_id || '',
+              address: localClientData.address || '',
+              city: localClientData.city || '',
+              country: localClientData.country || '',
+              postal_code: localClientData.postal_code || '',
+              iban: '',
+              bic: '',
+              account_holder: '',
+              usdt_wallet: '',
               status: 'ACTIVE',
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            } as ClientProfile;
+              created_at: localClientData.created_at,
+              updated_at: localClientData.updated_at
+            };
+          } else {
+            // Profile not found, create it automatically
+            console.log('No client profile found for user:', user.id, '- Creating profile automatically');
+            
+            try {
+              const response = await fetch('/api/profile/create', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ user_id: user.id }),
+              });
+
+              if (response.ok) {
+                const result = await response.json();
+                console.log('Profile created successfully:', result);
+                
+                // Fetch the newly created profile
+                const newLocalClientData = await db.getClientByUserId(user.id);
+                
+                if (newLocalClientData) {
+                  clientData = {
+                    id: newLocalClientData.id,
+                    user_id: newLocalClientData.user_id,
+                    email: user.email || '',
+                    first_name: user.first_name || '',
+                    last_name: user.last_name || '',
+                    phone: user.phone || '',
+                    company: newLocalClientData.company_name || '',
+                    position: '',
+                    date_of_birth: '',
+                    nationality: '',
+                    photo_url: '',
+                    tax_id: newLocalClientData.tax_id || '',
+                    address: newLocalClientData.address || '',
+                    city: newLocalClientData.city || '',
+                    country: newLocalClientData.country || '',
+                    postal_code: newLocalClientData.postal_code || '',
+                    iban: '',
+                    bic: '',
+                    account_holder: '',
+                    usdt_wallet: '',
+                    status: 'ACTIVE',
+                    created_at: newLocalClientData.created_at,
+                    updated_at: newLocalClientData.updated_at
+                  };
+                }
+              }
+            } catch (createError) {
+              console.error('Error creating profile:', createError);
+            }
           }
-        } catch (createError) {
-          console.error('Error creating profile:', createError);
-          // Create a basic profile object to prevent errors
-          clientData = {
-            id: user.id,
-            user_id: user.id,
-            email: user.email || '',
-            first_name: '',
-            last_name: '',
-            phone: '',
-            status: 'ACTIVE',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          } as ClientProfile;
+        } catch (dbError) {
+          console.error('Local database error:', dbError);
         }
-      } else if (clientError) {
-        console.error('Error loading client profile:', clientError);
-        // Create a basic profile object to prevent errors
-        clientData = {
-          id: user.id,
-          user_id: user.id,
-          email: user.email || '',
-          first_name: '',
-          last_name: '',
-          phone: '',
-          status: 'ACTIVE',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        } as ClientProfile;
+      } else {
+        // Use Supabase
+        let { data: supabaseClientData, error: clientError } = await supabase
+          .from('clients')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+
+        if (clientError && clientError.code === 'PGRST116') {
+          // Profile not found, create it automatically
+          console.log('No client profile found for user:', user.id, '- Creating profile automatically');
+          
+          try {
+            const response = await fetch('/api/profile/create', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ user_id: user.id }),
+            });
+
+            if (response.ok) {
+              const result = await response.json();
+              console.log('Profile created successfully:', result);
+              
+              // Fetch the newly created profile
+              const { data: newClientData, error: newClientError } = await supabase
+                .from('clients')
+                .select('*')
+                .eq('user_id', user.id)
+                .single();
+
+              if (newClientError) {
+                console.error('Error fetching newly created profile:', newClientError);
+              } else {
+                supabaseClientData = newClientData;
+              }
+            }
+          } catch (createError) {
+            console.error('Error creating profile:', createError);
+          }
+        } else if (clientError) {
+          console.error('Error loading client profile:', clientError);
+        }
+
+        if (supabaseClientData) {
+          clientData = supabaseClientData as ClientProfile;
+        }
       }
 
+      // Create fallback profile if no data found
       if (!clientData) {
-        // Create a basic profile object to prevent errors
         clientData = {
           id: user.id,
           user_id: user.id,
           email: user.email || '',
-          first_name: '',
-          last_name: '',
-          phone: '',
+          first_name: user.first_name || '',
+          last_name: user.last_name || '',
+          phone: user.phone || '',
+          company: '',
+          position: '',
+          date_of_birth: '',
+          nationality: '',
+          photo_url: '',
+          tax_id: '',
+          address: '',
+          city: '',
+          country: '',
+          postal_code: '',
+          iban: '',
+          bic: '',
+          account_holder: '',
+          usdt_wallet: '',
           status: 'ACTIVE',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
@@ -202,9 +265,23 @@ export default function ProfilePage() {
         id: user.id,
         user_id: user.id,
         email: user.email || '',
-        first_name: '',
-        last_name: '',
-        phone: '',
+        first_name: user.first_name || '',
+        last_name: user.last_name || '',
+        phone: user.phone || '',
+        company: '',
+        position: '',
+        date_of_birth: '',
+        nationality: '',
+        photo_url: '',
+        tax_id: '',
+        address: '',
+        city: '',
+        country: '',
+        postal_code: '',
+        iban: '',
+        bic: '',
+        account_holder: '',
+        usdt_wallet: '',
         status: 'ACTIVE',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
