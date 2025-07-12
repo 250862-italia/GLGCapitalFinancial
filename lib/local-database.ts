@@ -61,7 +61,10 @@ class LocalDatabase {
   async init(): Promise<void> {
     try {
       console.log('Initializing local database at:', this.dbPath);
-      this.db = new Database(this.dbPath);
+      this.db = await open({
+        filename: this.dbPath,
+        driver: sqlite3.Database
+      });
       console.log('Database connection established');
       
       await this.createTables();
