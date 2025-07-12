@@ -58,7 +58,7 @@ export default function RootLayout({
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
               {!isLoggedIn && !isAdminLoggedIn && (
                 <>
-                  <a href="/iscriviti" style={{
+                  <a href="/register" style={{
                     background: 'var(--accent)',
                     color: 'var(--primary)',
                     padding: '0.5rem 1rem',
@@ -164,7 +164,7 @@ export default function RootLayout({
                     <a href="/live-markets" style={{ color: '#fff', textDecoration: 'none', opacity: 0.8 }}>Live Markets</a>
                   </li>
                   <li style={{ marginBottom: '0.5rem' }}>
-                    <a href="/kyc" style={{ color: '#fff', textDecoration: 'none', opacity: 0.8 }}>KYC</a>
+                    <a href="/register" style={{ color: '#fff', textDecoration: 'none', opacity: 0.8 }}>Client Registration</a>
                   </li>
                 </ul>
               </div>

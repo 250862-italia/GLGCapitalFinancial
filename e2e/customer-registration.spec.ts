@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
 import path from 'path';
 
-test('Customer Registration, Profile Photo & KYC E2E', async ({ page }) => {
-  await page.goto('https://www.glgcapitalgroup.com/iscriviti');
+test('Customer Registration & Profile Photo E2E', async ({ page }) => {
+  await page.goto('https://www.glgcapitalgroup.com/register');
 
   // Fill registration form
   await page.fill('input[name="firstName"]', 'John');
@@ -38,13 +38,5 @@ test('Customer Registration, Profile Photo & KYC E2E', async ({ page }) => {
   // Attendi che la foto sia visibile (img src aggiornata)
   await expect(page.locator('img[alt="Profile"]')).toBeVisible({ timeout: 10000 });
 
-  // Vai alla pagina KYC
-  await page.goto('https://www.glgcapitalgroup.com/kyc');
 
-  // Upload documento KYC (simulato, aggiorna selector se necessario)
-  const kycFilePath = path.resolve(__dirname, 'fixtures/kyc-doc.pdf');
-  await page.setInputFiles('input[type="file"]', kycFilePath);
-
-  // Attendi che il documento sia visibile o che compaia uno stato di successo
-  await expect(page.locator('text=Uploaded')).toBeVisible({ timeout: 10000 });
 }); 
