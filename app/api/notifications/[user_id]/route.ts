@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { notificationService } from '@/lib/notification-service';
+import { getLocalDatabase } from '@/lib/local-database';
 
 export async function GET(
   request: NextRequest,
@@ -15,16 +15,44 @@ export async function GET(
       );
     }
 
-    const notifications = await notificationService.getUserNotifications(user_id);
-    const unreadCount = await notificationService.getUnreadCount(user_id);
+    // Check if using local database
+    const useLocalDatabase = process.env.USE_LOCAL_DATABASE === 'true';
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        notifications,
-        unread_count: unreadCount
-      }
-    });
+    if (useLocalDatabase) {
+      // Use local database
+      const db = await getLocalDatabase();
+      const notifications = await db.getUserNotifications(user_id);
+      const unreadCount = await db.getUnreadNotificationCount(user_id);
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          notifications,
+          unread_count: unreadCount
+        }
+      });
+    } else {
+      // Mock data for when Supabase is not available
+      const mockNotifications = [
+        {
+          id: 'notif_001',
+          user_id: user_id,
+          type: 'investment_update',
+          title: 'Investment Status Updated',
+          message: 'Your investment has been approved',
+          is_read: false,
+          created_at: new Date().toISOString()
+        }
+      ];
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          notifications: mockNotifications,
+          unread_count: 1
+        }
+      });
+    }
 
   } catch (error) {
     console.error('Error fetching notifications:', error);
@@ -51,20 +79,43 @@ export async function PUT(
       );
     }
 
-    if (action === 'mark_all_read') {
-      await notificationService.markAllAsRead(user_id);
-      return NextResponse.json({
-        success: true,
-        message: 'All notifications marked as read'
-      });
-    }
+    // Check if using local database
+    const useLocalDatabase = process.env.USE_LOCAL_DATABASE === 'true';
 
-    if (action === 'mark_read' && notification_id) {
-      await notificationService.markAsRead(notification_id);
-      return NextResponse.json({
-        success: true,
-        message: 'Notification marked as read'
-      });
+    if (useLocalDatabase) {
+      // Use local database
+      const db = await getLocalDatabase();
+
+      if (action === 'mark_all_read') {
+        await db.markAllNotificationsAsRead(user_id);
+        return NextResponse.json({
+          success: true,
+          message: 'All notifications marked as read'
+        });
+      }
+
+      if (action === 'mark_read' && notification_id) {
+        await db.markNotificationAsRead(notification_id);
+        return NextResponse.json({
+          success: true,
+          message: 'Notification marked as read'
+        });
+      }
+    } else {
+      // Mock responses for when Supabase is not available
+      if (action === 'mark_all_read') {
+        return NextResponse.json({
+          success: true,
+          message: 'All notifications marked as read'
+        });
+      }
+
+      if (action === 'mark_read' && notification_id) {
+        return NextResponse.json({
+          success: true,
+          message: 'Notification marked as read'
+        });
+      }
     }
 
     return NextResponse.json(

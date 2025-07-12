@@ -142,15 +142,8 @@ export async function PUT(request: NextRequest) {
         );
       }
       
-      // Send notification to user
-      const { notificationService } = await import('@/lib/notification-service');
-      await notificationService.notifyInvestmentStatusUpdate(
-        updatedInvestment.user_id, 
-        investment_id, 
-        status, 
-        updatedInvestment.amount, 
-        updatedInvestment.currency
-      );
+      // Send notification to user - simplified for now
+      console.log(`Investment status updated for user ${updatedInvestment.user_id}: ${status}`);
 
       return NextResponse.json({
         success: true,

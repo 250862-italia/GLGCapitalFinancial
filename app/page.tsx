@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import ChatbotWrapper from '@/components/ui/ChatbotWrapper'
 import FinancialNews from '@/components/ui/FinancialNews'
 import StockTicker from '@/components/ui/StockTicker'
 import NotificationSystem from '@/components/ui/NotificationSystem'
@@ -490,9 +489,6 @@ export default function HomePage() {
 
 
 
-      {/* CHATBOT */}
-      <ChatbotWrapper />
-      
       {/* NOTIFICATION SYSTEM */}
       <NotificationSystem userId="guest" />
       
