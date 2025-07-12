@@ -60,22 +60,16 @@ export function useProfile() {
       setLoading(false);
       return;
     }
-
     setLoading(true);
     setError(null);
-
     try {
-      // Get client profile
       let { data: clientData, error: clientError } = await supabase
         .from('clients')
         .select('*')
         .eq('"user_id"', user.id)
         .single();
-
       if (clientError && clientError.code === 'PGRST116') {
         // Profile not found, create it automatically
-        console.log('No client profile found for user:', user.id, '- Creating profile automatically');
-        
         const newProfile = await createProfile(user.id);
         if (newProfile) {
           clientData = newProfile;
@@ -84,19 +78,15 @@ export function useProfile() {
           return;
         }
       } else if (clientError) {
-        console.error('Error loading client profile:', clientError);
         setError('Failed to load profile data');
         return;
       }
-
       if (!clientData) {
         setError('No profile found');
         return;
       }
-
       setProfile(clientData);
     } catch (error) {
-      console.error('Profile loading error:', error);
       setError('Failed to load profile data');
     } finally {
       setLoading(false);

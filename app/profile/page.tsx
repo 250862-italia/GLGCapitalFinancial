@@ -69,7 +69,6 @@ export default function ProfilePage() {
   const { user } = useAuth();
   const router = useRouter();
   const [profile, setProfile] = useState<ClientProfile | null>(null);
-  const [kycData, setKycData] = useState<KYCData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
@@ -139,7 +138,6 @@ export default function ProfilePage() {
                 last_name: '',
                 phone: '',
                 status: 'ACTIVE',
-                kyc_status: 'PENDING',
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
               } as ClientProfile;
@@ -157,7 +155,6 @@ export default function ProfilePage() {
               last_name: '',
               phone: '',
               status: 'ACTIVE',
-              kyc_status: 'PENDING',
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             } as ClientProfile;
@@ -173,7 +170,6 @@ export default function ProfilePage() {
             last_name: '',
             phone: '',
             status: 'ACTIVE',
-            kyc_status: 'PENDING',
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           } as ClientProfile;
@@ -189,7 +185,6 @@ export default function ProfilePage() {
           last_name: '',
           phone: '',
           status: 'ACTIVE',
-          kyc_status: 'PENDING',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         } as ClientProfile;
@@ -205,7 +200,6 @@ export default function ProfilePage() {
           last_name: '',
           phone: '',
           status: 'ACTIVE',
-          kyc_status: 'PENDING',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         } as ClientProfile;
@@ -213,25 +207,6 @@ export default function ProfilePage() {
 
       setProfile(clientData);
       setEditForm(clientData);
-
-      // Get KYC data (optional - don't fail if this doesn't work)
-      try {
-        const { data: kycRecords, error: kycError } = await supabase
-          .from('kyc_records')
-          .select('*')
-          .eq('client_id', clientData.id)
-          .order('created_at', { ascending: false });
-
-        if (kycError) {
-          console.error('Error loading KYC data:', kycError);
-          setKycData([]);
-        } else {
-          setKycData(kycRecords || []);
-        }
-      } catch (kycError) {
-        console.error('Error loading KYC data:', kycError);
-        setKycData([]);
-      }
 
     } catch (error) {
       console.error('Profile loading error:', error);
@@ -244,14 +219,12 @@ export default function ProfilePage() {
         last_name: '',
         phone: '',
         status: 'ACTIVE',
-        kyc_status: 'PENDING',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       } as ClientProfile;
       
       setProfile(fallbackProfile);
       setEditForm(fallbackProfile);
-      setKycData([]);
     } finally {
       setLoading(false);
     }
@@ -373,23 +346,6 @@ export default function ProfilePage() {
     }
   };
 
-  const getKycStatus = () => {
-    if (kycData.length === 0) return { status: 'not_started', text: 'Not Started', color: '#6b7280' };
-    
-    const latestKyc = kycData[0];
-    switch (latestKyc.status) {
-      case 'approved': return { status: 'approved', text: 'Approved', color: '#059669' };
-      case 'rejected': return { status: 'rejected', text: 'Rejected', color: '#dc2626' };
-      case 'in_review': return { status: 'in_review', text: 'Under Review', color: '#f59e0b' };
-      default: return { status: 'pending', text: 'Pending', color: '#f59e0b' };
-    }
-  };
-
-  const getDocumentStatus = (documentType: string) => {
-    const doc = kycData.find(d => d.document_type === documentType);
-    return doc ? { uploaded: true, status: doc.status } : { uploaded: false, status: 'not_uploaded' };
-  };
-
   if (loading) {
     return (
       <div style={{ 
@@ -429,21 +385,6 @@ export default function ProfilePage() {
             Profile Error
           </h1>
           <p style={{ color: '#dc2626', marginBottom: '2rem' }}>{error}</p>
-          <button
-            onClick={() => router.push('/kyc')}
-            style={{
-              background: '#3b82f6',
-              color: 'white',
-              border: 'none',
-              borderRadius: 8,
-              padding: '0.75rem 1.5rem',
-              fontSize: 16,
-              fontWeight: 600,
-              cursor: 'pointer'
-            }}
-          >
-            Complete KYC Process
-          </button>
         </div>
       </div>
     );
@@ -470,22 +411,7 @@ export default function ProfilePage() {
           <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#1f2937', marginBottom: '1rem' }}>
             Profile Not Found
           </h1>
-          <p style={{ color: '#dc2626', marginBottom: '2rem' }}>No profile data found. Please complete your KYC process.</p>
-          <button
-            onClick={() => router.push('/kyc')}
-            style={{
-              background: '#3b82f6',
-              color: 'white',
-              border: 'none',
-              borderRadius: 8,
-              padding: '0.75rem 1.5rem',
-              fontSize: 16,
-              fontWeight: 600,
-              cursor: 'pointer'
-            }}
-          >
-            Start KYC Process
-          </button>
+          <p style={{ color: '#dc2626', marginBottom: '2rem' }}>No profile data found. Please complete your profile information.</p>
         </div>
       </div>
     );
@@ -536,8 +462,6 @@ export default function ProfilePage() {
     );
   }
 
-  const kycStatus = getKycStatus();
-
   return (
     <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '2rem 1rem' }}>
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
@@ -569,7 +493,7 @@ export default function ProfilePage() {
               User Profile
             </h1>
             <p style={{ fontSize: '16px', color: '#6b7280', margin: 0 }}>
-              Manage your personal information and KYC status
+              Manage your personal information
             </p>
           </div>
         </div>
@@ -669,16 +593,6 @@ export default function ProfilePage() {
                   )}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <span style={{ 
-                    background: 'rgba(255,255,255,0.2)', 
-                    color: 'white', 
-                    padding: '0.25rem 0.75rem', 
-                    borderRadius: 12, 
-                    fontSize: 12, 
-                    fontWeight: 600 
-                  }}>
-                    KYC: {kycStatus.text}
-                  </span>
                   <span style={{ 
                     background: 'rgba(255,255,255,0.2)', 
                     color: 'white', 
@@ -897,217 +811,6 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              {/* KYC Status */}
-              <div style={{ 
-                background: '#f8fafc', 
-                borderRadius: 12, 
-                padding: '1.5rem',
-                border: '1px solid #e2e8f0'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
-                  <Shield size={20} color="#3b82f6" />
-                  <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#1f2937', margin: 0 }}>
-                    KYC Verification Status
-                  </h3>
-                </div>
-                
-                <div style={{ 
-                  background: 'white', 
-                  borderRadius: 8, 
-                  padding: '1rem',
-                  border: '1px solid #e5e7eb'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-                    <div style={{ 
-                      width: 12, 
-                      height: 12, 
-                      borderRadius: '50%', 
-                      background: kycStatus.color 
-                    }} />
-                    <span style={{ fontWeight: 600, color: '#374151' }}>
-                      Overall Status: {kycStatus.text}
-                    </span>
-                  </div>
-                  
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.75rem' }}>
-                    {[
-                      { type: 'PERSONAL_INFO', label: 'Personal Information' },
-                      { type: 'PROOF_OF_ADDRESS', label: 'Proof of Address' },
-                      { type: 'BANK_STATEMENT', label: 'Bank Statement' }
-                    ].map(({ type, label }) => {
-                      const docStatus = getDocumentStatus(type);
-                      return (
-                        <div key={type} style={{ 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          gap: '0.75rem',
-                          padding: '0.75rem',
-                          background: '#f9fafb',
-                          borderRadius: 6,
-                          border: '1px solid #f3f4f6'
-                        }}>
-                          {docStatus.uploaded ? (
-                            <CheckCircle size={16} color={docStatus.status === 'approved' ? '#059669' : '#f59e0b'} />
-                          ) : (
-                            <AlertCircle size={16} color="#6b7280" />
-                          )}
-                          <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: '14px', fontWeight: 500, color: '#374151' }}>
-                              {label}
-                            </div>
-                            <div style={{ 
-                              fontSize: '12px', 
-                              color: docStatus.uploaded ? (docStatus.status === 'approved' ? '#059669' : '#f59e0b') : '#6b7280'
-                            }}>
-                              {docStatus.uploaded ? docStatus.status : 'Not uploaded'}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-                
-                {kycStatus.status === 'not_started' && (
-                  <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-                    <button
-                      onClick={() => router.push('/kyc')}
-                      style={{
-                        background: '#3b82f6',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: 8,
-                        padding: '0.75rem 1.5rem',
-                        fontSize: 16,
-                        fontWeight: 600,
-                        cursor: 'pointer'
-                      }}
-                    >
-                      Start KYC Process
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Complete KYC Data */}
-              {profile.kyc_data && (
-                <div style={{ 
-                  background: '#f8fafc', 
-                  borderRadius: 12, 
-                  padding: '1.5rem',
-                  border: '1px solid #e2e8f0'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
-                    <FileText size={20} color="#059669" />
-                    <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#1f2937', margin: 0 }}>
-                      Complete KYC Information
-                    </h3>
-                  </div>
-                  
-                  <div style={{ 
-                    background: 'white', 
-                    borderRadius: 8, 
-                    padding: '1rem',
-                    border: '1px solid #e5e7eb'
-                  }}>
-                    {(() => {
-                      try {
-                        const kycData = JSON.parse(profile.kyc_data);
-                        return (
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-                            {/* Personal Information */}
-                            <div>
-                              <h4 style={{ fontSize: '16px', fontWeight: 600, color: '#374151', marginBottom: '1rem' }}>
-                                Personal Information
-                              </h4>
-                              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.5rem' }}>
-                                <div><strong>Name:</strong> {kycData.personalInfo?.firstName} {kycData.personalInfo?.lastName}</div>
-                                <div><strong>Date of Birth:</strong> {kycData.personalInfo?.dateOfBirth}</div>
-                                <div><strong>Nationality:</strong> {kycData.personalInfo?.nationality}</div>
-                                <div><strong>Address:</strong> {kycData.personalInfo?.address}</div>
-                                <div><strong>City:</strong> {kycData.personalInfo?.city}</div>
-                                <div><strong>Country:</strong> {kycData.personalInfo?.country}</div>
-                                <div><strong>Phone:</strong> {kycData.personalInfo?.phone}</div>
-                                <div><strong>Email:</strong> {kycData.personalInfo?.email}</div>
-                                {kycData.personalInfo?.codiceFiscale && (
-                                  <div><strong>Codice Fiscale:</strong> {kycData.personalInfo.codiceFiscale}</div>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Financial Profile */}
-                            <div>
-                              <h4 style={{ fontSize: '16px', fontWeight: 600, color: '#374151', marginBottom: '1rem' }}>
-                                Financial Profile
-                              </h4>
-                              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.5rem' }}>
-                                <div><strong>Employment:</strong> {kycData.financialProfile?.employmentStatus}</div>
-                                <div><strong>Annual Income:</strong> {kycData.financialProfile?.annualIncome}</div>
-                                <div><strong>Source of Funds:</strong> {kycData.financialProfile?.sourceOfFunds}</div>
-                                <div><strong>Investment Experience:</strong> {kycData.financialProfile?.investmentExperience}</div>
-                                <div><strong>Risk Tolerance:</strong> {kycData.financialProfile?.riskTolerance}</div>
-                                <div><strong>Investment Goals:</strong> {kycData.financialProfile?.investmentGoals?.join(', ')}</div>
-                              </div>
-                            </div>
-
-                            {/* Documents */}
-                            <div style={{ gridColumn: '1 / -1' }}>
-                              <h4 style={{ fontSize: '16px', fontWeight: 600, color: '#374151', marginBottom: '1rem' }}>
-                                Documents
-                              </h4>
-                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
-                                <div>
-                                  <strong>ID Document:</strong>
-                                  {kycData.documents?.idDocument ? (
-                                    <a href={kycData.documents.idDocument} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline', display: 'block', marginTop: '0.25rem' }}>
-                                      View Document
-                                    </a>
-                                  ) : (
-                                    <span style={{ color: '#6b7280', display: 'block', marginTop: '0.25rem' }}>Not provided</span>
-                                  )}
-                                </div>
-                                <div>
-                                  <strong>Proof of Address:</strong>
-                                  {kycData.documents?.proofOfAddress ? (
-                                    <a href={kycData.documents.proofOfAddress} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline', display: 'block', marginTop: '0.25rem' }}>
-                                      View Document
-                                    </a>
-                                  ) : (
-                                    <span style={{ color: '#6b7280', display: 'block', marginTop: '0.25rem' }}>Not provided</span>
-                                  )}
-                                </div>
-                                <div>
-                                  <strong>Bank Statement:</strong>
-                                  {kycData.documents?.bankStatement ? (
-                                    <a href={kycData.documents.bankStatement} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', textDecoration: 'underline', display: 'block', marginTop: '0.25rem' }}>
-                                      View Document
-                                    </a>
-                                  ) : (
-                                    <span style={{ color: '#6b7280', display: 'block', marginTop: '0.25rem' }}>Not provided</span>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Submission Info */}
-                            <div style={{ gridColumn: '1 / -1', marginTop: '1rem', padding: '1rem', background: '#f0f9ff', borderRadius: 8, border: '1px solid #0ea5e9' }}>
-                              <div style={{ fontSize: '14px', color: '#0369a1' }}>
-                                <strong>Submitted:</strong> {kycData.submittedAt ? new Date(kycData.submittedAt).toLocaleString() : 'Unknown'}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      } catch (error) {
-                        return (
-                          <div style={{ color: '#dc2626', fontSize: '14px' }}>
-                            Error parsing KYC data: {error instanceof Error ? error.message : 'Unknown error'}
-                          </div>
-                        );
-                      }
-                    })()}
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>

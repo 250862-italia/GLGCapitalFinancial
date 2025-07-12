@@ -378,33 +378,6 @@ export default function ClientDashboard() {
   ];
   const riskColors = ['#10b981', '#f59e0b', '#ef4444'];
 
-  // Check KYC status and show toast if necessary
-  useEffect(() => {
-    if (!user) return;
-    const checkKycStatus = async () => {
-      const { data, error } = await supabase
-        .from('kyc_records')
-        .select('status')
-        .eq('client_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-      if (error || !data) return;
-      const status = data.status;
-      const lastNotified = localStorage.getItem('kyc-last-notified');
-      if ((status === 'approved' || status === 'rejected') && lastNotified !== status) {
-        setKycToastMsg(
-          status === 'approved'
-            ? 'Your KYC has been APPROVED! You can now operate freely.'
-            : 'Your KYC has been REJECTED. Contact support for details.'
-        );
-        setShowKycToast(true);
-        localStorage.setItem('kyc-last-notified', status);
-      }
-    };
-    checkKycStatus();
-  }, [user]);
-
   if (isLoading || packagesLoading) {
     return (
       <div style={{ 
@@ -439,10 +412,7 @@ export default function ClientDashboard() {
         {/* User Profile & KYC Status */}
         <div style={{ marginBottom: '2rem' }}>
           {user ? (
-            <UserProfile onKycComplete={() => {
-              // Ricarica la pagina per aggiornare lo stato
-              window.location.reload();
-            }} />
+            <UserProfile />
           ) : (
             <div style={{ color: '#dc2626', fontWeight: 700, fontSize: 18, padding: 16, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8 }}>
               Utente non autenticato

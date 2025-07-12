@@ -70,12 +70,6 @@ export default function DashboardSidebar({ isOpen, onToggle }: DashboardSidebarP
       adminOnly: false
     },
     {
-      title: 'KYC Process',
-      icon: <Shield size={20} />,
-      href: '/kyc',
-      adminOnly: false
-    },
-    {
       title: 'Request Documentation',
       icon: <FileText size={20} />,
       href: '/informational-request',
