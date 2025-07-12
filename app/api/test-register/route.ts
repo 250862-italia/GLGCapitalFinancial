@@ -44,11 +44,17 @@ export async function POST(request: NextRequest) {
       });
 
       // Create client record
-      await db.createClient({
-        user_id: user.id,
-        company_name: `${first_name} ${last_name}`,
-        country: 'Italy'
-      });
+      try {
+        await db.createClient({
+          user_id: user.id,
+          company_name: `${first_name} ${last_name}`,
+          country: 'Italy'
+        });
+      } catch (clientError) {
+        console.error('Failed to create client record:', clientError);
+        // Continue with user creation even if client creation fails
+        // The client record can be created later when needed
+      }
 
       return NextResponse.json({
         success: true,

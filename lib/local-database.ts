@@ -59,96 +59,111 @@ class LocalDatabase {
   }
 
   async init(): Promise<void> {
-    if (this.db) return;
-
-    this.db = await open({
-      filename: this.dbPath,
-      driver: sqlite3.Database
-    });
-
-    await this.createTables();
+    try {
+      console.log('Initializing local database at:', this.dbPath);
+      this.db = new Database(this.dbPath);
+      console.log('Database connection established');
+      
+      await this.createTables();
+      console.log('Database tables created/verified');
+    } catch (error) {
+      console.error('Failed to initialize local database:', error);
+      throw new Error(`Database initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 
   private async createTables(): Promise<void> {
     if (!this.db) throw new Error('Database not initialized');
 
-    // Create users table
-    await this.db.exec(`
-      CREATE TABLE IF NOT EXISTS users (
-        id TEXT PRIMARY KEY,
-        email TEXT UNIQUE NOT NULL,
-        password_hash TEXT NOT NULL,
-        first_name TEXT,
-        last_name TEXT,
-        phone TEXT,
-        role TEXT DEFAULT 'user',
-        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-        updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
+    try {
+      console.log('Creating/verifying database tables...');
 
-    // Create clients table
-    await this.db.exec(`
-      CREATE TABLE IF NOT EXISTS clients (
-        id TEXT PRIMARY KEY,
-        user_id TEXT NOT NULL,
-        company_name TEXT,
-        tax_id TEXT,
-        address TEXT,
-        city TEXT,
-        country TEXT,
-        postal_code TEXT,
-        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-        updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users (id)
-      )
-    `);
+      // Create users table
+      await this.db.exec(`
+        CREATE TABLE IF NOT EXISTS users (
+          id TEXT PRIMARY KEY,
+          email TEXT UNIQUE NOT NULL,
+          password_hash TEXT NOT NULL,
+          first_name TEXT,
+          last_name TEXT,
+          phone TEXT,
+          role TEXT DEFAULT 'user',
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      console.log('Users table ready');
 
-    // Create kyc_records table
-    await this.db.exec(`
-      CREATE TABLE IF NOT EXISTS kyc_records (
-        id TEXT PRIMARY KEY,
-        user_id TEXT NOT NULL,
-        status TEXT DEFAULT 'pending',
-        document_type TEXT,
-        document_url TEXT,
-        verification_data TEXT,
-        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-        updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users (id)
-      )
-    `);
+      // Create clients table
+      await this.db.exec(`
+        CREATE TABLE IF NOT EXISTS clients (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          company_name TEXT,
+          tax_id TEXT,
+          address TEXT,
+          city TEXT,
+          country TEXT,
+          postal_code TEXT,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (user_id) REFERENCES users (id)
+        )
+      `);
+      console.log('Clients table ready');
 
-    // Create investments table
-    await this.db.exec(`
-      CREATE TABLE IF NOT EXISTS investments (
-        id TEXT PRIMARY KEY,
-        user_id TEXT NOT NULL,
-        amount REAL NOT NULL,
-        currency TEXT DEFAULT 'EUR',
-        status TEXT DEFAULT 'pending',
-        investment_type TEXT,
-        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-        updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users (id)
-      );
+      // Create kyc_records table
+      await this.db.exec(`
+        CREATE TABLE IF NOT EXISTS kyc_records (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          status TEXT DEFAULT 'pending',
+          document_type TEXT,
+          document_url TEXT,
+          verification_data TEXT,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (user_id) REFERENCES users (id)
+        )
+      `);
+      console.log('KYC records table ready');
 
-      CREATE TABLE IF NOT EXISTS notifications (
-        id TEXT PRIMARY KEY,
-        user_id TEXT NOT NULL,
-        type TEXT NOT NULL,
-        title TEXT NOT NULL,
-        message TEXT NOT NULL,
-        status TEXT DEFAULT 'unread',
-        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-        updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-        metadata TEXT,
-        FOREIGN KEY (user_id) REFERENCES users (id)
-      )
-    `);
+      // Create investments table
+      await this.db.exec(`
+        CREATE TABLE IF NOT EXISTS investments (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          amount REAL NOT NULL,
+          currency TEXT DEFAULT 'EUR',
+          status TEXT DEFAULT 'pending',
+          investment_type TEXT,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (user_id) REFERENCES users (id)
+        );
 
-    // Create admin user if not exists
-    await this.createAdminUser();
+        CREATE TABLE IF NOT EXISTS notifications (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          type TEXT NOT NULL,
+          title TEXT NOT NULL,
+          message TEXT NOT NULL,
+          status TEXT DEFAULT 'unread',
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          metadata TEXT,
+          FOREIGN KEY (user_id) REFERENCES users (id)
+        )
+      `);
+      console.log('Investments and notifications tables ready');
+
+      // Create admin user if not exists
+      await this.createAdminUser();
+      console.log('Admin user check completed');
+    } catch (error) {
+      console.error('Error creating database tables:', error);
+      throw new Error(`Table creation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 
   private async createAdminUser(): Promise<void> {
@@ -228,27 +243,36 @@ class LocalDatabase {
   async createClient(clientData: Partial<Client>): Promise<Client> {
     if (!this.db) throw new Error('Database not initialized');
 
-    const id = this.generateId();
+    try {
+      const id = this.generateId();
 
-    await this.db.run(`
-      INSERT INTO clients (id, user_id, company_name, tax_id, address, city, country, postal_code)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `, [
-      id,
-      clientData.user_id,
-      clientData.company_name,
-      clientData.tax_id,
-      clientData.address,
-      clientData.city,
-      clientData.country,
-      clientData.postal_code
-    ]);
+      console.log('Creating client with data:', { id, ...clientData });
 
-    const client = await this.getClientById(id);
-    if (!client) {
-      throw new Error('Failed to create client');
+      await this.db.run(`
+        INSERT INTO clients (id, user_id, company_name, tax_id, address, city, country, postal_code)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        id,
+        clientData.user_id,
+        clientData.company_name || null,
+        clientData.tax_id || null,
+        clientData.address || null,
+        clientData.city || null,
+        clientData.country || null,
+        clientData.postal_code || null
+      ]);
+
+      const client = await this.getClientById(id);
+      if (!client) {
+        throw new Error('Failed to retrieve created client');
+      }
+      
+      console.log('Client created successfully:', client);
+      return client;
+    } catch (error) {
+      console.error('Error creating client:', error);
+      throw new Error(`Failed to create client record: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-    return client;
   }
 
   async getClientById(id: string): Promise<Client | null> {
