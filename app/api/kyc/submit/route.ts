@@ -99,31 +99,33 @@ export async function GET(request: NextRequest) {
     const useLocalDatabase = process.env.USE_LOCAL_DATABASE === 'true';
     if (useLocalDatabase) {
       const db = await getLocalDatabase();
-      const client = await db.getClientByUserId(userId);
-      if (!client) {
-        return NextResponse.json({ error: 'Client not found' }, { status: 404 });
+      const user = await db.getUserById(userId);
+      if (!user) {
+        return NextResponse.json({ error: 'User not found' }, { status: 404 });
       }
+      const client = await db.getClientByUserId(userId);
       const kycRecord = await db.getKYCRecordByUserId(userId);
+      
       // Ricostruisci la struttura attesa dal frontend
       const personalInfo = {
-        firstName: client.first_name || '',
-        lastName: client.last_name || '',
-        dateOfBirth: client.date_of_birth || '',
-        nationality: client.nationality || '',
-        address: client.address || '',
-        city: client.city || '',
-        country: client.country || '',
-        phone: client.phone || '',
-        email: client.email || '',
-        codiceFiscale: client.codice_fiscale || ''
+        firstName: user.first_name || '',
+        lastName: user.last_name || '',
+        dateOfBirth: '', // Non disponibile nel database locale
+        nationality: '', // Non disponibile nel database locale
+        address: client?.address || '',
+        city: client?.city || '',
+        country: client?.country || '',
+        phone: user.phone || '',
+        email: user.email || '',
+        codiceFiscale: client?.tax_id || ''
       };
       const financialProfile = {
-        employmentStatus: client.employment_status || '',
-        annualIncome: client.annual_income || '',
-        sourceOfFunds: client.source_of_funds || '',
-        investmentExperience: client.investment_experience || '',
-        riskTolerance: client.risk_tolerance || '',
-        investmentGoals: client.investment_goals || []
+        employmentStatus: '', // Non disponibile nel database locale
+        annualIncome: '', // Non disponibile nel database locale
+        sourceOfFunds: '', // Non disponibile nel database locale
+        investmentExperience: '', // Non disponibile nel database locale
+        riskTolerance: '', // Non disponibile nel database locale
+        investmentGoals: [] // Non disponibile nel database locale
       };
       // Documenti (se presenti)
       const documents = {
