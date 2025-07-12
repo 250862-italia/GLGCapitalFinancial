@@ -95,58 +95,55 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
     }
 
-    // Trova il client tramite user_id
-    const { data: client, error: clientError } = await supabase
-      .from('clients')
-      .select('*')
-      .eq('user_id', userId)
-      .single();
-
-    if (clientError || !client) {
-      return NextResponse.json({ error: 'Client not found' }, { status: 404 });
+    // Usa solo il database locale
+    const useLocalDatabase = process.env.USE_LOCAL_DATABASE === 'true';
+    if (useLocalDatabase) {
+      const db = await getLocalDatabase();
+      const client = await db.getClientByUserId(userId);
+      if (!client) {
+        return NextResponse.json({ error: 'Client not found' }, { status: 404 });
+      }
+      const kycRecord = await db.getKYCRecordByUserId(userId);
+      // Ricostruisci la struttura attesa dal frontend
+      const personalInfo = {
+        firstName: client.first_name || '',
+        lastName: client.last_name || '',
+        dateOfBirth: client.date_of_birth || '',
+        nationality: client.nationality || '',
+        address: client.address || '',
+        city: client.city || '',
+        country: client.country || '',
+        phone: client.phone || '',
+        email: client.email || '',
+        codiceFiscale: client.codice_fiscale || ''
+      };
+      const financialProfile = {
+        employmentStatus: client.employment_status || '',
+        annualIncome: client.annual_income || '',
+        sourceOfFunds: client.source_of_funds || '',
+        investmentExperience: client.investment_experience || '',
+        riskTolerance: client.risk_tolerance || '',
+        investmentGoals: client.investment_goals || []
+      };
+      // Documenti (se presenti)
+      const documents = {
+        idDocument: kycRecord?.document_url || null,
+        proofOfAddress: null,
+        bankStatement: null
+      };
+      return NextResponse.json({
+        personalInfo,
+        financialProfile,
+        documents
+      });
+    } else {
+      // Mock response
+      return NextResponse.json({
+        personalInfo: {},
+        financialProfile: {},
+        documents: {}
+      });
     }
-
-    // Recupera eventuali documenti associati
-    const { data: kycRecords } = await supabase
-      .from('kyc_records')
-      .select('*')
-      .eq('client_id', client.id);
-
-    // Ricostruisci la struttura attesa dal frontend
-    const personalInfo = {
-      firstName: client.first_name || '',
-      lastName: client.last_name || '',
-      dateOfBirth: client.date_of_birth || '',
-      nationality: client.nationality || '',
-      address: client.address || '',
-      city: client.city || '',
-      country: client.country || '',
-      phone: client.phone || '',
-      email: client.email || '',
-      codiceFiscale: client.codice_fiscale || ''
-    };
-
-    const financialProfile = {
-      employmentStatus: client.employment_status || '',
-      annualIncome: client.annual_income || '',
-      sourceOfFunds: client.source_of_funds || '',
-      investmentExperience: client.investment_experience || '',
-      riskTolerance: client.risk_tolerance || '',
-      investmentGoals: client.investment_goals || []
-    };
-
-    // Documenti (se presenti)
-    const documents = {
-      idDocument: kycRecords?.find(r => r.document_type === 'PERSONAL_INFO')?.document_image_url || null,
-      proofOfAddress: kycRecords?.find(r => r.document_type === 'PROOF_OF_ADDRESS')?.document_image_url || null,
-      bankStatement: kycRecords?.find(r => r.document_type === 'BANK_STATEMENT')?.document_image_url || null
-    };
-
-    return NextResponse.json({
-      personalInfo,
-      financialProfile,
-      documents
-    });
   } catch (error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
