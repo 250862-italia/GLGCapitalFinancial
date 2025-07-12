@@ -43,13 +43,12 @@ export async function POST(request: NextRequest) {
     // Create new client profile with basic data
     const newProfile = {
       user_id: user_id,
-              firstName: '',
-        lastName: '',
-      tax_id: '',
+      "firstName": '',
+      "lastName": '',
       address: '',
       city: '',
       country: '',
-      postal_code: ''
+      "postalCode": ''
     };
 
     const { data: createdProfile, error: createError } = await supabase

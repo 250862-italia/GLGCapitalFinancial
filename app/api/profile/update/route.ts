@@ -23,44 +23,41 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Mappa i campi updates con logica migliorata per gestire i nomi delle colonne
+    // Map the updates to match the database schema (camelCase)
     const updatesTyped: Record<string, any> = updates as Record<string, any>;
-    const updatesSnakeCase: Record<string, any> = {};
+    const updatesForDb: Record<string, any> = {};
     
-    // Mappa specifica per i campi che potrebbero avere nomi diversi
+    // Map specific fields to match database schema
     const fieldMapping: Record<string, string> = {
-      firstName: 'first_name',
-      lastName: 'last_name',
-      dateOfBirth: 'date_of_birth',
-      postalCode: 'postal_code',
-      profilePhoto: 'profile_photo',
-      bankingDetails: 'banking_details',
-      photoUrl: 'photo_url',
+      firstName: 'firstName',
+      lastName: 'lastName',
+      dateOfBirth: 'dateOfBirth',
+      postalCode: 'postalCode',
+      profilePhoto: 'profilePhoto',
+      bankingDetails: 'bankingDetails',
+      photoUrl: 'profilePhoto', // Map to profilePhoto in DB
       iban: 'iban',
       bic: 'bic',
-      accountHolder: 'account_holder',
-      usdtWallet: 'usdt_wallet',
-
-      createdAt: 'created_at',
-      updatedAt: 'updated_at'
+      accountHolder: 'accountHolder',
+      usdtWallet: 'usdtWallet'
     };
 
     for (const key in updatesTyped) {
       if (Object.prototype.hasOwnProperty.call(updatesTyped, key)) {
-        // Usa la mappa specifica se esiste, altrimenti converte camelCase -> snake_case
-        const snakeKey = fieldMapping[key] || key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
-        updatesSnakeCase[snakeKey] = updatesTyped[key];
+        // Use the specific mapping if it exists, otherwise keep the key as is
+        const dbKey = fieldMapping[key] || key;
+        updatesForDb[dbKey] = updatesTyped[key];
       }
     }
 
-    // Aggiungi updated_at automaticamente
-    updatesSnakeCase.updated_at = new Date().toISOString();
+    // Add updated_at automatically
+    updatesForDb.updated_at = new Date().toISOString();
 
-    console.log('Updating profile with data:', updatesSnakeCase);
+    console.log('Updating profile with data:', updatesForDb);
 
     const { data, error } = await supabase
       .from('clients')
-      .update(updatesSnakeCase)
+      .update(updatesForDb)
       .eq('user_id', userId)
       .select()
       .single();

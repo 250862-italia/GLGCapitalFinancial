@@ -25,8 +25,8 @@ export async function GET() {
     // Transform data to match expected format
     const transformedData = data?.map(client => ({
       id: client.id,
-      first_name: client.first_name || client.users?.first_name,
-      last_name: client.last_name || client.users?.last_name,
+      first_name: client.firstName || client.users?.first_name,
+      last_name: client.lastName || client.users?.last_name,
       email: client.email,
       phone: client.phone,
       dateOfBirth: client.dateOfBirth,
