@@ -5,22 +5,12 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
--- Users table (authentication)
-CREATE TABLE IF NOT EXISTS users (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    role VARCHAR(50) DEFAULT 'user' CHECK (role IN ('user', 'admin', 'superadmin')),
-    is_active BOOLEAN DEFAULT true,
-    email_verified BOOLEAN DEFAULT false,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+-- Users table is handled by Supabase Auth (auth.users)
 
 -- Clients table (client profiles)
 CREATE TABLE IF NOT EXISTS clients (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
     phone VARCHAR(20),
@@ -85,7 +75,7 @@ CREATE TABLE IF NOT EXISTS informational_requests (
 -- Team Members table
 CREATE TABLE IF NOT EXISTS team_members (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
@@ -104,7 +94,7 @@ CREATE TABLE IF NOT EXISTS content (
     content TEXT NOT NULL,
     type VARCHAR(50) NOT NULL CHECK (type IN ('news', 'market', 'partnership', 'announcement')),
     status VARCHAR(20) DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived')),
-    author_id UUID REFERENCES users(id),
+    author_id UUID REFERENCES auth.users(id),
     tags TEXT[],
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -135,7 +125,6 @@ CREATE TABLE IF NOT EXISTS settings (
 );
 
 -- Create indexes for better performance
-CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_clients_user_id ON clients(user_id);
 
 CREATE INDEX IF NOT EXISTS idx_investments_client_id ON investments(client_id);
@@ -145,7 +134,6 @@ CREATE INDEX IF NOT EXISTS idx_content_type ON content(type);
 CREATE INDEX IF NOT EXISTS idx_partnerships_status ON partnerships(status);
 
 -- Row Level Security (RLS) Policies
-ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE clients ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE investments ENABLE ROW LEVEL SECURITY;
@@ -157,9 +145,6 @@ ALTER TABLE partnerships ENABLE ROW LEVEL SECURITY;
 ALTER TABLE settings ENABLE ROW LEVEL SECURITY;
 
 -- Users can only see their own data
-CREATE POLICY "Users can view own profile" ON users
-    FOR SELECT USING (auth.uid() = id);
-
 CREATE POLICY "Clients can view own profile" ON clients
     FOR SELECT USING (user_id = auth.uid());
 
@@ -172,19 +157,11 @@ CREATE POLICY "Clients can view own investments" ON investments
     FOR SELECT USING (client_id IN (SELECT id FROM clients WHERE user_id = auth.uid()));
 
 -- Admins can view all data
-CREATE POLICY "Admins can view all users" ON users
-    FOR SELECT USING (
-        EXISTS (
-            SELECT 1 FROM users 
-            WHERE id = auth.uid() AND role IN ('admin', 'superadmin')
-        )
-    );
-
 CREATE POLICY "Admins can view all clients" ON clients
     FOR ALL USING (
         EXISTS (
-            SELECT 1 FROM users 
-            WHERE id = auth.uid() AND role IN ('admin', 'superadmin')
+            SELECT 1 FROM auth.users 
+            WHERE id = auth.uid() AND raw_user_meta_data->>'role' IN ('admin', 'superadmin')
         )
     );
 
@@ -193,8 +170,8 @@ CREATE POLICY "Admins can view all clients" ON clients
 CREATE POLICY "Admins can view all investments" ON investments
     FOR ALL USING (
         EXISTS (
-            SELECT 1 FROM users 
-            WHERE id = auth.uid() AND role IN ('admin', 'superadmin')
+            SELECT 1 FROM auth.users 
+            WHERE id = auth.uid() AND raw_user_meta_data->>'role' IN ('admin', 'superadmin')
         )
     );
 
