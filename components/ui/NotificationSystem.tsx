@@ -1,111 +1,194 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Bell, X, CheckCircle, AlertCircle, Info, Clock, Settings } from 'lucide-react';
+import { Bell, X, CheckCircle, AlertCircle, Info, Clock, Settings, UserPlus, DollarSign, Shield, UserCheck, UserX, RefreshCw } from 'lucide-react';
+import realtimeManager, { RealtimeEvent } from '@/lib/realtime-manager';
 
 interface Notification {
   id: string;
-  type: 'success' | 'error' | 'warning' | 'info';
+  type: 'success' | 'error' | 'warning' | 'info' | 'investment' | 'user_registration' | 'payment' | 'security_alert';
   title: string;
   message: string;
   timestamp: Date;
   read: boolean;
+  priority: 'low' | 'medium' | 'high' | 'critical';
   action?: {
     label: string;
     url: string;
   };
+  metadata?: Record<string, any>;
 }
 
 interface NotificationSystemProps {
   userId: string;
+  userRole?: 'admin' | 'user' | 'superadmin';
 }
 
-export default function NotificationSystem({ userId }: NotificationSystemProps) {
+export default function NotificationSystem({ userId, userRole = 'user' }: NotificationSystemProps) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [filter, setFilter] = useState<'all' | 'unread' | 'high_priority'>('all');
+  const [isLoading, setIsLoading] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState({ connected: false, subscriptions: 0, events: 0 });
 
   useEffect(() => {
     loadNotifications();
-    // Simulate real-time notifications
-    const interval = setInterval(() => {
-      checkNewNotifications();
-    }, 30000); // Check every 30 seconds
+    setupRealtimeSubscriptions();
+    
+    // Update connection status every 5 seconds
+    const statusInterval = setInterval(() => {
+      setConnectionStatus(realtimeManager.getConnectionStatus());
+    }, 5000);
 
-    return () => clearInterval(interval);
-  }, [userId]);
+    return () => {
+      clearInterval(statusInterval);
+    };
+  }, [userId, userRole]);
 
-  const loadNotifications = () => {
-    // Mock notifications - in real app this would come from API
-    const mockNotifications: Notification[] = [
-      {
-        id: '1',
-        type: 'success',
-        title: 'Investment Successful',
-        message: 'Your purchase of 50 AAPL shares has been completed successfully.',
-        timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-        read: false,
-        action: {
-          label: 'View Details',
-          url: '/reserved/portfolio'
-        }
-      },
-      {
-        id: '2',
-        type: 'warning',
-        title: 'Market Alert',
-        message: 'TSLA stock has dropped 5% in the last hour. Consider reviewing your position.',
-        timestamp: new Date(Date.now() - 1000 * 60 * 60), // 1 hour ago
-        read: false,
-        action: {
-          label: 'Review Portfolio',
-          url: '/reserved/portfolio'
-        }
-      },
-      {
-        id: '3',
-        type: 'info',
-        title: 'Dividend Payment',
-        message: 'You received a dividend payment of $24.50 from Apple Inc.',
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-        read: true
-      },
-      {
-        id: '4',
-        type: 'error',
-        title: 'Transaction Failed',
-        message: 'Your sell order for 25 TSLA shares could not be processed. Please try again.',
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 3), // 3 hours ago
-        read: false,
-        action: {
-          label: 'Retry Transaction',
-          url: '/reserved/transactions'
-        }
-      }
-    ];
+  const setupRealtimeSubscriptions = () => {
+    // Subscribe to user-specific notifications
+    const notificationSub = realtimeManager.subscribeToNotifications(userId, (event) => {
+      const notification = convertRealtimeEventToNotification(event);
+      addNotification(notification);
+    });
 
-    setNotifications(mockNotifications);
+    // Subscribe to investment updates
+    const investmentSub = realtimeManager.subscribeToInvestments(userId, (event) => {
+      const notification = convertRealtimeEventToNotification(event);
+      addNotification(notification);
+    });
+
+    // Admin-specific subscriptions
+    if (userRole === 'admin' || userRole === 'superadmin') {
+      const adminSubs = realtimeManager.subscribeToAdminEvents(userId, (event) => {
+        const notification = convertRealtimeEventToNotification(event);
+        addNotification(notification);
+      });
+
+      // Cleanup admin subscriptions
+      return () => {
+        notificationSub.unsubscribe();
+        investmentSub.unsubscribe();
+        adminSubs.forEach(sub => sub.unsubscribe());
+      };
+    }
+
+    // Cleanup user subscriptions
+    return () => {
+      notificationSub.unsubscribe();
+      investmentSub.unsubscribe();
+    };
   };
 
-  const checkNewNotifications = () => {
-    // Simulate new notifications
-    const shouldAddNotification = Math.random() > 0.8; // 20% chance
-    
-    if (shouldAddNotification) {
-      const newNotification: Notification = {
-        id: Date.now().toString(),
-        type: 'info',
-        title: 'Market Update',
-        message: 'New market data is available for your portfolio.',
-        timestamp: new Date(),
-        read: false
-      };
-      
-      setNotifications(prev => [newNotification, ...prev]);
+  const convertRealtimeEventToNotification = (event: RealtimeEvent): Notification => {
+    const baseNotification: Notification = {
+      id: event.id,
+      type: event.type as any,
+      title: getNotificationTitle(event.type, event.data),
+      message: getNotificationMessage(event.type, event.data),
+      timestamp: event.timestamp,
+      read: false,
+      priority: event.priority,
+      metadata: event.data
+    };
+
+    // Add action based on event type
+    switch (event.type) {
+      case 'investment':
+        baseNotification.action = {
+          label: 'View Investment',
+          url: `/dashboard/investments`
+        };
+        break;
+      case 'user_registration':
+        if (userRole === 'admin' || userRole === 'superadmin') {
+          baseNotification.action = {
+            label: 'View User',
+            url: `/admin/users`
+          };
+        }
+        break;
+      case 'payment':
+        baseNotification.action = {
+          label: 'View Payment',
+          url: `/admin/payments`
+        };
+        break;
+    }
+
+    return baseNotification;
+  };
+
+  const getNotificationTitle = (type: RealtimeEvent['type'], data: any): string => {
+    switch (type) {
+      case 'investment':
+        return 'New Investment';
+      case 'user_registration':
+        return 'New User Registration';
+      case 'payment':
+        return 'Payment Update';
+      case 'notification':
+        return 'New Notification';
+      case 'system_alert':
+        return 'System Alert';
+      default:
+        return 'New Event';
     }
   };
 
-  const markAsRead = (notificationId: string) => {
+  const getNotificationMessage = (type: RealtimeEvent['type'], data: any): string => {
+    switch (type) {
+      case 'investment':
+        const amount = data.new?.amount || data.data?.amount;
+        return `Investment of $${amount?.toLocaleString()} has been processed.`;
+      case 'user_registration':
+        const userName = data.new?.first_name || data.data?.first_name;
+        return `${userName} has registered for an account.`;
+      case 'payment':
+        const status = data.new?.status || data.data?.status;
+        return `Payment status updated to ${status}.`;
+      case 'notification':
+        return data.new?.message || data.data?.message || 'You have a new notification.';
+      case 'system_alert':
+        return data.new?.message || data.data?.message || 'System alert received.';
+      default:
+        return 'New event occurred.';
+    }
+  };
+
+  const loadNotifications = async () => {
+    setIsLoading(true);
+    try {
+      // Load from database
+      const response = await fetch(`/api/notifications/${userId}`);
+      if (response.ok) {
+        const data = await response.json();
+        const dbNotifications = data.map((n: any) => ({
+          id: n.id,
+          type: n.type,
+          title: n.title,
+          message: n.message,
+          timestamp: new Date(n.created_at),
+          read: n.status === 'read',
+          priority: n.priority || 'medium',
+          action: n.metadata?.action,
+          metadata: n.metadata
+        }));
+        setNotifications(dbNotifications);
+      }
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const addNotification = (notification: Notification) => {
+    setNotifications(prev => [notification, ...prev]);
+  };
+
+  const markAsRead = async (notificationId: string) => {
     setNotifications(prev =>
       prev.map(notification =>
         notification.id === notificationId
@@ -113,18 +196,51 @@ export default function NotificationSystem({ userId }: NotificationSystemProps) 
           : notification
       )
     );
+
+    // Update in database
+    try {
+      await fetch(`/api/notifications/${userId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notificationId, status: 'read' })
+      });
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
   };
 
-  const markAllAsRead = () => {
+  const markAllAsRead = async () => {
     setNotifications(prev =>
       prev.map(notification => ({ ...notification, read: true }))
     );
+
+    // Update in database
+    try {
+      await fetch(`/api/notifications/${userId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ markAllRead: true })
+      });
+    } catch (error) {
+      console.error('Error marking all notifications as read:', error);
+    }
   };
 
-  const deleteNotification = (notificationId: string) => {
+  const deleteNotification = async (notificationId: string) => {
     setNotifications(prev =>
       prev.filter(notification => notification.id !== notificationId)
     );
+
+    // Delete from database
+    try {
+      await fetch(`/api/notifications/${userId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notificationId })
+      });
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+    }
   };
 
   const getNotificationIcon = (type: Notification['type']) => {
@@ -137,27 +253,59 @@ export default function NotificationSystem({ userId }: NotificationSystemProps) 
         return <AlertCircle size={16} color="#d97706" />;
       case 'info':
         return <Info size={16} color="#0284c7" />;
+      case 'investment':
+        return <DollarSign size={16} color="#059669" />;
+      case 'user_registration':
+        return <UserPlus size={16} color="#3b82f6" />;
+      case 'payment':
+        return <CheckCircle size={16} color="#059669" />;
+      case 'security_alert':
+        return <Shield size={16} color="#dc2626" />;
       default:
         return <Info size={16} color="#6b7280" />;
     }
   };
 
-  const getNotificationStyle = (type: Notification['type']) => {
-    switch (type) {
-      case 'success':
-        return { background: '#f0fdf4', borderColor: '#bbf7d0' };
-      case 'error':
+  const getPriorityColor = (priority: Notification['priority']) => {
+    switch (priority) {
+      case 'critical':
+        return '#dc2626';
+      case 'high':
+        return '#d97706';
+      case 'medium':
+        return '#3b82f6';
+      case 'low':
+        return '#059669';
+      default:
+        return '#6b7280';
+    }
+  };
+
+  const getNotificationStyle = (priority: Notification['priority']) => {
+    switch (priority) {
+      case 'critical':
         return { background: '#fef2f2', borderColor: '#fecaca' };
-      case 'warning':
+      case 'high':
         return { background: '#fef3c7', borderColor: '#fed7aa' };
-      case 'info':
+      case 'medium':
         return { background: '#f0f9ff', borderColor: '#bfdbfe' };
+      case 'low':
+        return { background: '#f0fdf4', borderColor: '#bbf7d0' };
       default:
         return { background: '#f8fafc', borderColor: '#e2e8f0' };
     }
   };
 
+  const filteredNotifications = notifications.filter(notification => {
+    if (filter === 'unread') return !notification.read;
+    if (filter === 'high_priority') return notification.priority === 'high' || notification.priority === 'critical';
+    return true;
+  });
+
   const unreadCount = notifications.filter(n => !n.read).length;
+  const highPriorityCount = notifications.filter(n => 
+    !n.read && (n.priority === 'high' || n.priority === 'critical')
+  ).length;
 
   return (
     <div style={{ position: 'relative' }}>
@@ -166,207 +314,291 @@ export default function NotificationSystem({ userId }: NotificationSystemProps) 
         onClick={() => setShowDropdown(!showDropdown)}
         style={{
           position: 'relative',
-          background: 'transparent',
+          background: 'none',
           border: 'none',
           cursor: 'pointer',
-          padding: '0.5rem',
-          borderRadius: '50%',
+          padding: '8px',
+          borderRadius: '6px',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
-          color: '#374151'
+          gap: '8px',
+          color: '#6b7280',
+          transition: 'all 0.2s'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = '#f3f4f6';
+          e.currentTarget.style.color = '#374151';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = 'none';
+          e.currentTarget.style.color = '#6b7280';
         }}
       >
         <Bell size={20} />
+        
+        {/* Unread Badge */}
         {unreadCount > 0 && (
-          <span style={{
+          <div style={{
             position: 'absolute',
-            top: 0,
-            right: 0,
+            top: '-2px',
+            right: '-2px',
             background: '#dc2626',
             color: 'white',
             borderRadius: '50%',
-            width: 18,
-            height: 18,
-            fontSize: 10,
-            fontWeight: 600,
+            width: '18px',
+            height: '18px',
+            fontSize: '11px',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            fontWeight: 600
           }}>
-            {unreadCount > 9 ? '9+' : unreadCount}
-          </span>
+            {unreadCount > 99 ? '99+' : unreadCount}
+          </div>
         )}
+
+        {/* Connection Status Indicator */}
+        <div style={{
+          width: '8px',
+          height: '8px',
+          borderRadius: '50%',
+          background: connectionStatus.connected ? '#10b981' : '#ef4444',
+          marginLeft: '4px'
+        }} />
       </button>
 
-      {/* Notification Dropdown */}
+      {/* Dropdown */}
       {showDropdown && (
         <div style={{
           position: 'absolute',
           top: '100%',
           right: 0,
-          width: 400,
-          maxHeight: 500,
+          width: '400px',
           background: 'white',
-          border: '1px solid #e2e8f0',
-          borderRadius: 12,
-          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+          border: '1px solid #e5e7eb',
+          borderRadius: '8px',
+          boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
           zIndex: 1000,
-          overflow: 'hidden'
+          marginTop: '8px'
         }}>
           {/* Header */}
           <div style={{
-            padding: '1rem 1.5rem',
-            borderBottom: '1px solid #e2e8f0',
+            padding: '16px',
+            borderBottom: '1px solid #f3f4f6',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center'
           }}>
-            <h3 style={{
-              fontSize: 16,
-              fontWeight: 600,
-              color: '#1f2937',
-              margin: 0
-            }}>
-              Notifications
-            </h3>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <div>
+              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#1f2937' }}>
+                Notifications
+              </h3>
+              <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#6b7280' }}>
+                {connectionStatus.connected ? 'Live updates' : 'Polling mode'} • {connectionStatus.subscriptions} active
+              </p>
+            </div>
+            
+            <div style={{ display: 'flex', gap: '8px' }}>
               <button
-                onClick={markAllAsRead}
+                onClick={loadNotifications}
+                disabled={isLoading}
                 style={{
-                  background: 'transparent',
+                  background: 'none',
                   border: 'none',
-                  color: '#059669',
                   cursor: 'pointer',
-                  fontSize: 12,
-                  fontWeight: 600
+                  padding: '4px',
+                  borderRadius: '4px',
+                  color: '#6b7280',
+                  display: 'flex',
+                  alignItems: 'center'
                 }}
+                title="Refresh"
               >
-                Mark all read
+                <RefreshCw size={14} className={isLoading ? 'animate-spin' : ''} />
               </button>
+              
               <button
                 onClick={() => setShowSettings(!showSettings)}
                 style={{
-                  background: 'transparent',
+                  background: 'none',
                   border: 'none',
-                  color: '#6b7280',
                   cursor: 'pointer',
-                  padding: '0.25rem'
+                  padding: '4px',
+                  borderRadius: '4px',
+                  color: '#6b7280',
+                  display: 'flex',
+                  alignItems: 'center'
                 }}
+                title="Settings"
               >
-                <Settings size={16} />
+                <Settings size={14} />
+              </button>
+              
+              <button
+                onClick={() => setShowDropdown(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: '4px',
+                  borderRadius: '4px',
+                  color: '#6b7280',
+                  display: 'flex',
+                  alignItems: 'center'
+                }}
+                title="Close"
+              >
+                <X size={14} />
               </button>
             </div>
           </div>
 
+          {/* Filters */}
+          <div style={{
+            padding: '12px 16px',
+            borderBottom: '1px solid #f3f4f6',
+            display: 'flex',
+            gap: '8px'
+          }}>
+            <button
+              onClick={() => setFilter('all')}
+              style={{
+                background: filter === 'all' ? '#3b82f6' : '#f3f4f6',
+                color: filter === 'all' ? 'white' : '#374151',
+                border: 'none',
+                padding: '6px 12px',
+                borderRadius: '6px',
+                fontSize: '12px',
+                cursor: 'pointer',
+                fontWeight: 500
+              }}
+            >
+              All
+            </button>
+            <button
+              onClick={() => setFilter('unread')}
+              style={{
+                background: filter === 'unread' ? '#3b82f6' : '#f3f4f6',
+                color: filter === 'unread' ? 'white' : '#374151',
+                border: 'none',
+                padding: '6px 12px',
+                borderRadius: '6px',
+                fontSize: '12px',
+                cursor: 'pointer',
+                fontWeight: 500
+              }}
+            >
+              Unread ({unreadCount})
+            </button>
+            <button
+              onClick={() => setFilter('high_priority')}
+              style={{
+                background: filter === 'high_priority' ? '#dc2626' : '#f3f4f6',
+                color: filter === 'high_priority' ? 'white' : '#374151',
+                border: 'none',
+                padding: '6px 12px',
+                borderRadius: '6px',
+                fontSize: '12px',
+                cursor: 'pointer',
+                fontWeight: 500
+              }}
+            >
+              High Priority ({highPriorityCount})
+            </button>
+          </div>
+
           {/* Notifications List */}
           <div style={{
-            maxHeight: 400,
+            maxHeight: '400px',
             overflowY: 'auto'
           }}>
-            {notifications.length === 0 ? (
+            {filteredNotifications.length === 0 ? (
               <div style={{
                 padding: '2rem',
                 textAlign: 'center',
                 color: '#6b7280'
               }}>
-                <Bell size={32} style={{ marginBottom: '1rem', opacity: 0.5 }} />
-                <p style={{ margin: 0 }}>No notifications</p>
+                <Bell size={32} style={{ marginBottom: '0.5rem', opacity: 0.5 }} />
+                <p style={{ margin: 0, fontSize: 14 }}>No notifications</p>
               </div>
             ) : (
-              notifications.map((notification) => (
+              filteredNotifications.map((notification) => (
                 <div
                   key={notification.id}
                   style={{
-                    padding: '1rem 1.5rem',
+                    padding: '16px',
                     borderBottom: '1px solid #f1f5f9',
+                    background: notification.read ? 'white' : '#f8fafc',
                     cursor: 'pointer',
-                    ...getNotificationStyle(notification.type)
+                    transition: 'background-color 0.2s',
+                    borderLeft: `4px solid ${getPriorityColor(notification.priority)}`
                   }}
-                  onClick={() => markAsRead(notification.id)}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#f1f5f9';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = notification.read ? 'white' : '#f8fafc';
+                  }}
+                  onClick={() => {
+                    markAsRead(notification.id);
+                    if (notification.action) {
+                      window.location.href = notification.action.url;
+                    }
+                  }}
                 >
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'flex-start',
-                    marginBottom: '0.5rem'
-                  }}>
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem'
-                    }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                       {getNotificationIcon(notification.type)}
-                      <h4 style={{
-                        fontSize: 14,
-                        fontWeight: 600,
-                        color: '#1f2937',
-                        margin: 0
-                      }}>
-                        {notification.title}
-                      </h4>
+                      <div>
+                        <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#1f2937', margin: 0 }}>
+                          {notification.title}
+                        </h4>
+                        <p style={{ fontSize: '13px', color: '#6b7280', margin: '4px 0 0 0' }}>
+                          {notification.message}
+                        </p>
+                      </div>
                     </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteNotification(notification.id);
-                      }}
-                      style={{
-                        background: 'transparent',
-                        border: 'none',
-                        color: '#9ca3af',
-                        cursor: 'pointer',
-                        padding: '0.25rem'
-                      }}
-                    >
-                      <X size={14} />
-                    </button>
+                    
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        fontSize: '10px',
+                        fontWeight: 600,
+                        color: 'white',
+                        background: getPriorityColor(notification.priority)
+                      }}>
+                        {notification.priority}
+                      </span>
+                      <span style={{ fontSize: '11px', color: '#6b7280' }}>
+                        {notification.timestamp.toLocaleTimeString()}
+                      </span>
+                    </div>
                   </div>
                   
-                  <p style={{
-                    fontSize: 13,
-                    color: '#6b7280',
-                    margin: '0 0 0.5rem 0',
-                    lineHeight: 1.4
-                  }}>
-                    {notification.message}
-                  </p>
-                  
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
-                  }}>
-                    <span style={{
-                      fontSize: 11,
-                      color: '#9ca3af',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.25rem'
-                    }}>
-                      <Clock size={12} />
-                      {formatTimeAgo(notification.timestamp)}
-                    </span>
-                    
-                    {notification.action && (
+                  {notification.action && (
+                    <div style={{ marginTop: '8px' }}>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
+                          markAsRead(notification.id);
                           window.location.href = notification.action!.url;
                         }}
                         style={{
-                          background: 'transparent',
+                          background: '#3b82f6',
+                          color: 'white',
                           border: 'none',
-                          color: '#059669',
+                          padding: '4px 8px',
+                          borderRadius: '4px',
+                          fontSize: '11px',
                           cursor: 'pointer',
-                          fontSize: 12,
-                          fontWeight: 600
+                          fontWeight: 500
                         }}
                       >
                         {notification.action.label}
                       </button>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
               ))
             )}
@@ -374,22 +606,29 @@ export default function NotificationSystem({ userId }: NotificationSystemProps) 
 
           {/* Footer */}
           <div style={{
-            padding: '1rem 1.5rem',
-            borderTop: '1px solid #e2e8f0',
-            textAlign: 'center'
+            padding: '12px 16px',
+            borderTop: '1px solid #f3f4f6',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
           }}>
             <button
+              onClick={markAllAsRead}
               style={{
-                background: 'transparent',
+                background: 'none',
                 border: 'none',
-                color: '#059669',
+                color: '#3b82f6',
+                fontSize: '12px',
                 cursor: 'pointer',
-                fontSize: 14,
-                fontWeight: 600
+                fontWeight: 500
               }}
             >
-              View All Notifications
+              Mark all as read
             </button>
+            
+            <span style={{ fontSize: '11px', color: '#6b7280' }}>
+              {filteredNotifications.length} notification{filteredNotifications.length !== 1 ? 's' : ''}
+            </span>
           </div>
         </div>
       )}
@@ -528,22 +767,4 @@ export default function NotificationSystem({ userId }: NotificationSystemProps) 
       )}
     </div>
   );
-}
-
-function formatTimeAgo(date: Date): string {
-  const now = new Date();
-  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-  if (diffInSeconds < 60) {
-    return 'Just now';
-  } else if (diffInSeconds < 3600) {
-    const minutes = Math.floor(diffInSeconds / 60);
-    return `${minutes}m ago`;
-  } else if (diffInSeconds < 86400) {
-    const hours = Math.floor(diffInSeconds / 3600);
-    return `${hours}h ago`;
-  } else {
-    const days = Math.floor(diffInSeconds / 86400);
-    return `${days}d ago`;
-  }
 } 
