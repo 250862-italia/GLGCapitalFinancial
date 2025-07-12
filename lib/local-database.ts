@@ -359,6 +359,25 @@ class LocalDatabase {
     `, [status, id]);
   }
 
+  async updateInvestment(id: string, fields: any): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+    const allowedFields = ['amount', 'currency', 'status', 'investment_type', 'updated_at'];
+    const updates = [];
+    const values = [];
+    for (const key of allowedFields) {
+      if (fields[key] !== undefined) {
+        updates.push(`${key} = ?`);
+        values.push(fields[key]);
+      }
+    }
+    if (updates.length === 0) return;
+    values.push(id);
+    await this.db.run(
+      `UPDATE investments SET ${updates.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+      values
+    );
+  }
+
   // Notification operations
   async createNotification(notificationData: {
     user_id: string;
