@@ -209,7 +209,6 @@ class Logger {
       user: 0,
       investment: 0,
       payment: 0,
-      kyc: 0,
       security: 0,
       system: 0,
       admin: 0
@@ -338,7 +337,7 @@ class Logger {
       case 'user': return '\x1b[36m';     // Cyan
       case 'investment': return '\x1b[32m'; // Green
       case 'payment': return '\x1b[33m';   // Yellow
-      case 'kyc': return '\x1b[35m';       // Magenta
+
       case 'security': return '\x1b[31m';  // Red
       case 'system': return '\x1b[37m';    // White
       case 'admin': return '\x1b[30m';     // Black
