@@ -378,6 +378,11 @@ class LocalDatabase {
     );
   }
 
+  async deleteInvestment(id: string): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+    await this.db.run('DELETE FROM investments WHERE id = ?', id);
+  }
+
   // Notification operations
   async createNotification(notificationData: {
     user_id: string;
