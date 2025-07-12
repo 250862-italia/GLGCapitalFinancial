@@ -1,91 +1,57 @@
 import { NextRequest, NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
-import { getLocalDatabase } from '@/lib/local-database';
+import { supabase } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { first_name, last_name, email, phone, password } = body;
+    const { email, password, company_name, country } = body;
 
-    // Validation
-    if (!email || !password || !first_name || !last_name) {
+    if (!email || !password) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Email and password are required' },
         { status: 400 }
       );
     }
 
-    // Check if using local database
-    const useLocalDatabase = process.env.USE_LOCAL_DATABASE === 'true';
+    // Register user in Supabase
+    const { data: user, error: registerError } = await supabase.auth.signUp({
+      email,
+      password
+    });
 
-    if (useLocalDatabase) {
-      // Use local database
-      const db = await getLocalDatabase();
-      
-      // Check if user already exists
-      const existingUser = await db.getUserByEmail(email);
-      if (existingUser) {
-        return NextResponse.json(
-          { error: 'User already exists' },
-          { status: 409 }
-        );
-      }
-
-      // Create user
-      const user = await db.createUser({
-        email,
-        password_hash: password,
-        first_name,
-        last_name,
-        phone,
-        role: 'user'
-      });
-
-      // Create client record
-      try {
-        await db.createClient({
-          user_id: user.id,
-          company_name: `${first_name} ${last_name}`,
-          country: 'Italy'
-        });
-      } catch (clientError) {
-        console.error('Failed to create client record:', clientError);
-        // Continue with user creation even if client creation fails
-        // The client record can be created later when needed
-      }
-
-      return NextResponse.json({
-        success: true,
-        message: 'User registered successfully',
-        user: {
-          id: user.id,
-          email: user.email,
-          first_name: user.first_name,
-          last_name: user.last_name,
-          role: user.role
-        }
-      });
-    } else {
-      // Use Supabase (fallback to mock data for now)
-      console.log('Supabase not available, using mock registration');
-      
-      return NextResponse.json({
-        success: true,
-        message: 'User registered successfully (mock)',
-        user: {
-          id: 'mock_user_' + Date.now(),
-          email,
-          first_name,
-          last_name,
-          role: 'user'
-        }
-      });
+    if (registerError) {
+      return NextResponse.json(
+        { error: registerError.message },
+        { status: 500 }
+      );
     }
 
+    // Create client profile in Supabase
+    const { data: client, error: clientError } = await supabase
+      .from('clients')
+      .insert({
+        user_id: user.user?.id,
+        company_name: company_name || '',
+        country: country || ''
+      })
+      .select()
+      .single();
+
+    if (clientError) {
+      return NextResponse.json(
+        { error: clientError.message },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      user: user.user,
+      client
+    });
   } catch (error) {
-    console.error('Registration error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

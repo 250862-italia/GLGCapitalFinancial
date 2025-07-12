@@ -1,65 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getLocalDatabase } from '@/lib/local-database';
 
 export const dynamic = 'force-dynamic';
 
-// Mock data fallback
-const mockAnalytics = [
-  {
-    id: '1',
-    metric: 'Total Revenue',
-    value: 1250000,
-    change_percentage: 12.5,
-    period: 'monthly',
-    category: 'financial',
-    status: 'active',
-    description: 'Monthly revenue tracking',
-    created_at: new Date().toISOString()
-  },
-  {
-    id: '2',
-    metric: 'Active Users',
-    value: 1250,
-    change_percentage: 8.3,
-    period: 'weekly',
-    category: 'user',
-    status: 'active',
-    description: 'Weekly active user count',
-    created_at: new Date().toISOString()
-  },
-  {
-    id: '3',
-    metric: 'Investment Packages',
-    value: 45,
-    change_percentage: 15.2,
-    period: 'monthly',
-    category: 'product',
-    status: 'active',
-    description: 'Available investment packages',
-    created_at: new Date().toISOString()
-  }
-];
-
 export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const category = searchParams.get('category');
-    const status = searchParams.get('status');
-
-    // Check if using local database
-    const useLocalDatabase = process.env.USE_LOCAL_DATABASE === 'true';
-
-    if (useLocalDatabase) {
-      // Use local database - return mock data for now since analytics table doesn't exist
-      return NextResponse.json(mockAnalytics);
-    } else {
-      // Return mock data for when Supabase is not available
-      return NextResponse.json(mockAnalytics);
-    }
-  } catch (error) {
-    console.error('Error in analytics GET:', error);
-    return NextResponse.json(mockAnalytics);
-  }
+  // Analytics not implemented in Supabase yet
+  return NextResponse.json({
+    error: 'Analytics not implemented in Supabase yet.'
+  }, { status: 501 });
 }
 
 export async function POST(request: NextRequest) {
