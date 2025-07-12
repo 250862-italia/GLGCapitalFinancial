@@ -150,8 +150,8 @@ export default function InvestmentsPage() {
                 <div>
                   <h3 className="font-medium">{pkg.name}</h3>
                   <p className="text-gray-600">{pkg.description}</p>
-                  <p className="text-gray-600">Durata: {pkg.duration} giorni • Rendimento atteso: {pkg.expectedReturn}%</p>
-                  <p className="text-gray-600">Min: €{pkg.minInvestment} • Max: €{pkg.maxInvestment}</p>
+                  <p className="text-gray-600">Durata: {pkg.duration} giorni • Rendimento atteso: {pkg.expected_return}%</p>
+                  <p className="text-gray-600">Min: €{pkg.min_investment?.toLocaleString()} • Max: €{pkg.max_investment?.toLocaleString()}</p>
                 </div>
                 <button className="bg-blue-600 text-white px-4 py-2 rounded font-bold" onClick={() => handleBuy(pkg)}>Acquista</button>
               </div>
@@ -165,7 +165,7 @@ export default function InvestmentsPage() {
               <button className="absolute top-2 right-2 text-gray-400 hover:text-gray-700" onClick={() => setSelectedPackage(null)}>&times;</button>
               <h2 className="text-xl font-bold mb-4">Acquista {selectedPackage.name}</h2>
               <label className="block mb-2 font-medium">Importo da investire (EUR)</label>
-              <input type="number" min={selectedPackage.minInvestment} max={selectedPackage.maxInvestment} value={amount} onChange={e => setAmount(e.target.value)} className="border p-2 rounded w-full mb-4" />
+              <input type="number" min={selectedPackage.min_investment} max={selectedPackage.max_investment} value={amount} onChange={e => setAmount(e.target.value)} className="border p-2 rounded w-full mb-4" />
               <button className="bg-green-600 text-white px-4 py-2 rounded font-bold w-full" onClick={handleConfirmBuy} disabled={loading || !amount}>Conferma Acquisto</button>
             </div>
           </div>

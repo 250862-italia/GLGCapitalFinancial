@@ -129,7 +129,7 @@ export default function ClientDashboard() {
       minInvestment: pkg.min_investment || pkg.min_amount || pkg.amount || 1000,
       dailyReturn: pkg.expected_return || pkg.daily_return || 1.0,
       duration: pkg.duration || 30,
-      isActive: pkg.is_active !== undefined ? pkg.is_active : (pkg.status === 'Active'),
+      isActive: pkg.status === 'active', // Use status field instead of is_active
       category: pkg.category || 'General',
       riskLevel: pkg.riskLevel || pkg.risk_level || 'medium',
       description: pkg.description || '',
