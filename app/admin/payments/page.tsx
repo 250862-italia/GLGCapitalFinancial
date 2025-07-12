@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { DollarSign, CreditCard, Building2, CheckCircle, XCircle, Clock, TrendingUp, Download, Eye, AlertCircle, Calendar, Edit, Plus, Trash2, Search, Users } from 'lucide-react';
 import { usePackages } from '@/lib/package-context';
-import { emailNotificationService } from '@/lib/email-service';
 
 interface Payment {
   id: string;
@@ -140,11 +139,11 @@ export default function PaymentsManagementPage() {
     setPayments([...payments, newPayment]);
     
     // Send surveillance notification for payment creation
-    emailNotificationService.notifyAdminAction(
-      { id: 'admin', name: 'Admin User' },
-      'Payment Created',
-      { payment: newPayment, action: 'create' }
-    );
+    // emailNotificationService.notifyAdminAction(
+    //   { id: 'admin', name: 'Admin User' },
+    //   'Payment Created',
+    //   { payment: newPayment, action: 'create' }
+    // );
     
     setShowAddForm(false);
     resetForm();
@@ -180,11 +179,11 @@ export default function PaymentsManagementPage() {
     // Send surveillance notification for payment edit
     const updatedPayment = updatedPayments.find(payment => payment.id === editingPayment.id);
     if (updatedPayment) {
-      emailNotificationService.notifyAdminAction(
-        { id: 'admin', name: 'Admin User' },
-        'Payment Edited',
-        { payment: updatedPayment, action: 'edit', originalPayment: editingPayment }
-      );
+      // emailNotificationService.notifyAdminAction(
+      //   { id: 'admin', name: 'Admin User' },
+      //   'Payment Edited',
+      //   { payment: updatedPayment, action: 'edit', originalPayment: editingPayment }
+      // );
     }
     
     setEditingPayment(null);
@@ -198,11 +197,11 @@ export default function PaymentsManagementPage() {
       
       // Send surveillance notification for payment deletion
       if (paymentToDelete) {
-        emailNotificationService.notifyAdminAction(
-          { id: 'admin', name: 'Admin User' },
-          'Payment Deleted',
-          { payment: paymentToDelete, action: 'delete' }
-        );
+        // emailNotificationService.notifyAdminAction(
+        //   { id: 'admin', name: 'Admin User' },
+        //   'Payment Deleted',
+        //   { payment: paymentToDelete, action: 'delete' }
+        // );
       }
     }
   };

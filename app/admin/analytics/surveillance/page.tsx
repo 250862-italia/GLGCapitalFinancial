@@ -25,7 +25,7 @@ import {
   CreditCard,
   FileText
 } from 'lucide-react';
-import { emailNotificationService, NotificationData } from '@/lib/email-service';
+// REMOVE: import { emailNotificationService, NotificationData } from '@/lib/email-service';
 
 interface SurveillanceStats {
   totalNotifications: number;
@@ -40,8 +40,8 @@ interface SurveillanceStats {
 }
 
 export default function SurveillancePage() {
-  const [notifications, setNotifications] = useState<NotificationData[]>([]);
-  const [filteredNotifications, setFilteredNotifications] = useState<NotificationData[]>([]);
+  const [notifications, setNotifications] = useState<any[]>([]); // Stubbed
+  const [filteredNotifications, setFilteredNotifications] = useState<any[]>([]); // Stubbed
   const [stats, setStats] = useState<SurveillanceStats>({
     totalNotifications: 0,
     notificationsByType: {},
@@ -59,7 +59,7 @@ export default function SurveillancePage() {
     dateRange: '7d',
     search: ''
   });
-  const [selectedNotification, setSelectedNotification] = useState<NotificationData | null>(null);
+  const [selectedNotification, setSelectedNotification] = useState<any | null>(null); // Stubbed
   const [showDetailsModal, setShowDetailsModal] = useState(false);
 
   // Load notifications and calculate stats
@@ -68,13 +68,13 @@ export default function SurveillancePage() {
   }, []);
 
   const loadNotifications = () => {
-    const storedNotifications = emailNotificationService.getStoredNotifications();
-    setNotifications(storedNotifications);
-    calculateStats(storedNotifications);
-    applyFilters(storedNotifications);
+    // Stubbed: No actual data loading from email service
+    setNotifications([]);
+    calculateStats([]);
+    applyFilters([]);
   };
 
-  const calculateStats = (notifications: NotificationData[]) => {
+  const calculateStats = (notifications: any[]) => {
     const now = new Date();
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     
@@ -128,7 +128,7 @@ export default function SurveillancePage() {
     setStats(stats);
   };
 
-  const applyFilters = (notifications: NotificationData[]) => {
+  const applyFilters = (notifications: any[]) => {
     let filtered = [...notifications];
 
     // Filter by type
@@ -206,7 +206,8 @@ export default function SurveillancePage() {
 
   const clearAllNotifications = () => {
     if (confirm('Are you sure you want to clear all surveillance notifications? This action cannot be undone.')) {
-      emailNotificationService.clearNotifications();
+      // Stubbed: No actual clearing of notifications
+      alert('Clear all notifications functionality is not yet implemented.');
       loadNotifications();
     }
   };
