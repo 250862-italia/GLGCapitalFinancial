@@ -245,7 +245,7 @@ INSERT INTO storage.buckets (id, name, public) VALUES
 ('partnership-docs', 'partnership-docs', false)
 ON CONFLICT (id) DO NOTHING;
 
--- Storage policies (KYC policies removed - KYC system no longer exists)
+-- Storage policies (simplified system)
 
 CREATE POLICY "Admins can view all documents" ON storage.objects
     FOR SELECT USING (
@@ -254,6 +254,30 @@ CREATE POLICY "Admins can view all documents" ON storage.objects
             WHERE id = auth.uid() AND role IN ('admin', 'superadmin')
         )
     );
+
+-- Permetti agli utenti autenticati di vedere solo le proprie righe
+CREATE POLICY "Users can view their own clients"
+  ON public.clients
+  FOR SELECT
+  USING (auth.uid() = user_id);
+
+-- Permetti agli utenti autenticati di inserire righe dove user_id = auth.uid()
+CREATE POLICY "Users can insert their own clients"
+  ON public.clients
+  FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+-- Permetti agli utenti autenticati di aggiornare solo le proprie righe
+CREATE POLICY "Users can update their own clients"
+  ON public.clients
+  FOR UPDATE
+  USING (auth.uid() = user_id);
+
+-- Permetti agli utenti autenticati di cancellare solo le proprie righe
+CREATE POLICY "Users can delete their own clients"
+  ON public.clients
+  FOR DELETE
+  USING (auth.uid() = user_id);
 
 -- Success message
 SELECT 'Database setup completed successfully!' as status; 

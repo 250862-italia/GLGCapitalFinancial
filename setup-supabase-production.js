@@ -202,7 +202,7 @@ async function createIndexes() {
   const indexes = [
     'CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);',
     'CREATE INDEX IF NOT EXISTS idx_clients_user_id ON clients(user_id);',
-    // KYC index removed - KYC system no longer exists
+    // Verification index removed - simplified system
     'CREATE INDEX IF NOT EXISTS idx_investments_client_id ON investments(client_id);',
     'CREATE INDEX IF NOT EXISTS idx_analytics_category ON analytics(category);'
   ];

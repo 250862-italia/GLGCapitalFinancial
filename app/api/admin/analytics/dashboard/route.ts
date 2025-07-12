@@ -38,7 +38,7 @@ export async function GET() {
     const totalUsers = users?.length || 0;
     const activeUsers = users?.filter(u => u.last_login && new Date(u.last_login) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length || 0;
     const verifiedUsers = users?.filter(u => u.role === 'user').length || 0;
-    const pendingKYC = 0; // KYC system removed
+    const pendingVerifications = 0; // Verification system simplified
     const blockedUsers = 5; // Mock for now
 
     const totalInvestments = investments?.reduce((sum, inv) => sum + (inv.amount || 0), 0) || 0;
@@ -106,7 +106,7 @@ export async function GET() {
       userMetrics: {
         newUsers: 45, // Mock for now
         verifiedUsers,
-        pendingKYC,
+        pendingVerifications,
         blockedUsers
       },
       investmentMetrics: {

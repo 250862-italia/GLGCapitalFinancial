@@ -111,7 +111,7 @@ I, the undersigned, as a prospective participant, hereby request detailed inform
 3. Data Processing Consent (EU GDPR 2016/679)
 I authorize GLG Capital Consulting LLC and Magnificus Dominus Consulting Europe Srl to process my personal data solely for the purposes of:
 * Providing the requested information
-* Complying with legal AML/KYC requirements
+* Complying with legal AML requirements
 My data will not be shared with third parties for any other purposes.
 
 4. U.S. Regulatory References

@@ -71,7 +71,7 @@ async function setupSuperAdmin() {
         first_name: 'GLG',
         last_name: 'Admin',
         status: 'active',
-        // kyc_status removed - KYC system no longer exists
+        // verification_status removed - simplified system
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       });

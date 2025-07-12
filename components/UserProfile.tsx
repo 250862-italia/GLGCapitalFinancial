@@ -48,7 +48,7 @@ export default function UserProfile({}: UserProfileProps) {
     );
   }
 
-  // Only show basic profile info, no KYC
+      // Only show basic profile info, simplified system
   return (
     <div style={{ 
       background: 'white', 
