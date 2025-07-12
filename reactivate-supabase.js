@@ -115,7 +115,8 @@ async function setupDatabaseTables() {
         CREATE TABLE IF NOT EXISTS clients (
           id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
           user_id UUID REFERENCES users(id),
-          company_name VARCHAR(255),
+          "firstName" VARCHAR(100) NOT NULL,
+    "lastName" VARCHAR(100) NOT NULL,
           tax_id VARCHAR(50),
           address TEXT,
           city VARCHAR(100),

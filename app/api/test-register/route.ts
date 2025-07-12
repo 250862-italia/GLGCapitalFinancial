@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, password, company_name, country } = body;
+    const { email, password, firstName, lastName, country } = body;
 
     if (!email || !password) {
       return NextResponse.json(
@@ -33,7 +33,8 @@ export async function POST(request: NextRequest) {
       .from('clients')
       .insert({
         user_id: user.user?.id,
-        company_name: company_name || '',
+        firstName: firstName || '',
+        lastName: lastName || '',
         country: country || ''
       })
       .select()

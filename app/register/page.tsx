@@ -10,7 +10,8 @@ interface RegisterData {
   email: string;
   password: string;
   confirmPassword: string;
-  company_name: string;
+  firstName: string;
+  lastName: string;
   country: string;
 }
 
@@ -20,7 +21,8 @@ export default function RegisterPage() {
     email: '',
     password: '',
     confirmPassword: '',
-    company_name: '',
+    firstName: '',
+    lastName: '',
     country: ''
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -35,7 +37,7 @@ export default function RegisterPage() {
   };
 
   const validateForm = () => {
-    if (!formData.email.trim() || !formData.password.trim() || !formData.confirmPassword.trim()) {
+    if (!formData.email.trim() || !formData.password.trim() || !formData.confirmPassword.trim() || !formData.firstName.trim() || !formData.lastName.trim()) {
       return false;
     }
     if (formData.password !== formData.confirmPassword) {
@@ -49,6 +51,10 @@ export default function RegisterPage() {
 
   const handleSubmit = async () => {
     if (!validateForm()) {
+      if (!formData.firstName.trim() || !formData.lastName.trim()) {
+        setError('Please enter your first and last name');
+        return;
+      }
       if (formData.password !== formData.confirmPassword) {
         setError('Passwords do not match');
         return;
@@ -73,7 +79,8 @@ export default function RegisterPage() {
         body: JSON.stringify({
           email: formData.email,
           password: formData.password,
-          company_name: formData.company_name,
+          firstName: formData.firstName,
+      lastName: formData.lastName,
           country: formData.country
         }),
       });
@@ -198,13 +205,13 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          {/* Company Name */}
+          {/* First Name */}
           <div style={{ marginBottom: '1.5rem' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>
-              Company Name
+              First Name <span style={{ color: '#ef4444' }}>*</span>
             </label>
             <div style={{ position: 'relative' }}>
-              <Building size={20} style={{
+              <User size={20} style={{
                 position: 'absolute',
                 left: '0.75rem',
                 top: '50%',
@@ -213,8 +220,8 @@ export default function RegisterPage() {
               }} />
               <input
                 type="text"
-                value={formData.company_name}
-                onChange={(e) => handleInputChange('company_name', e.target.value)}
+                value={formData.firstName}
+                onChange={(e) => handleInputChange('firstName', e.target.value)}
                 style={{
                   width: '100%',
                   padding: '0.75rem 0.75rem 0.75rem 2.5rem',
@@ -223,7 +230,37 @@ export default function RegisterPage() {
                   fontSize: 16,
                   boxSizing: 'border-box'
                 }}
-                placeholder="Enter your company name"
+                placeholder="Enter your first name"
+              />
+            </div>
+          </div>
+
+          {/* Last Name */}
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>
+              Last Name <span style={{ color: '#ef4444' }}>*</span>
+            </label>
+            <div style={{ position: 'relative' }}>
+              <User size={20} style={{
+                position: 'absolute',
+                left: '0.75rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: '#9ca3af'
+              }} />
+              <input
+                type="text"
+                value={formData.lastName}
+                onChange={(e) => handleInputChange('lastName', e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 0.75rem 0.75rem 2.5rem',
+                  border: '1px solid #d1d5db',
+                  borderRadius: 8,
+                  fontSize: 16,
+                  boxSizing: 'border-box'
+                }}
+                placeholder="Enter your last name"
               />
             </div>
           </div>

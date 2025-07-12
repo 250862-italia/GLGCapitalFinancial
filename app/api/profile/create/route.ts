@@ -43,7 +43,8 @@ export async function POST(request: NextRequest) {
     // Create new client profile with basic data
     const newProfile = {
       user_id: user_id,
-      company_name: '',
+              firstName: '',
+        lastName: '',
       tax_id: '',
       address: '',
       city: '',
