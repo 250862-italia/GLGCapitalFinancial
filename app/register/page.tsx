@@ -4,24 +4,27 @@ export const dynamic = "force-dynamic";
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Eye, EyeOff, Lock, Mail, AlertCircle, CheckCircle } from 'lucide-react';
-import { useAuth } from '@/hooks/use-auth';
+import { Eye, EyeOff, Lock, Mail, User, Building, Globe, AlertCircle, CheckCircle } from 'lucide-react';
 
-interface LoginData {
+interface RegisterData {
   email: string;
   password: string;
-  rememberMe: boolean;
+  confirmPassword: string;
+  company_name: string;
+  country: string;
 }
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const router = useRouter();
-  const { login } = useAuth();
-  const [formData, setFormData] = useState<LoginData>({
+  const [formData, setFormData] = useState<RegisterData>({
     email: '',
     password: '',
-    rememberMe: false
+    confirmPassword: '',
+    company_name: '',
+    country: ''
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -32,11 +35,28 @@ export default function LoginPage() {
   };
 
   const validateForm = () => {
-    return formData.email.trim() !== '' && formData.password.trim() !== '';
+    if (!formData.email.trim() || !formData.password.trim() || !formData.confirmPassword.trim()) {
+      return false;
+    }
+    if (formData.password !== formData.confirmPassword) {
+      return false;
+    }
+    if (formData.password.length < 6) {
+      return false;
+    }
+    return true;
   };
 
   const handleSubmit = async () => {
     if (!validateForm()) {
+      if (formData.password !== formData.confirmPassword) {
+        setError('Passwords do not match');
+        return;
+      }
+      if (formData.password.length < 6) {
+        setError('Password must be at least 6 characters long');
+        return;
+      }
       setError('Please fill in all required fields');
       return;
     }
@@ -45,15 +65,28 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const result = await login(formData.email, formData.password);
-      
-      if (result.success) {
-        setSuccess('Login successful! Redirecting...');
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          company_name: formData.company_name,
+          country: formData.country
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSuccess('Registration successful! Please check your email to verify your account.');
         setTimeout(() => {
-          router.push('/dashboard');
-        }, 1000);
+          router.push('/login');
+        }, 3000);
       } else {
-        setError(result.error || 'Login failed');
+        setError(data.error || 'Registration failed');
       }
     } catch (err) {
       setError('Network error. Please try again.');
@@ -77,7 +110,7 @@ export default function LoginPage() {
         padding: '3rem',
         boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
         width: '100%',
-        maxWidth: 450
+        maxWidth: 500
       }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
@@ -87,14 +120,14 @@ export default function LoginPage() {
             color: '#1f2937',
             marginBottom: '0.5rem'
           }}>
-            Welcome Back
+            Create Account
           </h1>
           <p style={{
             fontSize: 16,
             color: '#6b7280',
             margin: 0
           }}>
-            Sign in to your account to continue
+            Join GLG Capital Financial to start investing
           </p>
         </div>
 
@@ -165,6 +198,66 @@ export default function LoginPage() {
             </div>
           </div>
 
+          {/* Company Name */}
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>
+              Company Name
+            </label>
+            <div style={{ position: 'relative' }}>
+              <Building size={20} style={{
+                position: 'absolute',
+                left: '0.75rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: '#9ca3af'
+              }} />
+              <input
+                type="text"
+                value={formData.company_name}
+                onChange={(e) => handleInputChange('company_name', e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 0.75rem 0.75rem 2.5rem',
+                  border: '1px solid #d1d5db',
+                  borderRadius: 8,
+                  fontSize: 16,
+                  boxSizing: 'border-box'
+                }}
+                placeholder="Enter your company name"
+              />
+            </div>
+          </div>
+
+          {/* Country */}
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>
+              Country
+            </label>
+            <div style={{ position: 'relative' }}>
+              <Globe size={20} style={{
+                position: 'absolute',
+                left: '0.75rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: '#9ca3af'
+              }} />
+              <input
+                type="text"
+                value={formData.country}
+                onChange={(e) => handleInputChange('country', e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 0.75rem 0.75rem 2.5rem',
+                  border: '1px solid #d1d5db',
+                  borderRadius: 8,
+                  fontSize: 16,
+                  boxSizing: 'border-box'
+                }}
+                placeholder="Enter your country"
+              />
+            </div>
+          </div>
+
           {/* Password */}
           <div style={{ marginBottom: '1.5rem' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>
@@ -190,7 +283,7 @@ export default function LoginPage() {
                   fontSize: 16,
                   boxSizing: 'border-box'
                 }}
-                placeholder="Enter your password"
+                placeholder="Enter your password (min 6 characters)"
               />
               <button
                 type="button"
@@ -211,28 +304,50 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Remember Me & Forgot Password */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '2rem'
-          }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: 14, color: '#374151' }}>
-              <input
-                type="checkbox"
-                checked={formData.rememberMe}
-                onChange={(e) => handleInputChange('rememberMe', e.target.checked)}
-              />
-              Remember me
+          {/* Confirm Password */}
+          <div style={{ marginBottom: '2rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>
+              Confirm Password <span style={{ color: '#ef4444' }}>*</span>
             </label>
-            <Link href="/forgot-password" style={{
-              fontSize: 14,
-              color: '#059669',
-              textDecoration: 'underline'
-            }}>
-              Forgot password?
-            </Link>
+            <div style={{ position: 'relative' }}>
+              <Lock size={20} style={{
+                position: 'absolute',
+                left: '0.75rem',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                color: '#9ca3af'
+              }} />
+              <input
+                type={showConfirmPassword ? 'text' : 'password'}
+                value={formData.confirmPassword}
+                onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 2.5rem 0.75rem 2.5rem',
+                  border: '1px solid #d1d5db',
+                  borderRadius: 8,
+                  fontSize: 16,
+                  boxSizing: 'border-box'
+                }}
+                placeholder="Confirm your password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                style={{
+                  position: 'absolute',
+                  right: '0.75rem',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: '#9ca3af'
+                }}
+              >
+                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -253,19 +368,19 @@ export default function LoginPage() {
             marginBottom: '1.5rem'
           }}
         >
-          {isLoading ? 'Signing In...' : 'Sign In'}
+          {isLoading ? 'Creating Account...' : 'Create Account'}
         </button>
 
-        {/* Register Link */}
+        {/* Login Link */}
         <div style={{ textAlign: 'center' }}>
           <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>
-            Don't have an account?{' '}
-            <Link href="/register" style={{ color: '#059669', textDecoration: 'underline', fontWeight: 600 }}>
-              Sign up here
+            Already have an account?{' '}
+            <Link href="/login" style={{ color: '#059669', textDecoration: 'underline', fontWeight: 600 }}>
+              Sign in here
             </Link>
           </p>
         </div>
       </div>
     </div>
   );
-}
+} 
