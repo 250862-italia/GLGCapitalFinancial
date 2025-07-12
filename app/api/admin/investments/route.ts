@@ -135,6 +135,13 @@ export async function PUT(request: NextRequest) {
       // Get updated investment
       const updatedInvestment = await db.getInvestmentById(investment_id);
       
+      if (!updatedInvestment) {
+        return NextResponse.json(
+          { error: 'Investment not found' },
+          { status: 404 }
+        );
+      }
+      
       // Send notification to user
       const { notificationService } = await import('@/lib/notification-service');
       await notificationService.notifyInvestmentStatusUpdate(
@@ -144,13 +151,6 @@ export async function PUT(request: NextRequest) {
         updatedInvestment.amount, 
         updatedInvestment.currency
       );
-      
-      if (!updatedInvestment) {
-        return NextResponse.json(
-          { error: 'Investment not found' },
-          { status: 404 }
-        );
-      }
 
       return NextResponse.json({
         success: true,

@@ -135,16 +135,16 @@ export async function PUT(request: NextRequest) {
       // Get updated KYC record
       const updatedKYC = await db.getKYCRecordById(kyc_id);
       
-      // Send notification to user
-      const { notificationService } = await import('@/lib/notification-service');
-      await notificationService.notifyKYCStatusUpdate(updatedKYC.user_id, status);
-      
       if (!updatedKYC) {
         return NextResponse.json(
           { error: 'KYC record not found' },
           { status: 404 }
         );
       }
+      
+      // Send notification to user
+      const { notificationService } = await import('@/lib/notification-service');
+      await notificationService.notifyKYCStatusUpdate(updatedKYC.user_id, status);
 
       return NextResponse.json({
         success: true,
