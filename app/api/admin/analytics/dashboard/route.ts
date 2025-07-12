@@ -77,13 +77,7 @@ export async function GET() {
         timestamp: new Date(Date.now() - 1000 * 60 * 15), // 15 minutes ago
         severity: 'medium'
       },
-      {
-        id: '3',
-        type: 'kyc_approval',
-        description: 'KYC approved for user: jane.smith@example.com',
-        timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-        severity: 'low'
-      },
+
       {
         id: '4',
         type: 'security_alert',

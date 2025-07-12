@@ -622,7 +622,7 @@ export default function BackupPage() {
                 type="text"
                 value={backupName}
                 onChange={(e) => setBackupName(e.target.value)}
-                placeholder="Es: Backup completo KYC"
+                placeholder="Es: Backup completo sistema"
                 style={{
                   width: '100%',
                   padding: '0.75rem',

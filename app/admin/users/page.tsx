@@ -85,7 +85,6 @@ export default function AdminUsersPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [showInvestmentsModal, setShowInvestmentsModal] = useState(false);
-  const [showKYCModal, setShowKYCModal] = useState(false);
   const [showActivityModal, setShowActivityModal] = useState(false);
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -288,10 +287,7 @@ export default function AdminUsersPage() {
     setShowInvestmentsModal(true);
   };
 
-  const openKYCModal = (user: AdminUser) => {
-    setSelectedUser(user);
-    setShowKYCModal(true);
-  };
+
 
   const openActivityModal = (user: AdminUser) => {
     setSelectedUser(user);

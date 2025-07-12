@@ -346,10 +346,6 @@ export default function AuditTrailPage() {
           }}
         >
           <option value="all">Tutte le azioni</option>
-          <option value="kyc_submitted">KYC Submitted</option>
-          <option value="kyc_approved">KYC Approved</option>
-          <option value="kyc_rejected">KYC Rejected</option>
-          <option value="kyc_document_uploaded">Document Uploaded</option>
           <option value="system_error">System Error</option>
         </select>
 
@@ -364,7 +360,6 @@ export default function AuditTrailPage() {
           }}
         >
           <option value="all">Tutti i tipi</option>
-          <option value="kyc_record">KYC Record</option>
           <option value="client">Client</option>
           <option value="document">Document</option>
         </select>

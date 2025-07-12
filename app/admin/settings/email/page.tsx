@@ -390,7 +390,7 @@ export default function EmailSettingsPage() {
           <h4 style={{ color: '#92400e', marginBottom: '15px' }}>📋 Tipi di email configurate:</h4>
           <ul style={{ color: '#92400e', lineHeight: '1.6', margin: 0, paddingLeft: '20px' }}>
             <li>🔔 Notifiche registrazione utenti</li>
-            <li>📋 Invio documenti KYC</li>
+            <li>📋 Richieste informative</li>
             <li>💰 Acquisto pacchetti</li>
             <li>💳 Pagamenti processati</li>
             <li>👥 Attività clienti</li>
