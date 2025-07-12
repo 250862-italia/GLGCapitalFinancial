@@ -230,23 +230,11 @@ ON CONFLICT DO NOTHING;
 
 -- Create storage buckets for file uploads
 INSERT INTO storage.buckets (id, name, public) VALUES
-('kyc-documents', 'kyc-documents', false),
 ('profile-photos', 'profile-photos', true),
 ('partnership-docs', 'partnership-docs', false)
 ON CONFLICT (id) DO NOTHING;
 
--- Storage policies
-CREATE POLICY "Users can upload own documents" ON storage.objects
-    FOR INSERT WITH CHECK (
-        bucket_id = 'kyc-documents' AND 
-        auth.uid()::text = (storage.foldername(name))[1]
-    );
-
-CREATE POLICY "Users can view own documents" ON storage.objects
-    FOR SELECT USING (
-        bucket_id = 'kyc-documents' AND 
-        auth.uid()::text = (storage.foldername(name))[1]
-    );
+-- Storage policies (KYC policies removed - KYC system no longer exists)
 
 CREATE POLICY "Admins can view all documents" ON storage.objects
     FOR SELECT USING (

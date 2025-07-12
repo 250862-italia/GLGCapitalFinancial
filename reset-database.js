@@ -45,7 +45,7 @@ async function resetDatabase() {
     console.log('-'.repeat(30));
 
     const tables = [
-      'audit_trail', 'kyc_records', 'investments', 'payments', 
+      'audit_trail', 'investments', 'payments', 
       'informational_requests', 'partnerships', 'content', 
       'notifications', 'backups', 'settings', 'team_members', 'clients'
     ];
@@ -171,7 +171,7 @@ async function resetDatabase() {
           first_name: 'GLG',
           last_name: 'Admin',
           status: 'active',
-          kyc_status: 'approved',
+          // kyc_status removed - KYC system no longer exists
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         });

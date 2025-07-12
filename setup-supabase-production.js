@@ -202,7 +202,7 @@ async function createIndexes() {
   const indexes = [
     'CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);',
     'CREATE INDEX IF NOT EXISTS idx_clients_user_id ON clients(user_id);',
-    'CREATE INDEX IF NOT EXISTS idx_kyc_client_id ON kyc_records(client_id);',
+    // KYC index removed - KYC system no longer exists
     'CREATE INDEX IF NOT EXISTS idx_investments_client_id ON investments(client_id);',
     'CREATE INDEX IF NOT EXISTS idx_analytics_category ON analytics(category);'
   ];
@@ -222,7 +222,7 @@ async function createIndexes() {
 async function enableRLS() {
   console.log('\n🔒 Enabling Row Level Security...');
   
-  const tables = ['users', 'clients', 'kyc_records', 'investments', 'analytics', 'informational_requests'];
+  const tables = ['users', 'clients', 'investments', 'analytics', 'informational_requests'];
   
   for (const table of tables) {
     try {
@@ -333,7 +333,7 @@ async function setupStorage() {
       return;
     }
     
-    const requiredBuckets = ['kyc-documents', 'profile-photos', 'partnership-docs'];
+    const requiredBuckets = ['profile-photos', 'partnership-docs'];
     
     for (const bucketName of requiredBuckets) {
       const exists = buckets.some(bucket => bucket.name === bucketName);
@@ -359,7 +359,7 @@ async function setupStorage() {
 async function verifySetup() {
   console.log('\n🔍 Verifying setup...');
   
-  const tables = ['users', 'clients', 'kyc_records', 'investments', 'analytics', 'informational_requests'];
+  const tables = ['users', 'clients', 'investments', 'analytics', 'informational_requests'];
   
   for (const table of tables) {
     try {
