@@ -21,8 +21,10 @@ export async function GET(
     if (useLocalDatabase) {
       // Use local database
       const db = await getLocalDatabase();
-      const notifications = await db.getUserNotifications(user_id);
-      const unreadCount = await db.getUnreadNotificationCount(user_id);
+      const notifications = await db.getNotificationsByUserId(user_id);
+      
+      // Calculate unread count
+      const unreadCount = notifications.filter(n => n.status === 'unread').length;
 
       return NextResponse.json({
         success: true,

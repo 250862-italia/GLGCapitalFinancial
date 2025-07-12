@@ -416,6 +416,16 @@ class LocalDatabase {
     `, [userId]);
   }
 
+  async markNotificationAsRead(id: string): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    await this.db.run(`
+      UPDATE notifications 
+      SET status = 'read', updated_at = CURRENT_TIMESTAMP 
+      WHERE id = ?
+    `, [id]);
+  }
+
   // Close database connection
   async close(): Promise<void> {
     if (this.db) {
