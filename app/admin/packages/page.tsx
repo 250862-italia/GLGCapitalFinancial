@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from '@/lib/supabase';
+import type { CSSProperties } from 'react';
 
 export default function AdminPackagesPage() {
   const [packages, setPackages] = useState<any[]>([]);
@@ -102,7 +103,7 @@ export default function AdminPackagesPage() {
   const headerStyle = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' };
   const titleStyle = { fontSize: '24px', fontWeight: 'bold', color: '#1f2937' };
   const buttonStyle = { background: '#2563eb', color: '#fff', border: 'none', padding: '12px 24px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' };
-  const tableStyle = { width: '100%', borderCollapse: 'collapse', background: '#fff', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' };
+  const tableStyle: CSSProperties = { width: '100%', borderCollapse: 'collapse', background: '#fff', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' };
   const thStyle = { background: '#f8fafc', padding: '12px', textAlign: 'left', fontWeight: '600', color: '#374151', borderBottom: '1px solid #e5e7eb' };
   const tdStyle = { padding: '12px', borderBottom: '1px solid #f3f4f6' };
   const actionBtnStyle = { background: '#059669', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' };
