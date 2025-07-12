@@ -107,7 +107,7 @@ SELECT * FROM analytics WHERE metric = 'Test Metric';
 ```
 
 #### **Step 3: Test Storage**
-1. Vai su **"Storage"** → **"kyc-documents"**
+1. Vai su **"Storage"** → **"profile-photos"**
 2. Prova a caricare un file di test
 3. Verifica che il file sia visibile
 
@@ -166,7 +166,7 @@ ALTER TABLE clients ENABLE ROW LEVEL SECURITY;
 **Soluzione:** Crea manualmente i bucket:
 1. Vai su **"Storage"**
 2. Clicca **"New bucket"**
-3. Crea: `kyc-documents`, `profile-photos`, `partnership-docs`
+3. Crea: `profile-photos`, `partnership-docs`
 
 #### **Problema: "Connection failed"**
 **Soluzione:** Verifica:
@@ -188,7 +188,7 @@ vercel --prod
 #### **Step 2: Verifica Produzione**
 1. Testa login admin: `admin@glgcapital.com`
 2. Testa registrazione cliente
-3. Testa upload documenti KYC
+3. Testa upload foto profilo
 4. Testa dashboard analytics
 
 ### **9. Monitoraggio**

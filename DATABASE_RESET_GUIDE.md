@@ -43,7 +43,7 @@ node reset-database.js
 
 ### Fase 1: Pulizia Database
 - ❌ Elimina audit trail
-- ❌ Elimina KYC records
+
 - ❌ Elimina investimenti
 - ❌ Elimina pagamenti
 - ❌ Elimina richieste informative
@@ -145,7 +145,7 @@ Dopo il reset:
 1. **Cambia la password** del Super Admin
 2. **Configura le impostazioni** base
 3. **Testa la registrazione** di un nuovo cliente
-4. **Verifica il processo KYC**
+4. **Verifica il processo di registrazione**
 5. **Controlla l'admin dashboard**
 
 ---
