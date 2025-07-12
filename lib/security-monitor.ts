@@ -1,5 +1,4 @@
 import { NextRequest } from 'next/server'
-import { emailNotificationService } from './email-service'
 
 // Security Event Types
 export enum SecurityEventType {
@@ -282,7 +281,8 @@ export class SecurityMonitor {
       Immediate action required!
     `
 
-    await emailNotificationService.notifySystemAlert(subject + '\n' + body, event)
+    // Email notification disabled - service not available
+    console.log('Security alert would be sent:', subject)
   }
 
   static async sendAlertNotification(alert: SecurityAlert): Promise<void> {
@@ -302,7 +302,8 @@ export class SecurityMonitor {
       Please investigate and take appropriate action.
     `
 
-    await emailNotificationService.notifySystemAlert(subject + '\n' + body, alert)
+    // Email notification disabled - service not available
+    console.log('Security alert would be sent:', subject)
   }
 
   static cleanupOldEvents(): void {

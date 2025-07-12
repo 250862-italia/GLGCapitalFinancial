@@ -38,6 +38,11 @@ interface ClientProfile {
   date_of_birth?: string;
   nationality?: string;
   photo_url?: string;
+  tax_id?: string;
+  address?: string;
+  city?: string;
+  country?: string;
+  postal_code?: string;
   iban?: string;
   bic?: string;
   account_holder?: string;

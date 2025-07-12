@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Globe } from 'lucide-react';
 
 export default function LanguageSwitcher() {
   const [isOpen, setIsOpen] = useState(false);
   const [currentLanguage, setCurrentLanguage] = useState('en');
+  const [mounted, setMounted] = useState(false);
 
   const languages = [
     { code: 'en', name: 'English', flag: '🇺🇸' },
@@ -18,16 +19,21 @@ export default function LanguageSwitcher() {
     setCurrentLanguage(languageCode);
     setIsOpen(false);
     // Store in localStorage for persistence
-    localStorage.setItem('preferred-language', languageCode);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('preferred-language', languageCode);
+    }
   };
 
   // Load preferred language from localStorage on mount
-  useState(() => {
-    const saved = localStorage.getItem('preferred-language');
-    if (saved && languages.find(lang => lang.code === saved)) {
-      setCurrentLanguage(saved);
+  useEffect(() => {
+    setMounted(true);
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('preferred-language');
+      if (saved && languages.find(lang => lang.code === saved)) {
+        setCurrentLanguage(saved);
+      }
     }
-  });
+  }, []);
 
   return (
     <div style={{ position: 'relative' }}>
