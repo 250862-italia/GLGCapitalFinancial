@@ -127,21 +127,7 @@ async function setupDatabaseTables() {
         );
       `
     },
-    {
-      name: 'kyc_records',
-      sql: `
-        CREATE TABLE IF NOT EXISTS kyc_records (
-          id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-          user_id UUID REFERENCES users(id),
-          status VARCHAR(20) DEFAULT 'pending',
-          document_type VARCHAR(50),
-          document_url TEXT,
-          verification_data JSONB,
-          created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-          updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-        );
-      `
-    },
+
     {
       name: 'investments',
       sql: `

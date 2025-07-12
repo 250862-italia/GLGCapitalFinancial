@@ -2,7 +2,7 @@ interface LogEntry {
   id: string;
   timestamp: Date;
   level: 'debug' | 'info' | 'warn' | 'error' | 'critical';
-  category: 'auth' | 'user' | 'investment' | 'payment' | 'kyc' | 'security' | 'system' | 'admin';
+  category: 'auth' | 'user' | 'investment' | 'payment' | 'security' | 'system' | 'admin';
   message: string;
   userId?: string;
   sessionId?: string;

@@ -133,18 +133,7 @@ async function createTables() {
       updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
     );`,
     
-    // KYC Records table
-    `CREATE TABLE IF NOT EXISTS kyc_records (
-      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-      client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
-      document_type VARCHAR(50) NOT NULL CHECK (document_type IN ('PERSONAL_INFO', 'PROOF_OF_ADDRESS', 'BANK_STATEMENT', 'ID_DOCUMENT')),
-      document_url VARCHAR(500) NOT NULL,
-      status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
-      notes TEXT,
-      verified_at TIMESTAMP WITH TIME ZONE,
-      created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-      updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-    );`,
+
     
     // Investments table
     `CREATE TABLE IF NOT EXISTS investments (

@@ -7,7 +7,7 @@ A comprehensive financial dashboard and investment management platform for GLG C
 ### Client Features
 - **User Registration & Authentication** - Secure client registration and login
 - **Profile Management** - Complete profile setup with personal information
-- **KYC Process** - Document verification and compliance checks
+
 - **Investment Dashboard** - View and manage investment portfolios
 - **Document Requests** - Request official documentation from GLG
 - **Banking Details** - Manage banking information securely
@@ -15,7 +15,7 @@ A comprehensive financial dashboard and investment management platform for GLG C
 ### Admin Features
 - **Analytics Dashboard** - Real-time financial metrics and insights
 - **Client Management** - Complete client database management
-- **KYC Management** - Document verification and approval system
+
 - **Investment Management** - Track and manage all investments
 - **Content Management** - Manage news, markets, and partnerships
 - **Team Management** - Admin team and role management
@@ -78,7 +78,7 @@ The application requires the following database tables:
 
 - `users` - User authentication and profiles
 - `clients` - Client information and profiles
-- `kyc_records` - KYC document management
+
 - `investments` - Investment tracking
 - `analytics` - Dashboard metrics
 - `informational_requests` - Document requests
@@ -102,7 +102,7 @@ The system uses a custom authentication system with role-based access:
 Configure SMTP settings in `.env.local` for:
 - User registration confirmations
 - Password reset emails
-- KYC status notifications
+
 - Document request confirmations
 - Investment updates
 

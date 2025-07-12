@@ -40,7 +40,7 @@ export async function PUT(request: NextRequest) {
       bic: 'bic',
       accountHolder: 'account_holder',
       usdtWallet: 'usdt_wallet',
-      kycStatus: 'kyc_status',
+
       createdAt: 'created_at',
       updatedAt: 'updated_at'
     };

@@ -39,7 +39,7 @@ ORDER BY table_name;
 **Tabelle che dovrebbero esistere:**
 - ✅ `users` - Autenticazione utenti
 - ✅ `clients` - Profili clienti
-- ✅ `kyc_records` - Documenti KYC
+
 - ✅ `investments` - Investimenti
 - ✅ `analytics` - Metriche dashboard
 - ✅ `informational_requests` - Richieste documenti
@@ -51,7 +51,7 @@ ORDER BY table_name;
 #### **Step 2: Controlla Storage Buckets**
 1. Vai su **"Storage"** nel menu laterale
 2. Verifica che esistano i bucket:
-   - ✅ `kyc-documents` (privato)
+
    - ✅ `profile-photos` (pubblico)
    - ✅ `partnership-docs` (privato)
 

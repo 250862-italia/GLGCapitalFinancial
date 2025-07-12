@@ -31,7 +31,7 @@ export async function GET() {
       phone: client.phone,
       dateOfBirth: client.dateOfBirth,
       nationality: client.nationality,
-      kycStatus: client.kycStatus,
+
       status: client.status,
       createdAt: client.createdAt,
       user: client.users

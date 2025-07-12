@@ -39,7 +39,7 @@ interface User {
   name: string;
   role: 'user' | 'admin' | 'superadmin';
   status: 'active' | 'inactive' | 'suspended' | 'pending';
-  kycStatus: 'pending' | 'approved' | 'rejected' | 'not_started';
+
   registrationDate: Date;
   lastLogin: Date;
   totalInvestments: number;
@@ -505,9 +505,7 @@ export default function AdminUsersPage() {
                           <button title="Investimenti" onClick={() => openInvestmentsModal(user)} style={{ marginRight: 8 }}>
                             <DollarSign size={16} />
                           </button>
-                          <button title="KYC" onClick={() => openKYCModal(user)} style={{ marginRight: 8 }}>
-                            <Shield size={16} />
-                          </button>
+
                           <button title="Attività" onClick={() => openActivityModal(user)} style={{ marginRight: 8 }}>
                             <Clock size={16} />
                           </button>
@@ -891,14 +889,7 @@ export default function AdminUsersPage() {
           <p style={{ color: '#f59e0b', fontWeight: 600 }}>Funzionalità in sviluppo.</p>
         </Modal>
       )}
-      {showKYCModal && (
-        <Modal onClose={() => setShowKYCModal(false)}>
-          <h2>KYC di {selectedUser?.name}</h2>
-          <p>Email: {selectedUser?.email}</p>
-          <p>Ruolo: {selectedUser?.role}</p>
-          <p style={{ color: '#f59e0b', fontWeight: 600 }}>Funzionalità in sviluppo.</p>
-        </Modal>
-      )}
+
       {showActivityModal && (
         <Modal onClose={() => setShowActivityModal(false)}>
           <h2>Attività di {selectedUser?.name}</h2>
