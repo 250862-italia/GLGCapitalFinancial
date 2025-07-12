@@ -26,16 +26,28 @@ CREATE TABLE IF NOT EXISTS clients (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-
+-- Investment Packages table
+CREATE TABLE IF NOT EXISTS packages (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(200) NOT NULL,
+    description TEXT,
+    min_investment DECIMAL(15,2) NOT NULL,
+    max_investment DECIMAL(15,2) NOT NULL,
+    duration INTEGER NOT NULL, -- in days
+    expected_return DECIMAL(5,2) NOT NULL, -- percentage
+    status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'sold_out')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
 -- Investments table
 CREATE TABLE IF NOT EXISTS investments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
-    package_id VARCHAR(100) NOT NULL,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    package_id UUID REFERENCES packages(id) ON DELETE CASCADE,
     amount DECIMAL(15,2) NOT NULL,
-    status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'completed', 'cancelled')),
-    start_date DATE NOT NULL,
+    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'completed', 'cancelled')),
+    start_date DATE,
     end_date DATE,
     total_returns DECIMAL(15,2) DEFAULT 0,
     daily_returns DECIMAL(10,2) DEFAULT 0,
@@ -126,8 +138,9 @@ CREATE TABLE IF NOT EXISTS settings (
 
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_clients_user_id ON clients(user_id);
-
-CREATE INDEX IF NOT EXISTS idx_investments_client_id ON investments(client_id);
+CREATE INDEX IF NOT EXISTS idx_packages_status ON packages(status);
+CREATE INDEX IF NOT EXISTS idx_investments_user_id ON investments(user_id);
+CREATE INDEX IF NOT EXISTS idx_investments_package_id ON investments(package_id);
 CREATE INDEX IF NOT EXISTS idx_analytics_category ON analytics(category);
 CREATE INDEX IF NOT EXISTS idx_team_members_user_id ON team_members(user_id);
 CREATE INDEX IF NOT EXISTS idx_content_type ON content(type);
@@ -135,7 +148,7 @@ CREATE INDEX IF NOT EXISTS idx_partnerships_status ON partnerships(status);
 
 -- Row Level Security (RLS) Policies
 ALTER TABLE clients ENABLE ROW LEVEL SECURITY;
-
+ALTER TABLE packages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE investments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE analytics ENABLE ROW LEVEL SECURITY;
 ALTER TABLE informational_requests ENABLE ROW LEVEL SECURITY;
@@ -151,10 +164,17 @@ CREATE POLICY "Clients can view own profile" ON clients
 CREATE POLICY "Clients can update own profile" ON clients
     FOR UPDATE USING (user_id = auth.uid());
 
+-- Anyone can view active packages
+CREATE POLICY "Anyone can view active packages" ON packages
+    FOR SELECT USING (status = 'active');
 
+-- Users can view their own investments
+CREATE POLICY "Users can view own investments" ON investments
+    FOR SELECT USING (user_id = auth.uid());
 
-CREATE POLICY "Clients can view own investments" ON investments
-    FOR SELECT USING (client_id IN (SELECT id FROM clients WHERE user_id = auth.uid()));
+-- Users can insert their own investments
+CREATE POLICY "Users can insert own investments" ON investments
+    FOR INSERT WITH CHECK (user_id = auth.uid());
 
 -- Admins can view all data
 CREATE POLICY "Admins can view all clients" ON clients
@@ -165,7 +185,13 @@ CREATE POLICY "Admins can view all clients" ON clients
         )
     );
 
-
+CREATE POLICY "Admins can manage all packages" ON packages
+    FOR ALL USING (
+        EXISTS (
+            SELECT 1 FROM auth.users 
+            WHERE id = auth.uid() AND raw_user_meta_data->>'role' IN ('admin', 'superadmin')
+        )
+    );
 
 CREATE POLICY "Admins can view all investments" ON investments
     FOR ALL USING (
@@ -178,18 +204,26 @@ CREATE POLICY "Admins can view all investments" ON investments
 CREATE POLICY "Admins can view all analytics" ON analytics
     FOR ALL USING (
         EXISTS (
-            SELECT 1 FROM users 
-            WHERE id = auth.uid() AND role IN ('admin', 'superadmin')
+            SELECT 1 FROM auth.users 
+            WHERE id = auth.uid() AND raw_user_meta_data->>'role' IN ('admin', 'superadmin')
         )
     );
 
 CREATE POLICY "Admins can view all requests" ON informational_requests
     FOR ALL USING (
         EXISTS (
-            SELECT 1 FROM users 
-            WHERE id = auth.uid() AND role IN ('admin', 'superadmin')
+            SELECT 1 FROM auth.users 
+            WHERE id = auth.uid() AND raw_user_meta_data->>'role' IN ('admin', 'superadmin')
         )
     );
+
+-- Insert sample investment packages
+INSERT INTO packages (name, description, min_investment, max_investment, duration, expected_return, status) VALUES
+('Pacchetto Starter', 'Perfetto per iniziare il tuo percorso di investimento. Ideale per principianti che vogliono approcciarsi al mondo degli investimenti con un capitale contenuto.', 1000.00, 5000.00, 90, 8.50, 'active'),
+('Pacchetto Growth', 'Il nostro pacchetto più popolare. Offre un equilibrio perfetto tra rischio e rendimento, adatto a investitori con esperienza.', 5000.00, 25000.00, 180, 12.00, 'active'),
+('Pacchetto Premium', 'Per investitori esperti che cercano rendimenti elevati. Include strategie avanzate e gestione personalizzata del portafoglio.', 25000.00, 100000.00, 365, 18.00, 'active'),
+('Pacchetto Elite', 'Il nostro pacchetto di punta per investitori istituzionali e high-net-worth individuals. Massima personalizzazione e rendimenti premium.', 100000.00, 1000000.00, 730, 25.00, 'active')
+ON CONFLICT (id) DO NOTHING;
 
 -- Insert default settings
 INSERT INTO settings (key, value, description) VALUES

@@ -2,6 +2,7 @@
 export const dynamic = "force-dynamic";
 import { useEffect, useState } from "react";
 import { supabase } from '@/lib/supabase';
+import { useRouter } from 'next/navigation';
 
 const BANK_DETAILS = `
 Beneficiario: GLG capital group LLC
@@ -19,33 +20,67 @@ export default function InvestmentsPage() {
   const [errorMsg, setErrorMsg] = useState("");
   const [selectedPackage, setSelectedPackage] = useState<any | null>(null);
   const [amount, setAmount] = useState("");
+  const [user, setUser] = useState<any>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    // Check authentication
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.push('/login');
+        return;
+      }
+      setUser(user);
+    };
+    checkAuth();
+  }, [router]);
 
   useEffect(() => {
     const fetchPackages = async () => {
+      if (!user) return;
+      
       setLoading(true);
-      const { data, error } = await supabase.from('packages').select('*').eq('status', 'active');
-      if (!error && data) setPackages(data);
-      setLoading(false);
+      try {
+        const { data, error } = await supabase.from('packages').select('*').eq('status', 'active');
+        if (error) {
+          console.error('Error fetching packages:', error);
+          setErrorMsg('Errore nel caricamento dei pacchetti');
+        } else if (data) {
+          setPackages(data);
+        }
+      } catch (err) {
+        console.error('Error fetching packages:', err);
+        setErrorMsg('Errore nel caricamento dei pacchetti');
+      } finally {
+        setLoading(false);
+      }
     };
-    fetchPackages();
-  }, []);
+    
+    if (user) {
+      fetchPackages();
+    }
+  }, [user]);
 
   const handleBuy = async (pkg: any) => {
+    if (!user) {
+      router.push('/login');
+      return;
+    }
     setSelectedPackage(pkg);
     setSuccessMsg("");
     setErrorMsg("");
   };
 
   const handleConfirmBuy = async () => {
-    if (!selectedPackage || !amount) return;
+    if (!selectedPackage || !amount || !user) return;
+    
     setLoading(true);
     setSuccessMsg("");
     setErrorMsg("");
+    
     try {
-      // Recupera utente loggato (esempio: da localStorage)
-      const user = JSON.parse(localStorage.getItem("user") || "null");
-      if (!user) throw new Error("Utente non autenticato");
-      // Salva investimento
+      // Save investment
       const { error: investError } = await supabase.from('investments').insert({
         user_id: user.id,
         package_id: selectedPackage.id,
@@ -53,26 +88,44 @@ export default function InvestmentsPage() {
         status: 'pending',
         created_at: new Date().toISOString()
       });
-      if (investError) throw investError;
-      // Invia email con coordinate bancarie
+      
+      if (investError) {
+        console.error('Investment error:', investError);
+        throw new Error(investError.message);
+      }
+      
+      // Send email with bank details
       await fetch("/api/send-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           to: user.email,
           subject: `Istruzioni Bonifico - Acquisto Pacchetto ${selectedPackage.name}`,
-          html: `<p>Gentile ${user.first_name || user.name || user.email},<br/>grazie per aver scelto il pacchetto <b>${selectedPackage.name}</b>.<br/><br/>Per completare l'acquisto, effettua un bonifico alle seguenti coordinate bancarie:</p><pre>${BANK_DETAILS}</pre><p><b>Causale:</b> Acquisto pacchetto ${selectedPackage.name} - ${user.first_name || user.name || user.email}<br/><b>Importo:</b> ${amount} EUR</p><p>Una volta effettuato il bonifico, invia la ricevuta a <a href='mailto:corefound@glgcapitalgroupllc.com'>corefound@glgcapitalgroupllc.com</a>.</p><p>Cordiali saluti,<br/>GLG Capital Group LLC</p>`
+          html: `<p>Gentile ${user.email},<br/>grazie per aver scelto il pacchetto <b>${selectedPackage.name}</b>.<br/><br/>Per completare l'acquisto, effettua un bonifico alle seguenti coordinate bancarie:</p><pre>${BANK_DETAILS}</pre><p><b>Causale:</b> Acquisto pacchetto ${selectedPackage.name} - ${user.email}<br/><b>Importo:</b> ${amount} EUR</p><p>Una volta effettuato il bonifico, invia la ricevuta a <a href='mailto:corefound@glgcapitalgroupllc.com'>corefound@glgcapitalgroupllc.com</a>.</p><p>Cordiali saluti,<br/>GLG Capital Group LLC</p>`
         })
       });
+      
       setSuccessMsg("Richiesta di acquisto inviata! Controlla la tua email per le istruzioni di pagamento.");
       setSelectedPackage(null);
       setAmount("");
     } catch (err: any) {
+      console.error('Purchase error:', err);
       setErrorMsg("Errore durante l'acquisto: " + (err.message || err));
     } finally {
       setLoading(false);
     }
   };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p>Caricamento...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
@@ -81,7 +134,16 @@ export default function InvestmentsPage() {
         <h2 className="text-xl font-semibold mb-4">Pacchetti disponibili</h2>
         {successMsg && <div className="bg-green-100 text-green-800 rounded p-3 mb-4">{successMsg}</div>}
         {errorMsg && <div className="bg-red-100 text-red-800 rounded p-3 mb-4">{errorMsg}</div>}
-        {loading ? <div>Caricamento...</div> : (
+        {loading ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p>Caricamento pacchetti...</p>
+          </div>
+        ) : packages.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            <p>Nessun pacchetto di investimento disponibile al momento.</p>
+          </div>
+        ) : (
           <div className="space-y-6">
             {packages.map(pkg => (
               <div key={pkg.id} className="border-b pb-4 flex items-center justify-between">
