@@ -173,6 +173,6 @@ For support and questions:
 ## 🔄 Version History
 
 - **v1.0.0** - Initial release with core features
-- **v1.1.0** - Added KYC management and document uploads
+- **v1.1.0** - Added document management and uploads
 - **v1.2.0** - Enhanced analytics and reporting
 - **v1.3.0** - Complete CRUD operations and admin panel

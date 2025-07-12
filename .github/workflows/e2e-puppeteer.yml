@@ -22,12 +22,10 @@ jobs:
           node-version: 18
       - name: Install dependencies
         run: npm install
-      - name: Ensure dummy KYC files
+      - name: Ensure dummy test files
         run: |
           mkdir -p dummy
-          [ -f dummy/front.jpg ] || curl -o dummy/front.jpg https://via.placeholder.com/300x400.jpg?text=Front
-          [ -f dummy/back.jpg ] || curl -o dummy/back.jpg https://via.placeholder.com/300x400.jpg?text=Back
-          [ -f dummy/selfie.jpg ] || curl -o dummy/selfie.jpg https://via.placeholder.com/300x400.jpg?text=Selfie
+          [ -f dummy/test-document.pdf ] || curl -o dummy/test-document.pdf https://via.placeholder.com/300x400.pdf?text=Test
       - name: Run Puppeteer E2E
         env:
           TEST_BASE_URL: ${{ matrix.test_env }}
