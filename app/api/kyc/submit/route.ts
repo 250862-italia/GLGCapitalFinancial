@@ -1,316 +1,89 @@
-import { supabaseAdmin } from '@/lib/supabase'
-import { NextRequest, NextResponse } from 'next/server'
-import { createAuditTrailService } from '@/lib/audit-trail'
+import { NextRequest, NextResponse } from 'next/server';
+import { getLocalDatabase } from '@/lib/local-database';
 
 export const dynamic = 'force-dynamic';
 
-const supabase = supabaseAdmin;
-
-
-
 export async function POST(request: NextRequest) {
-  const auditTrail = createAuditTrailService(supabase);
-  
   try {
-    console.log('=== KYC SUBMIT START ===');
-    
-    // Test database connection
-    const { data: testData, error: testError } = await supabase
-      .from('clients')
-      .select('id')
-      .limit(1);
-    
-    if (testError) {
-      console.log('Database connection test failed, using offline mode');
-      // Log system error
-      await auditTrail.logSystemError(
-        new Error('Database connection failed'),
-        'KYC submission - database connection test',
-        'system'
+    const body = await request.json();
+    const { user_id, personal_info, documents, verification_data } = body;
+
+    if (!user_id || !personal_info) {
+      return NextResponse.json(
+        { error: 'User ID and personal info are required' },
+        { status: 400 }
       );
-      // Return mock success response for offline mode
+    }
+
+    // Check if using local database
+    const useLocalDatabase = process.env.USE_LOCAL_DATABASE === 'true';
+
+    if (useLocalDatabase) {
+      // Use local database
+      const db = await getLocalDatabase();
+      
+      // Check if user exists
+      const user = await db.getUserById(user_id);
+      if (!user) {
+        return NextResponse.json(
+          { error: 'User not found' },
+          { status: 404 }
+        );
+      }
+
+      // Check if KYC record already exists
+      const existingKYC = await db.getKYCRecordByUserId(user_id);
+      if (existingKYC) {
+        return NextResponse.json(
+          { error: 'KYC record already exists for this user' },
+          { status: 409 }
+        );
+      }
+
+      // Create KYC record
+      const kycRecord = await db.createKYCRecord({
+        user_id,
+        status: 'pending',
+        document_type: documents?.idDocument ? 'id_document' : 'personal_info',
+        document_url: documents?.idDocument || null,
+        verification_data: {
+          personal_info,
+          documents,
+          verification_data,
+          submitted_at: new Date().toISOString()
+        }
+      });
+
       return NextResponse.json({
         success: true,
-        message: 'KYC data submitted successfully (offline mode)',
-        client_id: 'mock-client-id',
-        kyc_status: 'pending'
+        message: 'KYC submitted successfully',
+        data: {
+          id: kycRecord.id,
+          status: kycRecord.status,
+          created_at: kycRecord.created_at
+        }
       });
-    }
-    
-    const body = await request.json()
-    console.log('Request body received:', JSON.stringify(body, null, 2));
-    
-    const {
-      userId,
-      personalInfo,
-      financialProfile,
-      documents,
-      verification
-    } = body
-
-    console.log('Extracted data:', {
-      userId,
-      personalInfoKeys: personalInfo ? Object.keys(personalInfo) : 'null',
-      financialProfileKeys: financialProfile ? Object.keys(financialProfile) : 'null',
-      documentsKeys: documents ? Object.keys(documents) : 'null'
-    });
-
-    // Validation
-    if (!userId || !personalInfo || !financialProfile) {
-      console.log('Validation failed:', { userId: !!userId, personalInfo: !!personalInfo, financialProfile: !!financialProfile });
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      )
-    }
-
-    // Get client_id from user_id or email
-    let clientData = null;
-    let clientError = null;
-
-    console.log('Looking for client with userId:', userId, 'and email:', personalInfo.email);
-
-    // First try to find by user_id
-    const { data: clientByUserId, error: errorByUserId } = await supabase
-      .from('clients')
-      .select('id')
-      .eq('user_id', userId)
-      .single();
-
-    console.log('Client lookup by user_id result:', { clientByUserId, errorByUserId });
-
-    if (clientByUserId) {
-      clientData = clientByUserId;
-      console.log('Found client by user_id:', clientData);
     } else {
-      // If not found by user_id, try to find by email
-      const { data: clientByEmail, error: errorByEmail } = await supabase
-        .from('clients')
-        .select('id')
-        .eq('email', personalInfo.email)
-        .single();
-
-      console.log('Client lookup by email result:', { clientByEmail, errorByEmail });
-
-      if (clientByEmail) {
-        clientData = clientByEmail;
-        console.log('Found client by email:', clientData);
-      } else {
-        clientError = errorByEmail || errorByUserId;
-        console.log('No client found, will create new one');
-      }
-    }
-
-    if (clientError || !clientData) {
-      console.error('Client lookup error:', clientError);
-      console.error('Tried to find client with userId:', userId, 'and email:', personalInfo.email);
+      // Mock KYC submission
+      const mockKYCId = 'mock_kyc_' + Date.now();
       
-      // Try to create a client if not found
-      console.log('Attempting to create client for email:', personalInfo.email);
-      
-      const clientInsertData = {
-        user_id: userId,
-        email: personalInfo.email,
-        first_name: personalInfo.firstName,
-        last_name: personalInfo.lastName,
-        phone: personalInfo.phone,
-        date_of_birth: personalInfo.dateOfBirth,
-        nationality: personalInfo.nationality,
-        address: personalInfo.address,
-        city: personalInfo.city,
-        country: personalInfo.country,
-        status: 'active',
-        kyc_status: 'pending'
-      };
-      
-      console.log('Client insert data:', clientInsertData);
-      
-      const { data: newClient, error: createError } = await supabase
-        .from('clients')
-        .insert(clientInsertData)
-        .select('id')
-        .single();
-
-      console.log('Client creation result:', { newClient, createError });
-
-      if (createError || !newClient) {
-        console.error('Client creation error:', createError);
-        return NextResponse.json(
-          { error: 'Failed to create client record. Please try registering again.' },
-          { status: 500 }
-        )
-      }
-
-      clientData = newClient;
-      console.log('Created new client with ID:', newClient.id);
-    }
-
-    // Save KYC records for each document type
-    const kycRecords = [];
-
-    // Personal Information KYC Record (always create this one)
-    kycRecords.push({
-      client_id: clientData.id,
-      document_type: 'PERSONAL_INFO',
-      document_number: `ID: ${personalInfo.codiceFiscale || 'Not provided'}`,
-      document_image_url: documents.idDocument || null,
-      status: 'pending',
-      notes: `Personal Info: ${personalInfo.firstName} ${personalInfo.lastName}, DOB: ${personalInfo.dateOfBirth}, Nationality: ${personalInfo.nationality}, Address: ${personalInfo.address}, ${personalInfo.city}, ${personalInfo.country}`
-    });
-
-    // Proof of Address KYC Record
-    if (documents.proofOfAddress) {
-      kycRecords.push({
-        "client_id": clientData.id,
-        "document_type": 'PROOF_OF_ADDRESS',
-        "document_number": `Address: ${personalInfo.address}, ${personalInfo.city}, ${personalInfo.country}`,
-        "document_image_url": documents.proofOfAddress,
-        status: 'pending',
-        notes: `Address: ${personalInfo.address}, ${personalInfo.city}, ${personalInfo.country}`
+      return NextResponse.json({
+        success: true,
+        message: 'KYC submitted successfully (mock)',
+        data: {
+          id: mockKYCId,
+          status: 'pending',
+          created_at: new Date().toISOString()
+        }
       });
     }
-
-    // Bank Statement KYC Record
-    if (documents.bankStatement) {
-      kycRecords.push({
-        "client_id": clientData.id,
-        "document_type": 'BANK_STATEMENT',
-        "document_number": 'Bank Statement',
-        "document_image_url": documents.bankStatement,
-        status: 'pending',
-        notes: `Financial Profile: Employment: ${financialProfile.employmentStatus}, Income: ${financialProfile.annualIncome}, Source: ${financialProfile.sourceOfFunds}`
-      });
-    }
-
-    // Insert KYC records (we always have at least the personal info record)
-    console.log('Inserting KYC records:', kycRecords.length, 'records');
-    
-    // Try to insert KYC records, but always have a fallback
-    let kycInsertSuccess = false;
-    let kycErrorDetails = null;
-    
-    try {
-      const { data: kycInsertData, error: kycError } = await supabase
-        .from('kyc_records')
-        .insert(kycRecords)
-        .select();
-
-      if (kycError) {
-        console.error('KYC records creation error:', kycError);
-        kycErrorDetails = kycError.message;
-        
-        // Log the specific error for debugging
-        await auditTrail.logSystemError(
-          new Error(`KYC records creation failed: ${kycError.message}`),
-          'KYC submission - records creation',
-          'warning'
-        );
-      } else {
-        console.log('KYC records created successfully:', kycInsertData?.length, 'records');
-        kycInsertSuccess = true;
-      }
-    } catch (kycInsertException) {
-      console.error('Exception during KYC records insertion:', kycInsertException);
-      kycErrorDetails = kycInsertException instanceof Error ? kycInsertException.message : 'Unknown error';
-      
-      await auditTrail.logSystemError(
-        kycInsertException as Error,
-        'KYC submission - records insertion exception',
-        'warning'
-      );
-    }
-
-    // Always store KYC data in client profile as backup/fallback
-    const kycDataJson = JSON.stringify({
-      personalInfo,
-      financialProfile,
-      documents,
-      submittedAt: new Date().toISOString(),
-      validationScore: body.validationScore || 0,
-      kycRecords: kycRecords // Store the records we tried to insert
-    });
-    
-    // Update client with KYC data in a custom field
-    const { error: kycDataUpdateError } = await supabase
-      .from('clients')
-      .update({ 
-        kyc_data: kycDataJson,
-        kyc_status: 'pending'
-      })
-      .eq('id', clientData.id);
-      
-    if (kycDataUpdateError) {
-      console.error('Failed to store KYC data in client profile:', kycDataUpdateError);
-    } else {
-      console.log('KYC data stored in client profile as backup');
-    }
-
-    // Update client KYC status and personal info
-    const { error: updateError } = await supabase
-      .from('clients')
-      .update({ 
-        kyc_status: 'pending',
-        "date_of_birth": personalInfo.dateOfBirth,
-        nationality: personalInfo.nationality,
-        address: personalInfo.address,
-        city: personalInfo.city,
-        country: personalInfo.country,
-        // Store financial profile data in client record
-        employment_status: financialProfile.employmentStatus,
-        annual_income: financialProfile.annualIncome,
-        source_of_funds: financialProfile.sourceOfFunds,
-        investment_experience: financialProfile.investmentExperience,
-        risk_tolerance: financialProfile.riskTolerance,
-        investment_goals: financialProfile.investmentGoals
-      })
-      .eq('id', clientData.id);
-
-    if (updateError) {
-      console.error('Client update error:', updateError);
-      return NextResponse.json(
-        { error: 'Error updating client KYC status', details: updateError.message },
-        { status: 500 }
-      )
-    }
-
-    // Log KYC submission
-    await auditTrail.logKYCSubmission(userId, body, body.validationScore);
-
-    const response = {
-      success: true,
-      message: kycInsertSuccess 
-        ? 'KYC data submitted successfully' 
-        : 'KYC data submitted successfully (stored in profile as backup)',
-      client_id: clientData.id,
-      kyc_status: 'pending',
-      kyc_records_created: kycInsertSuccess,
-      kyc_data_stored_in_profile: true,
-      warning: kycErrorDetails ? `KYC records table issue: ${kycErrorDetails}` : null
-    };
-
-    console.log('=== KYC SUBMIT SUCCESS ===');
-    console.log('Final response:', response);
-
-    return NextResponse.json(response);
 
   } catch (error) {
-    console.error('=== KYC SUBMIT ERROR ===');
-    console.error('KYC submission error:', error);
-    console.error('Error details:', {
-      message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : 'No stack trace'
-    });
-    
-    // Log system error
-    await auditTrail.logSystemError(
-      error as Error,
-      'KYC submission - general error',
-      'system'
-    );
+    console.error('Error submitting KYC:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
-    )
+    );
   }
 } 
 

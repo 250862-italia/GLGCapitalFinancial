@@ -3,40 +3,31 @@
 import { useState } from 'react';
 import { Globe } from 'lucide-react';
 
-// Wrapper sicuro per useTranslation
-const useSafeTranslation = () => {
-  try {
-    // Dynamic import per evitare errori di SSR
-    const { useTranslation } = require('next-i18next');
-    return useTranslation();
-  } catch (error) {
-    // Fallback se i18next non è disponibile
-    return {
-      t: (key: string) => key,
-      i18n: { language: 'en' }
-    };
-  }
-};
-
 export default function LanguageSwitcher() {
-  const translation = useSafeTranslation();
   const [isOpen, setIsOpen] = useState(false);
+  const [currentLanguage, setCurrentLanguage] = useState('en');
 
   const languages = [
     { code: 'en', name: 'English', flag: '🇺🇸' },
     { code: 'it', name: 'Italiano', flag: '🇮🇹' }
   ];
 
-  const currentLanguage = languages.find(lang => lang.code === translation.i18n.language) || languages[0];
+  const selectedLanguage = languages.find(lang => lang.code === currentLanguage) || languages[0];
 
   const handleLanguageChange = (languageCode: string) => {
-    try {
-      translation.i18n.changeLanguage(languageCode);
-    } catch (error) {
-      console.log('Language change not available in this context');
-    }
+    setCurrentLanguage(languageCode);
     setIsOpen(false);
+    // Store in localStorage for persistence
+    localStorage.setItem('preferred-language', languageCode);
   };
+
+  // Load preferred language from localStorage on mount
+  useState(() => {
+    const saved = localStorage.getItem('preferred-language');
+    if (saved && languages.find(lang => lang.code === saved)) {
+      setCurrentLanguage(saved);
+    }
+  });
 
   return (
     <div style={{ position: 'relative' }}>
@@ -53,12 +44,21 @@ export default function LanguageSwitcher() {
           cursor: 'pointer',
           fontSize: '14px',
           fontWeight: 500,
-          color: '#374151'
+          color: '#374151',
+          transition: 'all 0.2s ease'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.borderColor = '#3b82f6';
+          e.currentTarget.style.boxShadow = '0 2px 4px rgba(59, 130, 246, 0.1)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.borderColor = '#e5e7eb';
+          e.currentTarget.style.boxShadow = 'none';
         }}
       >
         <Globe size={16} />
-        <span>{currentLanguage.flag}</span>
-        <span>{currentLanguage.name}</span>
+        <span>{selectedLanguage.flag}</span>
+        <span>{selectedLanguage.name}</span>
       </button>
 
       {isOpen && (
@@ -70,9 +70,10 @@ export default function LanguageSwitcher() {
           background: 'white',
           border: '1px solid #e5e7eb',
           borderRadius: '8px',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
           zIndex: 1000,
-          minWidth: '150px'
+          minWidth: '150px',
+          overflow: 'hidden'
         }}>
           {languages.map((language) => (
             <button
@@ -84,23 +85,31 @@ export default function LanguageSwitcher() {
                 gap: '0.5rem',
                 width: '100%',
                 padding: '0.75rem 1rem',
-                background: 'transparent',
+                background: language.code === currentLanguage ? '#f3f4f6' : 'transparent',
                 border: 'none',
                 cursor: 'pointer',
                 fontSize: '14px',
                 color: '#374151',
                 textAlign: 'left',
-                transition: 'background-color 0.2s'
+                transition: 'background-color 0.2s ease',
+                borderBottom: language.code !== languages[languages.length - 1].code ? '1px solid #f3f4f6' : 'none'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#f3f4f6';
+                if (language.code !== currentLanguage) {
+                  e.currentTarget.style.backgroundColor = '#f9fafb';
+                }
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
+                if (language.code !== currentLanguage) {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }
               }}
             >
               <span>{language.flag}</span>
               <span>{language.name}</span>
+              {language.code === currentLanguage && (
+                <span style={{ marginLeft: 'auto', color: '#3b82f6', fontSize: '12px' }}>✓</span>
+              )}
             </button>
           ))}
         </div>
