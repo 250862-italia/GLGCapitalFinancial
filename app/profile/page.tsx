@@ -30,19 +30,18 @@ interface ClientProfile {
   id: string;
   user_id: string;
   email: string;
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
   phone: string;
   company?: string;
   position?: string;
-  dateOfBirth?: string;
+  date_of_birth?: string;
   nationality?: string;
-  profilePhoto?: string;
-  tax_id?: string;
+  profile_photo?: string;
   address?: string;
   city?: string;
   country?: string;
-  postalCode?: string;
+  postal_code?: string;
   iban?: string;
   bic?: string;
   account_holder?: string;
@@ -424,9 +423,9 @@ export default function ProfilePage() {
                   justifyContent: 'center',
                   border: '3px solid rgba(255,255,255,0.3)'
                 }}>
-                  {profile.profilePhoto ? (
-                    <img 
-                      src={profile.profilePhoto} 
+                                  {profile.profile_photo ? (
+                  <img
+                    src={profile.profile_photo} 
                       alt="Profile" 
                       style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
                     />
@@ -478,7 +477,7 @@ export default function ProfilePage() {
               </div>
               <div style={{ flex: 1 }}>
                 <h2 style={{ fontSize: '28px', fontWeight: 700, margin: 0, marginBottom: '0.5rem' }}>
-                  {profile.firstName} {profile.lastName}
+                  {profile.first_name} {profile.last_name}
                 </h2>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -593,22 +592,22 @@ export default function ProfilePage() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   <ProfileField 
                     label="First Name" 
-                    value={editing ? editForm.firstName : profile.firstName}
+                    value={editing ? editForm.first_name : profile.first_name}
                     editing={editing}
-                    onChange={(value) => setEditForm(prev => ({ ...prev, firstName: value }))}
+                                          onChange={(value) => setEditForm(prev => ({ ...prev, first_name: value }))}
                   />
                   <ProfileField 
                     label="Last Name" 
-                    value={editing ? editForm.lastName : profile.lastName}
+                    value={editing ? editForm.last_name : profile.last_name}
                     editing={editing}
-                    onChange={(value) => setEditForm(prev => ({ ...prev, lastName: value }))}
+                                          onChange={(value) => setEditForm(prev => ({ ...prev, last_name: value }))}
                   />
                   <ProfileField 
                     label="Date of Birth" 
-                    value={editing ? formatDateForInput(editForm.dateOfBirth) : formatDateForDisplay(profile.dateOfBirth)}
+                                          value={editing ? formatDateForInput(editForm.date_of_birth) : formatDateForDisplay(profile.date_of_birth)}
                     icon={<Calendar size={14} />}
                     editing={editing}
-                    onChange={(value) => setEditForm(prev => ({ ...prev, dateOfBirth: value }))}
+                                          onChange={(value) => setEditForm(prev => ({ ...prev, date_of_birth: value }))}
                   />
                   <ProfileField 
                     label="Nationality" 

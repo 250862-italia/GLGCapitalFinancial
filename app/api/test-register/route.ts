@@ -33,8 +33,8 @@ export async function POST(request: NextRequest) {
       .from('clients')
       .insert({
         user_id: user.user?.id,
-        "firstName": firstName || '',
-        "lastName": lastName || '',
+        first_name: firstName || '',
+        last_name: lastName || '',
         country: country || ''
       })
       .select()

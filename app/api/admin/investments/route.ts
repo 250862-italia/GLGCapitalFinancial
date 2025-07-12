@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
         // Get client details
         const { data: client } = await supabase
           .from('clients')
-          .select('id, "firstName", "lastName", country')
+          .select('id, first_name, last_name, country')
           .eq('user_id', investment.user_id)
           .single();
 

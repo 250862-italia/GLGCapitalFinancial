@@ -5,9 +5,8 @@ import { supabase } from '@/lib/supabase';
 interface ClientProfile {
   id: string;
   user_id: string;
-  firstName: string;
-  lastName: string;
-  tax_id: string | null;
+  first_name: string;
+  last_name: string;
   address: string | null;
   city: string | null;
   country: string | null;
