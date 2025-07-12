@@ -20,7 +20,6 @@ import {
 } from 'lucide-react';
 import { Investment } from "@/types/investment";
 import { Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import KYCProcess from "../../components/kyc/kyc-process";
 import UserProfile from "../../components/UserProfile";
 import { useAuth } from "../../hooks/use-auth";
 import { usePackages } from "../../lib/package-context";
@@ -46,8 +45,6 @@ export default function ClientDashboard() {
   const [showBankModal, setShowBankModal] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<any>(null);
   const [bankDetails, setBankDetails] = useState<{iban: string, accountHolder: string, bankName: string, reason: string} | null>(null);
-  const [showKycToast, setShowKycToast] = useState(false);
-  const [kycToastMsg, setKycToastMsg] = useState("");
   const router = useRouter();
 
   useEffect(() => {
@@ -152,51 +149,10 @@ export default function ClientDashboard() {
 
   // Function to purchase a package
   const handleBuy = async (pkg: any) => {
-    // Check KYC status first
     if (!user) {
       alert('Please log in to make investments.');
       return;
     }
-
-    try {
-      // Get client data to check KYC status
-      const { data: clientData, error: clientError } = await supabase
-        .from('clients')
-        .select('kyc_status')
-        .eq('user_id', user.id)
-        .single();
-
-      if (clientError || !clientData) {
-        console.error('Error fetching client data:', clientError);
-        alert('Error checking your account status. Please try again.');
-        return;
-      }
-
-      // Check KYC status
-      if (clientData.kyc_status !== 'approved') {
-        if (clientData.kyc_status === 'pending') {
-          alert('Your KYC is still pending approval. Please complete the KYC process and wait for approval before making investments.');
-        } else if (clientData.kyc_status === 'rejected') {
-          alert('Your KYC has been rejected. Please contact support to resolve this issue before making investments.');
-        } else {
-          alert('Please complete the KYC process before making investments.');
-        }
-        return;
-      }
-
-      // KYC is approved, proceed with purchase
-      setSelectedPackage(pkg);
-      setShowBankModal(true);
-    } catch (error) {
-      console.error('Error checking KYC status:', error);
-      alert('Error checking your account status. Please try again.');
-    }
-  };
-
-  // Purchase confirmation function
-  const confirmBuy = async () => {
-    if (!selectedPackage || !user) return;
-    if (myInvestments.some(inv => inv.packageName === selectedPackage.name)) return;
 
     try {
       // Send email to GLG support with investment request
@@ -667,16 +623,16 @@ export default function ClientDashboard() {
               )}
               <div style={{ display: 'flex', gap: 16, justifyContent: 'flex-end' }}>
                 <button onClick={() => { setShowBankModal(false); setSelectedPackage(null); }} style={{ background: '#d1d5db', color: '#1f2937', padding: '0.5rem 1rem', border: 'none', borderRadius: 6, fontWeight: 500 }}>Cancel</button>
-                <button onClick={confirmBuy} style={{ background: '#059669', color: 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: 6, fontWeight: 500, cursor: 'pointer' }}>Send Investment Instructions</button>
+                <button onClick={handleBuy} style={{ background: '#059669', color: 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: 6, fontWeight: 500, cursor: 'pointer' }}>Send Investment Instructions</button>
               </div>
             </div>
           </div>
         )}
 
         <Toast
-          message={kycToastMsg}
-          visible={showKycToast}
-          onClose={() => setShowKycToast(false)}
+          message={""}
+          visible={false}
+          onClose={() => {}}
           duration={5000}
         />
       </div>
