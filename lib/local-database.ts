@@ -261,13 +261,15 @@ class LocalDatabase {
   async getUserByEmail(email: string): Promise<User | null> {
     if (!this.db) throw new Error('Database not initialized');
 
-    return await this.db.get('SELECT * FROM users WHERE email = ?', email);
+    const result = await this.db.get('SELECT * FROM users WHERE email = ?', email);
+    return result || null;
   }
 
   async getUserById(id: string): Promise<User | null> {
     if (!this.db) throw new Error('Database not initialized');
 
-    return await this.db.get('SELECT * FROM users WHERE id = ?', id);
+    const result = await this.db.get('SELECT * FROM users WHERE id = ?', id);
+    return result || null;
   }
 
   async getAllUsers(): Promise<User[]> {
@@ -315,13 +317,15 @@ class LocalDatabase {
   async getClientById(id: string): Promise<Client | null> {
     if (!this.db) throw new Error('Database not initialized');
 
-    return await this.db.get('SELECT * FROM clients WHERE id = ?', id);
+    const result = await this.db.get('SELECT * FROM clients WHERE id = ?', id);
+    return result || null;
   }
 
   async getClientByUserId(userId: string): Promise<Client | null> {
     if (!this.db) throw new Error('Database not initialized');
 
-    return await this.db.get('SELECT * FROM clients WHERE user_id = ?', userId);
+    const result = await this.db.get('SELECT * FROM clients WHERE user_id = ?', userId);
+    return result || null;
   }
 
   async getAllClients(): Promise<Client[]> {
@@ -358,13 +362,15 @@ class LocalDatabase {
   async getKYCRecordById(id: string): Promise<KYCRecord | null> {
     if (!this.db) throw new Error('Database not initialized');
 
-    return await this.db.get('SELECT * FROM kyc_records WHERE id = ?', id);
+    const result = await this.db.get('SELECT * FROM kyc_records WHERE id = ?', id);
+    return result || null;
   }
 
   async getKYCRecordByUserId(userId: string): Promise<KYCRecord | null> {
     if (!this.db) throw new Error('Database not initialized');
 
-    return await this.db.get('SELECT * FROM kyc_records WHERE user_id = ?', userId);
+    const result = await this.db.get('SELECT * FROM kyc_records WHERE user_id = ?', userId);
+    return result || null;
   }
 
   async getAllKYCRecords(): Promise<KYCRecord[]> {
@@ -444,7 +450,7 @@ class LocalDatabase {
       // Convert email_verified to boolean
       record.email_verified = Boolean(record.email_verified);
     }
-    return record;
+    return record || null;
   }
 
   async getSimpleKYCByUserId(userId: string): Promise<any> {
@@ -463,7 +469,7 @@ class LocalDatabase {
       // Convert email_verified to boolean
       record.email_verified = Boolean(record.email_verified);
     }
-    return record;
+    return record || null;
   }
 
   async getAllSimpleKYC(): Promise<any[]> {
@@ -543,7 +549,8 @@ class LocalDatabase {
   async getInvestmentById(id: string): Promise<Investment | null> {
     if (!this.db) throw new Error('Database not initialized');
 
-    return await this.db.get('SELECT * FROM investments WHERE id = ?', id);
+    const result = await this.db.get('SELECT * FROM investments WHERE id = ?', id);
+    return result || null;
   }
 
   async getInvestmentsByUserId(userId: string): Promise<Investment[]> {
@@ -627,7 +634,9 @@ class LocalDatabase {
 
   async getNotificationById(id: string): Promise<any> {
     if (!this.db) throw new Error('Database not initialized');
-    return await this.db.get('SELECT * FROM notifications WHERE id = ?', id);
+
+    const result = await this.db.get('SELECT * FROM notifications WHERE id = ?', id);
+    return result || null;
   }
 
   async getNotificationsByUserId(userId: string): Promise<any[]> {
