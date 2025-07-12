@@ -104,7 +104,7 @@ export default function AdminPackagesPage() {
   const titleStyle = { fontSize: '24px', fontWeight: 'bold', color: '#1f2937' };
   const buttonStyle = { background: '#2563eb', color: '#fff', border: 'none', padding: '12px 24px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' };
   const tableStyle: CSSProperties = { width: '100%', borderCollapse: 'collapse', background: '#fff', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' };
-  const thStyle = { background: '#f8fafc', padding: '12px', textAlign: 'left', fontWeight: '600', color: '#374151', borderBottom: '1px solid #e5e7eb' };
+  const thStyle: CSSProperties = { background: '#f8fafc', padding: '12px', textAlign: 'left', fontWeight: '600', color: '#374151', borderBottom: '1px solid #e5e7eb' };
   const tdStyle = { padding: '12px', borderBottom: '1px solid #f3f4f6' };
   const actionBtnStyle = { background: '#059669', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' };
   const modalStyle = { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 };
