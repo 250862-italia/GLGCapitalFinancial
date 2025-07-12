@@ -28,7 +28,6 @@ interface AnalyticsData {
   userMetrics: {
     newUsers: number;
     verifiedUsers: number;
-    pendingKYC: number;
     blockedUsers: number;
   };
   investmentMetrics: {
@@ -45,7 +44,7 @@ interface AnalyticsData {
   };
   recentActivity: Array<{
     id: string;
-    type: 'user_registration' | 'investment' | 'kyc_approval' | 'security_alert';
+    type: 'user_registration' | 'investment' | 'security_alert';
     description: string;
     timestamp: Date;
     severity?: 'low' | 'medium' | 'high';
@@ -89,7 +88,6 @@ export default function AdminAnalyticsDashboard() {
           userMetrics: {
             newUsers: 45,
             verifiedUsers: 892,
-            pendingKYC: 23,
             blockedUsers: 5
           },
           investmentMetrics: {
@@ -121,20 +119,13 @@ export default function AdminAnalyticsDashboard() {
             },
             {
               id: '3',
-              type: 'kyc_approval',
-              description: 'KYC approved for user: jane.smith@example.com',
-              timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-              severity: 'low'
-            },
-            {
-              id: '4',
               type: 'security_alert',
               description: 'Multiple failed login attempts detected from IP 192.168.1.100',
               timestamp: new Date(Date.now() - 1000 * 60 * 45), // 45 minutes ago
               severity: 'high'
             },
             {
-              id: '5',
+              id: '4',
               type: 'investment',
               description: 'Investment completed: $25,000 in Balanced Portfolio',
               timestamp: new Date(Date.now() - 1000 * 60 * 60), // 1 hour ago
@@ -171,8 +162,6 @@ export default function AdminAnalyticsDashboard() {
         return <UserPlus size={16} />;
       case 'investment':
         return <DollarSign size={16} />;
-      case 'kyc_approval':
-        return <UserCheck size={16} />;
       case 'security_alert':
         return <AlertTriangle size={16} />;
       default:
@@ -513,10 +502,6 @@ export default function AdminAnalyticsDashboard() {
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ color: '#6b7280' }}>Verified Users</span>
               <span style={{ fontWeight: 600 }}>{analyticsData.userMetrics.verifiedUsers}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ color: '#6b7280' }}>Pending KYC</span>
-              <span style={{ fontWeight: 600, color: '#d97706' }}>{analyticsData.userMetrics.pendingKYC}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ color: '#6b7280' }}>Blocked Users</span>

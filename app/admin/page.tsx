@@ -113,7 +113,6 @@ export default function AdminDashboardPage() {
 
   const quickActions = [
     { name: "Manage Packages", icon: Package, color: "#3b82f6", href: "/admin/packages" },
-    { name: "KYC Management", icon: CheckCircle, color: "#10b981", href: "/admin/kyc" },
     { name: "Client Management", icon: Users, color: "var(--accent)", href: "/admin/clients" },
     { name: "Payment Management", icon: CreditCard, color: "#8b5cf6", href: "/admin/payments" },
     { name: "Documentation Requests", icon: FileText, color: "#f59e0b", href: "/admin/informational-requests" },

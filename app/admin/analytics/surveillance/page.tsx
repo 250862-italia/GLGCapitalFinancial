@@ -28,30 +28,20 @@ import {
 // REMOVE: import { emailNotificationService, NotificationData } from '@/lib/email-service';
 
 interface SurveillanceStats {
-  totalNotifications: number;
-  notificationsByType: { [key: string]: number };
-  notificationsBySeverity: { [key: string]: number };
-  recentActivity: number;
-  criticalAlerts: number;
   userRegistrations: number;
-  kycSubmissions: number;
-  packagePurchases: number;
-  investmentCancellations: number;
+  investments: number;
+  securityAlerts: number;
+  systemAlerts: number;
 }
 
 export default function SurveillancePage() {
   const [notifications, setNotifications] = useState<any[]>([]); // Stubbed
   const [filteredNotifications, setFilteredNotifications] = useState<any[]>([]); // Stubbed
   const [stats, setStats] = useState<SurveillanceStats>({
-    totalNotifications: 0,
-    notificationsByType: {},
-    notificationsBySeverity: {},
-    recentActivity: 0,
-    criticalAlerts: 0,
     userRegistrations: 0,
-    kycSubmissions: 0,
-    packagePurchases: 0,
-    investmentCancellations: 0
+    investments: 0,
+    securityAlerts: 0,
+    systemAlerts: 0
   });
   const [filters, setFilters] = useState({
     type: '',
@@ -79,48 +69,26 @@ export default function SurveillancePage() {
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     
     const stats: SurveillanceStats = {
-      totalNotifications: notifications.length,
-      notificationsByType: {},
-      notificationsBySeverity: {},
-      recentActivity: 0,
-      criticalAlerts: 0,
       userRegistrations: 0,
-      kycSubmissions: 0,
-      packagePurchases: 0,
-      investmentCancellations: 0
+      investments: 0,
+      securityAlerts: 0,
+      systemAlerts: 0
     };
 
     notifications.forEach(notification => {
       // Count by type
-      stats.notificationsByType[notification.type] = (stats.notificationsByType[notification.type] || 0) + 1;
-      
-      // Count by severity
-      stats.notificationsBySeverity[notification.severity] = (stats.notificationsBySeverity[notification.severity] || 0) + 1;
-      
-      // Count recent activity (last 7 days)
-      const notificationDate = new Date(notification.timestamp);
-      if (notificationDate >= sevenDaysAgo) {
-        stats.recentActivity++;
-      }
-      
-      // Count critical alerts
-      if (notification.severity === 'critical') {
-        stats.criticalAlerts++;
-      }
-      
-      // Count specific types
       switch (notification.type) {
         case 'user_registration':
           stats.userRegistrations++;
           break;
-        case 'kyc_submission':
-          stats.kycSubmissions++;
-          break;
         case 'package_purchase':
-          stats.packagePurchases++;
+          stats.investments++;
           break;
-        case 'investment_cancellation':
-          stats.investmentCancellations++;
+        case 'system_alert':
+          stats.systemAlerts++;
+          break;
+        case 'security_alert':
+          stats.securityAlerts++;
           break;
       }
     });
@@ -189,13 +157,9 @@ export default function SurveillancePage() {
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'user_registration': return <User size={16} />;
-      case 'kyc_submission': return <FileText size={16} />;
       case 'package_purchase': return <Package size={16} />;
-      case 'investment_cancellation': return <XCircle size={16} />;
-      case 'admin_action': return <Shield size={16} />;
-      case 'payment_processed': return <CreditCard size={16} />;
-      case 'client_activity': return <Activity size={16} />;
       case 'system_alert': return <AlertTriangle size={16} />;
+      case 'security_alert': return <Shield size={16} />;
       default: return <Bell size={16} />;
     }
   };
@@ -305,7 +269,7 @@ export default function SurveillancePage() {
             <div>
               <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: 0 }}>Total Notifications</p>
               <p style={{ fontSize: '1.5rem', fontWeight: 600, color: '#1f2937', margin: 0 }}>
-                {stats.totalNotifications}
+                {notifications.length}
               </p>
             </div>
             <Bell size={24} color="#3b82f6" />
@@ -314,34 +278,45 @@ export default function SurveillancePage() {
         <div style={{ background: '#fff', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: 0 }}>Critical Alerts</p>
+              <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: 0 }}>User Registrations</p>
+              <p style={{ fontSize: '1.5rem', fontWeight: 600, color: '#1f2937', margin: 0 }}>
+                {stats.userRegistrations}
+              </p>
+            </div>
+            <Users size={24} color="#10b981" />
+          </div>
+        </div>
+        <div style={{ background: '#fff', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: 0 }}>Investments</p>
+              <p style={{ fontSize: '1.5rem', fontWeight: 600, color: '#1f2937', margin: 0 }}>
+                {stats.investments}
+              </p>
+            </div>
+            <DollarSign size={24} color="#f59e0b" />
+          </div>
+        </div>
+        <div style={{ background: '#fff', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: 0 }}>System Alerts</p>
+              <p style={{ fontSize: '1.5rem', fontWeight: 600, color: '#1f2937', margin: 0 }}>
+                {stats.systemAlerts}
+              </p>
+            </div>
+            <AlertTriangle size={24} color="#ef4444" />
+          </div>
+        </div>
+        <div style={{ background: '#fff', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>
+              <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: 0 }}>Security Alerts</p>
               <p style={{ fontSize: '1.5rem', fontWeight: 600, color: '#dc2626', margin: 0 }}>
-                {stats.criticalAlerts}
+                {stats.securityAlerts}
               </p>
             </div>
-            <AlertTriangle size={24} color="#dc2626" />
-          </div>
-        </div>
-        <div style={{ background: '#fff', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: 0 }}>Recent Activity (7d)</p>
-              <p style={{ fontSize: '1.5rem', fontWeight: 600, color: '#1f2937', margin: 0 }}>
-                {stats.recentActivity}
-              </p>
-            </div>
-            <Activity size={24} color="#10b981" />
-          </div>
-        </div>
-        <div style={{ background: '#fff', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: 0 }}>Package Purchases</p>
-              <p style={{ fontSize: '1.5rem', fontWeight: 600, color: '#1f2937', margin: 0 }}>
-                {stats.packagePurchases}
-              </p>
-            </div>
-            <Package size={24} color="#f59e0b" />
+            <Shield size={24} color="#dc2626" />
           </div>
         </div>
       </div>
@@ -353,7 +328,12 @@ export default function SurveillancePage() {
             Notifications by Type
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            {Object.entries(stats.notificationsByType).map(([type, count]) => (
+            {Object.entries({
+              user_registration: stats.userRegistrations,
+              package_purchase: stats.investments,
+              system_alert: stats.systemAlerts,
+              security_alert: stats.securityAlerts
+            }).map(([type, count]) => (
               <div key={type} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   {getTypeIcon(type)}
@@ -373,7 +353,12 @@ export default function SurveillancePage() {
             Notifications by Severity
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            {Object.entries(stats.notificationsBySeverity).map(([severity, count]) => (
+            {Object.entries({
+              low: 0, // No severity breakdown in new stats
+              medium: 0,
+              high: 0,
+              critical: 0
+            }).map(([severity, count]) => (
               <div key={severity} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <div style={{
@@ -418,13 +403,9 @@ export default function SurveillancePage() {
             >
               <option value="">All Types</option>
               <option value="user_registration">User Registration</option>
-              <option value="kyc_submission">KYC Submission</option>
               <option value="package_purchase">Package Purchase</option>
-              <option value="investment_cancellation">Investment Cancellation</option>
-              <option value="admin_action">Admin Action</option>
-              <option value="payment_processed">Payment Processed</option>
-              <option value="client_activity">Client Activity</option>
               <option value="system_alert">System Alert</option>
+              <option value="security_alert">Security Alert</option>
             </select>
           </div>
           <div>
