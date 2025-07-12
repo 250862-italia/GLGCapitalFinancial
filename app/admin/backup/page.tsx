@@ -23,8 +23,8 @@ export default function BackupPage() {
   const [backupDescription, setBackupDescription] = useState('');
   const [backupOptions, setBackupOptions] = useState({
     include_clients: true,
-    include_kyc_records: true,
-    include_audit_trail: true
+            include_investments: true,
+            include_notifications: true
   });
   const [restoreOptions, setRestoreOptions] = useState({
     overwrite_existing: false,
@@ -359,7 +359,7 @@ export default function BackupPage() {
                           {backup.metadata.total_clients} Clienti
                         </span>
                       )}
-                      {backup.metadata.total_kyc_records > 0 && (
+                      {backup.metadata.total_investments > 0 && (
                         <span style={{ 
                           background: '#fef3c7', 
                           color: '#d97706', 
@@ -367,10 +367,10 @@ export default function BackupPage() {
                           borderRadius: 4, 
                           fontSize: 12 
                         }}>
-                          {backup.metadata.total_kyc_records} KYC
+                          {backup.metadata.total_investments} Investments
                         </span>
                       )}
-                      {backup.metadata.total_audit_events > 0 && (
+                      {backup.metadata.total_notifications > 0 && (
                         <span style={{ 
                           background: '#f0fdf4', 
                           color: '#16a34a', 
@@ -378,7 +378,7 @@ export default function BackupPage() {
                           borderRadius: 4, 
                           fontSize: 12 
                         }}>
-                          {backup.metadata.total_audit_events} Audit
+                          {backup.metadata.total_notifications} Notifications
                         </span>
                       )}
                     </div>
@@ -546,10 +546,10 @@ export default function BackupPage() {
                   <strong>Clienti:</strong> {selectedBackup.metadata.total_clients}
                 </div>
                 <div style={{ marginBottom: '1rem' }}>
-                  <strong>Record KYC:</strong> {selectedBackup.metadata.total_kyc_records}
+                  <strong>Investimenti:</strong> {selectedBackup.metadata.total_investments}
                 </div>
                 <div style={{ marginBottom: '1rem' }}>
-                  <strong>Eventi Audit:</strong> {selectedBackup.metadata.total_audit_events}
+                  <strong>Notifiche:</strong> {selectedBackup.metadata.total_notifications}
                 </div>
                 <div style={{ marginBottom: '1rem' }}>
                   <strong>Dimensione:</strong> {formatSize(JSON.stringify(selectedBackup).length)}
@@ -667,18 +667,18 @@ export default function BackupPage() {
                 <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <input
                     type="checkbox"
-                    checked={backupOptions.include_kyc_records}
-                    onChange={(e) => setBackupOptions(prev => ({ ...prev, include_kyc_records: e.target.checked }))}
+                    checked={backupOptions.include_investments}
+                    onChange={(e) => setBackupOptions(prev => ({ ...prev, include_investments: e.target.checked }))}
                   />
-                  Includi Record KYC
+                  Includi Investimenti
                 </label>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <input
                     type="checkbox"
-                    checked={backupOptions.include_audit_trail}
-                    onChange={(e) => setBackupOptions(prev => ({ ...prev, include_audit_trail: e.target.checked }))}
+                    checked={backupOptions.include_notifications}
+                    onChange={(e) => setBackupOptions(prev => ({ ...prev, include_notifications: e.target.checked }))}
                   />
-                  Includi Audit Trail
+                  Includi Notifiche
                 </label>
               </div>
             </div>

@@ -33,7 +33,7 @@ export default function AdminSettingsBackupPage() {
       const newBackup = await backupService.createBackup(
         'Manual backup from admin panel',
         'Backup created manually from admin panel',
-        { include_clients: true, include_kyc_records: true, include_audit_trail: true },
+        { include_clients: true, include_investments: true, include_notifications: true },
         'admin'
       );
       setCurrentBackup(newBackup);

@@ -1,4 +1,4 @@
-// Backup and Recovery Service for KYC Data
+// Backup and Recovery Service for Client Data
 export interface BackupData {
   id: string;
   name: string;
@@ -6,22 +6,22 @@ export interface BackupData {
   timestamp: string;
   data: {
     clients: any[];
-    kyc_records: any[];
-    audit_trail: any[];
+    investments: any[];
+    notifications: any[];
   };
   metadata: {
     version: string;
     total_clients: number;
-    total_kyc_records: number;
-    total_audit_events: number;
+    total_investments: number;
+    total_notifications: number;
     created_by: string;
   };
 }
 
 export interface BackupOptions {
   include_clients?: boolean;
-  include_kyc_records?: boolean;
-  include_audit_trail?: boolean;
+  include_investments?: boolean;
+  include_notifications?: boolean;
   compress?: boolean;
   encrypt?: boolean;
 }
@@ -55,8 +55,8 @@ export class BackupService {
       const metadata: any = {
         version: '1.0.0',
         total_clients: 0,
-        total_kyc_records: 0,
-        total_audit_events: 0,
+        total_investments: 0,
+        total_notifications: 0,
         created_by: createdBy
       };
 
@@ -71,26 +71,26 @@ export class BackupService {
         metadata.total_clients = data.clients.length;
       }
 
-      // Backup KYC records if requested
-      if (options.include_kyc_records !== false) {
-        const { data: kycRecords, error: kycError } = await this.supabase
-          .from('kyc_records')
+      // Backup investments if requested
+      if (options.include_investments !== false) {
+        const { data: investments, error: investmentsError } = await this.supabase
+          .from('investments')
           .select('*');
         
-        if (kycError) throw kycError;
-        data.kyc_records = kycRecords || [];
-        metadata.total_kyc_records = data.kyc_records.length;
+        if (investmentsError) throw investmentsError;
+        data.investments = investments || [];
+        metadata.total_investments = data.investments.length;
       }
 
-      // Backup audit trail if requested
-      if (options.include_audit_trail !== false) {
-        const { data: auditTrail, error: auditError } = await this.supabase
-          .from('audit_trail')
+      // Backup notifications if requested
+      if (options.include_notifications !== false) {
+        const { data: notifications, error: notificationsError } = await this.supabase
+          .from('notifications')
           .select('*');
         
-        if (auditError) throw auditError;
-        data.audit_trail = auditTrail || [];
-        metadata.total_audit_events = data.audit_trail.length;
+        if (notificationsError) throw notificationsError;
+        data.notifications = notifications || [];
+        metadata.total_notifications = data.notifications.length;
       }
 
       const backup: BackupData = {
@@ -189,7 +189,7 @@ export class BackupService {
         await this.createBackup(
           `pre_restore_backup_${Date.now()}`,
           `Backup created before restoring ${backup.name}`,
-          { include_clients: true, include_kyc_records: true, include_audit_trail: true },
+          { include_clients: true, include_investments: true, include_notifications: true },
           'system'
         );
       }
@@ -217,34 +217,34 @@ export class BackupService {
         if (clientsError) throw clientsError;
       }
 
-      // Restore KYC records
-      if (backup.data.kyc_records && backup.data.kyc_records.length > 0) {
+      // Restore investments
+      if (backup.data.investments && backup.data.investments.length > 0) {
         if (options.overwrite_existing) {
-          // Clear existing KYC records
-          await this.supabase.from('kyc_records').delete().neq('id', '');
+          // Clear existing investments
+          await this.supabase.from('investments').delete().neq('id', '');
         }
         
-        // Insert KYC records from backup
-        const { error: kycError } = await this.supabase
-          .from('kyc_records')
-          .upsert(backup.data.kyc_records, { onConflict: 'id' });
+        // Insert investments from backup
+        const { error: investmentsError } = await this.supabase
+          .from('investments')
+          .upsert(backup.data.investments, { onConflict: 'id' });
         
-        if (kycError) throw kycError;
+        if (investmentsError) throw investmentsError;
       }
 
-      // Restore audit trail
-      if (backup.data.audit_trail && backup.data.audit_trail.length > 0) {
+      // Restore notifications
+      if (backup.data.notifications && backup.data.notifications.length > 0) {
         if (options.overwrite_existing) {
-          // Clear existing audit trail
-          await this.supabase.from('audit_trail').delete().neq('id', '');
+          // Clear existing notifications
+          await this.supabase.from('notifications').delete().neq('id', '');
         }
         
-        // Insert audit trail from backup
-        const { error: auditError } = await this.supabase
-          .from('audit_trail')
-          .upsert(backup.data.audit_trail, { onConflict: 'id' });
+        // Insert notifications from backup
+        const { error: notificationsError } = await this.supabase
+          .from('notifications')
+          .upsert(backup.data.notifications, { onConflict: 'id' });
         
-        if (auditError) throw auditError;
+        if (notificationsError) throw notificationsError;
       }
 
       console.log(`Successfully restored backup: ${backup.name}`);
@@ -331,27 +331,26 @@ export class BackupService {
       }
     }
 
-    // Validate KYC records data
-    if (data.kyc_records) {
-      if (!Array.isArray(data.kyc_records)) {
-        errors.push('KYC records data must be an array');
+    // Validate investments data
+    if (data.investments) {
+      if (!Array.isArray(data.investments)) {
+        errors.push('Investments data must be an array');
       } else {
-        data.kyc_records.forEach((record: any, index: number) => {
-          if (!record.id) errors.push(`KYC record at index ${index} missing ID`);
-          if (!record.client_id) errors.push(`KYC record at index ${index} missing client_id`);
+        data.investments.forEach((investment: any, index: number) => {
+          if (!investment.id) errors.push(`Investment at index ${index} missing ID`);
+          if (!investment.user_id) errors.push(`Investment at index ${index} missing user_id`);
         });
       }
     }
 
-    // Validate audit trail data
-    if (data.audit_trail) {
-      if (!Array.isArray(data.audit_trail)) {
-        errors.push('Audit trail data must be an array');
+    // Validate notifications data
+    if (data.notifications) {
+      if (!Array.isArray(data.notifications)) {
+        errors.push('Notifications data must be an array');
       } else {
-        data.audit_trail.forEach((event: any, index: number) => {
-          if (!event.id) errors.push(`Audit event at index ${index} missing ID`);
-          if (!event.action) errors.push(`Audit event at index ${index} missing action`);
-          if (!event.timestamp) errors.push(`Audit event at index ${index} missing timestamp`);
+        data.notifications.forEach((notification: any, index: number) => {
+          if (!notification.id) errors.push(`Notification at index ${index} missing ID`);
+          if (!notification.user_id) errors.push(`Notification at index ${index} missing user_id`);
         });
       }
     }
