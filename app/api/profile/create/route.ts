@@ -35,11 +35,11 @@ export async function POST(request: NextRequest) {
         const newProfile = {
           user_id: user_id,
           company_name: '',
-          tax_id: null,
-          address: null,
-          city: null,
-          country: null,
-          postal_code: null
+          tax_id: '',
+          address: '',
+          city: '',
+          country: '',
+          postal_code: ''
         };
 
         const createdProfile = await db.createClient(newProfile);
@@ -90,11 +90,11 @@ export async function POST(request: NextRequest) {
       const newProfile = {
         user_id: user_id,
         company_name: '',
-        tax_id: null,
-        address: null,
-        city: null,
-        country: null,
-        postal_code: null
+        tax_id: '',
+        address: '',
+        city: '',
+        country: '',
+        postal_code: ''
       };
 
       const { data: createdProfile, error: createError } = await supabase
