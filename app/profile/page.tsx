@@ -43,24 +43,6 @@ interface ClientProfile {
   account_holder?: string;
   usdt_wallet?: string;
   status: string;
-  kyc_status: string;
-  country?: string;
-  city?: string;
-  address?: string;
-  kyc_data?: string; // JSON string containing full KYC data
-  created_at: string;
-  updated_at: string;
-}
-
-interface KYCData {
-  id: string;
-  client_id: string;
-  document_type: string;
-  document_number: string;
-  document_image_url: string;
-  status: string;
-  notes?: string;
-  verified_at?: string;
   created_at: string;
   updated_at: string;
 }

@@ -24,16 +24,6 @@ interface UserProfileProps {
   onKycComplete?: () => void;
 }
 
-interface KYCStatus {
-  status: 'pending' | 'approved' | 'rejected' | 'in_review' | 'not_started';
-  documents: {
-    id_document: boolean;
-    proof_of_address: boolean;
-    bank_statement: boolean;
-  };
-  last_updated?: string;
-}
-
 export default function UserProfile({ onKycComplete }: UserProfileProps) {
   const { user } = useAuth();
   const router = useRouter();
