@@ -36,18 +36,7 @@ CREATE TABLE IF NOT EXISTS clients (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- KYC Records table
-CREATE TABLE IF NOT EXISTS kyc_records (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
-    "documentType" VARCHAR(50) NOT NULL CHECK ("documentType" IN ('PERSONAL_INFO', 'PROOF_OF_ADDRESS', 'BANK_STATEMENT', 'ID_DOCUMENT')),
-    "documentUrl" VARCHAR(500) NOT NULL,
-    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
-    notes TEXT,
-    "verifiedAt" TIMESTAMP WITH TIME ZONE,
-    "createdAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    "updatedAt" TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+
 
 -- Investments table
 CREATE TABLE IF NOT EXISTS investments (
@@ -148,7 +137,7 @@ CREATE TABLE IF NOT EXISTS settings (
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_clients_user_id ON clients(user_id);
-CREATE INDEX IF NOT EXISTS idx_kyc_client_id ON kyc_records(client_id);
+
 CREATE INDEX IF NOT EXISTS idx_investments_client_id ON investments(client_id);
 CREATE INDEX IF NOT EXISTS idx_analytics_category ON analytics(category);
 CREATE INDEX IF NOT EXISTS idx_team_members_user_id ON team_members(user_id);
@@ -158,7 +147,7 @@ CREATE INDEX IF NOT EXISTS idx_partnerships_status ON partnerships(status);
 -- Row Level Security (RLS) Policies
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE clients ENABLE ROW LEVEL SECURITY;
-ALTER TABLE kyc_records ENABLE ROW LEVEL SECURITY;
+
 ALTER TABLE investments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE analytics ENABLE ROW LEVEL SECURITY;
 ALTER TABLE informational_requests ENABLE ROW LEVEL SECURITY;
@@ -177,8 +166,7 @@ CREATE POLICY "Clients can view own profile" ON clients
 CREATE POLICY "Clients can update own profile" ON clients
     FOR UPDATE USING (user_id = auth.uid());
 
-CREATE POLICY "Clients can view own KYC" ON kyc_records
-    FOR SELECT USING (client_id IN (SELECT id FROM clients WHERE user_id = auth.uid()));
+
 
 CREATE POLICY "Clients can view own investments" ON investments
     FOR SELECT USING (client_id IN (SELECT id FROM clients WHERE user_id = auth.uid()));
@@ -200,13 +188,7 @@ CREATE POLICY "Admins can view all clients" ON clients
         )
     );
 
-CREATE POLICY "Admins can view all KYC" ON kyc_records
-    FOR ALL USING (
-        EXISTS (
-            SELECT 1 FROM users 
-            WHERE id = auth.uid() AND role IN ('admin', 'superadmin')
-        )
-    );
+
 
 CREATE POLICY "Admins can view all investments" ON investments
     FOR ALL USING (

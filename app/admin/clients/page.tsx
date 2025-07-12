@@ -4,20 +4,19 @@ import { supabase } from '@/lib/supabase';
 
 interface Client {
   id: string;
-  first_name: string;
-  last_name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   phone: string;
-  date_of_birth?: string;
+  dateOfBirth?: string;
   nationality?: string;
-  kyc_status?: string;
   status: 'active' | 'inactive' | 'pending';
   created_at: string;
 }
 
 const emptyClient = (): Partial<Client> => ({
-  first_name: '',
-  last_name: '',
+  firstName: '',
+  lastName: '',
   email: '',
   phone: '',
   status: 'active',
@@ -80,8 +79,8 @@ export default function AdminClientsPage() {
     let res;
     if (isEdit && form.id) {
       res = await supabase.from('clients').update({
-        first_name: form.first_name,
-        last_name: form.last_name,
+        firstName: form.firstName,
+        lastName: form.lastName,
         email: form.email,
         phone: form.phone,
         status: form.status
@@ -89,8 +88,8 @@ export default function AdminClientsPage() {
     } else {
       res = await supabase.from('clients').insert([
         {
-          first_name: form.first_name,
-          last_name: form.last_name,
+          firstName: form.firstName,
+          lastName: form.lastName,
           email: form.email,
           phone: form.phone,
           status: form.status
@@ -140,7 +139,6 @@ export default function AdminClientsPage() {
                 <th style={thStyle}>Name</th>
                 <th style={thStyle}>Email</th>
                 <th style={thStyle}>Phone</th>
-                <th style={thStyle}>KYC Status</th>
                 <th style={thStyle}>Status</th>
                 <th style={thStyle}>Created</th>
                 <th style={thStyle}>Actions</th>
@@ -151,10 +149,10 @@ export default function AdminClientsPage() {
                 <tr key={client.id} style={{ background: '#fff', borderBottom: '1px solid #e5e7eb', transition: 'background 0.2s' }}>
                   <td style={tdStyle}>
                     <div>
-                      <strong>{client.first_name} {client.last_name}</strong>
-                      {client.date_of_birth && (
+                      <strong>{client.firstName} {client.lastName}</strong>
+                      {client.dateOfBirth && (
                         <div style={{ fontSize: 12, color: '#6b7280' }}>
-                          DOB: {new Date(client.date_of_birth).toLocaleDateString()}
+                          DOB: {new Date(client.dateOfBirth).toLocaleDateString()}
                         </div>
                       )}
                       {client.nationality && (
@@ -166,22 +164,6 @@ export default function AdminClientsPage() {
                   </td>
                   <td style={tdStyle}>{client.email}</td>
                   <td style={tdStyle}>{client.phone}</td>
-                  <td style={tdStyle}>
-                    <span style={{
-                      background: client.kyc_status === 'approved' ? '#bbf7d0' : 
-                                 client.kyc_status === 'rejected' ? '#fee2e2' : 
-                                 client.kyc_status === 'pending' ? '#fef3c7' : '#f3f4f6',
-                      color: client.kyc_status === 'approved' ? '#16a34a' : 
-                            client.kyc_status === 'rejected' ? '#dc2626' : 
-                            client.kyc_status === 'pending' ? '#b45309' : '#6b7280',
-                      borderRadius: 6,
-                      padding: '2px 10px',
-                      fontWeight: 700,
-                      fontSize: 12
-                    }}>
-                      {client.kyc_status || 'Not Started'}
-                    </span>
-                  </td>
                   <td style={tdStyle}>
                     <span style={{
                       background: client.status === 'active' ? '#bbf7d0' : 
