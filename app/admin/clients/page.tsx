@@ -225,8 +225,8 @@ export default function AdminClientsPage() {
                 </label>
                 <input
                   type="text"
-                  value={form.first_name || ''}
-                  onChange={(e) => setForm({ ...form, first_name: e.target.value })}
+                  value={form.firstName || ''}
+                  onChange={(e) => setForm({ ...form, firstName: e.target.value })}
                   required
                   style={inputStyle}
                 />
@@ -237,8 +237,8 @@ export default function AdminClientsPage() {
                 </label>
                 <input
                   type="text"
-                  value={form.last_name || ''}
-                  onChange={(e) => setForm({ ...form, last_name: e.target.value })}
+                  value={form.lastName || ''}
+                  onChange={(e) => setForm({ ...form, lastName: e.target.value })}
                   required
                   style={inputStyle}
                 />
