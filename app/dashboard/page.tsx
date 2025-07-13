@@ -608,12 +608,6 @@ export default function ClientDashboard() {
                         {pkg.duration} months
                       </div>
                     </div>
-                    <div>
-                      <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>Category</div>
-                      <div style={{ fontSize: '1.125rem', fontWeight: 700, color: '#1f2937' }}>
-                        {pkg.category}
-                      </div>
-                    </div>
                   </div>
                   
                   <button

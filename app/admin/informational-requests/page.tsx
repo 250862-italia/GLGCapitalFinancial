@@ -212,7 +212,7 @@ export default function InformationalRequestsPage() {
               Total: {requests.length}
             </span>
             <span style={{ fontWeight: 600, color: '#059669' }}>
-              Pending: {requests.filter(r => r.status === 'PENDING').length}
+              Pending: {requests.filter(r => r.status === 'pending').length}
             </span>
           </div>
         </div>
@@ -406,9 +406,9 @@ export default function InformationalRequestsPage() {
                     View
                   </button>
 
-                  {request.status === 'PENDING' && (
+                  {request.status === 'pending' && (
                     <button
-                      onClick={() => updateRequestStatus(request.id, 'PROCESSED')}
+                      onClick={() => updateRequestStatus(request.id, 'in_progress')}
                       style={{
                         background: '#059669',
                         color: 'white',
@@ -426,7 +426,7 @@ export default function InformationalRequestsPage() {
                     </button>
                   )}
 
-                  {request.status === 'PENDING' && (
+                  {request.status === 'pending' && (
                     <button
                       onClick={() => resendEmail(request)}
                       style={{
@@ -582,7 +582,7 @@ export default function InformationalRequestsPage() {
                     <div>
                       <label style={{ fontSize: '14px', color: '#6b7280' }}>Email Sent</label>
                       <div style={{ fontWeight: 500 }}>
-                        {selectedRequest.status !== 'PENDING' ? 'Yes' : 'No'}
+                        {selectedRequest.status !== 'pending' ? 'Yes' : 'No'}
                       </div>
                     </div>
                     <div>
@@ -591,7 +591,7 @@ export default function InformationalRequestsPage() {
                         {new Date(selectedRequest.created_at).toLocaleString()}
                       </div>
                     </div>
-                    {selectedRequest.updated_at && selectedRequest.status !== 'PENDING' && (
+                    {selectedRequest.updated_at && selectedRequest.status !== 'pending' && (
                       <div>
                         <label style={{ fontSize: '14px', color: '#6b7280' }}>Updated</label>
                         <div style={{ fontWeight: 500 }}>
@@ -624,10 +624,10 @@ export default function InformationalRequestsPage() {
                   >
                     Close
                   </button>
-                  {selectedRequest.status === 'PENDING' && (
+                  {selectedRequest.status === 'pending' && (
                     <button
                       onClick={() => {
-                        updateRequestStatus(selectedRequest.id, 'PROCESSED');
+                        updateRequestStatus(selectedRequest.id, 'in_progress');
                         setSelectedRequest(null);
                       }}
                       style={{
@@ -652,5 +652,4 @@ export default function InformationalRequestsPage() {
       </div>
     </AdminProtectedRoute>
   );
-} 
-} 
+}
