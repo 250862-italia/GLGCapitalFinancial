@@ -29,19 +29,36 @@ class RealtimeManager {
   private isInitialized = false;
 
   constructor() {
-    // Only initialize on client side
-    if (typeof window !== 'undefined') {
-      this.initializeConnection();
+    // Only initialize on client side and avoid SSR issues
+    if (typeof window !== 'undefined' && !process.env.NODE_ENV?.includes('test')) {
+      // Delay initialization to avoid blocking the main thread
+      setTimeout(() => {
+        this.initializeConnection();
+      }, 100);
     }
   }
 
   private async initializeConnection() {
-    if (this.isInitialized) return;
+    if (this.isInitialized || typeof window === 'undefined') return;
     
     try {
       this.isInitialized = true;
-      // Test connection
-      const { data, error } = await supabase.from('clients').select('count').limit(1);
+      
+      // Check if we have valid environment variables
+      if (!supabaseUrl || !supabaseAnonKey) {
+        console.warn('Supabase environment variables not configured');
+        this.isConnected = false;
+        return;
+      }
+      
+      // Test connection with timeout
+      const connectionPromise = supabase.from('clients').select('count').limit(1);
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Connection timeout')), 5000)
+      );
+      
+      const { data, error } = await Promise.race([connectionPromise, timeoutPromise]) as any;
+      
       if (error) {
         console.warn('Supabase connection test failed:', {
           message: error.message,
@@ -56,7 +73,7 @@ class RealtimeManager {
         console.log('Realtime manager connected to Supabase');
       }
     } catch (error: any) {
-      console.error('Failed to initialize realtime connection:', {
+      console.warn('Failed to initialize realtime connection:', {
         message: error.message,
         details: error.stack,
         hint: 'Check your environment variables and network connection',
