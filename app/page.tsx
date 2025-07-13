@@ -2,10 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
-import FinancialNews from '@/components/ui/FinancialNews'
-import StockTicker from '@/components/ui/StockTicker'
-import NotificationSystem from '@/components/ui/NotificationSystem'
 
 export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true)
@@ -23,33 +19,30 @@ export default function HomePage() {
         justifyContent: 'center', 
         alignItems: 'center', 
         minHeight: '60vh',
-        background: 'var(--background)'
+        background: '#f9fafb'
       }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{ 
             width: 50, 
             height: 50, 
-            border: '4px solid var(--accent)', 
+            border: '4px solid #0a2540', 
             borderTop: '4px solid transparent', 
             borderRadius: '50%', 
             animation: 'spin 1s linear infinite',
             margin: '0 auto 1rem'
           }}></div>
-          <p style={{ color: 'var(--foreground)', fontSize: 18 }}>Loading GLG Capital Group...</p>
+          <p style={{ color: '#1f2937', fontSize: 18 }}>Loading GLG Capital Group...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div style={{ background: 'var(--background)', minHeight: '100vh' }}>
-      {/* STOCK TICKER */}
-      <StockTicker />
-      
+    <div style={{ background: '#f9fafb', minHeight: '100vh' }}>
       {/* HERO SECTION */}
       <section style={{ 
-        background: 'linear-gradient(135deg, var(--primary) 0%, #1a3556 100%)', 
-        color: 'var(--secondary)', 
+        background: 'linear-gradient(135deg, #0a2540 0%, #1a3556 100%)', 
+        color: '#fff', 
         padding: '4rem 2rem', 
         textAlign: 'center',
         position: 'relative',
@@ -88,7 +81,7 @@ export default function HomePage() {
             fontSize: '1.4rem',
             fontWeight: 600,
             background: 'rgba(255,255,255,0.1)',
-            borderLeft: '6px solid var(--accent)',
+            borderLeft: '6px solid #f59e0b',
             borderRadius: 8,
             margin: '0 auto 2.5rem',
             padding: '2rem',
@@ -113,9 +106,9 @@ export default function HomePage() {
           </p>
           
           <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link href="/login" style={{
-              background: 'var(--accent)',
-              color: 'var(--primary)',
+            <Link href="/register" style={{
+              background: '#f59e0b',
+              color: '#0a2540',
               padding: '1rem 2rem',
               borderRadius: 8,
               textDecoration: 'none',
@@ -128,13 +121,13 @@ export default function HomePage() {
             </Link>
             <Link href="/contact" style={{
               background: 'transparent',
-              color: 'var(--secondary)',
+              color: '#fff',
               padding: '1rem 2rem',
               borderRadius: 8,
               textDecoration: 'none',
               fontWeight: 700,
               fontSize: '1.1rem',
-              border: '2px solid var(--secondary)',
+              border: '2px solid #fff',
               transition: 'all 0.3s ease'
             }}>
               Contact Us
@@ -144,10 +137,10 @@ export default function HomePage() {
       </section>
 
       {/* SERVICES SECTION */}
-      <section style={{ padding: '4rem 2rem', background: 'var(--background)' }}>
+      <section style={{ padding: '4rem 2rem', background: '#f9fafb' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
           <h2 style={{ 
-            color: 'var(--primary)', 
+            color: '#0a2540', 
             fontSize: '2.5rem', 
             fontWeight: 800, 
             marginBottom: '3rem',
@@ -162,7 +155,7 @@ export default function HomePage() {
             gap: '2rem' 
           }}>
             
-            {/* Service 1 - Grey */}
+            {/* Service 1 */}
             <div style={{ 
               background: '#f8f9fa', 
               padding: '2rem', 
@@ -172,7 +165,7 @@ export default function HomePage() {
               transition: 'transform 0.3s ease, box-shadow 0.3s ease'
             }}>
               <h3 style={{ 
-                color: 'var(--primary)', 
+                color: '#0a2540', 
                 fontSize: '1.4rem', 
                 fontWeight: 700, 
                 marginBottom: '1rem' 
@@ -180,7 +173,7 @@ export default function HomePage() {
                 Direct Business Structuring & Financing
               </h3>
               <ul style={{ 
-                color: 'var(--foreground)', 
+                color: '#1f2937', 
                 lineHeight: 1.6,
                 paddingLeft: '1.5rem'
               }}>
@@ -192,7 +185,7 @@ export default function HomePage() {
               </ul>
             </div>
 
-            {/* Service 2 - White */}
+            {/* Service 2 */}
             <div style={{ 
               background: '#ffffff', 
               padding: '2rem', 
@@ -202,26 +195,27 @@ export default function HomePage() {
               transition: 'transform 0.3s ease, box-shadow 0.3s ease'
             }}>
               <h3 style={{ 
-                color: 'var(--primary)', 
+                color: '#0a2540', 
                 fontSize: '1.4rem', 
                 fontWeight: 700, 
                 marginBottom: '1rem' 
               }}>
-                Valuation & Risk Management
+                Investment Management & Portfolio Services
               </h3>
               <ul style={{ 
-                color: 'var(--foreground)', 
+                color: '#1f2937', 
                 lineHeight: 1.6,
                 paddingLeft: '1.5rem'
               }}>
-                <li>Asset valuations and transfer appraisals</li>
-                <li>Due Diligence and Business Planner</li>
-                <li>Drafting and assisting in AP&C (Asset Adjustment and Capitalization)</li>
-                <li>Operational plans (Services to support AP&C)</li>
+                <li>Comprehensive investment portfolio management</li>
+                <li>Risk assessment and mitigation strategies</li>
+                <li>Market analysis and trend forecasting</li>
+                <li>Diversification and asset allocation</li>
+                <li>Performance monitoring and reporting</li>
               </ul>
             </div>
 
-            {/* Service 3 - Grey */}
+            {/* Service 3 */}
             <div style={{ 
               background: '#f8f9fa', 
               padding: '2rem', 
@@ -231,273 +225,68 @@ export default function HomePage() {
               transition: 'transform 0.3s ease, box-shadow 0.3s ease'
             }}>
               <h3 style={{ 
-                color: 'var(--primary)', 
+                color: '#0a2540', 
                 fontSize: '1.4rem', 
                 fontWeight: 700, 
                 marginBottom: '1rem' 
               }}>
-                Advisory & Asset Restructuring
+                Strategic Financial Consulting
               </h3>
               <ul style={{ 
-                color: 'var(--foreground)', 
+                color: '#1f2937', 
                 lineHeight: 1.6,
                 paddingLeft: '1.5rem'
               }}>
-                <li>Enhancement of Corporate and Intangible Assets</li>
-                <li>REOCO Structures Services</li>
-                <li>Real Estate and Real Estate portfolio management and strategy</li>
+                <li>Strategic financial planning and advisory</li>
+                <li>Mergers and acquisitions support</li>
+                <li>Capital raising and investor relations</li>
+                <li>Financial modeling and valuation</li>
+                <li>Regulatory compliance and governance</li>
               </ul>
             </div>
-
-            {/* Service 4 - White */}
-            <div style={{ 
-              background: '#ffffff', 
-              padding: '2rem', 
-              borderRadius: 12, 
-              boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
-              border: '1px solid #e2e8f0',
-              transition: 'transform 0.3s ease, box-shadow 0.3s ease'
-            }}>
-              <h3 style={{ 
-                color: 'var(--primary)', 
-                fontSize: '1.4rem', 
-                fontWeight: 700, 
-                marginBottom: '1rem' 
-              }}>
-                Investments Research & Assistance
-              </h3>
-              <ul style={{ 
-                color: 'var(--foreground)', 
-                lineHeight: 1.6,
-                paddingLeft: '1.5rem'
-              }}>
-                <li>Research and assistance for professional and qualified investors</li>
-                <li>Purchase and credit management services through qualified private banking investors and SGRs</li>
-              </ul>
-            </div>
-
-            {/* Service 5 - Grey */}
-            <div style={{ 
-              background: '#f8f9fa', 
-              padding: '2rem', 
-              borderRadius: 12, 
-              boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
-              border: '1px solid #e2e8f0',
-              transition: 'transform 0.3s ease, box-shadow 0.3s ease'
-            }}>
-              <h3 style={{ 
-                color: 'var(--primary)', 
-                fontSize: '1.4rem', 
-                fontWeight: 700, 
-                marginBottom: '1rem' 
-              }}>
-                Auction Real Estate Marketplace
-              </h3>
-              <ul style={{ 
-                color: 'var(--foreground)', 
-                lineHeight: 1.6,
-                paddingLeft: '1.5rem'
-              }}>
-                <li>Marketplace of credit assignment and real estate rights</li>
-              </ul>
-            </div>
-
-            {/* Service 6 - White (NEW) */}
-            <div style={{ 
-              background: '#ffffff', 
-              padding: '2rem', 
-              borderRadius: 12, 
-              boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
-              border: '1px solid #e2e8f0',
-              transition: 'transform 0.3s ease, box-shadow 0.3s ease'
-            }}>
-              <h3 style={{ 
-                color: 'var(--primary)', 
-                fontSize: '1.4rem', 
-                fontWeight: 700, 
-                marginBottom: '1rem' 
-              }}>
-                Digital Investment Platform
-              </h3>
-              <ul style={{ 
-                color: 'var(--foreground)', 
-                lineHeight: 1.6,
-                paddingLeft: '1.5rem'
-              }}>
-                <li>Advanced investment portfolio management</li>
-                <li>Real-time market analysis and insights</li>
-                <li>Automated investment strategies and rebalancing</li>
-                <li>Secure digital asset management and custody</li>
-                <li>24/7 platform access with mobile optimization</li>
-              </ul>
-            </div>
-
           </div>
         </div>
       </section>
 
-      {/* FINANCIAL NEWS SECTION */}
-      <section style={{ padding: '4rem 2rem', background: 'var(--accent)' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+      {/* CTA SECTION */}
+      <section style={{ 
+        background: 'linear-gradient(135deg, #1f2937 0%, #374151 100%)', 
+        color: '#fff', 
+        padding: '4rem 2rem', 
+        textAlign: 'center' 
+      }}>
+        <div style={{ maxWidth: 800, margin: '0 auto' }}>
           <h2 style={{ 
-            color: 'var(--primary)', 
             fontSize: '2.5rem', 
             fontWeight: 800, 
-            marginBottom: '3rem',
-            textAlign: 'center'
+            marginBottom: '1.5rem' 
           }}>
-            Latest Financial News
+            Ready to Start Your Investment Journey?
           </h2>
-          <FinancialNews />
+          <p style={{ 
+            fontSize: '1.2rem', 
+            lineHeight: 1.6,
+            marginBottom: '2rem',
+            opacity: 0.9
+          }}>
+            Join GLG Capital Group LLC and take control of your financial future with our expert guidance and innovative investment solutions.
+          </p>
+          <Link href="/register" style={{
+            background: '#f59e0b',
+            color: '#0a2540',
+            padding: '1rem 2rem',
+            borderRadius: 8,
+            textDecoration: 'none',
+            fontWeight: 700,
+            fontSize: '1.1rem',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+            transition: 'all 0.3s ease',
+            display: 'inline-block'
+          }}>
+            Start Investing Today
+          </Link>
         </div>
       </section>
-
-      {/* PARTNERS SECTION */}
-      <section style={{ padding: '4rem 2rem', background: 'var(--background)' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-          <h2 style={{ 
-            color: 'var(--primary)', 
-            fontSize: '2.5rem', 
-            fontWeight: 800, 
-            marginBottom: '3rem',
-            textAlign: 'center'
-          }}>
-            Our Italian Partners
-          </h2>
-          
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', 
-            gap: '2rem' 
-          }}>
-            
-            {/* Partner 1 - Grey */}
-            <div style={{ 
-              background: 'var(--secondary)', 
-              padding: '2rem', 
-              borderRadius: 12, 
-              boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
-              border: '1px solid #e2e8f0'
-            }}>
-              <h3 style={{ 
-                color: 'var(--primary)', 
-                fontSize: '1.4rem', 
-                fontWeight: 700, 
-                marginBottom: '1rem' 
-              }}>
-                Magnificus Dominus Consulting Europe Srl – Exclusive Partner for Italy
-              </h3>
-              <p style={{ 
-                color: 'var(--foreground)', 
-                lineHeight: 1.6,
-                marginBottom: '1rem'
-              }}>
-                GLG Capital Group has entrusted <strong>Magnificus Dominus Consulting Europe Srl</strong> with the exclusive management of its business operations in Italy. As a specialized firm in strategic development, consultancy, and high-value project management, Magnificus Dominus ensures the growth and consolidation of GLG's initiatives in the Italian market.
-              </p>
-              <p style={{ color: 'var(--foreground)', fontSize: '0.9rem' }}>
-                For more information: <strong>www.magnificusdominus.com</strong>
-              </p>
-            </div>
-
-            {/* Partner 2 - White */}
-            <div style={{ 
-              background: '#ffffff', 
-              padding: '2rem', 
-              borderRadius: 12, 
-              boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
-              border: '1px solid #e2e8f0'
-            }}>
-              <h3 style={{ 
-                color: 'var(--primary)', 
-                fontSize: '1.4rem', 
-                fontWeight: 700, 
-                marginBottom: '1rem' 
-              }}>
-                Wash The World – Innovating for a Plastic-Free Future
-              </h3>
-              <p style={{ 
-                color: 'var(--foreground)', 
-                lineHeight: 1.6,
-                marginBottom: '1rem'
-              }}>
-                Wash The World is a pioneering association dedicated to promoting plastic waste reduction by identifying and introducing <strong>innovative, sustainable products</strong> to the market. With a strong commitment to environmental awareness and practical solutions.
-              </p>
-              <p style={{ color: 'var(--foreground)', fontSize: '0.9rem' }}>
-                For more information: <strong>https://www.washtheworld.it</strong>
-              </p>
-            </div>
-
-            {/* Partner 3 - Grey */}
-            <div style={{ 
-              background: 'var(--secondary)', 
-              padding: '2rem', 
-              borderRadius: 12, 
-              boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
-              border: '1px solid #e2e8f0'
-            }}>
-              <h3 style={{ 
-                color: 'var(--primary)', 
-                fontSize: '1.4rem', 
-                fontWeight: 700, 
-                marginBottom: '1rem' 
-              }}>
-                Pentawash – The First Wash The World Approved Product
-              </h3>
-              <p style={{ 
-                color: 'var(--foreground)', 
-                lineHeight: 1.6,
-                marginBottom: '1rem'
-              }}>
-                Pentawash is the first <strong>Wash The World</strong> approved product, embodying our mission to reduce plastic waste through innovative and sustainable solutions. Designed to revolutionize laundry care.
-              </p>
-              <p style={{ color: 'var(--foreground)', fontSize: '0.9rem' }}>
-                For more information: <strong>www.pentawash.com</strong>
-              </p>
-            </div>
-
-            {/* Partner 4 - White */}
-            <div style={{ 
-              background: '#ffffff', 
-              padding: '2rem', 
-              borderRadius: 12, 
-              boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
-              border: '1px solid #e2e8f0'
-            }}>
-              <h3 style={{ 
-                color: 'var(--primary)', 
-                fontSize: '1.4rem', 
-                fontWeight: 700, 
-                marginBottom: '1rem' 
-              }}>
-                GreenTech Solutions – Sustainable Innovation Partner
-              </h3>
-              <p style={{ 
-                color: 'var(--foreground)', 
-                lineHeight: 1.6,
-                marginBottom: '1rem'
-              }}>
-                GreenTech Solutions specializes in <strong>sustainable technology and green investment opportunities</strong>. As a strategic partner, they provide innovative solutions for environmental challenges while creating profitable investment opportunities in the growing green economy sector.
-              </p>
-              <p style={{ color: 'var(--foreground)', fontSize: '0.9rem' }}>
-                For more information: <strong>www.greentech-solutions.eu</strong>
-              </p>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-
-
-      {/* NOTIFICATION SYSTEM */}
-      <NotificationSystem userId="guest" />
-      
-      <style jsx>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   )
 } 
