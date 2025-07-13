@@ -12,6 +12,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Debug: stampa tutte le variabili d'ambiente relative alle email
+    console.log('=== DEBUG EMAIL CONFIG ===');
+    console.log('EMAIL_SERVICE:', process.env.EMAIL_SERVICE);
+    console.log('RESEND_API_KEY exists:', !!process.env.RESEND_API_KEY);
+    console.log('RESEND_API_KEY length:', process.env.RESEND_API_KEY?.length);
+    console.log('RESEND_API_KEY preview:', process.env.RESEND_API_KEY?.substring(0, 10) + '...');
+    console.log('SENDGRID_API_KEY exists:', !!process.env.SENDGRID_API_KEY);
+    console.log('========================');
+
     // In produzione, leggi la configurazione dal database
     // Per ora usiamo le variabili d'ambiente
     const emailConfig = {
@@ -32,6 +41,10 @@ export async function POST(request: NextRequest) {
 
     // Prova Resend (gratuito per 100 email/mese)
     console.log('Tentativo invio con Resend...');
+    console.log('Service check:', emailConfig.service === 'resend');
+    console.log('API key check:', !!emailConfig.apiKey);
+    console.log('Both conditions:', emailConfig.service === 'resend' && emailConfig.apiKey);
+    
     if (emailConfig.service === 'resend' && emailConfig.apiKey) {
       console.log('Resend configurato, tentativo invio...');
       try {
@@ -63,7 +76,9 @@ export async function POST(request: NextRequest) {
     } else {
       console.log('Resend non configurato:', {
         service: emailConfig.service,
-        hasApiKey: !!emailConfig.apiKey
+        hasApiKey: !!emailConfig.apiKey,
+        serviceCheck: emailConfig.service === 'resend',
+        apiKeyCheck: !!emailConfig.apiKey
       });
     }
 
