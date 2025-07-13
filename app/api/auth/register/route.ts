@@ -310,6 +310,25 @@ export async function POST(request: NextRequest) {
     // Wait a moment to ensure the user is fully created in auth.users
     await new Promise(resolve => setTimeout(resolve, 2000));
 
+    // Insert user into users table first
+    const { error: userInsertError } = await supabase
+      .from('users')
+      .insert({
+        id: user.user.id,
+        email: user.user.email,
+        first_name: firstName,
+        last_name: lastName,
+        role: 'user',
+        is_active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
+
+    if (userInsertError) {
+      console.error('Error inserting user into users table:', userInsertError);
+      // Continue anyway, the user exists in auth
+    }
+
     // Create client profile with retry mechanism
     const client = await createClientProfile(user.user.id, firstName, lastName, country);
 

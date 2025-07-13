@@ -9,32 +9,61 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function GET() {
   try {
-    const { data, error } = await supabase
+    // First get all clients without join to avoid RLS recursion
+    const { data: clients, error: clientsError } = await supabase
       .from('clients')
-      .select(`
-        *,
-        users!inner(email, first_name, last_name, role, isActive, lastLogin)
-      `)
-      .order('createdAt', { ascending: false });
+      .select('*')
+      .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('Error fetching clients:', error);
+    if (clientsError) {
+      console.error('Error fetching clients:', clientsError);
       return NextResponse.json({ error: 'Failed to fetch clients' }, { status: 500 });
     }
 
-    // Transform data to match expected format
-    const transformedData = data?.map(client => ({
-      id: client.id,
-      first_name: client.first_name || client.users?.first_name,
-      last_name: client.last_name || client.users?.last_name,
-      email: client.email,
-      phone: client.phone,
-      dateOfBirth: client.date_of_birth,
-      nationality: client.nationality,
+    // Then get users separately
+    const { data: users, error: usersError } = await supabase
+      .from('users')
+      .select('id, email, first_name, last_name, role, is_active, last_login')
+      .in('id', clients?.map(c => c.user_id) || []);
 
+    if (usersError) {
+      console.error('Error fetching users:', usersError);
+      return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });
+    }
+
+    // Combine the data
+    const userMap = new Map(users?.map(u => [u.id, u]) || []);
+    const data = clients?.map(client => ({
+      ...client,
+      user: userMap.get(client.user_id)
+    })) || [];
+
+    // Trasformo i dati per includere tutti i campi
+    const transformedData = data?.map(client => ({
+      // Campi da clients
+      id: client.id,
+      user_id: client.user_id,
+      first_name: client.first_name,
+      last_name: client.last_name,
+      phone: client.phone,
+      date_of_birth: client.date_of_birth,
+      nationality: client.nationality,
+      address: client.address,
+      city: client.city,
+      country: client.country,
+      postal_code: client.postal_code,
+      profile_photo: client.profile_photo,
+      banking_details: client.banking_details,
+      created_at: client.created_at,
+      updated_at: client.updated_at,
       status: client.status,
-      createdAt: client.created_at,
-      user: client.users
+      // Campi da users
+      email: client.user?.email,
+      user_role: client.user?.role,
+      is_active: client.user?.is_active,
+      last_login: client.user?.last_login,
+      user_created_at: client.user?.created_at,
+      user_updated_at: client.user?.updated_at
     })) || [];
 
     return NextResponse.json(transformedData);
