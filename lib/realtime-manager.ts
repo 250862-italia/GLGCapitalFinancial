@@ -373,7 +373,53 @@ class RealtimeManager {
 }
 
 // Create singleton instance
-export const realtimeManager = new RealtimeManager();
+let realtimeManagerInstance: RealtimeManager | null = null;
+
+export const getRealtimeManager = (): RealtimeManager => {
+  if (!realtimeManagerInstance && typeof window !== 'undefined') {
+    realtimeManagerInstance = new RealtimeManager();
+  }
+  return realtimeManagerInstance!;
+};
+
+export const realtimeManager = {
+  subscribe: (...args: Parameters<RealtimeManager['subscribe']>) => {
+    const manager = getRealtimeManager();
+    return manager.subscribe(...args);
+  },
+  subscribeToUserEvents: (...args: Parameters<RealtimeManager['subscribeToUserEvents']>) => {
+    const manager = getRealtimeManager();
+    return manager.subscribeToUserEvents(...args);
+  },
+  subscribeToInvestments: (...args: Parameters<RealtimeManager['subscribeToInvestments']>) => {
+    const manager = getRealtimeManager();
+    return manager.subscribeToInvestments(...args);
+  },
+  subscribeToNotifications: (...args: Parameters<RealtimeManager['subscribeToNotifications']>) => {
+    const manager = getRealtimeManager();
+    return manager.subscribeToNotifications(...args);
+  },
+  subscribeToAdminEvents: (...args: Parameters<RealtimeManager['subscribeToAdminEvents']>) => {
+    const manager = getRealtimeManager();
+    return manager.subscribeToAdminEvents(...args);
+  },
+  sendEvent: (...args: Parameters<RealtimeManager['sendEvent']>) => {
+    const manager = getRealtimeManager();
+    return manager.sendEvent(...args);
+  },
+  cleanup: () => {
+    if (realtimeManagerInstance) {
+      realtimeManagerInstance.cleanup();
+      realtimeManagerInstance = null;
+    }
+  },
+  getConnectionStatus: () => {
+    if (!realtimeManagerInstance) {
+      return { connected: false, subscriptions: 0, events: 0 };
+    }
+    return realtimeManagerInstance.getConnectionStatus();
+  }
+};
 
 // Cleanup on page unload
 if (typeof window !== 'undefined') {
