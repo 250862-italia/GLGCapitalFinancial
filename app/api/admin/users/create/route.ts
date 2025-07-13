@@ -1,57 +1,66 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { localAuthService } from '../../../../../lib/auth-local';
+import { supabaseAdmin } from '@/lib/supabase';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, name, password, role } = body;
+    const { email, password, role, name, phone } = body;
 
-    // Validate input
-    if (!email || !name || !password || !role) {
-      return NextResponse.json({
-        success: false,
-        error: 'All fields are required'
-      }, { status: 400 });
+    if (!email || !password || !role) {
+      return NextResponse.json(
+        { error: 'Email, password, and role are required' },
+        { status: 400 }
+      );
     }
 
-    // Validate role
-    if (role !== 'admin' && role !== 'superadmin') {
-      return NextResponse.json({
-        success: false,
-        error: 'Invalid role. Must be admin or superadmin'
-      }, { status: 400 });
+    // Create user in Supabase Auth
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true
+    });
+
+    if (authError) {
+      throw new Error(`Failed to create user: ${authError.message}`);
     }
 
-    // Check if user already exists
-    const existingUser = await localAuthService.getUserByEmail(email);
-    if (existingUser) {
-      return NextResponse.json({
-        success: false,
-        error: 'User with this email already exists'
-      }, { status: 400 });
+    // Create profile in profiles table
+    const { data: profileData, error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .insert([{
+        id: authData.user.id,
+        email,
+        full_name: name || '',
+        phone: phone || '',
+        role: role,
+        status: 'active',
+        email_verified: true
+      }])
+      .select()
+      .single();
+
+    if (profileError) {
+      // If profile creation fails, delete the auth user
+      await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
+      throw new Error(`Failed to create profile: ${profileError.message}`);
     }
 
-    // Create new admin user
-    const result = await localAuthService.createAdminUser(email, password, name, role);
-
-    if (result.success) {
-      return NextResponse.json({
-        success: true,
-        message: 'Admin user created successfully',
-        user: result.user
-      }, { status: 201 });
-    } else {
-      return NextResponse.json({
-        success: false,
-        error: result.error || 'Failed to create admin user'
-      }, { status: 400 });
-    }
-
-  } catch (error) {
-    console.error('Error creating admin user:', error);
     return NextResponse.json({
-      success: false,
-      error: 'Internal server error'
-    }, { status: 500 });
+      success: true,
+      user: {
+        id: authData.user.id,
+        email: authData.user.email,
+        role: profileData.role,
+        name: profileData.full_name,
+        phone: profileData.phone,
+        status: profileData.status
+      }
+    });
+  } catch (error: any) {
+    console.error('Error creating user:', error);
+    return NextResponse.json(
+      { error: error.message || 'Failed to create user' },
+      { status: 500 }
+    );
   }
 } 

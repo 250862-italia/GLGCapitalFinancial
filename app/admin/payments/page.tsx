@@ -1,7 +1,8 @@
 "use client";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+
+export const dynamic = "force-dynamic";
 import { DollarSign, CreditCard, Building2, CheckCircle, XCircle, Clock, TrendingUp, Download, Eye, AlertCircle, Calendar, Edit, Plus, Trash2, Search, Users } from 'lucide-react';
-import { usePackages } from '@/lib/package-context';
 
 interface Payment {
   id: string;
@@ -20,7 +21,24 @@ interface Payment {
 }
 
 export default function PaymentsManagementPage() {
-  const { packages } = usePackages();
+  const [packages, setPackages] = useState<any[]>([]);
+  
+  // Load packages on client side
+  useEffect(() => {
+    const loadPackages = async () => {
+      try {
+        const response = await fetch('/api/admin/packages');
+        if (response.ok) {
+          const data = await response.json();
+          setPackages(data);
+        }
+      } catch (error) {
+        console.error('Failed to load packages:', error);
+      }
+    };
+    
+    loadPackages();
+  }, []);
   
   const [payments, setPayments] = useState<Payment[]>([
     {

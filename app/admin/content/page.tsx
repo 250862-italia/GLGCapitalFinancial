@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+
+export const dynamic = "force-dynamic";
 import { supabase } from '@/lib/supabase';
 
 interface ContentItem {

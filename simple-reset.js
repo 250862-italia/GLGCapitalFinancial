@@ -98,7 +98,7 @@ rl.question('Sei sicuro di voler procedere? (scrivi "RESET" per confermare): ', 
   console.log('2. Se necessario, configura le variabili d\'ambiente in .env');
   console.log('3. Se il database Supabase non è accessibile, considera:');
   console.log('   - Creare un nuovo progetto Supabase');
-  console.log('   - Aggiornare le credenziali in lib/supabase-config.ts');
+  console.log('   - Aggiornare le credenziali in .env.local');
   console.log('   - Eseguire gli script di setup del database');
 
   rl.close();
