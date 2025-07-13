@@ -23,12 +23,6 @@ function LoadingFallback() {
         }}></div>
         <p>Loading GLG Capital Group...</p>
       </div>
-      <style jsx>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   );
 }
@@ -131,12 +125,6 @@ function HomePageContent() {
             fontSize: '1.1rem',
             transition: 'all 0.3s ease',
             border: '1px solid rgba(255, 255, 255, 0.3)'
-          }}
-          onMouseOver={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
           }}>
             Get Started
           </a>
@@ -151,12 +139,6 @@ function HomePageContent() {
             fontSize: '1.1rem',
             transition: 'all 0.3s ease',
             border: '1px solid rgba(255, 255, 255, 0.2)'
-          }}
-          onMouseOver={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
           }}>
             Learn More
           </a>
