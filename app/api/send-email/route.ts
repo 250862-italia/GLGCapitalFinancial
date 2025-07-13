@@ -17,13 +17,23 @@ export async function POST(request: NextRequest) {
     const emailConfig = {
       service: process.env.EMAIL_SERVICE || 'resend',
       apiKey: process.env.RESEND_API_KEY || process.env.SENDGRID_API_KEY,
-      fromEmail: process.env.EMAIL_FROM || 'noreply@glgcapitalgroupllc.com'
+      // Forza sempre il mittente corretto
+      fromEmail: 'noreply@glgcapitalgroupllc.com'
     };
+
+    console.log('Email config:', {
+      service: emailConfig.service,
+      hasApiKey: !!emailConfig.apiKey,
+      apiKeyLength: emailConfig.apiKey?.length,
+      fromEmail: emailConfig.fromEmail
+    });
 
     let emailSent = false;
 
     // Prova Resend (gratuito per 100 email/mese)
+    console.log('Tentativo invio con Resend...');
     if (emailConfig.service === 'resend' && emailConfig.apiKey) {
+      console.log('Resend configurato, tentativo invio...');
       try {
         const resendResponse = await fetch('https://api.resend.com/emails', {
           method: 'POST',
@@ -39,6 +49,7 @@ export async function POST(request: NextRequest) {
           }),
         });
 
+        console.log('Risposta Resend status:', resendResponse.status);
         if (resendResponse.ok) {
           emailSent = true;
           console.log('Email inviata con Resend');
@@ -49,6 +60,11 @@ export async function POST(request: NextRequest) {
       } catch (error) {
         console.error('Errore connessione Resend:', error);
       }
+    } else {
+      console.log('Resend non configurato:', {
+        service: emailConfig.service,
+        hasApiKey: !!emailConfig.apiKey
+      });
     }
 
     // Prova SendGrid (fallback)
