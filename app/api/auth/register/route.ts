@@ -328,10 +328,10 @@ export async function POST(request: NextRequest) {
     // Return mock registration response in case of unexpected errors
     const mockUser = {
       id: `mock-${Date.now()}`,
-      email: body?.email || 'unknown',
+      email: 'unknown',
       user_metadata: {
-        first_name: body?.firstName || '',
-        last_name: body?.lastName || '',
+        first_name: '',
+        last_name: '',
         role: 'user'
       }
     };
@@ -339,9 +339,9 @@ export async function POST(request: NextRequest) {
     const mockClient = {
       id: `mock-${Date.now()}`,
       user_id: mockUser.id,
-      first_name: body?.firstName || '',
-      last_name: body?.lastName || '',
-      country: body?.country || '',
+      first_name: '',
+      last_name: '',
+      country: '',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };

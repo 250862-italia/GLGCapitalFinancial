@@ -1,21 +1,7 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { 
-  FileText, 
-  Image, 
-  Video, 
-  Globe, 
-  Edit, 
-  Trash2, 
-  Plus,
-  Eye,
-  Calendar,
-  User,
-  ExternalLink,
-  Search,
-  Filter
-} from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 
 interface ContentItem {
   id: string;
@@ -28,11 +14,11 @@ interface ContentItem {
   views: number;
   content: string;
   tags: string[];
+  created_at: string;
+  updated_at: string;
   featured_image_url?: string;
   meta_description?: string;
   seo_keywords?: string;
-  created_at: string;
-  updated_at: string;
 }
 
 export default function AdminContentPage() {
@@ -43,8 +29,6 @@ export default function AdminContentPage() {
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showViewModal, setShowViewModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState<ContentItem | null>(null);
   const [formData, setFormData] = useState({
     title: '',
@@ -57,7 +41,8 @@ export default function AdminContentPage() {
     meta_description: '',
     seo_keywords: ''
   });
-  const [isUsingMockData, setIsUsingMockData] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadContent();
@@ -68,139 +53,24 @@ export default function AdminContentPage() {
   }, [content, searchTerm, selectedType, selectedStatus]);
 
   const loadContent = async () => {
+    setIsLoading(true);
+    setError(null);
     try {
-      const response = await fetch('/api/admin/content');
-      if (response.ok) {
-        const data = await response.json();
-        setContent(data);
-        setIsUsingMockData(false);
-      } else {
-        console.error('Failed to load content');
-        setIsUsingMockData(true);
-        // Fallback to mock data if API fails
-        const mockData: ContentItem[] = [
-          {
-            id: '1',
-            title: 'GLG Capital Group Q1 2024 Financial Report',
-            type: 'article',
-            status: 'published',
-            author: 'John Smith',
-            publish_date: '2024-01-15',
-            last_modified: '2024-01-15T00:00:00Z',
-            views: 1247,
-            content: 'Comprehensive analysis of GLG Capital Group performance in Q1 2024...',
-            tags: ['financial', 'report', 'Q1-2024'],
-            created_at: '2024-01-15T00:00:00Z',
-            updated_at: '2024-01-15T00:00:00Z'
-          },
-          {
-            id: '2',
-            title: 'New Partnership with European Investment Bank',
-            type: 'partnership',
-            status: 'published',
-            author: 'Maria Garcia',
-            publish_date: '2024-01-12',
-            last_modified: '2024-01-12T00:00:00Z',
-            views: 892,
-            content: 'GLG Capital Group announces strategic partnership with European Investment Bank...',
-            tags: ['partnership', 'europe', 'investment'],
-            created_at: '2024-01-12T00:00:00Z',
-            updated_at: '2024-01-12T00:00:00Z'
-          },
-          {
-            id: '3',
-            title: 'Market Analysis: Tech Sector Trends',
-            type: 'market',
-            status: 'draft',
-            author: 'David Chen',
-            publish_date: null,
-            last_modified: '2024-01-14T00:00:00Z',
-            views: 0,
-            content: 'Analysis of current trends in the technology sector and investment opportunities...',
-            tags: ['market', 'tech', 'analysis'],
-            created_at: '2024-01-14T00:00:00Z',
-            updated_at: '2024-01-14T00:00:00Z'
-          },
-          {
-            id: '4',
-            title: 'Investment Opportunities in Renewable Energy',
-            type: 'news',
-            status: 'archived',
-            author: 'Sarah Johnson',
-            publish_date: '2023-12-20',
-            last_modified: '2023-12-20T00:00:00Z',
-            views: 2156,
-            content: 'Exploring investment opportunities in the growing renewable energy sector...',
-            tags: ['renewable', 'energy', 'investment'],
-            created_at: '2023-12-20T00:00:00Z',
-            updated_at: '2023-12-20T00:00:00Z'
-          }
-        ];
-        setContent(mockData);
+      const { data, error } = await supabase
+        .from('content')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        throw new Error(`Failed to load content: ${error.message}`);
       }
-    } catch (error) {
-      console.error('Error loading content:', error);
-      setIsUsingMockData(true);
-      // Fallback to mock data if API fails
-      const mockData: ContentItem[] = [
-        {
-          id: '1',
-          title: 'GLG Capital Group Q1 2024 Financial Report',
-          type: 'article',
-          status: 'published',
-          author: 'John Smith',
-          publish_date: '2024-01-15',
-          last_modified: '2024-01-15T00:00:00Z',
-          views: 1247,
-          content: 'Comprehensive analysis of GLG Capital Group performance in Q1 2024...',
-          tags: ['financial', 'report', 'Q1-2024'],
-          created_at: '2024-01-15T00:00:00Z',
-          updated_at: '2024-01-15T00:00:00Z'
-        },
-        {
-          id: '2',
-          title: 'New Partnership with European Investment Bank',
-          type: 'partnership',
-          status: 'published',
-          author: 'Maria Garcia',
-          publish_date: '2024-01-12',
-          last_modified: '2024-01-12T00:00:00Z',
-          views: 892,
-          content: 'GLG Capital Group announces strategic partnership with European Investment Bank...',
-          tags: ['partnership', 'europe', 'investment'],
-          created_at: '2024-01-12T00:00:00Z',
-          updated_at: '2024-01-12T00:00:00Z'
-        },
-        {
-          id: '3',
-          title: 'Market Analysis: Tech Sector Trends',
-          type: 'market',
-          status: 'draft',
-          author: 'David Chen',
-          publish_date: null,
-          last_modified: '2024-01-14T00:00:00Z',
-          views: 0,
-          content: 'Analysis of current trends in the technology sector and investment opportunities...',
-          tags: ['market', 'tech', 'analysis'],
-          created_at: '2024-01-14T00:00:00Z',
-          updated_at: '2024-01-14T00:00:00Z'
-        },
-        {
-          id: '4',
-          title: 'Investment Opportunities in Renewable Energy',
-          type: 'news',
-          status: 'archived',
-          author: 'Sarah Johnson',
-          publish_date: '2023-12-20',
-          last_modified: '2023-12-20T00:00:00Z',
-          views: 2156,
-          content: 'Exploring investment opportunities in the growing renewable energy sector...',
-          tags: ['renewable', 'energy', 'investment'],
-          created_at: '2023-12-20T00:00:00Z',
-          updated_at: '2023-12-20T00:00:00Z'
-        }
-      ];
-      setContent(mockData);
+
+      setContent(data || []);
+    } catch (err: any) {
+      console.error('Error loading content:', err);
+      setError(err.message || 'Failed to load content');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -257,725 +127,389 @@ export default function AdminContentPage() {
     setShowEditModal(true);
   };
 
-  const handleDelete = (item: ContentItem) => {
-    setSelectedItem(item);
-    setShowDeleteModal(true);
-  };
-
-  const handleView = (item: ContentItem) => {
-    setSelectedItem(item);
-    setShowViewModal(true);
-  };
-
-  const saveContent = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
-      if (showEditModal && selectedItem) {
-        // Update existing item
-        const response = await fetch('/api/admin/content', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            id: selectedItem.id,
-            ...formData
-          })
-        });
+      const contentData = {
+        ...formData,
+        publish_date: formData.status === 'published' ? new Date().toISOString() : null,
+        last_modified: new Date().toISOString(),
+        views: 0
+      };
 
-        if (response.ok) {
-          const updatedItem = await response.json();
-          setContent(content.map(item =>
-            item.id === selectedItem.id ? updatedItem : item
-          ));
-        } else {
-          console.error('Failed to update content');
-          return;
+      if (showAddModal) {
+        const { error } = await supabase
+          .from('content')
+          .insert([contentData]);
+
+        if (error) {
+          throw new Error(`Failed to create content: ${error.message}`);
         }
-      } else {
-        // Add new item
-        const response = await fetch('/api/admin/content', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData)
-        });
+      } else if (showEditModal && selectedItem) {
+        const { error } = await supabase
+          .from('content')
+          .update(contentData)
+          .eq('id', selectedItem.id);
 
-        if (response.ok) {
-          const newItem = await response.json();
-          setContent([newItem, ...content]);
-        } else {
-          console.error('Failed to create content');
-          return;
+        if (error) {
+          throw new Error(`Failed to update content: ${error.message}`);
         }
       }
-      
+
+      await loadContent();
       setShowAddModal(false);
       setShowEditModal(false);
       setSelectedItem(null);
-    } catch (error) {
-      console.error('Error saving content:', error);
+    } catch (err: any) {
+      console.error('Error saving content:', err);
+      setError(err.message || 'Failed to save content');
     }
   };
 
-  const confirmDelete = async () => {
-    if (selectedItem) {
-      try {
-        const response = await fetch(`/api/admin/content?id=${selectedItem.id}`, {
-          method: 'DELETE'
-        });
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this content item?')) {
+      return;
+    }
 
-        if (response.ok) {
-          setContent(content.filter(item => item.id !== selectedItem.id));
-        } else {
-          console.error('Failed to delete content');
-        }
-      } catch (error) {
-        console.error('Error deleting content:', error);
+    try {
+      const { error } = await supabase
+        .from('content')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        throw new Error(`Failed to delete content: ${error.message}`);
       }
-      
-      setShowDeleteModal(false);
-      setSelectedItem(null);
+
+      await loadContent();
+    } catch (err: any) {
+      console.error('Error deleting content:', err);
+      setError(err.message || 'Failed to delete content');
     }
   };
 
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'article': return <FileText size={16} />;
-      case 'news': return <Globe size={16} />;
-      case 'market': return <Image size={16} />;
-      case 'partnership': return <Video size={16} />;
-      default: return <FileText size={16} />;
-    }
+  const handleTagChange = (tags: string) => {
+    const tagArray = tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
+    setFormData({ ...formData, tags: tagArray });
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'published': return { bg: '#dcfce7', color: '#166534' };
-      case 'draft': return { bg: '#fef3c7', color: '#92400e' };
-      case 'archived': return { bg: '#f3f4f6', color: '#374151' };
-      default: return { bg: '#f3f4f6', color: '#374151' };
-    }
-  };
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
-  const contentTypes = ['article', 'news', 'market', 'partnership'];
-  const statusOptions = ['published', 'draft', 'archived'];
-
-  return (
-    <div style={{ padding: '2rem', background: '#f9fafb', minHeight: '100vh' }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-        
-        {isUsingMockData && (
-          <div style={{
-            background: '#fef3c7',
-            border: '1px solid #f59e0b',
-            borderRadius: '8px',
-            padding: '1rem',
-            marginBottom: '2rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem'
-          }}>
-            <span style={{ fontSize: '1.2rem' }}>⚠️</span>
-            <div>
-              <strong style={{ color: '#92400e' }}>Development Mode</strong>
-              <p style={{ margin: '0.25rem 0 0 0', color: '#92400e', fontSize: '0.9rem' }}>
-                Showing mock data due to database connection issues. CRUD operations are simulated.
-              </p>
-            </div>
-          </div>
-        )}
-        
-        {/* Header */}
-        <div style={{ marginBottom: '2rem' }}>
-          <h1 style={{ 
-            color: '#1a2238', 
-            fontSize: '2.5rem', 
-            fontWeight: 800, 
-            marginBottom: '0.5rem' 
-          }}>
-            Content Management
-          </h1>
-          <p style={{ color: '#64748b', fontSize: '1.1rem' }}>
-            Manage all website content, pages, and media
-          </p>
-        </div>
-
-        {/* Quick Navigation */}
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
-          gap: '1rem',
-          marginBottom: '2rem'
-        }}>
-          <a href="/admin/content/news" style={{
-            display: 'flex',
-            alignItems: 'center',
-            padding: '1rem',
-            background: '#fff',
-            borderRadius: 8,
-            textDecoration: 'none',
-            color: '#1a2238',
-            border: '1px solid #e2e8f0',
-            transition: 'all 0.2s'
-          }}>
-            <Globe size={20} style={{ marginRight: '0.5rem' }} />
-            <span>News Management</span>
-            <ExternalLink size={16} style={{ marginLeft: 'auto', color: '#64748b' }} />
-          </a>
-          
-          <a href="/admin/content/markets" style={{
-            display: 'flex',
-            alignItems: 'center',
-            padding: '1rem',
-            background: '#fff',
-            borderRadius: 8,
-            textDecoration: 'none',
-            color: '#1a2238',
-            border: '1px solid #e2e8f0',
-            transition: 'all 0.2s'
-          }}>
-            <Image size={20} style={{ marginRight: '0.5rem' }} />
-            <span>Markets Content</span>
-            <ExternalLink size={16} style={{ marginLeft: 'auto', color: '#64748b' }} />
-          </a>
-          
-          <a href="/admin/content/partnership" style={{
-            display: 'flex',
-            alignItems: 'center',
-            padding: '1rem',
-            background: '#fff',
-            borderRadius: 8,
-            textDecoration: 'none',
-            color: '#1a2238',
-            border: '1px solid #e2e8f0',
-            transition: 'all 0.2s'
-          }}>
-            <Video size={20} style={{ marginRight: '0.5rem' }} />
-            <span>Partnership Content</span>
-            <ExternalLink size={16} style={{ marginLeft: 'auto', color: '#64748b' }} />
-          </a>
-        </div>
-
-        {/* Search and Filter */}
-        <div style={{ 
-          display: 'flex', 
-          gap: '1rem', 
-          marginBottom: '2rem',
-          flexWrap: 'wrap'
-        }}>
-          <div style={{ flex: 1, minWidth: 300 }}>
-            <div style={{ position: 'relative' }}>
-              <Search size={20} style={{ 
-                position: 'absolute', 
-                left: '12px', 
-                top: '50%', 
-                transform: 'translateY(-50%)', 
-                color: '#64748b' 
-              }} />
-              <input
-                type="text"
-                placeholder="Search content..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem 1rem 0.75rem 2.5rem',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: 8,
-                  fontSize: '1rem',
-                  background: '#fff'
-                }}
-              />
-            </div>
-          </div>
-          
-          <select
-            value={selectedType}
-            onChange={(e) => setSelectedType(e.target.value)}
-            style={{
-              padding: '0.75rem 1rem',
-              border: '1px solid #e2e8f0',
-              borderRadius: 8,
-              fontSize: '1rem',
-              background: '#fff',
-              minWidth: 150
-            }}
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Error</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
           >
-            <option value="all">All Types</option>
-            {contentTypes.map(type => (
-              <option key={type} value={type}>{type.charAt(0).toUpperCase() + type.slice(1)}</option>
-            ))}
-          </select>
-          
-          <select
-            value={selectedStatus}
-            onChange={(e) => setSelectedStatus(e.target.value)}
-            style={{
-              padding: '0.75rem 1rem',
-              border: '1px solid #e2e8f0',
-              borderRadius: 8,
-              fontSize: '1rem',
-              background: '#fff',
-              minWidth: 150
-            }}
-          >
-            <option value="all">All Status</option>
-            {statusOptions.map(status => (
-              <option key={status} value={status}>{status.charAt(0).toUpperCase() + status.slice(1)}</option>
-            ))}
-          </select>
-          
-          <button style={{
-            display: 'flex',
-            alignItems: 'center',
-            padding: '0.75rem 1.5rem',
-            background: '#1a2238',
-            color: '#fff',
-            border: 'none',
-            borderRadius: 8,
-            fontSize: '1rem',
-            fontWeight: 600,
-            cursor: 'pointer',
-            transition: 'background 0.2s'
-          }}>
-            <Plus size={16} style={{ marginRight: '0.5rem' }} />
-            New Content
+            Retry
           </button>
         </div>
+      </div>
+    );
+  }
 
-        {/* Content List */}
-        <div style={{ 
-          background: '#fff', 
-          borderRadius: 12, 
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          border: '1px solid #e2e8f0',
-          overflow: 'hidden'
-        }}>
-          
-          {/* Table Header */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr',
-            gap: '1rem',
-            padding: '1rem 1.5rem',
-            background: '#f8fafc',
-            borderBottom: '1px solid #e2e8f0',
-            fontWeight: 600,
-            color: '#374151'
-          }}>
-            <div>Title</div>
-            <div>Type</div>
-            <div>Status</div>
-            <div>Author</div>
-            <div>Last Modified</div>
-            <div>Actions</div>
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-gray-900">Content Management</h1>
+        <button
+          onClick={handleAdd}
+          className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          Add Content
+        </button>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div className="flex flex-wrap gap-4 items-center">
+          <div className="flex items-center space-x-2">
+            <label className="text-sm font-medium text-gray-700">Search:</label>
+            <input
+              type="text"
+              placeholder="Search content..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="border border-gray-300 rounded-md px-3 py-1 text-sm w-64"
+            />
           </div>
 
-          {/* Table Rows */}
-          {filteredContent.map((item) => (
-            <div key={item.id} style={{
-              display: 'grid',
-              gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr',
-              gap: '1rem',
-              padding: '1rem 1.5rem',
-              borderBottom: '1px solid #f1f5f9',
-              alignItems: 'center'
-            }}>
-              <div>
-                <div style={{ fontWeight: 600, color: '#1a2238', marginBottom: '0.25rem' }}>
-                  {item.title}
-                </div>
-                <div style={{ fontSize: '0.875rem', color: '#64748b' }}>
-                  {item.views != null ? item.views.toLocaleString() : '-'} views
-                </div>
-              </div>
-              
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                {getTypeIcon(item.type)}
-                <span style={{ marginLeft: '0.5rem', textTransform: 'capitalize' }}>
-                  {item.type}
-                </span>
-              </div>
-              
-              <div>
-                <span style={{
-                  padding: '0.25rem 0.75rem',
-                  borderRadius: 20,
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  textTransform: 'uppercase',
-                  background: `${getStatusColor(item.status).bg}20`,
-                  color: getStatusColor(item.status).color
-                }}>
-                  {item.status}
-                </span>
-              </div>
-              
-              <div style={{ color: '#64748b' }}>
-                {item.author}
-              </div>
-              
-              <div style={{ color: '#64748b', fontSize: '0.875rem' }}>
-                {new Date(item.last_modified).toLocaleDateString()}
-              </div>
-              
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button style={{
-                  padding: '0.5rem',
-                  background: '#f1f5f9',
-                  border: 'none',
-                  borderRadius: 6,
-                  cursor: 'pointer',
-                  color: '#64748b'
-                }}>
-                  <Eye size={16} />
-                </button>
-                <button style={{
-                  padding: '0.5rem',
-                  background: '#f1f5f9',
-                  border: 'none',
-                  borderRadius: 6,
-                  cursor: 'pointer',
-                  color: '#64748b'
-                }}>
-                  <Edit size={16} />
-                </button>
-                <button style={{
-                  padding: '0.5rem',
-                  background: '#fef2f2',
-                  border: 'none',
-                  borderRadius: 6,
-                  cursor: 'pointer',
-                  color: '#dc2626'
-                }}>
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+          <div className="flex items-center space-x-2">
+            <label className="text-sm font-medium text-gray-700">Type:</label>
+            <select
+              value={selectedType}
+              onChange={(e) => setSelectedType(e.target.value)}
+              className="border border-gray-300 rounded-md px-3 py-1 text-sm"
+            >
+              <option value="all">All Types</option>
+              <option value="article">Article</option>
+              <option value="news">News</option>
+              <option value="market">Market</option>
+              <option value="partnership">Partnership</option>
+            </select>
+          </div>
 
-        {/* Summary Stats */}
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-          gap: '1rem',
-          marginTop: '2rem'
-        }}>
-          <div style={{ 
-            background: '#fff', 
-            padding: '1rem', 
-            borderRadius: 8, 
-            textAlign: 'center',
-            border: '1px solid #e2e8f0'
-          }}>
-            <div style={{ fontSize: '2rem', fontWeight: 700, color: '#1a2238' }}>
-              {content.length}
-            </div>
-            <div style={{ color: '#64748b' }}>Total Items</div>
-          </div>
-          
-          <div style={{ 
-            background: '#fff', 
-            padding: '1rem', 
-            borderRadius: 8, 
-            textAlign: 'center',
-            border: '1px solid #e2e8f0'
-          }}>
-            <div style={{ fontSize: '2rem', fontWeight: 700, color: '#059669' }}>
-              {content.filter(item => item.status === 'published').length}
-            </div>
-            <div style={{ color: '#64748b' }}>Published</div>
-          </div>
-          
-          <div style={{ 
-            background: '#fff', 
-            padding: '1rem', 
-            borderRadius: 8, 
-            textAlign: 'center',
-            border: '1px solid #e2e8f0'
-          }}>
-            <div style={{ fontSize: '2rem', fontWeight: 700, color: '#d97706' }}>
-              {content.filter(item => item.status === 'draft').length}
-            </div>
-            <div style={{ color: '#64748b' }}>Drafts</div>
-          </div>
-          
-          <div style={{ 
-            background: '#fff', 
-            padding: '1rem', 
-            borderRadius: 8, 
-            textAlign: 'center',
-            border: '1px solid #e2e8f0'
-          }}>
-            <div style={{ fontSize: '2rem', fontWeight: 700, color: '#1a2238' }}>
-              {content.reduce((sum, item) => sum + (item.views || 0), 0).toLocaleString()}
-            </div>
-            <div style={{ color: '#64748b' }}>Total Views</div>
+          <div className="flex items-center space-x-2">
+            <label className="text-sm font-medium text-gray-700">Status:</label>
+            <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="border border-gray-300 rounded-md px-3 py-1 text-sm"
+            >
+              <option value="all">All Status</option>
+              <option value="published">Published</option>
+              <option value="draft">Draft</option>
+              <option value="archived">Archived</option>
+            </select>
           </div>
         </div>
+      </div>
 
+      {/* Content List */}
+      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Title
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Type
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Author
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Views
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredContent.map((item) => (
+                <tr key={item.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">{item.title}</div>
+                    <div className="text-sm text-gray-500">
+                      {item.publish_date ? new Date(item.publish_date).toLocaleDateString() : 'Not published'}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      item.type === 'article' ? 'bg-blue-100 text-blue-800' :
+                      item.type === 'news' ? 'bg-green-100 text-green-800' :
+                      item.type === 'market' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-purple-100 text-purple-800'
+                    }`}>
+                      {item.type}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">{item.author}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      item.status === 'published' ? 'bg-green-100 text-green-800' :
+                      item.status === 'draft' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-red-100 text-red-800'
+                    }`}>
+                      {item.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">{item.views}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <button
+                      onClick={() => handleEdit(item)}
+                      className="text-blue-600 hover:text-blue-900 mr-3"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(item.id)}
+                      className="text-red-600 hover:text-red-900"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {filteredContent.length === 0 && (
+          <div className="text-center py-8">
+            <p className="text-gray-500">No content found</p>
+          </div>
+        )}
       </div>
 
       {/* Add/Edit Modal */}
       {(showAddModal || showEditModal) && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            background: 'white',
-            padding: '2rem',
-            borderRadius: '12px',
-            width: '90%',
-            maxWidth: 600,
-            maxHeight: '90vh',
-            overflow: 'auto'
-          }}>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '1.5rem' }}>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-screen overflow-y-auto">
+            <h2 className="text-xl font-bold mb-4">
               {showAddModal ? 'Add Content' : 'Edit Content'}
             </h2>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <input
-                type="text"
-                placeholder="Content title"
-                value={formData.title}
-                onChange={(e) => setFormData({...formData, title: e.target.value})}
-                style={{ padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
-              />
-              
-              <select
-                value={formData.type}
-                onChange={(e) => setFormData({...formData, type: e.target.value as any})}
-                style={{ padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
-              >
-                {contentTypes.map(type => (
-                  <option key={type} value={type}>{type.charAt(0).toUpperCase() + type.slice(1)}</option>
-                ))}
-              </select>
-              
-              <input
-                type="text"
-                placeholder="Author name"
-                value={formData.author}
-                onChange={(e) => setFormData({...formData, author: e.target.value})}
-                style={{ padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
-              />
-              
-              <select
-                value={formData.status}
-                onChange={(e) => setFormData({...formData, status: e.target.value as any})}
-                style={{ padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
-              >
-                {statusOptions.map(status => (
-                  <option key={status} value={status}>{status.charAt(0).toUpperCase() + status.slice(1)}</option>
-                ))}
-              </select>
-              
-              <textarea
-                placeholder="Content..."
-                value={formData.content}
-                onChange={(e) => setFormData({...formData, content: e.target.value})}
-                style={{ 
-                  padding: '0.75rem', 
-                  border: '1px solid #d1d5db', 
-                  borderRadius: '6px',
-                  minHeight: '150px',
-                  resize: 'vertical'
-                }}
-              />
-              
-              <input
-                type="text"
-                placeholder="Tags (comma separated)"
-                value={formData.tags.join(', ')}
-                onChange={(e) => setFormData({...formData, tags: e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag)})}
-                style={{ padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
-              />
-            </div>
-            
-            <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
-              <button
-                onClick={saveContent}
-                style={{
-                  background: '#3b82f6',
-                  color: 'white',
-                  border: 'none',
-                  padding: '0.75rem 1.5rem',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontWeight: 600
-                }}
-              >
-                {showAddModal ? 'Add' : 'Save'}
-              </button>
-              <button
-                onClick={() => {
-                  setShowAddModal(false);
-                  setShowEditModal(false);
-                  setSelectedItem(null);
-                }}
-                style={{
-                  background: '#6b7280',
-                  color: 'white',
-                  border: 'none',
-                  padding: '0.75rem 1.5rem',
-                  borderRadius: '6px',
-                  cursor: 'pointer'
-                }}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+            <form onSubmit={handleSubmit}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Title
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    required
+                    className="w-full border border-gray-300 rounded-md px-3 py-2"
+                  />
+                </div>
 
-      {/* View Modal */}
-      {showViewModal && selectedItem && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            background: 'white',
-            padding: '2rem',
-            borderRadius: '12px',
-            width: '90%',
-            maxWidth: 800,
-            maxHeight: '90vh',
-            overflow: 'auto'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: 600 }}>
-                {selectedItem.title}
-              </h2>
-              <button
-                onClick={() => {
-                  setShowViewModal(false);
-                  setSelectedItem(null);
-                }}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  fontSize: '1.5rem',
-                  cursor: 'pointer',
-                  color: '#6b7280'
-                }}
-              >
-                ×
-              </button>
-            </div>
-            
-            <div style={{ marginBottom: '1rem' }}>
-              <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>
-                By {selectedItem.author} • {selectedItem.publish_date || 'Not published'} • {selectedItem.views} views
-              </p>
-            </div>
-            
-            <div style={{ marginBottom: '1rem' }}>
-              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                {selectedItem.tags.map(tag => (
-                  <span key={tag} style={{
-                    padding: '0.25rem 0.5rem',
-                    background: '#f3f4f6',
-                    borderRadius: '4px',
-                    fontSize: '0.75rem',
-                    color: '#374151'
-                  }}>
-                    #{tag}
-                  </span>
-                ))}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Type
+                  </label>
+                  <select
+                    value={formData.type}
+                    onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2"
+                  >
+                    <option value="article">Article</option>
+                    <option value="news">News</option>
+                    <option value="market">Market</option>
+                    <option value="partnership">Partnership</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Status
+                  </label>
+                  <select
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2"
+                  >
+                    <option value="draft">Draft</option>
+                    <option value="published">Published</option>
+                    <option value="archived">Archived</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Author
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.author}
+                    onChange={(e) => setFormData({ ...formData, author: e.target.value })}
+                    required
+                    className="w-full border border-gray-300 rounded-md px-3 py-2"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Tags (comma-separated)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.tags.join(', ')}
+                    onChange={(e) => handleTagChange(e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Featured Image URL
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.featured_image_url}
+                    onChange={(e) => setFormData({ ...formData, featured_image_url: e.target.value })}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Meta Description
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.meta_description}
+                    onChange={(e) => setFormData({ ...formData, meta_description: e.target.value })}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    SEO Keywords
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.seo_keywords}
+                    onChange={(e) => setFormData({ ...formData, seo_keywords: e.target.value })}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2"
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Content
+                  </label>
+                  <textarea
+                    value={formData.content}
+                    onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                    rows={8}
+                    required
+                    className="w-full border border-gray-300 rounded-md px-3 py-2"
+                  />
+                </div>
               </div>
-            </div>
-            
-            <div style={{ 
-              padding: '1rem', 
-              background: '#f9fafb', 
-              borderRadius: '8px',
-              lineHeight: 1.6,
-              color: '#374151'
-            }}>
-              {selectedItem.content}
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* Delete Confirmation Modal */}
-      {showDeleteModal && selectedItem && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            background: 'white',
-            padding: '2rem',
-            borderRadius: '12px',
-            width: '90%',
-            maxWidth: 400
-          }}>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '1rem' }}>
-              Confirm Delete
-            </h2>
-            <p style={{ marginBottom: '1.5rem', color: '#6b7280' }}>
-              Are you sure you want to delete "{selectedItem.title}"? This action cannot be undone.
-            </p>
-            
-            <div style={{ display: 'flex', gap: '1rem' }}>
-              <button
-                onClick={confirmDelete}
-                style={{
-                  background: '#ef4444',
-                  color: 'white',
-                  border: 'none',
-                  padding: '0.75rem 1.5rem',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontWeight: 600
-                }}
-              >
-                Delete
-              </button>
-              <button
-                onClick={() => {
-                  setShowDeleteModal(false);
-                  setSelectedItem(null);
-                }}
-                style={{
-                  background: '#6b7280',
-                  color: 'white',
-                  border: 'none',
-                  padding: '0.75rem 1.5rem',
-                  borderRadius: '6px',
-                  cursor: 'pointer'
-                }}
-              >
-                Cancel
-              </button>
-            </div>
+              <div className="flex justify-end space-x-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddModal(false);
+                    setShowEditModal(false);
+                    setSelectedItem(null);
+                  }}
+                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                >
+                  {showAddModal ? 'Add Content' : 'Update Content'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

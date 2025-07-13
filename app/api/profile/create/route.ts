@@ -3,8 +3,9 @@ import { NextRequest, NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
+  let body: any = {};
   try {
-    const body = await request.json();
+    body = await request.json();
     const { user_id } = body;
 
     if (!user_id) {
@@ -122,7 +123,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Profile creation error:', error);
-    
     // Return a mock profile in case of any unexpected errors
     const mockProfile = {
       id: `mock-${body?.user_id || 'unknown'}`,

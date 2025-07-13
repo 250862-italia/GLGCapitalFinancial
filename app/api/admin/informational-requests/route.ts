@@ -1,93 +1,136 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
-// Mock data fallback
-const mockInformationalRequests = [
-  {
-    id: '1',
-    client_name: 'John Doe',
-    client_email: 'john.doe@example.com',
-    document_type: 'Investment Agreement',
-    status: 'pending',
-    notes: 'Request for investment agreement documentation',
-    created_at: new Date().toISOString()
-  },
-  {
-    id: '2',
-    client_name: 'Jane Smith',
-    client_email: 'jane.smith@example.com',
-    document_type: 'Tax Documents',
-    status: 'completed',
-    notes: 'Tax documentation sent to client',
-    created_at: new Date().toISOString()
-  }
-];
+interface InformationalRequest {
+  id: string;
+  client_name: string;
+  client_email: string;
+  document_type: string;
+  status: 'pending' | 'completed' | 'cancelled';
+  notes: string;
+  created_at: string;
+  updated_at: string;
+}
 
 export async function GET() {
   try {
-    // Try to connect to Supabase
-    try {
-      const { data, error } = await supabaseAdmin
-        .from('informational_requests')
-        .select('*')
-        .order('created_at', { ascending: false });
+    const { data, error } = await supabaseAdmin
+      .from('informational_requests')
+      .select('*')
+      .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Supabase error, using mock data:', error);
-        return NextResponse.json(mockInformationalRequests);
-      }
-
-      return NextResponse.json(data || []);
-    } catch (supabaseError) {
-      console.error('Supabase connection failed, using mock data:', supabaseError);
-      return NextResponse.json(mockInformationalRequests);
+    if (error) {
+      throw new Error(`Failed to fetch informational requests: ${error.message}`);
     }
-  } catch (error) {
+
+    return NextResponse.json(data || []);
+  } catch (error: any) {
     console.error('Error in informational requests GET:', error);
-    return NextResponse.json(mockInformationalRequests);
+    return NextResponse.json(
+      { error: 'Failed to fetch informational requests' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { client_name, client_email, document_type, notes } = body;
+
+    if (!client_name || !client_email || !document_type) {
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      );
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('informational_requests')
+      .insert([{
+        client_name,
+        client_email,
+        document_type,
+        status: 'pending',
+        notes: notes || ''
+      }])
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(`Failed to create informational request: ${error.message}`);
+    }
+
+    return NextResponse.json(data);
+  } catch (error: any) {
+    console.error('Error in informational requests POST:', error);
+    return NextResponse.json(
+      { error: 'Failed to create informational request' },
+      { status: 500 }
+    );
   }
 }
 
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const { id, status, notes } = body;
+    const { id, ...updateData } = body;
 
-    if (!id || !status) {
-      return NextResponse.json({ error: 'ID and status are required' }, { status: 400 });
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Missing request ID' },
+        { status: 400 }
+      );
     }
 
-    const updateData: any = { status };
-    if (notes !== undefined) updateData.notes = notes;
-    updateData.updated_at = new Date().toISOString();
+    const { data, error } = await supabaseAdmin
+      .from('informational_requests')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
 
-    // Try to connect to Supabase
-    try {
-      const { data, error } = await supabaseAdmin
-        .from('informational_requests')
-        .update(updateData)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Supabase error in PUT:', error);
-        return NextResponse.json({ 
-          error: 'Database connection failed, but update was validated',
-          mockData: { id, ...updateData }
-        }, { status: 503 });
-      }
-
-      return NextResponse.json(data);
-    } catch (supabaseError) {
-      console.error('Supabase connection failed in PUT:', supabaseError);
-      return NextResponse.json({ 
-        error: 'Database connection failed, but update was validated',
-        mockData: { id, ...updateData }
-      }, { status: 503 });
+    if (error) {
+      throw new Error(`Failed to update informational request: ${error.message}`);
     }
-  } catch (error) {
+
+    return NextResponse.json(data);
+  } catch (error: any) {
     console.error('Error in informational requests PUT:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to update informational request' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json(
+        { error: 'Missing request ID' },
+        { status: 400 }
+      );
+    }
+
+    const { error } = await supabaseAdmin
+      .from('informational_requests')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      throw new Error(`Failed to delete informational request: ${error.message}`);
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    console.error('Error in informational requests DELETE:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete informational request' },
+      { status: 500 }
+    );
   }
 } 

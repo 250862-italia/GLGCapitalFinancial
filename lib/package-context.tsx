@@ -1,8 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import Toast from "../components/ui/Toast";
-import { supabase } from "./supabase";
+import { supabase } from '@/lib/supabase';
 
 export interface InvestmentPackage {
   id: string;
@@ -17,11 +16,11 @@ export interface InvestmentPackage {
   isActive: boolean;
   features: string[];
   terms: string;
-  status: 'Active' | 'Fundraising' | 'Closed';
+  status: 'Active' | 'Inactive' | 'Pending';
   createdAt: string;
-  price?: number;
-  daily_return?: number;
-  currency?: string;
+  price: number;
+  daily_return: number;
+  currency: string;
 }
 
 interface PackageContextType {
@@ -29,117 +28,58 @@ interface PackageContextType {
   loading: boolean;
   error: string | null;
   selectedPackage: InvestmentPackage | null;
-  setSelectedPackage: (pkg: InvestmentPackage | null) => void;
-  setPackages: React.Dispatch<React.SetStateAction<InvestmentPackage[]>>;
-  fetchPackages: () => Promise<void>;
-  createPackage: (pkg: Omit<InvestmentPackage, 'id'>) => Promise<void>;
-  updatePackage: (id: string, pkg: Partial<InvestmentPackage>) => Promise<void>;
-  deletePackage: (id: string) => Promise<void>;
-  saveToStorage: () => void;
+  showToast: boolean;
   lastUpdated: Date | null;
+  fetchPackages: () => Promise<void>;
+  selectPackage: (pkg: InvestmentPackage) => void;
+  clearSelection: () => void;
+  setShowToast: (show: boolean) => void;
+  createPackage: (pkg: Omit<InvestmentPackage, 'id' | 'createdAt'>) => Promise<void>;
+  updatePackage: (id: string, updates: Partial<InvestmentPackage>) => Promise<void>;
+  deletePackage: (id: string) => Promise<void>;
 }
 
-const defaultContext: PackageContextType = {
-  packages: [],
-  loading: false,
-  error: null,
-  selectedPackage: null,
-  setSelectedPackage: () => { console.warn('setSelectedPackage called outside PackageProvider'); },
-  setPackages: () => { console.warn('setPackages called outside PackageProvider'); },
-  fetchPackages: async () => { console.warn('fetchPackages called outside PackageProvider'); },
-  createPackage: async () => { console.warn('createPackage called outside PackageProvider'); },
-  updatePackage: async () => { console.warn('updatePackage called outside PackageProvider'); },
-  deletePackage: async () => { console.warn('deletePackage called outside PackageProvider'); },
-  saveToStorage: () => { console.warn('saveToStorage called outside PackageProvider'); },
-  lastUpdated: null,
-};
-const PackageContext = createContext<PackageContextType>(defaultContext);
+const PackageContext = createContext<PackageContextType | undefined>(undefined);
 
-// Mock data for offline mode
-const mockPackages: InvestmentPackage[] = [
-  {
-    id: '1',
-    name: 'Conservative Growth',
-    description: 'Low-risk investment focused on stable returns',
-    minInvestment: 1000,
-    maxInvestment: 50000,
-    expectedReturn: 5.5,
-    duration: 12,
-    riskLevel: 'low',
-    category: 'Conservative',
-    isActive: true,
-    features: ['Diversified portfolio', 'Monthly reports', 'Capital protection'],
-    terms: 'Minimum 12-month commitment',
-    status: 'Active',
-    createdAt: '2024-01-15',
-    price: 1000,
-    daily_return: 0.015,
-    currency: 'USD'
-  },
-  {
-    id: '2',
-    name: 'Balanced Portfolio',
-    description: 'Moderate risk with balanced growth potential',
-    minInvestment: 5000,
-    maxInvestment: 100000,
-    expectedReturn: 8.2,
-    duration: 18,
-    riskLevel: 'medium',
-    category: 'Balanced',
-    isActive: true,
-    features: ['Mixed asset allocation', 'Quarterly rebalancing', 'Professional management'],
-    terms: 'Minimum 18-month commitment',
-    status: 'Active',
-    createdAt: '2024-01-20',
-    price: 5000,
-    daily_return: 0.022,
-    currency: 'USD'
-  },
-  {
-    id: '3',
-    name: 'Aggressive Growth',
-    description: 'High-risk, high-reward investment strategy',
-    minInvestment: 10000,
-    maxInvestment: 500000,
-    expectedReturn: 12.5,
-    duration: 24,
-    riskLevel: 'high',
-    category: 'Aggressive',
-    isActive: true,
-    features: ['Growth-focused assets', 'Active management', 'Higher potential returns'],
-    terms: 'Minimum 24-month commitment',
-    status: 'Active',
-    createdAt: '2024-02-01',
-    price: 10000,
-    daily_return: 0.034,
-    currency: 'USD'
-  }
-];
+// Transform database package to InvestmentPackage format
+const transformPackage = (dbPackage: any): InvestmentPackage => ({
+  id: dbPackage.id,
+  name: dbPackage.name,
+  description: dbPackage.description,
+  minInvestment: dbPackage.min_investment,
+  maxInvestment: dbPackage.max_investment,
+  expectedReturn: dbPackage.expected_return,
+  duration: dbPackage.duration,
+  riskLevel: dbPackage.risk_level,
+  category: dbPackage.category,
+  isActive: dbPackage.is_active,
+  features: dbPackage.features || [],
+  terms: dbPackage.terms,
+  status: dbPackage.status,
+  createdAt: dbPackage.created_at,
+  price: dbPackage.price,
+  daily_return: dbPackage.daily_return,
+  currency: dbPackage.currency
+});
 
-const STORAGE_KEY = 'glg-investment-packages';
-
-// Function to transform database package to InvestmentPackage
-function transformPackage(dbPackage: any): InvestmentPackage {
-  return {
-    id: dbPackage.id,
-    name: dbPackage.name,
-    description: dbPackage.description || '',
-    minInvestment: dbPackage.min_investment || dbPackage.minAmount || 1000,
-    maxInvestment: dbPackage.max_investment || dbPackage.maxAmount || 50000,
-    expectedReturn: dbPackage.expectedReturn || dbPackage.daily_return || 5.0,
-    duration: dbPackage.duration || 12,
-    riskLevel: dbPackage.riskLevel || 'medium',
-    category: dbPackage.category || 'General',
-    isActive: dbPackage.is_active !== undefined ? dbPackage.is_active : true,
-    features: dbPackage.features || [],
-    terms: dbPackage.terms || '',
-    status: dbPackage.status || 'Active',
-    createdAt: dbPackage.created_at || new Date().toISOString(),
-    price: dbPackage.price,
-    daily_return: dbPackage.daily_return,
-    currency: dbPackage.currency || 'USD'
-  };
-}
+// Transform InvestmentPackage to database format
+const transformToDb = (pkg: InvestmentPackage) => ({
+  name: pkg.name,
+  description: pkg.description,
+  min_investment: pkg.minInvestment,
+  max_investment: pkg.maxInvestment,
+  expected_return: pkg.expectedReturn,
+  duration: pkg.duration,
+  risk_level: pkg.riskLevel,
+  category: pkg.category,
+  is_active: pkg.isActive,
+  features: pkg.features,
+  terms: pkg.terms,
+  status: pkg.status,
+  price: pkg.price,
+  daily_return: pkg.daily_return,
+  currency: pkg.currency
+});
 
 export function PackageProvider({ children }: { children: ReactNode }) {
   const [packages, setPackages] = useState<InvestmentPackage[]>([]);
@@ -160,10 +100,7 @@ export function PackageProvider({ children }: { children: ReactNode }) {
         .order('created_at', { ascending: false });
       
       if (error) {
-        console.log('Supabase connection failed, using offline mode');
-        // Use mock data in offline mode
-        setPackages(mockPackages);
-        return;
+        throw new Error(`Failed to fetch packages: ${error.message}`);
       }
       
       // Transform database packages to InvestmentPackage format
@@ -171,127 +108,91 @@ export function PackageProvider({ children }: { children: ReactNode }) {
       setPackages(transformedPackages);
       setLastUpdated(new Date());
       
-      // Save to localStorage for offline access
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(transformedPackages));
-      
     } catch (err: any) {
-      console.log('Error fetching packages, using offline mode:', err);
-      setPackages(mockPackages);
-      setLastUpdated(new Date());
+      console.error('Error fetching packages:', err);
+      setError(err.message || 'Failed to fetch packages');
     } finally {
       setLoading(false);
     }
   };
 
-  // Create package in Supabase
-  const createPackage = async (pkg: Omit<InvestmentPackage, 'id'>) => {
-    setError(null);
+  // Create new package
+  const createPackage = async (pkg: Omit<InvestmentPackage, 'id' | 'createdAt'>) => {
     try {
+      const dbPackage = transformToDb(pkg as InvestmentPackage);
       const { data, error } = await supabase
         .from('packages')
-        .insert([{
-          name: pkg.name,
-          description: pkg.description,
-          min_investment: pkg.minInvestment,
-          max_investment: pkg.maxInvestment,
-          daily_return: pkg.expectedReturn,
-          duration: pkg.duration,
-          category: pkg.category,
-          is_active: pkg.isActive,
-          currency: pkg.currency || 'USD',
-          price: pkg.price || pkg.minInvestment
-        }])
-        .select();
-      
-      if (error) throw error;
-      
-      const newPackage = transformPackage(data?.[0]);
+        .insert([dbPackage])
+        .select()
+        .single();
+
+      if (error) {
+        throw new Error(`Failed to create package: ${error.message}`);
+      }
+
+      const newPackage = transformPackage(data);
       setPackages(prev => [newPackage, ...prev]);
-      
+      setShowToast(true);
     } catch (err: any) {
-      console.error('CREATE PACKAGE ERROR:', err);
+      console.error('Error creating package:', err);
       setError(err.message || 'Failed to create package');
-      throw err;
     }
   };
 
-  // Update package in Supabase
-  const updatePackage = async (id: string, pkg: Partial<InvestmentPackage>) => {
-    setError(null);
+  // Update package
+  const updatePackage = async (id: string, updates: Partial<InvestmentPackage>) => {
     try {
+      const dbUpdates = transformToDb(updates as InvestmentPackage);
       const { data, error } = await supabase
         .from('packages')
-        .update({
-          name: pkg.name,
-          description: pkg.description,
-          min_investment: pkg.minInvestment,
-          max_investment: pkg.maxInvestment,
-          daily_return: pkg.expectedReturn,
-          duration: pkg.duration,
-          category: pkg.category,
-          is_active: pkg.isActive,
-          currency: pkg.currency,
-          price: pkg.price
-        })
+        .update(dbUpdates)
         .eq('id', id)
-        .select();
-      
-      if (error) throw error;
-      
-      const updatedPackage = transformPackage(data?.[0]);
-      setPackages(prev => prev.map(p => p.id === id ? updatedPackage : p));
-      
+        .select()
+        .single();
+
+      if (error) {
+        throw new Error(`Failed to update package: ${error.message}`);
+      }
+
+      const updatedPackage = transformPackage(data);
+      setPackages(prev => prev.map(pkg => pkg.id === id ? updatedPackage : pkg));
+      setShowToast(true);
     } catch (err: any) {
+      console.error('Error updating package:', err);
       setError(err.message || 'Failed to update package');
-      throw err;
     }
   };
 
-  // Delete package in Supabase
+  // Delete package
   const deletePackage = async (id: string) => {
-    setError(null);
     try {
       const { error } = await supabase
         .from('packages')
         .delete()
         .eq('id', id);
-      
-      if (error) throw error;
-      
-      setPackages(prev => prev.filter(p => p.id !== id));
-      
+
+      if (error) {
+        throw new Error(`Failed to delete package: ${error.message}`);
+      }
+
+      setPackages(prev => prev.filter(pkg => pkg.id !== id));
+      setShowToast(true);
     } catch (err: any) {
+      console.error('Error deleting package:', err);
       setError(err.message || 'Failed to delete package');
-      throw err;
     }
   };
 
-  // Save packages to localStorage
-  const saveToStorage = () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(packages));
+  const selectPackage = (pkg: InvestmentPackage) => {
+    setSelectedPackage(pkg);
   };
 
-  // On mount, fetch packages and activate realtime
+  const clearSelection = () => {
+    setSelectedPackage(null);
+  };
+
   useEffect(() => {
     fetchPackages();
-    
-    // Try to set up realtime subscription
-    try {
-      const subscription = supabase
-        .channel('public:packages')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'packages' }, (payload) => {
-          console.log('Realtime package update:', payload);
-          // Refresh packages when changes occur
-          fetchPackages();
-        })
-        .subscribe();
-      
-      return () => {
-        supabase.removeChannel(subscription);
-      };
-    } catch (error) {
-      console.log('Realtime subscription failed, continuing without realtime updates');
-    }
   }, []);
 
   const value: PackageContextType = {
@@ -299,26 +200,20 @@ export function PackageProvider({ children }: { children: ReactNode }) {
     loading,
     error,
     selectedPackage,
-    setSelectedPackage,
-    setPackages,
+    showToast,
+    lastUpdated,
     fetchPackages,
+    selectPackage,
+    clearSelection,
+    setShowToast,
     createPackage,
     updatePackage,
-    deletePackage,
-    saveToStorage,
-    lastUpdated
+    deletePackage
   };
 
   return (
     <PackageContext.Provider value={value}>
       {children}
-      {showToast && (
-        <Toast
-          message={error || 'Operation completed successfully'}
-          visible={showToast}
-          onClose={() => setShowToast(false)}
-        />
-      )}
     </PackageContext.Provider>
   );
 }

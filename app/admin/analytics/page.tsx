@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Search, Filter, Download, Eye } from 'lucide-react';
-import AdminProtectedRoute from '@/components/auth/AdminProtectedRoute';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 
-interface AnalyticsData {
+interface AnalyticsItem {
   id: string;
   metric: string;
   value: number;
@@ -12,20 +11,20 @@ interface AnalyticsData {
   period: string;
   category: string;
   status: 'active' | 'inactive';
-  description?: string;
+  description: string;
   created_at: string;
   updated_at: string;
 }
 
 export default function AnalyticsPage() {
-  const [analytics, setAnalytics] = useState<AnalyticsData[]>([]);
-  const [filteredAnalytics, setFilteredAnalytics] = useState<AnalyticsData[]>([]);
+  const [analytics, setAnalytics] = useState<AnalyticsItem[]>([]);
+  const [filteredAnalytics, setFilteredAnalytics] = useState<AnalyticsItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedStatus, setSelectedStatus] = useState('all');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<AnalyticsData | null>(null);
+  const [selectedItem, setSelectedItem] = useState<AnalyticsItem | null>(null);
   const [formData, setFormData] = useState({
     metric: '',
     value: 0,
@@ -35,7 +34,8 @@ export default function AnalyticsPage() {
     status: 'active' as 'active' | 'inactive',
     description: ''
   });
-  const [isUsingMockData, setIsUsingMockData] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadAnalytics();
@@ -43,126 +43,27 @@ export default function AnalyticsPage() {
 
   useEffect(() => {
     filterAnalytics();
-  }, [analytics, searchTerm, selectedCategory]);
+  }, [analytics, searchTerm, selectedCategory, selectedStatus]);
 
   const loadAnalytics = async () => {
+    setIsLoading(true);
+    setError(null);
     try {
-      const response = await fetch('/api/admin/analytics');
-      if (response.ok) {
-        const data = await response.json();
-        setAnalytics(data);
-        setIsUsingMockData(false);
-      } else {
-        console.error('Failed to load analytics');
-        setIsUsingMockData(true);
-        // Fallback to mock data if API fails
-        const mockData = [
-          {
-            id: '1',
-            metric: 'Total Revenue',
-            value: 1250000,
-            change_percentage: 12.5,
-            period: 'Q1 2024',
-            category: 'Financial',
-            status: 'active' as 'active',
-            description: 'Total platform revenue',
-            created_at: '2024-01-15T00:00:00Z',
-            updated_at: '2024-01-15T00:00:00Z'
-          },
-          {
-            id: '2',
-            metric: 'Active Users',
-            value: 15420,
-            change_percentage: -2.3,
-            period: 'Q1 2024',
-            category: 'User',
-            status: 'active' as 'active',
-            description: 'Number of active users',
-            created_at: '2024-01-14T00:00:00Z',
-            updated_at: '2024-01-14T00:00:00Z'
-          },
-          {
-            id: '3',
-            metric: 'Conversion Rate',
-            value: 3.2,
-            change_percentage: 0.8,
-            period: 'Q1 2024',
-            category: 'Performance',
-            status: 'active' as 'active',
-            description: 'User conversion rate',
-            created_at: '2024-01-13T00:00:00Z',
-            updated_at: '2024-01-13T00:00:00Z'
-          },
-          {
-            id: '4',
-            metric: 'Customer Satisfaction',
-            value: 4.7,
-            change_percentage: 0.2,
-            period: 'Q1 2024',
-            category: 'Quality',
-            status: 'inactive' as 'inactive',
-            description: 'Customer satisfaction score',
-            created_at: '2024-01-12T00:00:00Z',
-            updated_at: '2024-01-12T00:00:00Z'
-          }
-        ];
-        setAnalytics(mockData);
+      const { data, error } = await supabase
+        .from('analytics')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        throw new Error(`Failed to load analytics: ${error.message}`);
       }
-    } catch (error) {
-      console.error('Error loading analytics:', error);
-      setIsUsingMockData(true);
-      // Fallback to mock data if API fails
-      const mockData = [
-        {
-          id: '1',
-          metric: 'Total Revenue',
-          value: 1250000,
-          change_percentage: 12.5,
-          period: 'Q1 2024',
-          category: 'Financial',
-          status: 'active' as 'active',
-          description: 'Total platform revenue',
-          created_at: '2024-01-15T00:00:00Z',
-          updated_at: '2024-01-15T00:00:00Z'
-        },
-        {
-          id: '2',
-          metric: 'Active Users',
-          value: 15420,
-          change_percentage: -2.3,
-          period: 'Q1 2024',
-          category: 'User',
-          status: 'active' as 'active',
-          description: 'Number of active users',
-          created_at: '2024-01-14T00:00:00Z',
-          updated_at: '2024-01-14T00:00:00Z'
-        },
-        {
-          id: '3',
-          metric: 'Conversion Rate',
-          value: 3.2,
-          change_percentage: 0.8,
-          period: 'Q1 2024',
-          category: 'Performance',
-          status: 'active' as 'active',
-          description: 'User conversion rate',
-          created_at: '2024-01-13T00:00:00Z',
-          updated_at: '2024-01-13T00:00:00Z'
-        },
-        {
-          id: '4',
-          metric: 'Customer Satisfaction',
-          value: 4.7,
-          change_percentage: 0.2,
-          period: 'Q1 2024',
-          category: 'Quality',
-          status: 'inactive' as 'inactive',
-          description: 'Customer satisfaction score',
-          created_at: '2024-01-12T00:00:00Z',
-          updated_at: '2024-01-12T00:00:00Z'
-        }
-      ];
-      setAnalytics(mockData);
+
+      setAnalytics(data || []);
+    } catch (err: any) {
+      console.error('Error loading analytics:', err);
+      setError(err.message || 'Failed to load analytics');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -172,12 +73,17 @@ export default function AnalyticsPage() {
     if (searchTerm) {
       filtered = filtered.filter(item =>
         item.metric.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.category.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     if (selectedCategory !== 'all') {
       filtered = filtered.filter(item => item.category === selectedCategory);
+    }
+
+    if (selectedStatus !== 'all') {
+      filtered = filtered.filter(item => item.status === selectedStatus);
     }
 
     setFilteredAnalytics(filtered);
@@ -196,7 +102,7 @@ export default function AnalyticsPage() {
     setShowAddModal(true);
   };
 
-  const handleEdit = (item: AnalyticsData) => {
+  const handleEdit = (item: AnalyticsItem) => {
     setSelectedItem(item);
     setFormData({
       metric: item.metric,
@@ -205,512 +111,356 @@ export default function AnalyticsPage() {
       period: item.period,
       category: item.category,
       status: item.status,
-      description: item.description || ''
+      description: item.description
     });
     setShowEditModal(true);
   };
 
-  const handleDelete = (item: AnalyticsData) => {
-    setSelectedItem(item);
-    setShowDeleteModal(true);
-  };
-
-  const handleView = (item: AnalyticsData) => {
-    setSelectedItem(item);
-    // In a real app, this would navigate to a detailed view
-    alert(`Viewing details for: ${item.metric}`);
-  };
-
-  const saveAnalytics = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
-      if (showEditModal && selectedItem) {
-        // Update existing item
-        const response = await fetch('/api/admin/analytics', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: selectedItem.id, ...formData })
-        });
-        
-        if (response.ok) {
-          await loadAnalytics(); // Reload data
-        } else {
-          console.error('Failed to update analytics');
+      if (showAddModal) {
+        const { error } = await supabase
+          .from('analytics')
+          .insert([formData]);
+
+        if (error) {
+          throw new Error(`Failed to create analytics: ${error.message}`);
         }
-      } else {
-        // Add new item
-        const response = await fetch('/api/admin/analytics', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData)
-        });
-        
-        if (response.ok) {
-          await loadAnalytics(); // Reload data
-        } else {
-          console.error('Failed to create analytics');
+      } else if (showEditModal && selectedItem) {
+        const { error } = await supabase
+          .from('analytics')
+          .update(formData)
+          .eq('id', selectedItem.id);
+
+        if (error) {
+          throw new Error(`Failed to update analytics: ${error.message}`);
         }
       }
-      
+
+      await loadAnalytics();
       setShowAddModal(false);
       setShowEditModal(false);
       setSelectedItem(null);
-    } catch (error) {
-      console.error('Error saving analytics:', error);
+    } catch (err: any) {
+      console.error('Error saving analytics:', err);
+      setError(err.message || 'Failed to save analytics');
     }
   };
 
-  const confirmDelete = async () => {
-    if (selectedItem) {
-      try {
-        const response = await fetch(`/api/admin/analytics?id=${selectedItem.id}`, {
-          method: 'DELETE'
-        });
-        
-        if (response.ok) {
-          await loadAnalytics(); // Reload data
-        } else {
-          console.error('Failed to delete analytics');
-        }
-      } catch (error) {
-        console.error('Error deleting analytics:', error);
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this analytics item?')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('analytics')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        throw new Error(`Failed to delete analytics: ${error.message}`);
       }
-      
-      setShowDeleteModal(false);
-      setSelectedItem(null);
+
+      await loadAnalytics();
+    } catch (err: any) {
+      console.error('Error deleting analytics:', err);
+      setError(err.message || 'Failed to delete analytics');
     }
   };
 
-  const exportData = () => {
-    const csvContent = [
-      ['ID', 'Metric', 'Value', 'Change %', 'Period', 'Category', 'Status', 'Description', 'Last Updated'],
-      ...filteredAnalytics.map(item => [
-        item.id,
-        item.metric,
-        item.value.toString(),
-        item.change_percentage.toString(),
-        item.period,
-        item.category,
-        item.status,
-        item.description || '',
-        new Date(item.updated_at).toLocaleDateString()
-      ])
-    ].map(row => row.join(',')).join('\n');
+  const categories = Array.from(new Set(analytics.map(item => item.category)));
 
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'analytics-data.csv';
-    a.click();
-    window.URL.revokeObjectURL(url);
-  };
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
-  const categories = ['Financial', 'User', 'Performance', 'Quality'];
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Error</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <AdminProtectedRoute>
-      <div style={{ padding: '2rem', maxWidth: 1400, margin: '0 auto' }}>
-        {isUsingMockData && (
-          <div style={{
-            background: '#fef3c7',
-            border: '1px solid #f59e0b',
-            borderRadius: '8px',
-            padding: '1rem',
-            marginBottom: '2rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem'
-          }}>
-            <span style={{ fontSize: '1.2rem' }}>⚠️</span>
-            <div>
-              <strong style={{ color: '#92400e' }}>Development Mode</strong>
-              <p style={{ margin: '0.25rem 0 0 0', color: '#92400e', fontSize: '0.9rem' }}>
-                Showing mock data due to database connection issues. CRUD operations are simulated.
-              </p>
-            </div>
-          </div>
-        )}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '2rem', fontWeight: 700, color: '#1f2937' }}>
-          Analytics Dashboard
-        </h1>
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-gray-900">Analytics Management</h1>
         <button
           onClick={handleAdd}
-          style={{
-            background: '#3b82f6',
-            color: 'white',
-            border: 'none',
-            padding: '0.75rem 1.5rem',
-            borderRadius: '8px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            cursor: 'pointer',
-            fontWeight: 600
-          }}
+          className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
         >
-          <Plus size={16} />
           Add Analytics
         </button>
       </div>
 
       {/* Filters */}
-      <div style={{ 
-        display: 'flex', 
-        gap: '1rem', 
-        marginBottom: '2rem',
-        flexWrap: 'wrap',
-        alignItems: 'center'
-      }}>
-        <div style={{ position: 'relative', flex: 1, minWidth: 300 }}>
-          <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#6b7280' }} />
-          <input
-            type="text"
-            placeholder="Search analytics..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '0.75rem 1rem 0.75rem 2.5rem',
-              border: '1px solid #d1d5db',
-              borderRadius: '8px',
-              fontSize: '0.875rem'
-            }}
-          />
-        </div>
-        
-        <select
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-          style={{
-            padding: '0.75rem 1rem',
-            border: '1px solid #d1d5db',
-            borderRadius: '8px',
-            fontSize: '0.875rem',
-            minWidth: 150
-          }}
-        >
-          <option value="all">All Categories</option>
-          {categories.map(category => (
-            <option key={category} value={category}>{category}</option>
-          ))}
-        </select>
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div className="flex flex-wrap gap-4 items-center">
+          <div className="flex items-center space-x-2">
+            <label className="text-sm font-medium text-gray-700">Search:</label>
+            <input
+              type="text"
+              placeholder="Search metrics..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="border border-gray-300 rounded-md px-3 py-1 text-sm w-64"
+            />
+          </div>
 
-        <button
-          onClick={exportData}
-          style={{
-            background: '#10b981',
-            color: 'white',
-            border: 'none',
-            padding: '0.75rem 1rem',
-            borderRadius: '8px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            cursor: 'pointer',
-            fontWeight: 600
-          }}
-        >
-          <Download size={16} />
-          Export
-        </button>
+          <div className="flex items-center space-x-2">
+            <label className="text-sm font-medium text-gray-700">Category:</label>
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="border border-gray-300 rounded-md px-3 py-1 text-sm"
+            >
+              <option value="all">All Categories</option>
+              {categories.map(category => (
+                <option key={category} value={category}>{category}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <label className="text-sm font-medium text-gray-700">Status:</label>
+            <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="border border-gray-300 rounded-md px-3 py-1 text-sm"
+            >
+              <option value="all">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+        </div>
       </div>
 
-      {/* Analytics Grid */}
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', 
-        gap: '1.5rem',
-        marginBottom: '2rem'
-      }}>
-        {filteredAnalytics.map(item => (
-          <div key={item.id} style={{
-            background: 'white',
-            border: '1px solid #e5e7eb',
-            borderRadius: '12px',
-            padding: '1.5rem',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-              <div>
-                <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#1f2937', marginBottom: '0.5rem' }}>
-                  {item.metric}
-                </h3>
-                <p style={{ fontSize: '2rem', fontWeight: 700, color: '#3b82f6' }}>
-                  {typeof item.value === 'number' && item.value > 1000 
-                    ? `$${(item.value / 1000).toFixed(1)}K`
-                    : item.value}
-                </p>
-              </div>
-              <div style={{
-                padding: '0.25rem 0.75rem',
-                borderRadius: '20px',
-                fontSize: '0.75rem',
-                fontWeight: 600,
-                background: item.status === 'active' ? '#dcfce7' : '#fef3c7',
-                color: item.status === 'active' ? '#166534' : '#92400e'
-              }}>
-                {item.status}
-              </div>
-            </div>
-            
-            <div style={{ marginBottom: '1rem' }}>
-              <span style={{
-                color: item.change_percentage >= 0 ? '#10b981' : '#ef4444',
-                fontWeight: 600,
-                fontSize: '0.875rem'
-              }}>
-                {item.change_percentage >= 0 ? '+' : ''}{item.change_percentage}%
-              </span>
-              <span style={{ color: '#6b7280', fontSize: '0.875rem', marginLeft: '0.5rem' }}>
-                vs {item.period}
-              </span>
-            </div>
+      {/* Analytics List */}
+      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Metric
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Value
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Change %
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Period
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Category
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredAnalytics.map((item) => (
+                <tr key={item.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">{item.metric}</div>
+                    <div className="text-sm text-gray-500">{item.description}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">{item.value.toLocaleString()}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      item.change_percentage >= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    }`}>
+                      {item.change_percentage >= 0 ? '+' : ''}{item.change_percentage}%
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">{item.period}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">{item.category}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      item.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    }`}>
+                      {item.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <button
+                      onClick={() => handleEdit(item)}
+                      className="text-blue-600 hover:text-blue-900 mr-3"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(item.id)}
+                      className="text-red-600 hover:text-red-900"
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ 
-                padding: '0.25rem 0.75rem', 
-                background: '#f3f4f6', 
-                borderRadius: '6px',
-                fontSize: '0.75rem',
-                color: '#374151'
-              }}>
-                {item.category}
-              </span>
-              
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button
-                  onClick={() => handleView(item)}
-                  style={{
-                    background: '#3b82f6',
-                    color: 'white',
-                    border: 'none',
-                    padding: '0.5rem',
-                    borderRadius: '6px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <Eye size={14} />
-                </button>
-                <button
-                  onClick={() => handleEdit(item)}
-                  style={{
-                    background: '#f59e0b',
-                    color: 'white',
-                    border: 'none',
-                    padding: '0.5rem',
-                    borderRadius: '6px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <Edit size={14} />
-                </button>
-                <button
-                  onClick={() => handleDelete(item)}
-                  style={{
-                    background: '#ef4444',
-                    color: 'white',
-                    border: 'none',
-                    padding: '0.5rem',
-                    borderRadius: '6px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <Trash2 size={14} />
-                </button>
-              </div>
-            </div>
+        {filteredAnalytics.length === 0 && (
+          <div className="text-center py-8">
+            <p className="text-gray-500">No analytics found</p>
           </div>
-        ))}
+        )}
       </div>
 
       {/* Add/Edit Modal */}
       {(showAddModal || showEditModal) && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            background: 'white',
-            padding: '2rem',
-            borderRadius: '12px',
-            width: '90%',
-            maxWidth: 500
-          }}>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '1.5rem' }}>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4">
               {showAddModal ? 'Add Analytics' : 'Edit Analytics'}
             </h2>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <input
-                type="text"
-                placeholder="Metric name"
-                value={formData.metric}
-                onChange={(e) => setFormData({...formData, metric: e.target.value})}
-                style={{ padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
-              />
-              
-              <input
-                type="number"
-                placeholder="Value"
-                value={formData.value}
-                onChange={(e) => setFormData({...formData, value: parseFloat(e.target.value) || 0})}
-                style={{ padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
-              />
-              
-              <input
-                type="number"
-                placeholder="Change %"
-                value={formData.change_percentage}
-                onChange={(e) => setFormData({...formData, change_percentage: parseFloat(e.target.value) || 0})}
-                style={{ padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
-              />
-              
-              <input
-                type="text"
-                placeholder="Period (e.g., Q1 2024)"
-                value={formData.period}
-                onChange={(e) => setFormData({...formData, period: e.target.value})}
-                style={{ padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
-              />
-              
-              <select
-                value={formData.category}
-                onChange={(e) => setFormData({...formData, category: e.target.value})}
-                style={{ padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
-              >
-                <option value="">Select Category</option>
-                {categories.map(category => (
-                  <option key={category} value={category}>{category}</option>
-                ))}
-              </select>
-              
-              <select
-                value={formData.status}
-                onChange={(e) => setFormData({...formData, status: e.target.value as 'active' | 'inactive'})}
-                style={{ padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px' }}
-              >
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-              
-              <textarea
-                placeholder="Description (optional)"
-                value={formData.description}
-                onChange={(e) => setFormData({...formData, description: e.target.value})}
-                style={{ padding: '0.75rem', border: '1px solid #d1d5db', borderRadius: '6px', minHeight: '80px', resize: 'vertical' }}
-              />
-            </div>
-            
-            <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
-              <button
-                onClick={saveAnalytics}
-                style={{
-                  background: '#3b82f6',
-                  color: 'white',
-                  border: 'none',
-                  padding: '0.75rem 1.5rem',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontWeight: 600
-                }}
-              >
-                {showAddModal ? 'Add' : 'Save'}
-              </button>
-              <button
-                onClick={() => {
-                  setShowAddModal(false);
-                  setShowEditModal(false);
-                  setSelectedItem(null);
-                }}
-                style={{
-                  background: '#6b7280',
-                  color: 'white',
-                  border: 'none',
-                  padding: '0.75rem 1.5rem',
-                  borderRadius: '6px',
-                  cursor: 'pointer'
-                }}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+            <form onSubmit={handleSubmit}>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Metric Name
+                </label>
+                <input
+                  type="text"
+                  value={formData.metric}
+                  onChange={(e) => setFormData({ ...formData, metric: e.target.value })}
+                  required
+                  className="w-full border border-gray-300 rounded-md px-3 py-2"
+                />
+              </div>
 
-      {/* Delete Confirmation Modal */}
-      {showDeleteModal && selectedItem && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0,0,0,0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            background: 'white',
-            padding: '2rem',
-            borderRadius: '12px',
-            width: '90%',
-            maxWidth: 400
-          }}>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '1rem' }}>
-              Confirm Delete
-            </h2>
-            <p style={{ marginBottom: '1.5rem', color: '#6b7280' }}>
-              Are you sure you want to delete "{selectedItem.metric}"? This action cannot be undone.
-            </p>
-            
-            <div style={{ display: 'flex', gap: '1rem' }}>
-              <button
-                onClick={confirmDelete}
-                style={{
-                  background: '#ef4444',
-                  color: 'white',
-                  border: 'none',
-                  padding: '0.75rem 1.5rem',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontWeight: 600
-                }}
-              >
-                Delete
-              </button>
-              <button
-                onClick={() => {
-                  setShowDeleteModal(false);
-                  setSelectedItem(null);
-                }}
-                style={{
-                  background: '#6b7280',
-                  color: 'white',
-                  border: 'none',
-                  padding: '0.75rem 1.5rem',
-                  borderRadius: '6px',
-                  cursor: 'pointer'
-                }}
-              >
-                Cancel
-              </button>
-            </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Value
+                </label>
+                <input
+                  type="number"
+                  value={formData.value}
+                  onChange={(e) => setFormData({ ...formData, value: parseFloat(e.target.value) || 0 })}
+                  required
+                  className="w-full border border-gray-300 rounded-md px-3 py-2"
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Change Percentage
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={formData.change_percentage}
+                  onChange={(e) => setFormData({ ...formData, change_percentage: parseFloat(e.target.value) || 0 })}
+                  required
+                  className="w-full border border-gray-300 rounded-md px-3 py-2"
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Period
+                </label>
+                <input
+                  type="text"
+                  value={formData.period}
+                  onChange={(e) => setFormData({ ...formData, period: e.target.value })}
+                  required
+                  className="w-full border border-gray-300 rounded-md px-3 py-2"
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Category
+                </label>
+                <input
+                  type="text"
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  required
+                  className="w-full border border-gray-300 rounded-md px-3 py-2"
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Status
+                </label>
+                <select
+                  value={formData.status}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value as 'active' | 'inactive' })}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2"
+                >
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Description
+                </label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  rows={3}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2"
+                />
+              </div>
+
+              <div className="flex justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddModal(false);
+                    setShowEditModal(false);
+                    setSelectedItem(null);
+                  }}
+                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                >
+                  {showAddModal ? 'Add Analytics' : 'Update Analytics'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
-      </div>
-    </AdminProtectedRoute>
+    </div>
   );
 } 
