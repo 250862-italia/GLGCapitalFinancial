@@ -121,10 +121,9 @@ export default function InformationalRequestsPage() {
 
   const filteredRequests = requests.filter(request => {
     const matchesSearch = 
-      request.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      request.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      request.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       request.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (request.country && request.country.toLowerCase().includes(searchTerm.toLowerCase()));
+      (request.company && request.company.toLowerCase().includes(searchTerm.toLowerCase()));
     
     const matchesStatus = statusFilter === 'ALL' || request.status === statusFilter;
     
@@ -337,10 +336,10 @@ export default function InformationalRequestsPage() {
                 {/* Client */}
                 <div>
                   <div style={{ fontWeight: 600, color: '#1f2937' }}>
-                    {request.first_name} {request.last_name}
+                    {request.name}
                   </div>
                   <div style={{ fontSize: '14px', color: '#6b7280' }}>
-                    {request.country && request.city ? `${request.city}, ${request.country}` : 'Location not specified'}
+                    {request.company || 'Company not specified'}
                   </div>
                 </div>
 
@@ -356,11 +355,11 @@ export default function InformationalRequestsPage() {
                   )}
                 </div>
 
-                {/* Country */}
+                {/* Company */}
                 <div>
-                  {request.country && (
+                  {request.company && (
                     <div style={{ fontSize: '14px', color: '#1f2937' }}>
-                      {request.country}
+                      {request.company}
                     </div>
                   )}
                 </div>
@@ -427,7 +426,7 @@ export default function InformationalRequestsPage() {
                     </button>
                   )}
 
-                  {!request.emailSent && (
+                  {request.status === 'PENDING' && (
                     <button
                       onClick={() => resendEmail(request)}
                       style={{
@@ -508,7 +507,7 @@ export default function InformationalRequestsPage() {
                     <div>
                       <label style={{ fontSize: '14px', color: '#6b7280' }}>Name</label>
                       <div style={{ fontWeight: 500 }}>
-                        {selectedRequest.first_name} {selectedRequest.last_name}
+                        {selectedRequest.name}
                       </div>
                     </div>
                     <div>
@@ -522,21 +521,33 @@ export default function InformationalRequestsPage() {
                       </div>
                     </div>
                     <div>
-                      <label style={{ fontSize: '14px', color: '#6b7280' }}>Location</label>
+                      <label style={{ fontSize: '14px', color: '#6b7280' }}>Company</label>
                       <div style={{ fontWeight: 500 }}>
-                        {selectedRequest.city && selectedRequest.country 
-                          ? `${selectedRequest.city}, ${selectedRequest.country}`
-                          : 'Not provided'
-                        }
+                        {selectedRequest.company || 'Not provided'}
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {selectedRequest.additionalNotes && (
+                <div>
+                  <h3 style={{ fontWeight: 600, color: '#374151', marginBottom: '0.5rem' }}>
+                    Message
+                  </h3>
+                  <div style={{ 
+                    background: '#f9fafb', 
+                    padding: '1rem', 
+                    borderRadius: 8,
+                    fontSize: '14px',
+                    lineHeight: '1.6'
+                  }}>
+                    {selectedRequest.message}
+                  </div>
+                </div>
+
+                {selectedRequest.notes && (
                   <div>
                     <h3 style={{ fontWeight: 600, color: '#374151', marginBottom: '0.5rem' }}>
-                      Additional Notes
+                      Notes
                     </h3>
                     <div style={{ 
                       background: '#f9fafb', 
@@ -545,7 +556,7 @@ export default function InformationalRequestsPage() {
                       fontSize: '14px',
                       lineHeight: '1.6'
                     }}>
-                      {selectedRequest.additionalNotes}
+                      {selectedRequest.notes}
                     </div>
                   </div>
                 )}
@@ -571,7 +582,7 @@ export default function InformationalRequestsPage() {
                     <div>
                       <label style={{ fontSize: '14px', color: '#6b7280' }}>Email Sent</label>
                       <div style={{ fontWeight: 500 }}>
-                        {selectedRequest.emailSent ? 'Yes' : 'No'}
+                        {selectedRequest.status !== 'PENDING' ? 'Yes' : 'No'}
                       </div>
                     </div>
                     <div>
@@ -580,11 +591,11 @@ export default function InformationalRequestsPage() {
                         {new Date(selectedRequest.created_at).toLocaleString()}
                       </div>
                     </div>
-                    {selectedRequest.processedAt && (
+                    {selectedRequest.updated_at && selectedRequest.status !== 'PENDING' && (
                       <div>
-                        <label style={{ fontSize: '14px', color: '#6b7280' }}>Processed</label>
+                        <label style={{ fontSize: '14px', color: '#6b7280' }}>Updated</label>
                         <div style={{ fontWeight: 500 }}>
-                          {new Date(selectedRequest.processedAt).toLocaleString()}
+                          {new Date(selectedRequest.updated_at).toLocaleString()}
                         </div>
                       </div>
                     )}
@@ -641,4 +652,5 @@ export default function InformationalRequestsPage() {
       </div>
     </AdminProtectedRoute>
   );
+} 
 } 
