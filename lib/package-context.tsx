@@ -12,15 +12,12 @@ export interface InvestmentPackage {
   expectedReturn: number;
   duration: number;
   riskLevel: 'low' | 'medium' | 'high';
-  category: string;
+  status: 'active' | 'inactive' | 'suspended';
   isActive: boolean;
   features: string[];
   terms: string;
-  status: 'Active' | 'Inactive' | 'Pending';
   createdAt: string;
-  price: number;
-  daily_return: number;
-  currency: string;
+  updatedAt: string;
 }
 
 interface PackageContextType {
@@ -42,7 +39,7 @@ interface PackageContextType {
 const PackageContext = createContext<PackageContextType | undefined>(undefined);
 
 // Transform database package to InvestmentPackage format
-const transformPackage = (dbPackage: any): InvestmentPackage => ({
+const normalizePackage = (dbPackage: any): InvestmentPackage => ({
   id: dbPackage.id,
   name: dbPackage.name,
   description: dbPackage.description,
@@ -51,19 +48,17 @@ const transformPackage = (dbPackage: any): InvestmentPackage => ({
   expectedReturn: dbPackage.expected_return,
   duration: dbPackage.duration,
   riskLevel: dbPackage.risk_level,
-  category: dbPackage.category,
+  status: dbPackage.status,
   isActive: dbPackage.is_active,
   features: dbPackage.features || [],
   terms: dbPackage.terms,
-  status: dbPackage.status,
   createdAt: dbPackage.created_at,
-  price: dbPackage.price,
-  daily_return: dbPackage.daily_return,
-  currency: dbPackage.currency
+  updatedAt: dbPackage.updated_at,
 });
 
 // Transform InvestmentPackage to database format
-const transformToDb = (pkg: InvestmentPackage) => ({
+const denormalizePackage = (pkg: InvestmentPackage): any => ({
+  id: pkg.id,
   name: pkg.name,
   description: pkg.description,
   min_investment: pkg.minInvestment,
@@ -71,14 +66,12 @@ const transformToDb = (pkg: InvestmentPackage) => ({
   expected_return: pkg.expectedReturn,
   duration: pkg.duration,
   risk_level: pkg.riskLevel,
-  category: pkg.category,
+  status: pkg.status,
   is_active: pkg.isActive,
   features: pkg.features,
   terms: pkg.terms,
-  status: pkg.status,
-  price: pkg.price,
-  daily_return: pkg.daily_return,
-  currency: pkg.currency
+  created_at: pkg.createdAt,
+  updated_at: pkg.updatedAt,
 });
 
 export function PackageProvider({ children }: { children: ReactNode }) {
@@ -104,7 +97,7 @@ export function PackageProvider({ children }: { children: ReactNode }) {
       }
       
       // Transform database packages to InvestmentPackage format
-      const transformedPackages = (data || []).map(transformPackage);
+      const transformedPackages = (data || []).map(normalizePackage);
       setPackages(transformedPackages);
       setLastUpdated(new Date());
       
@@ -119,7 +112,7 @@ export function PackageProvider({ children }: { children: ReactNode }) {
   // Create new package
   const createPackage = async (pkg: Omit<InvestmentPackage, 'id' | 'createdAt'>) => {
     try {
-      const dbPackage = transformToDb(pkg as InvestmentPackage);
+      const dbPackage = denormalizePackage(pkg as InvestmentPackage);
       const { data, error } = await supabase
         .from('packages')
         .insert([dbPackage])
@@ -130,7 +123,7 @@ export function PackageProvider({ children }: { children: ReactNode }) {
         throw new Error(`Failed to create package: ${error.message}`);
       }
 
-      const newPackage = transformPackage(data);
+      const newPackage = normalizePackage(data);
       setPackages(prev => [newPackage, ...prev]);
       setShowToast(true);
     } catch (err: any) {
@@ -142,7 +135,7 @@ export function PackageProvider({ children }: { children: ReactNode }) {
   // Update package
   const updatePackage = async (id: string, updates: Partial<InvestmentPackage>) => {
     try {
-      const dbUpdates = transformToDb(updates as InvestmentPackage);
+      const dbUpdates = denormalizePackage(updates as InvestmentPackage);
       const { data, error } = await supabase
         .from('packages')
         .update(dbUpdates)
@@ -154,7 +147,7 @@ export function PackageProvider({ children }: { children: ReactNode }) {
         throw new Error(`Failed to update package: ${error.message}`);
       }
 
-      const updatedPackage = transformPackage(data);
+      const updatedPackage = normalizePackage(data);
       setPackages(prev => prev.map(pkg => pkg.id === id ? updatedPackage : pkg));
       setShowToast(true);
     } catch (err: any) {

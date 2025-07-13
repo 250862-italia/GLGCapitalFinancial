@@ -23,7 +23,7 @@ export async function GET() {
     // Then get users separately
     const { data: users, error: usersError } = await supabase
       .from('users')
-      .select('id, email, first_name, last_name, role, is_active, last_login')
+      .select('id, email, first_name, last_name, role, is_active, last_login, created_at, updated_at')
       .in('id', clients?.map(c => c.user_id) || []);
 
     if (usersError) {

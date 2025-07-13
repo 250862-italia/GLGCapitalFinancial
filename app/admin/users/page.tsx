@@ -53,7 +53,7 @@ interface AdminUser {
   email: string;
   name: string;
   role: 'admin' | 'superadmin';
-  createdAt: string;
+  created_at: string;
   isVerified: boolean;
 }
 
@@ -441,7 +441,7 @@ export default function AdminUsersPage() {
                         </div>
                       </td>
                       <td style={{ padding: '1rem', color: 'var(--foreground)', fontSize: 14 }}>
-                        {new Date(user.createdAt).toLocaleDateString()}
+                        {new Date(user.created_at).toLocaleDateString()}
                       </td>
                       <td style={{ padding: '1rem', textAlign: 'center' }}>
                         <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>

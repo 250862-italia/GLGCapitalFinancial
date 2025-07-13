@@ -22,21 +22,21 @@ import AdminProtectedRoute from '@/components/auth/AdminProtectedRoute';
 
 interface InformationalRequest {
   id: string;
-  userId: string | null;
-  first_name: string;
-  last_name: string;
+  name: string;
   email: string;
-  phone: string | null;
-  country: string | null;
-  city: string | null;
-  additionalNotes: string | null;
-  status: 'PENDING' | 'PROCESSED' | 'COMPLETED' | 'CANCELLED';
-  emailSent: boolean;
-  emailSentAt: string | null;
-  processedAt: string | null;
-  processedBy: string | null;
-  createdAt: string;
-  updatedAt: string;
+  phone: string;
+  company: string;
+  message: string;
+  status: 'pending' | 'in_progress' | 'completed' | 'rejected';
+  priority: 'low' | 'medium' | 'high';
+  assigned_to: string;
+  created_at: string;
+  updated_at: string;
+  notes: string;
+  response: string;
+  category: string;
+  source: string;
+  tags: string[];
 }
 
 export default function InformationalRequestsPage() {
@@ -380,10 +380,10 @@ export default function InformationalRequestsPage() {
                 {/* Date */}
                 <div>
                   <div style={{ fontSize: '14px', color: '#1f2937' }}>
-                    {new Date(request.createdAt).toLocaleDateString()}
+                    {new Date(request.created_at).toLocaleDateString()}
                   </div>
                   <div style={{ fontSize: '12px', color: '#6b7280' }}>
-                    {new Date(request.createdAt).toLocaleTimeString()}
+                    {new Date(request.created_at).toLocaleTimeString()}
                   </div>
                 </div>
 
@@ -577,7 +577,7 @@ export default function InformationalRequestsPage() {
                     <div>
                       <label style={{ fontSize: '14px', color: '#6b7280' }}>Created</label>
                       <div style={{ fontWeight: 500 }}>
-                        {new Date(selectedRequest.createdAt).toLocaleString()}
+                        {new Date(selectedRequest.created_at).toLocaleString()}
                       </div>
                     </div>
                     {selectedRequest.processedAt && (

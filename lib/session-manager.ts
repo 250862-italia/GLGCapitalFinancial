@@ -4,11 +4,9 @@ interface Session {
   token: string;
   ipAddress: string;
   userAgent: string;
-  created_at: Date;
-  last_activity: Date;
-  expires_at: Date;
-  isActive: boolean;
-  metadata?: Record<string, any>;
+  is_active: boolean;
+  createdAt: string;
+  expiresAt: string;
 }
 
 interface SessionActivity {
@@ -42,7 +40,6 @@ class SessionManager {
     this.initializeCleanup();
   }
 
-  // Create a new session
   createSession(
     userId: string,
     token: string,
@@ -50,13 +47,10 @@ class SessionManager {
     userAgent: string,
     metadata?: Record<string, any>
   ): Session {
-    // Check if user has too many active sessions
+    // Remove old sessions for this user if limit exceeded
     const userSessions = this.getUserSessions(userId);
     if (userSessions.length >= this.maxSessionsPerUser) {
-      // Remove oldest session
-      const oldestSession = userSessions.sort((a, b) => 
-        a.created_at.getTime() - b.created_at.getTime()
-      )[0];
+      const oldestSession = userSessions[userSessions.length - 1];
       this.removeSession(oldestSession.id);
     }
 
@@ -66,11 +60,9 @@ class SessionManager {
       token,
       ipAddress,
       userAgent,
-      created_at: new Date(),
-      last_activity: new Date(),
-      expires_at: new Date(Date.now() + this.sessionTimeout),
-      isActive: true,
-      metadata
+      is_active: true,
+      createdAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + this.sessionTimeout).toISOString()
     };
 
     this.sessions.set(session.id, session);
@@ -83,7 +75,7 @@ class SessionManager {
   // Get session by token
   getSession(token: string): Session | null {
     for (const session of this.sessions.values()) {
-      if (session.token === token && session.isActive && !this.isSessionExpired(session)) {
+      if (session.token === token && session.is_active && !this.isSessionExpired(session)) {
         return session;
       }
     }
@@ -93,7 +85,7 @@ class SessionManager {
   // Get session by ID
   getSessionById(sessionId: string): Session | null {
     const session = this.sessions.get(sessionId);
-    if (session && session.isActive && !this.isSessionExpired(session)) {
+    if (session && session.is_active && !this.isSessionExpired(session)) {
       return session;
     }
     return null;
@@ -102,14 +94,13 @@ class SessionManager {
   // Update session activity
   updateSessionActivity(sessionId: string, ipAddress: string, userAgent: string): boolean {
     const session = this.sessions.get(sessionId);
-    if (!session || !session.isActive || this.isSessionExpired(session)) {
+    if (!session || !session.is_active || this.isSessionExpired(session)) {
       return false;
     }
 
-    session.last_activity = new Date();
     session.ipAddress = ipAddress;
     session.userAgent = userAgent;
-    session.expires_at = new Date(Date.now() + this.sessionTimeout);
+    session.expiresAt = new Date(Date.now() + this.sessionTimeout).toISOString();
 
     this.sessions.set(sessionId, session);
     this.logActivity(sessionId, session.userId, 'session_activity', ipAddress, userAgent);
@@ -124,7 +115,7 @@ class SessionManager {
       return false;
     }
 
-    session.isActive = false;
+    session.is_active = false;
     this.sessions.set(sessionId, session);
     this.logActivity(sessionId, session.userId, 'session_ended', session.ipAddress, session.userAgent);
 
@@ -137,8 +128,8 @@ class SessionManager {
     let removedCount = 0;
     
     for (const session of this.sessions.values()) {
-      if (session.userId === userId && session.isActive) {
-        session.isActive = false;
+      if (session.userId === userId && session.is_active) {
+        session.is_active = false;
         this.sessions.set(session.id, session);
         this.logActivity(session.id, userId, 'session_ended', session.ipAddress, session.userAgent);
         removedCount++;
@@ -152,13 +143,13 @@ class SessionManager {
   // Get all sessions for a user
   getUserSessions(userId: string): Session[] {
     return Array.from(this.sessions.values())
-      .filter(session => session.userId === userId && session.isActive && !this.isSessionExpired(session));
+      .filter(session => session.userId === userId && session.is_active && !this.isSessionExpired(session));
   }
 
   // Get active sessions
   getActiveSessions(): Session[] {
     return Array.from(this.sessions.values())
-      .filter(session => session.isActive && !this.isSessionExpired(session));
+      .filter(session => session.is_active && !this.isSessionExpired(session));
   }
 
   // Get session statistics
@@ -166,14 +157,14 @@ class SessionManager {
     const now = Date.now();
     const activeSessions = this.getActiveSessions();
     const expiredSessions = Array.from(this.sessions.values())
-      .filter(session => !session.isActive || this.isSessionExpired(session));
+      .filter(session => !session.is_active || this.isSessionExpired(session));
 
     const sessionsByUser: Record<string, number> = {};
     let totalDuration = 0;
 
     activeSessions.forEach(session => {
       sessionsByUser[session.userId] = (sessionsByUser[session.userId] || 0) + 1;
-      totalDuration += session.last_activity.getTime() - session.created_at.getTime();
+      totalDuration += new Date(session.expiresAt).getTime() - new Date(session.createdAt).getTime();
     });
 
     const recentActivity = this.activities
@@ -218,9 +209,9 @@ class SessionManager {
       }
 
       // Sessions created very close together
-      const sortedSessions = sessions.sort((a, b) => a.created_at.getTime() - b.created_at.getTime());
+      const sortedSessions = sessions.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
       for (let i = 1; i < sortedSessions.length; i++) {
-        const timeDiff = sortedSessions[i].created_at.getTime() - sortedSessions[i-1].created_at.getTime();
+        const timeDiff = new Date(sortedSessions[i].createdAt).getTime() - new Date(sortedSessions[i-1].createdAt).getTime();
         if (timeDiff < 60000) { // Less than 1 minute apart
           suspiciousSessions.push(sortedSessions[i]);
         }
@@ -260,26 +251,24 @@ class SessionManager {
 
   // Check if session is expired
   private isSessionExpired(session: Session): boolean {
-    return session.expires_at.getTime() < Date.now();
+    return new Date(session.expiresAt).getTime() < Date.now();
   }
 
   // Initialize cleanup interval
   private initializeCleanup(): void {
     setInterval(() => {
       this.cleanupExpiredSessions();
-    }, 60000); // Cleanup every minute
+    }, 5 * 60 * 1000); // Clean up every 5 minutes
   }
 
-  // Cleanup expired sessions
+  // Clean up expired sessions
   private cleanupExpiredSessions(): void {
-    const now = Date.now();
     let cleanedCount = 0;
-
-    for (const [sessionId, session] of this.sessions.entries()) {
-      if (session.isActive && this.isSessionExpired(session)) {
-        session.isActive = false;
-        this.sessions.set(sessionId, session);
-        this.logActivity(sessionId, session.userId, 'session_expired', session.ipAddress, session.userAgent);
+    
+    for (const session of this.sessions.values()) {
+      if (session.is_active && this.isSessionExpired(session)) {
+        session.is_active = false;
+        this.sessions.set(session.id, session);
         cleanedCount++;
       }
     }
@@ -289,19 +278,16 @@ class SessionManager {
     }
   }
 
-  // Set session timeout
+  // Configuration methods
   setSessionTimeout(timeout: number): void {
     this.sessionTimeout = timeout;
-    console.log(`⚙️ Session timeout updated: ${timeout}ms`);
   }
 
-  // Set max sessions per user
   setMaxSessionsPerUser(max: number): void {
     this.maxSessionsPerUser = max;
-    console.log(`⚙️ Max sessions per user updated: ${max}`);
   }
 
-  // Get session activity for a user
+  // Activity tracking methods
   getUserActivity(userId: string, limit: number = 100): SessionActivity[] {
     return this.activities
       .filter(activity => activity.userId === userId)
@@ -309,53 +295,43 @@ class SessionManager {
       .slice(0, limit);
   }
 
-  // Get session activity for a session
   getSessionActivity(sessionId: string): SessionActivity[] {
     return this.activities
       .filter(activity => activity.sessionId === sessionId)
-      .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
   }
 
-  // Force logout user from all devices
+  // Security methods
   forceLogoutUser(userId: string, reason: string = 'Admin action'): number {
-    const removedCount = this.removeUserSessions(userId);
-    
-    this.logActivity('system', userId, 'force_logout', 'system', 'system', {
-      reason,
-      sessionsRemoved: removedCount
+    const sessions = this.getUserSessions(userId);
+    sessions.forEach(session => {
+      session.is_active = false;
+      this.sessions.set(session.id, session);
+      this.logActivity(session.id, userId, 'force_logout', session.ipAddress, session.userAgent, { reason });
     });
 
-    console.log(`🔒 Force logged out user ${userId} from ${removedCount} sessions (${reason})`);
-    return removedCount;
+    console.log(`🚫 Force logged out user ${userId}: ${reason}`);
+    return sessions.length;
   }
 
-  // Get sessions by IP address
   getSessionsByIP(ipAddress: string): Session[] {
     return Array.from(this.sessions.values())
-      .filter(session => session.ipAddress === ipAddress && session.isActive && !this.isSessionExpired(session));
+      .filter(session => session.ipAddress === ipAddress && session.is_active && !this.isSessionExpired(session));
   }
 
-  // Block IP address (remove all sessions from that IP)
   blockIP(ipAddress: string, reason: string = 'Suspicious activity'): number {
-    let blockedCount = 0;
-    
-    for (const session of this.sessions.values()) {
-      if (session.ipAddress === ipAddress && session.isActive) {
-        session.isActive = false;
-        this.sessions.set(session.id, session);
-        this.logActivity(session.id, session.userId, 'session_blocked', ipAddress, session.userAgent, {
-          reason,
-          blockedIP: ipAddress
-        });
-        blockedCount++;
-      }
-    }
+    const sessions = this.getSessionsByIP(ipAddress);
+    sessions.forEach(session => {
+      session.is_active = false;
+      this.sessions.set(session.id, session);
+      this.logActivity(session.id, session.userId, 'ip_blocked', session.ipAddress, session.userAgent, { reason });
+    });
 
-    console.log(`🚫 Blocked ${blockedCount} sessions from IP ${ipAddress} (${reason})`);
-    return blockedCount;
+    console.log(`🚫 Blocked IP ${ipAddress}: ${reason}`);
+    return sessions.length;
   }
 
-  // Get session analytics
+  // Analytics methods
   getSessionAnalytics(timeRange: number = 24 * 60 * 60 * 1000): {
     totalSessions: number;
     uniqueUsers: number;
@@ -363,45 +339,49 @@ class SessionManager {
     mostActiveUsers: Array<{ userId: string; sessions: number; lastActivity: Date }>;
     sessionsByHour: Record<number, number>;
   } {
-    const cutoffTime = Date.now() - timeRange;
+    const now = Date.now();
+    const cutoff = now - timeRange;
+
     const recentSessions = Array.from(this.sessions.values())
-      .filter(session => session.created_at.getTime() > cutoffTime);
+      .filter(session => new Date(session.createdAt).getTime() > cutoff);
 
     const uniqueUsers = new Set(recentSessions.map(s => s.userId)).size;
-    const userSessionCounts = new Map<string, { sessions: number; lastActivity: Date }>();
+    const sessionsByUser: Record<string, number> = {};
+    const sessionsByHour: Record<number, number> = {};
+    const userLastActivity: Record<string, Date> = {};
 
     recentSessions.forEach(session => {
-      const existing = userSessionCounts.get(session.userId) || { sessions: 0, lastActivity: session.last_activity };
-      existing.sessions++;
-      if (session.last_activity > existing.lastActivity) {
-        existing.lastActivity = session.last_activity;
+      // Count sessions per user
+      sessionsByUser[session.userId] = (sessionsByUser[session.userId] || 0) + 1;
+
+      // Count sessions by hour
+      const hour = new Date(session.createdAt).getHours();
+      sessionsByHour[hour] = (sessionsByHour[hour] || 0) + 1;
+
+      // Track last activity per user
+      const sessionDate = new Date(session.createdAt);
+      if (!userLastActivity[session.userId] || sessionDate > userLastActivity[session.userId]) {
+        userLastActivity[session.userId] = sessionDate;
       }
-      userSessionCounts.set(session.userId, existing);
     });
 
-    const mostActiveUsers = Array.from(userSessionCounts.entries())
-      .map(([userId, data]) => ({ userId, ...data }))
+    const mostActiveUsers = Object.entries(sessionsByUser)
+      .map(([userId, sessions]) => ({
+        userId,
+        sessions,
+        lastActivity: userLastActivity[userId]
+      }))
       .sort((a, b) => b.sessions - a.sessions)
       .slice(0, 10);
-
-    const sessionsByHour: Record<number, number> = {};
-    recentSessions.forEach(session => {
-      const hour = session.created_at.getHours();
-      sessionsByHour[hour] = (sessionsByHour[hour] || 0) + 1;
-    });
 
     return {
       totalSessions: recentSessions.length,
       uniqueUsers,
-      averageSessionsPerUser: recentSessions.length / uniqueUsers,
+      averageSessionsPerUser: uniqueUsers > 0 ? recentSessions.length / uniqueUsers : 0,
       mostActiveUsers,
       sessionsByHour
     };
   }
 }
 
-// Export singleton instance
-export const sessionManager = new SessionManager();
-
-// Export types
-export type { Session, SessionActivity, SessionStats }; 
+export default SessionManager; 

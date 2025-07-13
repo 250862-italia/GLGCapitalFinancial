@@ -319,6 +319,7 @@ export async function POST(request: NextRequest) {
         first_name: firstName,
         last_name: lastName,
         role: 'user',
+        password_hash: 'supabase_auth_managed', // Placeholder since password is managed by Supabase Auth
         is_active: true,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
