@@ -74,7 +74,7 @@ class RealtimeManager {
             type: this.mapTableToEventType(channel),
             data: payload,
             timestamp: new Date(),
-            userId: payload.new?.user_id || payload.old?.user_id,
+            userId: (payload.new as any)?.user_id || (payload.old as any)?.user_id,
             priority: this.calculatePriority(channel, payload)
           };
 
