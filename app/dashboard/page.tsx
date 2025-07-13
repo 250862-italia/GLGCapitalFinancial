@@ -16,7 +16,9 @@ import {
   ArrowDownRight,
   Eye,
   Download,
-  RefreshCw
+  RefreshCw,
+  Wifi,
+  WifiOff
 } from 'lucide-react';
 import { Investment } from "@/types/investment";
 import { Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
@@ -45,13 +47,79 @@ export default function ClientDashboard() {
   const [showBankModal, setShowBankModal] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<any>(null);
   const [bankDetails, setBankDetails] = useState<{iban: string, accountHolder: string, bankName: string, reason: string} | null>(null);
+  const [supabaseConnected, setSupabaseConnected] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    // Test Supabase connection first
+    const testConnection = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('clients')
+          .select('count')
+          .limit(1);
+        
+        if (error) {
+          console.warn('Supabase connection test failed:', error);
+          setSupabaseConnected(false);
+          setConnectionError(error.message);
+        } else {
+          setSupabaseConnected(true);
+          setConnectionError(null);
+        }
+      } catch (err) {
+        console.warn('Supabase connection test failed:', err);
+        setSupabaseConnected(false);
+        setConnectionError('Connection failed');
+      }
+    };
+
+    testConnection();
+  }, []);
 
   useEffect(() => {
     // Load purchased investments from database and bank data from localStorage
     const loadMyInvestments = async () => {
       if (!user) {
         setMyInvestments([]);
+        setIsLoading(false);
+        return;
+      }
+
+      // If Supabase is not connected, use mock data
+      if (!supabaseConnected) {
+        console.log('Using mock data due to Supabase connection issues');
+        const mockInvestments: Investment[] = [
+          {
+            id: 'mock-1',
+            packageName: 'Premium Investment Package',
+            amount: 5000,
+            dailyReturn: 1.2,
+            duration: 30,
+            startDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+            endDate: new Date(Date.now() + 23 * 24 * 60 * 60 * 1000).toISOString(),
+            status: 'active',
+            totalEarned: 420,
+            dailyEarnings: 60,
+            monthlyEarnings: 1800
+          },
+          {
+            id: 'mock-2',
+            packageName: 'Gold Investment Package',
+            amount: 10000,
+            dailyReturn: 1.5,
+            duration: 60,
+            startDate: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
+            endDate: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString(),
+            status: 'active',
+            totalEarned: 2250,
+            dailyEarnings: 150,
+            monthlyEarnings: 4500
+          }
+        ];
+        setMyInvestments(mockInvestments);
+        setIsLoading(false);
         return;
       }
 
@@ -66,6 +134,7 @@ export default function ClientDashboard() {
         if (clientError || !clientData) {
           console.error('Error fetching client data:', clientError);
           setMyInvestments([]);
+          setIsLoading(false);
           return;
         }
 
@@ -81,6 +150,7 @@ export default function ClientDashboard() {
         if (investmentsError) {
           console.error('Error fetching investments:', investmentsError);
           setMyInvestments([]);
+          setIsLoading(false);
           return;
         }
 
@@ -91,6 +161,8 @@ export default function ClientDashboard() {
       } catch (error) {
         console.error('Error loading investments:', error);
         setMyInvestments([]);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -101,8 +173,7 @@ export default function ClientDashboard() {
 
     loadMyInvestments();
     loadBankDetails();
-    setIsLoading(false);
-  }, [user]);
+  }, [user, supabaseConnected]);
 
   // Funzione di normalizzazione per Investment (snake_case -> camelCase)
   function normalizeInvestment(inv: any): Investment {
@@ -355,6 +426,28 @@ export default function ClientDashboard() {
     <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '2rem 1rem' }}>
       <div style={{ maxWidth: 1400, margin: '0 auto' }}>
         
+        {/* Connection Status Indicator */}
+        {!supabaseConnected && (
+          <div style={{
+            background: '#fef3c7',
+            border: '1px solid #f59e0b',
+            borderRadius: '8px',
+            padding: '1rem',
+            marginBottom: '1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <WifiOff size={20} color="#f59e0b" />
+            <div>
+              <strong style={{ color: '#92400e' }}>Offline Mode</strong>
+              <p style={{ margin: '0.25rem 0 0 0', color: '#92400e', fontSize: '0.875rem' }}>
+                Showing demo data. Some features may be limited.
+              </p>
+            </div>
+          </div>
+        )}
+        
         {/* Header */}
         <div style={{ marginBottom: '2rem' }}>
           <h1 style={{ fontSize: '2.5rem', fontWeight: 800, color: '#1f2937', marginBottom: '0.5rem' }}>
@@ -370,8 +463,37 @@ export default function ClientDashboard() {
           {user ? (
             <UserProfile />
           ) : (
-            <div style={{ color: '#dc2626', fontWeight: 700, fontSize: 18, padding: 16, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8 }}>
-              Utente non autenticato
+            <div style={{ 
+              color: '#dc2626', 
+              fontWeight: 700, 
+              fontSize: 18, 
+              padding: 16, 
+              background: '#fef2f2', 
+              border: '1px solid #fecaca', 
+              borderRadius: 8,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}>
+              <AlertCircle size={20} />
+              <div>
+                <div>Utente non autenticato</div>
+                <button 
+                  onClick={() => router.push('/login')}
+                  style={{
+                    background: '#dc2626',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    padding: '0.5rem 1rem',
+                    marginTop: '0.5rem',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem'
+                  }}
+                >
+                  Accedi
+                </button>
+              </div>
             </div>
           )}
         </div>
