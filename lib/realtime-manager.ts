@@ -26,25 +26,42 @@ class RealtimeManager {
   private isConnected = false;
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
+  private isInitialized = false;
 
   constructor() {
-    this.initializeConnection();
+    // Only initialize on client side
+    if (typeof window !== 'undefined') {
+      this.initializeConnection();
+    }
   }
 
   private async initializeConnection() {
+    if (this.isInitialized) return;
+    
     try {
+      this.isInitialized = true;
       // Test connection
       const { data, error } = await supabase.from('clients').select('count').limit(1);
       if (error) {
-        console.warn('Supabase connection test failed:', error);
+        console.warn('Supabase connection test failed:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
         this.isConnected = false;
       } else {
         this.isConnected = true;
         this.reconnectAttempts = 0;
         console.log('Realtime manager connected to Supabase');
       }
-    } catch (error) {
-      console.error('Failed to initialize realtime connection:', error);
+    } catch (error: any) {
+      console.error('Failed to initialize realtime connection:', {
+        message: error.message,
+        details: error.stack,
+        hint: 'Check your environment variables and network connection',
+        code: 'CONNECTION_ERROR'
+      });
       this.isConnected = false;
     }
   }
@@ -56,6 +73,11 @@ class RealtimeManager {
     callback: (payload: any) => void,
     userId?: string
   ): RealtimeSubscription {
+    // Initialize connection if not already done
+    if (!this.isInitialized && typeof window !== 'undefined') {
+      this.initializeConnection();
+    }
+    
     if (!this.isConnected) {
       console.warn('Realtime not connected, using polling fallback');
       return this.createPollingSubscription(channel, event, callback, userId);
