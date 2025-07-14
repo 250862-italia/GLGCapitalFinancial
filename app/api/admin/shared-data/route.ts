@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseAdmin } from '@/lib/supabase';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
 
 // Shared data types
 interface SharedData {
@@ -35,7 +33,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user role to determine access level
-    const { data: user, error: userError } = await supabase.auth.admin.getUserById(userId);
+    const { data: user, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId);
     if (userError || !user.user) {
       return NextResponse.json(
         { error: 'User not found' },
@@ -101,7 +99,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify admin permissions
-    const { data: adminUser, error: adminError } = await supabase.auth.admin.getUserById(adminId);
+    const { data: adminUser, error: adminError } = await supabaseAdmin.auth.admin.getUserById(adminId);
     if (adminError || !adminUser.user) {
       return NextResponse.json(
         { error: 'Admin user not found' },
@@ -173,7 +171,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Verify admin permissions
-    const { data: adminUser, error: adminError } = await supabase.auth.admin.getUserById(adminId);
+    const { data: adminUser, error: adminError } = await supabaseAdmin.auth.admin.getUserById(adminId);
     if (adminError || !adminUser.user) {
       return NextResponse.json(
         { error: 'Admin user not found' },
@@ -240,7 +238,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Verify admin permissions
-    const { data: adminUser, error: adminError } = await supabase.auth.admin.getUserById(adminId);
+    const { data: adminUser, error: adminError } = await supabaseAdmin.auth.admin.getUserById(adminId);
     if (adminError || !adminUser.user) {
       return NextResponse.json(
         { error: 'Admin user not found' },
@@ -299,13 +297,13 @@ async function sendSharedDataNotification(sharedData: any, action: 'create' | 'u
 
     if (targetUsers.includes('all')) {
       // Get all active users
-      const { data: allUsers } = await supabase.auth.admin.listUsers();
+      const { data: allUsers } = await supabaseAdmin.auth.admin.listUsers();
       usersToNotify = allUsers.users.filter(user => 
         user.user_metadata?.role === 'user' && user.email_confirmed_at
       );
     } else {
       // Get specific users
-      const { data: specificUsers } = await supabase.auth.admin.listUsers();
+      const { data: specificUsers } = await supabaseAdmin.auth.admin.listUsers();
       usersToNotify = specificUsers.users.filter(user => 
         targetUsers.includes(user.id) && user.email_confirmed_at
       );

@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseAdmin } from '@/lib/supabase';
 import { emailService } from '@/lib/email-service';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
 
 // Banking details for wire transfers
 const BANK_DETAILS = {
@@ -54,7 +52,7 @@ export async function POST(request: NextRequest) {
     console.log('Processing investment request:', { userId, packageId, amount, packageName });
 
     // Get user details
-    const { data: user, error: userError } = await supabase.auth.admin.getUserById(userId);
+    const { data: user, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId);
     if (userError || !user.user) {
       return NextResponse.json(
         { error: 'User not found' },

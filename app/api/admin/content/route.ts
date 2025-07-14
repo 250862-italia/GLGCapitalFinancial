@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function GET(request: NextRequest) {
   try {
@@ -18,7 +13,7 @@ export async function GET(request: NextRequest) {
     const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : 50;
     const offset = searchParams.get('offset') ? parseInt(searchParams.get('offset')!) : 0;
 
-    let query = supabase
+    let query = supabaseAdmin
       .from('content')
       .select('*')
       .order('created_at', { ascending: false })
@@ -99,7 +94,7 @@ export async function POST(request: NextRequest) {
       insertData.publish_date = new Date().toISOString().split('T')[0];
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('content')
       .insert(insertData)
       .select()
@@ -153,7 +148,7 @@ export async function PUT(request: NextRequest) {
       updateData.publish_date = new Date().toISOString().split('T')[0];
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('content')
       .update(updateData)
       .eq('id', id)
@@ -181,7 +176,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Content ID is required' }, { status: 400 });
     }
 
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from('content')
       .delete()
       .eq('id', id);

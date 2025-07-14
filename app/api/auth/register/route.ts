@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseAdmin } from '@/lib/supabase';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
 
 async function createClientProfile(userId: string, firstName: string, lastName: string, country: string, retries = 3) {
   for (let i = 0; i < retries; i++) {
@@ -177,7 +175,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Register user in Supabase
-    const { data: user, error: registerError } = await supabase.auth.signUp({
+    const { data: user, error: registerError } = await supabaseAdmin.auth.signUp({
       email,
       password,
       options: {
