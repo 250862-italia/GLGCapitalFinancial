@@ -176,3 +176,9 @@ For support and questions:
 - **v1.1.0** - Added document management and uploads
 - **v1.2.0** - Enhanced analytics and reporting
 - **v1.3.0** - Complete CRUD operations and admin panel
+
+## ❗️ Troubleshooting CRUD Admin Packages
+
+- Per poter salvare/modificare/eliminare pacchetti da /admin/packages, l'utente deve essere autenticato come admin o superadmin.
+- Se ricevi errori di permessi (es. permission denied, no insert policy, RLS violation), esegui lo script `fix-rls-policies.sql` su Supabase per sbloccare le policy.
+- Consulta la guida `RLS_FIX_GUIDE.md` per i dettagli.

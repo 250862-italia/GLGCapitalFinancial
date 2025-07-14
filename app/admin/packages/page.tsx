@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from '@/lib/supabase';
 import type { CSSProperties } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function AdminPackagesPage() {
   const [packages, setPackages] = useState<any[]>([]);
@@ -11,6 +12,10 @@ export default function AdminPackagesPage() {
   const [form, setForm] = useState<any>(emptyForm());
   const [isEdit, setIsEdit] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [role, setRole] = useState<string | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
+  const router = useRouter();
 
   function emptyForm() {
     return {
@@ -24,6 +29,26 @@ export default function AdminPackagesPage() {
       status: 'active'
     };
   }
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (!user) {
+        setError('Devi essere autenticato per accedere a questa pagina.');
+        setAuthChecked(true);
+        return;
+      }
+      setUser(user);
+      // Recupera ruolo custom da user_metadata
+      const userRole = user.user_metadata?.role || user.app_metadata?.role || null;
+      setRole(userRole);
+      if (!['admin', 'superadmin'].includes(userRole)) {
+        setError('Accesso negato: solo admin/superadmin possono gestire i pacchetti.');
+      }
+      setAuthChecked(true);
+    };
+    checkAuth();
+  }, []);
 
   useEffect(() => {
     fetchPackages();
@@ -59,20 +84,9 @@ export default function AdminPackagesPage() {
     e.preventDefault();
     setSaving(true);
     setError(null);
-    let res;
-    if (isEdit && form.id) {
-      res = await supabase.from('packages').update({
-        name: form.name,
-        description: form.description,
-        min_investment: Number(form.min_investment),
-        max_investment: Number(form.max_investment),
-        duration: Number(form.duration),
-        expected_return: Number(form.expected_return),
-        status: form.status
-      }).eq('id', form.id);
-    } else {
-      res = await supabase.from('packages').insert([
-        {
+    try {
+      if (isEdit && form.id) {
+        res = await supabase.from('packages').update({
           name: form.name,
           description: form.description,
           min_investment: Number(form.min_investment),
@@ -80,11 +94,30 @@ export default function AdminPackagesPage() {
           duration: Number(form.duration),
           expected_return: Number(form.expected_return),
           status: form.status
+        }).eq('id', form.id);
+      } else {
+        res = await supabase.from('packages').insert([
+          {
+            name: form.name,
+            description: form.description,
+            min_investment: Number(form.min_investment),
+            max_investment: Number(form.max_investment),
+            duration: Number(form.duration),
+            expected_return: Number(form.expected_return),
+            status: form.status
+          }
+        ]);
+      }
+      if (res.error) {
+        if (res.error.message.match(/permission denied|no insert policy|RLS/)) {
+          setError('Errore di permessi: le policy RLS potrebbero essere troppo restrittive. Contatta un amministratore.');
+        } else {
+          setError(res.error.message);
         }
-      ]);
+      } else closeModal();
+    } catch (err: any) {
+      setError('Errore imprevisto: ' + (err.message || err));
     }
-    if (res.error) setError(res.error.message);
-    else closeModal();
     setSaving(false);
     fetchPackages();
   }
@@ -93,8 +126,18 @@ export default function AdminPackagesPage() {
     if (!window.confirm('Sei sicuro di voler eliminare questo pacchetto?')) return;
     setSaving(true);
     setError(null);
-    const { error } = await supabase.from('packages').delete().eq('id', id);
-    if (error) setError(error.message);
+    try {
+      const { error } = await supabase.from('packages').delete().eq('id', id);
+      if (error) {
+        if (error.message.match(/permission denied|no delete policy|RLS/)) {
+          setError('Errore di permessi: le policy RLS potrebbero essere troppo restrittive. Contatta un amministratore.');
+        } else {
+          setError(error.message);
+        }
+      }
+    } catch (err: any) {
+      setError('Errore imprevisto: ' + (err.message || err));
+    }
     setSaving(false);
     fetchPackages();
   }
@@ -110,6 +153,10 @@ export default function AdminPackagesPage() {
   const modalStyle: CSSProperties = { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 };
   const modalContentStyle = { background: '#fff', padding: '24px', borderRadius: '8px', width: '90%', maxWidth: '600px', maxHeight: '90vh', overflow: 'auto' };
   const inputStyle = { width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '14px' };
+
+  // Blocca la UI se non admin/superadmin o non autenticato
+  if (!authChecked) return <div>Controllo autenticazione...</div>;
+  if (error) return <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '24px', borderRadius: '8px', margin: '40px auto', maxWidth: 600, fontSize: 18 }}>{error}</div>;
 
   return (
     <div style={containerStyle}>
