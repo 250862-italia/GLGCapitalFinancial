@@ -9,7 +9,7 @@ async function createClientProfile(userId: string, firstName: string, lastName: 
       console.log(`Attempt ${i + 1} to create client profile for user:`, userId);
       
       // Test connection first
-      const { data: connectionTest, error: connectionError } = await supabase
+      const { data: connectionTest, error: connectionError } = await supabaseAdmin
         .from('clients')
         .select('count')
         .limit(1);
@@ -32,7 +32,7 @@ async function createClientProfile(userId: string, firstName: string, lastName: 
         return mockProfile;
       }
       
-      const { data: client, error: clientError } = await supabase
+      const { data: client, error: clientError } = await supabaseAdmin
         .from('clients')
         .insert({
           user_id: userId,
@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
     console.log('Starting registration for:', email);
 
     // Test Supabase connection first
-    const { data: connectionTest, error: connectionError } = await supabase
+    const { data: connectionTest, error: connectionError } = await supabaseAdmin
       .from('clients')
       .select('count')
       .limit(1);
@@ -209,7 +209,7 @@ export async function POST(request: NextRequest) {
     await new Promise(resolve => setTimeout(resolve, 2000));
 
     // Insert user into users table first
-    const { error: userInsertError } = await supabase
+    const { error: userInsertError } = await supabaseAdmin
       .from('users')
       .insert({
         id: user.user.id,
