@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { emailService } from '@/lib/email-service';
 
 export const dynamic = 'force-dynamic';
 
@@ -105,22 +106,19 @@ Date: ${new Date().toLocaleDateString()}
 Time: ${new Date().toLocaleTimeString()}
     `;
 
-    // Send email using the existing email service
-    const email_response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/send-email`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        to: 'corefound@glgcapitalgroupllc.com',
-        subject: `Informational Request - ${first_name} ${last_name}`,
-        text: email_content,
-        html: email_content.replace(/\n/g, '<br>'),
-        from: email
-      })
+    // Send email using the new Supabase email service
+    const emailSent = await emailService.sendInformationalRequestEmail({
+      id: request_data.id,
+      first_name,
+      last_name,
+      email,
+      phone,
+      country,
+      city,
+      additionalNotes: additional_notes
     });
 
-    if (!email_response.ok) {
+    if (!emailSent) {
       console.error('Email sending failed');
       // Still return success since the request was saved to database
       // The admin can manually send the email later

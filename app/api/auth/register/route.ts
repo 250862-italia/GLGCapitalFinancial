@@ -112,111 +112,11 @@ async function createClientProfile(userId: string, firstName: string, lastName: 
   }
 }
 
+import { emailService } from '@/lib/email-service';
+
 async function sendWelcomeEmail(email: string, firstName: string, lastName: string) {
   try {
-    const emailConfig = {
-      service: process.env.EMAIL_SERVICE || 'resend',
-      apiKey: process.env.RESEND_API_KEY || process.env.SENDGRID_API_KEY,
-      fromEmail: process.env.EMAIL_FROM || 'noreply@glgcapitalgroupllc.com'
-    };
-
-    const welcomeEmailHtml = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-          <h1 style="margin: 0; font-size: 28px;">Welcome to GLG Capital Group</h1>
-          <p style="margin: 10px 0 0 0; opacity: 0.9;">Your account has been successfully created</p>
-        </div>
-        
-        <div style="background: white; padding: 30px; border: 1px solid #e5e7eb; border-radius: 0 0 10px 10px;">
-          <h2 style="color: #1f2937; margin-bottom: 20px;">Hello ${firstName} ${lastName},</h2>
-          
-          <p style="color: #374151; line-height: 1.6; margin-bottom: 20px;">
-            Welcome to GLG Capital Group! Your account has been successfully created and you're now part of our exclusive investment community.
-          </p>
-          
-          <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="color: #1f2937; margin-top: 0;">What's Next?</h3>
-            <ul style="color: #374151; line-height: 1.6;">
-              <li>Complete your profile with additional information</li>
-              <li>Explore our investment packages</li>
-              <li>Set up your banking details for transactions</li>
-              <li>Review our terms and conditions</li>
-            </ul>
-          </div>
-          
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard" 
-               style="background: #3b82f6; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 600;">
-              Access Your Dashboard
-            </a>
-          </div>
-          
-          <p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
-            If you have any questions, please contact our support team at 
-            <a href="mailto:support@glgcapitalgroupllc.com" style="color: #3b82f6;">support@glgcapitalgroupllc.com</a>
-          </p>
-          
-          <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
-          
-          <p style="color: #6b7280; font-size: 12px; text-align: center;">
-            This email was sent to ${email}. If you didn't create this account, please ignore this email.
-          </p>
-        </div>
-      </div>
-    `;
-
-    // Try Resend first
-    if (emailConfig.service === 'resend' && emailConfig.apiKey) {
-      const resendResponse = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${emailConfig.apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          from: emailConfig.fromEmail,
-          to: [email],
-          subject: 'Welcome to GLG Capital Group - Account Created Successfully',
-          html: welcomeEmailHtml,
-        }),
-      });
-
-      if (resendResponse.ok) {
-        console.log('Welcome email sent via Resend');
-        return true;
-      }
-    }
-
-    // Try SendGrid as fallback
-    if (emailConfig.service === 'sendgrid' && emailConfig.apiKey) {
-      const sendgridResponse = await fetch('https://api.sendgrid.com/v3/mail/send', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${emailConfig.apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          personalizations: [{ to: [{ email: email }] }],
-          from: { email: emailConfig.fromEmail },
-          subject: 'Welcome to GLG Capital Group - Account Created Successfully',
-          content: [{ type: 'text/html', value: welcomeEmailHtml }],
-        }),
-      });
-
-      if (sendgridResponse.ok) {
-        console.log('Welcome email sent via SendGrid');
-        return true;
-      }
-    }
-
-    // If no email service configured, log the email content
-    console.log('No email service configured. Welcome email content:', {
-      to: email,
-      subject: 'Welcome to GLG Capital Group - Account Created Successfully',
-      html: welcomeEmailHtml
-    });
-
-    return true; // Return true even if email service is not configured
+    return await emailService.sendWelcomeEmail(email, firstName, lastName);
   } catch (error) {
     console.error('Error sending welcome email:', error);
     return false; // Don't fail registration if email fails

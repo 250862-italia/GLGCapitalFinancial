@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { emailService } from '@/lib/email-service';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -25,158 +26,13 @@ async function sendInvestmentNotificationEmails(
   investmentId: string
 ) {
   try {
-    const emailConfig = {
-      service: process.env.EMAIL_SERVICE || 'resend',
-      apiKey: process.env.RESEND_API_KEY || process.env.SENDGRID_API_KEY,
-      fromEmail: process.env.EMAIL_FROM || 'noreply@glgcapitalgroupllc.com'
-    };
-
-    // Email to support team
-    const supportEmailHtml = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="background: #dc2626; color: white; padding: 20px; text-align: center; border-radius: 8px;">
-          <h2 style="margin: 0;">New Investment Request</h2>
-        </div>
-        
-        <div style="background: white; padding: 20px; border: 1px solid #e5e7eb; border-radius: 0 0 8px 8px;">
-          <h3>Investment Details:</h3>
-          <ul>
-            <li><strong>Client:</strong> ${userName} (${userEmail})</li>
-            <li><strong>Package:</strong> ${packageName}</li>
-            <li><strong>Amount:</strong> $${amount.toLocaleString()}</li>
-            <li><strong>Investment ID:</strong> ${investmentId}</li>
-            <li><strong>Date:</strong> ${new Date().toLocaleString()}</li>
-          </ul>
-          
-          <p>Please process this investment request and send banking details to the client.</p>
-        </div>
-      </div>
-    `;
-
-    // Email to client with banking details
-    const clientEmailHtml = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-          <h1 style="margin: 0; font-size: 28px;">Investment Request Confirmed</h1>
-          <p style="margin: 10px 0 0 0; opacity: 0.9;">Your investment request has been received</p>
-        </div>
-        
-        <div style="background: white; padding: 30px; border: 1px solid #e5e7eb; border-radius: 0 0 10px 10px;">
-          <h2 style="color: #1f2937; margin-bottom: 20px;">Hello ${userName},</h2>
-          
-          <p style="color: #374151; line-height: 1.6; margin-bottom: 20px;">
-            Thank you for your investment request for the <strong>${packageName}</strong> package. 
-            Your request has been received and is being processed.
-          </p>
-          
-          <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="color: #166534; margin-top: 0;">Investment Details:</h3>
-            <ul style="color: #166534; line-height: 1.6;">
-              <li><strong>Package:</strong> ${packageName}</li>
-              <li><strong>Investment Amount:</strong> $${amount.toLocaleString()}</li>
-              <li><strong>Investment ID:</strong> ${investmentId}</li>
-              <li><strong>Status:</strong> Pending Payment</li>
-            </ul>
-          </div>
-          
-          <div style="background: #fef3c7; border: 1px solid #f59e0b; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="color: #92400e; margin-top: 0;">Banking Details for Wire Transfer:</h3>
-            <div style="background: #f8fafc; padding: 15px; border-radius: 6px; font-family: monospace; font-size: 14px;">
-              <p><strong>Beneficiary:</strong> ${BANK_DETAILS.beneficiary}</p>
-              <p><strong>Account Number:</strong> ${BANK_DETAILS.accountNumber}</p>
-              <p><strong>Routing Number:</strong> ${BANK_DETAILS.routingNumber}</p>
-              <p><strong>SWIFT/BIC:</strong> ${BANK_DETAILS.swiftBic}</p>
-              <p><strong>Bank:</strong> ${BANK_DETAILS.bankName}</p>
-              <p><strong>Reference:</strong> Investment ${packageName} - ${userEmail}</p>
-            </div>
-          </div>
-          
-          <div style="background: #eff6ff; border: 1px solid #3b82f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="color: #1e40af; margin-top: 0;">Next Steps:</h3>
-            <ol style="color: #1e40af; line-height: 1.6;">
-              <li>Complete the wire transfer using the banking details above</li>
-              <li>Include the reference number in your transfer description</li>
-              <li>Send the wire transfer receipt to our support team</li>
-              <li>Your investment will be activated within 24-48 hours after payment confirmation</li>
-            </ol>
-          </div>
-          
-          <p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
-            If you have any questions, please contact our support team at 
-            <a href="mailto:corefound@glgcapitalgroupllc.com" style="color: #3b82f6;">corefound@glgcapitalgroupllc.com</a>
-          </p>
-        </div>
-      </div>
-    `;
-
-    // Send to support team
-    if (emailConfig.apiKey) {
-      if (emailConfig.service === 'resend') {
-        await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${emailConfig.apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            from: emailConfig.fromEmail,
-            to: ['corefound@glgcapitalgroupllc.com'],
-            subject: `Investment Request - ${packageName} Package - ${userName}`,
-            html: supportEmailHtml,
-          }),
-        });
-      } else if (emailConfig.service === 'sendgrid') {
-        await fetch('https://api.sendgrid.com/v3/mail/send', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${emailConfig.apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            personalizations: [{ to: [{ email: 'corefound@glgcapitalgroupllc.com' }] }],
-            from: { email: emailConfig.fromEmail },
-            subject: `Investment Request - ${packageName} Package - ${userName}`,
-            content: [{ type: 'text/html', value: supportEmailHtml }],
-          }),
-        });
-      }
-    }
-
-    // Send to client
-    if (emailConfig.apiKey) {
-      if (emailConfig.service === 'resend') {
-        await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${emailConfig.apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            from: emailConfig.fromEmail,
-            to: [userEmail],
-            subject: `Investment Request Confirmation - ${packageName} Package`,
-            html: clientEmailHtml,
-          }),
-        });
-      } else if (emailConfig.service === 'sendgrid') {
-        await fetch('https://api.sendgrid.com/v3/mail/send', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${emailConfig.apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            personalizations: [{ to: [{ email: userEmail }] }],
-            from: { email: emailConfig.fromEmail },
-            subject: `Investment Request Confirmation - ${packageName} Package`,
-            content: [{ type: 'text/html', value: clientEmailHtml }],
-          }),
-        });
-      }
-    }
-
-    console.log('Investment notification emails sent successfully');
-    return true;
+    return await emailService.sendInvestmentNotification(
+      userEmail, 
+      userName, 
+      packageName, 
+      amount, 
+      investmentId
+    );
   } catch (error) {
     console.error('Error sending investment notification emails:', error);
     return false;
