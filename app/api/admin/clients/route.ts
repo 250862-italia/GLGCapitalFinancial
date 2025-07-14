@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     // First get all clients without join to avoid RLS recursion
-    const { data: clients, error: clientsError } = await supabase
+    const { data: clients, error: clientsError } = await supabaseAdmin
       .from('clients')
       .select('*')
       .order('created_at', { ascending: false });
@@ -19,7 +19,7 @@ export async function GET() {
     }
 
     // Then get users separately
-    const { data: users, error: usersError } = await supabase
+    const { data: users, error: usersError } = await supabaseAdmin
       .from('users')
       .select('id, email, first_name, last_name, role, is_active, last_login, created_at, updated_at')
       .in('id', clients?.map(c => c.user_id) || []);
@@ -80,7 +80,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Client ID is required' }, { status: 400 });
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('clients')
       .update(updateData)
       .eq('id', id)
@@ -108,7 +108,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Client ID is required' }, { status: 400 });
     }
 
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from('clients')
       .delete()
       .eq('id', id);

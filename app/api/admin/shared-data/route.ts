@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 
 
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
     const isAdmin = userRole === 'admin' || userRole === 'superadmin';
 
     // Build query
-    let query = supabase
+    let query = supabaseAdmin
       .from('shared_data')
       .select('*')
       .order('created_at', { ascending: false })
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create shared data record
-    const { data: sharedData, error } = await supabase
+    const { data: sharedData, error } = await supabaseAdmin
       .from('shared_data')
       .insert({
         type,
@@ -188,7 +188,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Update shared data
-    const { data: updatedData, error } = await supabase
+    const { data: updatedData, error } = await supabaseAdmin
       .from('shared_data')
       .update({
         ...updates,
@@ -255,7 +255,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Delete shared data
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from('shared_data')
       .delete()
       .eq('id', dataId);
@@ -312,7 +312,7 @@ async function sendSharedDataNotification(sharedData: any, action: 'create' | 'u
     // Send notifications to each user
     for (const user of usersToNotify) {
       // Create notification record
-      await supabase
+      await supabaseAdmin
         .from('notifications')
         .insert({
           user_id: user.id,

@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 
 
 export async function GET() {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('system_settings')
       .select('*')
       .single();
@@ -26,7 +26,7 @@ export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
     
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('system_settings')
       .upsert(body, { onConflict: 'id' })
       .select()

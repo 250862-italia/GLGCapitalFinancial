@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { emailService } from '@/lib/email-service';
 
 
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get client profile
-    const { data: client, error: clientError } = await supabase
+    const { data: client, error: clientError } = await supabaseAdmin
       .from('clients')
       .select('*')
       .eq('user_id', userId)
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create investment record
-    const { data: investment, error: investmentError } = await supabase
+    const { data: investment, error: investmentError } = await supabaseAdmin
       .from('investments')
       .insert({
         user_id: userId,
@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
     );
 
     // Create notification record
-    await supabase
+    await supabaseAdmin
       .from('notifications')
       .insert({
         user_id: userId,
@@ -152,7 +152,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { data: investments, error } = await supabase
+    const { data: investments, error } = await supabaseAdmin
       .from('investments')
       .select(`
         *,

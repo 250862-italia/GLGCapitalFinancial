@@ -29,12 +29,10 @@ for (const file of files) {
     continue;
   }
   let content = fs.readFileSync(file, 'utf8');
-  // Sostituisci tutte le occorrenze di 'supabase' (che non siano già 'supabaseAdmin') con 'supabaseAdmin'
-  // Escludi l'import
-  content = content.replace(/([^A-Za-z0-9_])supabase\./g, '$1supabaseAdmin.');
-  // Sostituisci anche dichiarazioni tipo 'const supabase = ...' con 'const supabaseAdmin = ...' se presenti
-  content = content.replace(/const supabase(\s*=)/g, 'const supabaseAdmin$1');
+  // Sostituisci tutte le occorrenze di 'supabase' che NON sono già 'supabaseAdmin'
+  // Usa regex con lookbehind e lookahead per evitare di toccare 'supabaseAdmin'
+  content = content.replace(/(?<![A-Za-z0-9_])supabase(?!Admin)/g, 'supabaseAdmin');
   fs.writeFileSync(file, content, 'utf8');
   console.log(`✔️  Fixed: ${file}`);
 }
-console.log('✅ Tutte le occorrenze di supabase sono state sostituite con supabaseAdmin nei file target.'); 
+console.log('✅ Tutte le occorrenze di supabase sono state sostituite con supabaseAdmin nei file target (anche senza punto).'); 
