@@ -85,6 +85,7 @@ export default function AdminPackagesPage() {
     setSaving(true);
     setError(null);
     try {
+      let res;
       if (isEdit && form.id) {
         res = await supabase.from('packages').update({
           name: form.name,
