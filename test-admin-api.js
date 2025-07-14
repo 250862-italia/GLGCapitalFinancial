@@ -1,6 +1,6 @@
 const fetch = require('node-fetch');
 
-const BASE_URL = 'https://glgcapitalfinancial-io7qm84zx-250862-italias-projects.vercel.app';
+const BASE_URL = 'https://glgcapitalfinancial-8xdcmett9-250862-italias-projects.vercel.app';
 
 async function testAdminAPI() {
   console.log('🧪 Testing Admin API endpoints...\n');
