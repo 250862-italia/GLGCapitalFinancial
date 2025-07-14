@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
     // Fetch users from Supabase Auth and join with client profiles
-    const { data: users, error } = await supabase.auth.admin.listUsers();
+    const { data: users, error } = await supabaseAdmin.auth.admin.listUsers();
     
     if (error) {
       console.error('Error fetching users:', error);
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get client profiles for all users
-    const { data: clients, error: clientsError } = await supabase
+    const { data: clients, error: clientsError } = await supabaseAdmin
       .from('clients')
       .select('*');
 

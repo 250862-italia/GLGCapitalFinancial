@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('payments')
       .select(`
         *,
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('payments')
       .insert(body)
       .select()
@@ -53,7 +53,7 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
     const { id, ...updateData } = body;
     
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('payments')
       .update(updateData)
       .eq('id', id)
@@ -81,7 +81,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Payment ID is required' }, { status: 400 });
     }
 
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from('payments')
       .delete()
       .eq('id', id);

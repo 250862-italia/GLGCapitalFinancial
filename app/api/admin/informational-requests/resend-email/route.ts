@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase';
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get the informational request
-    const { data: requestData, error: fetchError } = await supabase
+    const { data: requestData, error: fetchError } = await supabaseAdmin
       .from('informational_requests')
       .select('*')
       .eq('id', requestId)
@@ -109,7 +109,7 @@ Time: ${new Date().toLocaleTimeString()}
     }
 
     // Update the request to mark email as sent
-    const { error: updateError } = await supabase
+    const { error: updateError } = await supabaseAdmin
       .from('informational_requests')
       .update({
         emailSent: true,

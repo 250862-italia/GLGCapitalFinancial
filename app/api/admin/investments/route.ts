@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
   try {
     // Fetch investments from Supabase
-    const { data: investments, error } = await supabase
+    const { data: investments, error } = await supabaseAdmin
       .from('investments')
       .select('*');
 
@@ -19,14 +19,14 @@ export async function GET(request: NextRequest) {
     const investmentsWithDetails = await Promise.all(
       investments.map(async (investment) => {
         // Get user details
-        const { data: user } = await supabase
+        const { data: user } = await supabaseAdmin
           .from('users')
           .select('id, email, first_name, last_name, phone')
           .eq('id', investment.user_id)
           .single();
 
         // Get client details
-        const { data: client } = await supabase
+        const { data: client } = await supabaseAdmin
           .from('clients')
           .select('id, first_name, last_name, country')
           .eq('user_id', investment.user_id)
@@ -74,7 +74,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Update investment status in Supabase
-    const { data: updatedInvestment, error } = await supabase
+    const { data: updatedInvestment, error } = await supabaseAdmin
       .from('investments')
       .update({ 
         status: status,
