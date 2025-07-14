@@ -3,8 +3,6 @@ import { supabaseAdmin } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
-    const supabaseAdmin = supabaseAdmin;
-    
     // Execute the reload_schema_cache function
     const { data, error } = await supabaseAdmin.rpc('reload_schema_cache');
     
