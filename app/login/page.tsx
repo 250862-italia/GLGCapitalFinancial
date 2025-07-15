@@ -1,11 +1,13 @@
 "use client";
-export const dynamic = "force-dynamic";
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Eye, EyeOff, Lock, Mail, AlertCircle, CheckCircle } from 'lucide-react';
+import { AlertCircle, CheckCircle, Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 
 interface LoginData {
   email: string;

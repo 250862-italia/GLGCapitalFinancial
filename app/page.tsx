@@ -1,399 +1,318 @@
-import { Suspense } from 'react';
 import Link from 'next/link';
+import { Suspense } from 'react';
 
-// Hero Section Component with enhanced animations
-function HeroSection() {
+export default function HomePage() {
   return (
-    <section className="hero-section">
-      <div className="hero-background">
-        <div className="hero-particles"></div>
-        <div className="hero-grid"></div>
-      </div>
-      
-      <div className="hero-content">
-        <div className="hero-text">
-          <div className="hero-badge">
-            <span className="badge-icon">🏆</span>
-            <span>Trusted by 500+ Investors Worldwide</span>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+      {/* Hero Section */}
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        {/* Background Elements */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"></div>
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.03"%3E%3Ccircle cx="30" cy="30" r="2"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-30"></div>
+        
+        {/* Floating Elements */}
+        <div className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-br from-amber-400 to-amber-600 rounded-full opacity-10 animate-pulse"></div>
+        <div className="absolute top-40 right-20 w-24 h-24 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full opacity-10 animate-pulse delay-1000"></div>
+        <div className="absolute bottom-40 left-20 w-20 h-20 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full opacity-10 animate-pulse delay-2000"></div>
+        
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-6 py-3 mb-8 animate-fade-in-up">
+            <div className="w-2 h-2 bg-amber-400 rounded-full animate-pulse"></div>
+            <span className="text-white/90 text-sm font-medium tracking-wide">Private Banking Excellence</span>
           </div>
-          
-          <h1 className="hero-title">
-            <span className="title-line">GLG Capital Group</span>
-            <span className="title-accent">LLC</span>
-            <span className="hero-subtitle">Strategic Investment Solutions</span>
+
+          {/* Main Title */}
+          <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight animate-fade-in-up delay-100">
+            <span className="block">GLG Capital</span>
+            <span className="block bg-gradient-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent">Financial Group</span>
           </h1>
-          
-          <p className="hero-description">
-            Empowering sophisticated investors with exclusive access to high-growth opportunities, 
-            strategic capital management, and personalized wealth solutions for optimal portfolio performance.
+
+          {/* Subtitle */}
+          <p className="text-xl md:text-2xl text-white/80 mb-12 max-w-3xl mx-auto leading-relaxed animate-fade-in-up delay-200">
+            Elevating wealth management through innovative investment strategies, 
+            personalized service, and unwavering commitment to client success.
+          </p>
+
+          {/* Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12 max-w-4xl mx-auto animate-fade-in-up delay-300">
+            <div className="text-center">
+              <div className="text-3xl md:text-4xl font-bold text-amber-400 mb-2">$2.5B+</div>
+              <div className="text-white/70 text-sm uppercase tracking-wide">Assets Under Management</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl md:text-4xl font-bold text-amber-400 mb-2">15+</div>
+              <div className="text-white/70 text-sm uppercase tracking-wide">Years of Excellence</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl md:text-4xl font-bold text-amber-400 mb-2">500+</div>
+              <div className="text-white/70 text-sm uppercase tracking-wide">Satisfied Clients</div>
+            </div>
+          </div>
+
+          {/* CTA Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in-up delay-400">
+            <Link 
+              href="/register" 
+              className="btn-primary text-lg px-10 py-4 shadow-ultra hover:shadow-2xl"
+            >
+              Begin Your Journey
+            </Link>
+            <Link 
+              href="/about" 
+              className="btn-secondary text-lg px-10 py-4 bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20"
+            >
+              Learn More
+            </Link>
+          </div>
+        </div>
+
+        {/* Scroll Indicator */}
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+          <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center">
+            <div className="w-1 h-3 bg-white/60 rounded-full mt-2 animate-pulse"></div>
+          </div>
+        </div>
+      </section>
+
+      {/* Services Section */}
+      <section className="section-padding bg-white">
+        <div className="max-w-7xl mx-auto container-padding">
+          {/* Section Header */}
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 bg-amber-50 text-amber-700 rounded-full px-4 py-2 text-sm font-medium mb-6">
+              <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
+              Our Services
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-6">
+              Comprehensive Wealth Management
+            </h2>
+            <p className="text-xl text-slate-600 max-w-3xl mx-auto">
+              Tailored financial solutions designed to preserve and grow your wealth 
+              through market expertise and personalized strategies.
+            </p>
+          </div>
+
+          {/* Services Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* Investment Management */}
+            <div className="card card-hover p-8 text-center group">
+              <div className="w-16 h-16 bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-bold text-slate-900 mb-4">Investment Management</h3>
+              <p className="text-slate-600 mb-6 leading-relaxed">
+                Strategic portfolio management with diversified investment strategies 
+                designed to maximize returns while managing risk.
+              </p>
+              <ul className="text-left space-y-3 text-slate-600">
+                <li className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                  Custom portfolio construction
+                </li>
+                <li className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                  Risk management strategies
+                </li>
+                <li className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                  Regular performance reviews
+                </li>
+              </ul>
+            </div>
+
+            {/* Private Banking */}
+            <div className="card card-hover p-8 text-center group">
+              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-bold text-slate-900 mb-4">Private Banking</h3>
+              <p className="text-slate-600 mb-6 leading-relaxed">
+                Exclusive banking services with dedicated relationship managers 
+                providing personalized financial solutions and exceptional service.
+              </p>
+              <ul className="text-left space-y-3 text-slate-600">
+                <li className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                  Dedicated relationship managers
+                </li>
+                <li className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                  Premium banking services
+                </li>
+                <li className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                  Concierge financial services
+                </li>
+              </ul>
+            </div>
+
+            {/* Wealth Planning */}
+            <div className="card card-hover p-8 text-center group">
+              <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-bold text-slate-900 mb-4">Wealth Planning</h3>
+              <p className="text-slate-600 mb-6 leading-relaxed">
+                Comprehensive financial planning including estate planning, 
+                tax optimization, and legacy preservation strategies.
+              </p>
+              <ul className="text-left space-y-3 text-slate-600">
+                <li className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                  Estate planning services
+                </li>
+                <li className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                  Tax optimization strategies
+                </li>
+                <li className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                  Legacy preservation
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="section-padding bg-gradient-to-br from-slate-50 to-slate-100">
+        <div className="max-w-7xl mx-auto container-padding">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            {/* Content */}
+            <div>
+              <div className="inline-flex items-center gap-2 bg-amber-50 text-amber-700 rounded-full px-4 py-2 text-sm font-medium mb-6">
+                <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
+                Why Choose GLG
+              </div>
+              <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-6">
+                Unparalleled Expertise & Service
+              </h2>
+              <p className="text-xl text-slate-600 mb-8 leading-relaxed">
+                Our team of seasoned financial professionals brings decades of experience 
+                in wealth management, ensuring your financial goals are met with precision and care.
+              </p>
+              
+              <div className="space-y-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-900 mb-2">Expert Team</h3>
+                    <p className="text-slate-600">Certified financial advisors with specialized expertise in private banking and wealth management.</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-900 mb-2">Secure & Private</h3>
+                    <p className="text-slate-600">Bank-level security with complete privacy protection for your financial information.</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-900 mb-2">Proven Results</h3>
+                    <p className="text-slate-600">Consistent track record of delivering exceptional returns while managing risk effectively.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Visual */}
+            <div className="relative">
+              <div className="card p-8 bg-white shadow-premium">
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-2xl font-bold text-slate-900">Portfolio Performance</div>
+                      <div className="text-slate-600">Last 12 months</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-3xl font-bold text-emerald-600">+18.5%</div>
+                      <div className="text-sm text-emerald-600">+2.3% vs benchmark</div>
+                    </div>
+                  </div>
+                  
+                  <div className="h-32 bg-gradient-to-r from-emerald-500 to-blue-500 rounded-lg flex items-center justify-center">
+                    <div className="text-white text-center">
+                      <div className="text-2xl font-bold">Interactive Chart</div>
+                      <div className="text-sm opacity-80">Performance visualization</div>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center p-4 bg-slate-50 rounded-lg">
+                      <div className="text-2xl font-bold text-slate-900">$2.5B</div>
+                      <div className="text-sm text-slate-600">AUM</div>
+                    </div>
+                    <div className="text-center p-4 bg-slate-50 rounded-lg">
+                      <div className="text-2xl font-bold text-slate-900">15+</div>
+                      <div className="text-sm text-slate-600">Years</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Floating Elements */}
+              <div className="absolute -top-4 -right-4 w-20 h-20 bg-gradient-to-br from-amber-400 to-amber-600 rounded-full opacity-20 animate-pulse"></div>
+              <div className="absolute -bottom-4 -left-4 w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full opacity-20 animate-pulse delay-1000"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="section-padding bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div className="max-w-4xl mx-auto text-center container-padding">
+          <div className="inline-flex items-center gap-2 bg-amber-500/20 text-amber-400 rounded-full px-4 py-2 text-sm font-medium mb-6">
+            <div className="w-2 h-2 bg-amber-400 rounded-full"></div>
+            Ready to Start?
+          </div>
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+            Begin Your Wealth Journey Today
+          </h2>
+          <p className="text-xl text-white/80 mb-8 leading-relaxed">
+            Join hundreds of satisfied clients who trust GLG Capital Financial Group 
+            with their wealth management needs.
           </p>
           
-          <div className="hero-stats">
-            <div className="stat-item">
-              <div className="stat-number">$2.5B+</div>
-              <div className="stat-label">Assets Managed</div>
-            </div>
-            <div className="stat-item">
-              <div className="stat-number">15.2%</div>
-              <div className="stat-label">Avg. Annual Return</div>
-            </div>
-            <div className="stat-item">
-              <div className="stat-number">25+</div>
-              <div className="stat-label">Years Experience</div>
-            </div>
-          </div>
-          
-          <div className="hero-buttons">
-            <Link href="/register" className="btn-primary">
-              <span>Start Your Journey</span>
-              <svg className="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Link 
+              href="/register" 
+              className="btn-primary text-lg px-10 py-4 shadow-ultra hover:shadow-2xl"
+            >
+              Get Started Now
             </Link>
-            <Link href="/about" className="btn-secondary">
-              <span>Learn More</span>
-              <svg className="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-              </svg>
+            <Link 
+              href="/contact" 
+              className="btn-secondary text-lg px-10 py-4 bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20"
+            >
+              Contact Us
             </Link>
           </div>
         </div>
-        
-        <div className="hero-visual">
-          <div className="floating-cards">
-            <div className="card card-1">
-              <div className="card-icon">📈</div>
-              <div className="card-content">
-                <h4>Portfolio Growth</h4>
-                <p>+15.2% Avg. Return</p>
-                <div className="card-progress">
-                  <div className="progress-bar" style={{width: '85%'}}></div>
-                </div>
-              </div>
-            </div>
-            <div className="card card-2">
-              <div className="card-icon">💼</div>
-              <div className="card-content">
-                <h4>Assets Managed</h4>
-                <p>$2.5B+ Portfolio</p>
-                <div className="card-progress">
-                  <div className="progress-bar" style={{width: '92%'}}></div>
-                </div>
-              </div>
-            </div>
-            <div className="card card-3">
-              <div className="card-icon">🌟</div>
-              <div className="card-content">
-                <h4>Client Success</h4>
-                <p>500+ Investors</p>
-                <div className="card-progress">
-                  <div className="progress-bar" style={{width: '78%'}}></div>
-                </div>
-              </div>
-            </div>
-            <div className="card card-4">
-              <div className="card-icon">🎯</div>
-              <div className="card-content">
-                <h4>Success Rate</h4>
-                <p>98% Satisfaction</p>
-                <div className="card-progress">
-                  <div className="progress-bar" style={{width: '98%'}}></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// Enhanced Services Section
-function ServicesSection() {
-  return (
-    <section className="services-section">
-      <div className="container">
-        <div className="section-header">
-          <div className="section-badge">Our Services</div>
-          <h2>Comprehensive Investment Solutions</h2>
-          <p>Tailored financial strategies designed for sophisticated investors seeking exceptional returns</p>
-        </div>
-        
-        <div className="services-grid">
-          <div className="service-card">
-            <div className="service-icon">🏦</div>
-            <div className="service-content">
-              <h3>Private Equity</h3>
-              <p>Access to exclusive private equity opportunities with high-growth potential companies across diverse sectors.</p>
-              <ul>
-                <li>Direct investment opportunities</li>
-                <li>Venture capital partnerships</li>
-                <li>Growth equity strategies</li>
-                <li>Buyout transactions</li>
-              </ul>
-              <div className="service-metrics">
-                <div className="metric">
-                  <span className="metric-value">$850M</span>
-                  <span className="metric-label">Deployed</span>
-                </div>
-                <div className="metric">
-                  <span className="metric-value">24%</span>
-                  <span className="metric-label">Avg. IRR</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div className="service-card">
-            <div className="service-icon">🌍</div>
-            <div className="service-content">
-              <h3>Global Markets</h3>
-              <p>Strategic exposure to international markets with sophisticated risk management and diversification strategies.</p>
-              <ul>
-                <li>Multi-asset portfolios</li>
-                <li>Currency hedging</li>
-                <li>Emerging market access</li>
-                <li>Quantitative strategies</li>
-              </ul>
-              <div className="service-metrics">
-                <div className="metric">
-                  <span className="metric-value">45+</span>
-                  <span className="metric-label">Countries</span>
-                </div>
-                <div className="metric">
-                  <span className="metric-value">12.8%</span>
-                  <span className="metric-label">Avg. Return</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div className="service-card">
-            <div className="service-icon">🏢</div>
-            <div className="service-content">
-              <h3>Real Estate</h3>
-              <p>Premium real estate investment opportunities including commercial properties, development projects, and REITs.</p>
-              <ul>
-                <li>Commercial real estate</li>
-                <li>Development financing</li>
-                <li>Property management</li>
-                <li>REIT investments</li>
-              </ul>
-              <div className="service-metrics">
-                <div className="metric">
-                  <span className="metric-value">$420M</span>
-                  <span className="metric-label">Portfolio</span>
-                </div>
-                <div className="metric">
-                  <span className="metric-value">18.5%</span>
-                  <span className="metric-label">Avg. Return</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div className="service-card">
-            <div className="service-icon">⚡</div>
-            <div className="service-content">
-              <h3>Alternative Investments</h3>
-              <p>Access to hedge funds, commodities, and other alternative assets for enhanced portfolio diversification.</p>
-              <ul>
-                <li>Hedge fund strategies</li>
-                <li>Commodity trading</li>
-                <li>Structured products</li>
-                <li>Digital assets</li>
-              </ul>
-              <div className="service-metrics">
-                <div className="metric">
-                  <span className="metric-value">$180M</span>
-                  <span className="metric-label">AUM</span>
-                </div>
-                <div className="metric">
-                  <span className="metric-value">22.3%</span>
-                  <span className="metric-label">Avg. Return</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// Testimonials Section
-function TestimonialsSection() {
-  return (
-    <section className="testimonials-section">
-      <div className="container">
-        <div className="section-header">
-          <div className="section-badge">Testimonials</div>
-          <h2>What Our Clients Say</h2>
-          <p>Hear from successful investors who trust GLG Capital Group with their financial future</p>
-        </div>
-        
-        <div className="testimonials-grid">
-          <div className="testimonial-card">
-            <div className="testimonial-content">
-              <div className="stars">★★★★★</div>
-              <p>"GLG Capital Group has transformed my investment portfolio. Their strategic approach and exclusive opportunities have delivered exceptional returns year after year."</p>
-            </div>
-            <div className="testimonial-author">
-              <div className="author-avatar">👨‍💼</div>
-              <div className="author-info">
-                <h4>Michael Rodriguez</h4>
-                <span>Portfolio Manager, Tech Ventures</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="testimonial-card">
-            <div className="testimonial-content">
-              <div className="stars">★★★★★</div>
-              <p>"The team's expertise in global markets and risk management is unmatched. They've helped me achieve consistent growth while protecting my capital."</p>
-            </div>
-            <div className="testimonial-author">
-              <div className="author-avatar">👩‍💼</div>
-              <div className="author-info">
-                <h4>Sarah Chen</h4>
-                <span>CEO, Global Enterprises</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="testimonial-card">
-            <div className="testimonial-content">
-              <div className="stars">★★★★★</div>
-              <p>"Outstanding service and results. GLG Capital Group's private equity opportunities have been game-changing for my investment strategy."</p>
-            </div>
-            <div className="testimonial-author">
-              <div className="author-avatar">👨‍💼</div>
-              <div className="author-info">
-                <h4>David Thompson</h4>
-                <span>Angel Investor</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// Enhanced Stats Section
-function StatsSection() {
-  return (
-    <section className="stats-section">
-      <div className="container">
-        <div className="stats-grid">
-          <div className="stat-item">
-            <div className="stat-icon">💰</div>
-            <div className="stat-number">$2.5B+</div>
-            <div className="stat-label">Assets Under Management</div>
-            <div className="stat-trend">+12% YoY</div>
-          </div>
-          <div className="stat-item">
-            <div className="stat-icon">📈</div>
-            <div className="stat-number">15.2%</div>
-            <div className="stat-label">Average Annual Return</div>
-            <div className="stat-trend">+2.1% vs Market</div>
-          </div>
-          <div className="stat-item">
-            <div className="stat-icon">👥</div>
-            <div className="stat-number">500+</div>
-            <div className="stat-label">Satisfied Investors</div>
-            <div className="stat-trend">98% Retention</div>
-          </div>
-          <div className="stat-item">
-            <div className="stat-icon">⏰</div>
-            <div className="stat-number">25+</div>
-            <div className="stat-label">Years of Experience</div>
-            <div className="stat-trend">Since 1998</div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// Enhanced CTA Section
-function CTASection() {
-  return (
-    <section className="cta-section">
-      <div className="container">
-        <div className="cta-content">
-          <div className="cta-badge">Get Started Today</div>
-          <h2>Ready to Transform Your Investment Portfolio?</h2>
-          <p>Join hundreds of successful investors who trust GLG Capital Group with their financial future. Start your journey towards exceptional returns today.</p>
-          
-          <div className="cta-features">
-            <div className="feature">
-              <div className="feature-icon">✅</div>
-              <span>No minimum investment</span>
-            </div>
-            <div className="feature">
-              <div className="feature-icon">✅</div>
-              <span>Personalized strategy</span>
-            </div>
-            <div className="feature">
-              <div className="feature-icon">✅</div>
-              <span>24/7 support</span>
-            </div>
-          </div>
-          
-          <div className="cta-buttons">
-            <Link href="/register" className="btn-primary-large">
-              <span>Create Your Account</span>
-              <svg className="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            </Link>
-            <Link href="/contact" className="btn-outline-large">
-              <span>Speak with an Advisor</span>
-              <svg className="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
-            </Link>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// Main page content
-function HomePageContent() {
-  return (
-    <div className="homepage">
-      <HeroSection />
-      <ServicesSection />
-      <TestimonialsSection />
-      <StatsSection />
-      <CTASection />
+      </section>
     </div>
-  );
-}
-
-// Loading component
-function LoadingFallback() {
-  return (
-    <div className="loading-screen">
-      <div className="loading-content">
-        <div className="loading-logo">
-          <div className="logo-text">GLG</div>
-          <div className="logo-subtitle">Capital Group</div>
-        </div>
-        <div className="loading-spinner"></div>
-        <p>Loading your investment future...</p>
-      </div>
-    </div>
-  );
-}
-
-export default function Home() {
-  return (
-    <Suspense fallback={<LoadingFallback />}>
-      <HomePageContent />
-    </Suspense>
   );
 } 

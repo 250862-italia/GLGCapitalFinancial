@@ -1,33 +1,38 @@
 "use client";
-export const dynamic = "force-dynamic";
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/use-auth';
+import { supabase } from '@/lib/supabase';
 import { 
   TrendingUp, 
+  TrendingDown, 
   DollarSign, 
   Calendar, 
-  Target, 
-  BarChart3, 
-  PieChart,
-  Clock,
-  CheckCircle,
-  AlertCircle,
-  ArrowUpRight,
-  ArrowDownRight,
+  Package, 
+  AlertTriangle, 
+  CheckCircle, 
+  Clock, 
+  BarChart3,
+  RefreshCw,
   Eye,
   Download,
-  RefreshCw,
+  ArrowUpRight,
+  ArrowDownRight,
   Wifi,
-  WifiOff
+  WifiOff,
+  Target,
+  PieChart,
+  AlertCircle
 } from 'lucide-react';
 import { Investment } from "@/types/investment";
 import { Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import UserProfile from "../../components/UserProfile";
-import { useAuth } from "../../hooks/use-auth";
 import { usePackages } from "../../lib/package-context";
 import Toast from "../../components/ui/Toast";
-import { supabase } from "../../lib/supabase";
-import { useRouter } from 'next/navigation';
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 
 interface PortfolioStats {
   totalInvested: number;
