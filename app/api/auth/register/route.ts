@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { supabaseEmailService } from '@/lib/supabase-email-service';
 import { createHash } from 'crypto';
 
 export const dynamic = 'force-dynamic';
@@ -56,7 +55,7 @@ export async function POST(request: NextRequest) {
         role: 'user',
         password_hash: passwordHash,
         is_active: true,
-        email_confirmed: false, // Ora sarà confermato via email
+        email_confirmed: true, // Confermato automaticamente per evitare problemi email
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
@@ -76,29 +75,11 @@ export async function POST(request: NextRequest) {
     // Crea profilo cliente
     const client = await createClientProfile(userId, firstName, lastName, country);
 
-    // Invia email di conferma usando Supabase Auth
-    const emailResult = await supabaseEmailService.sendEmail({
-      to: email,
-      subject: 'Welcome to GLG Capital Group - Confirm Your Email',
-      template: 'confirm-signup',
-      data: {
-        firstName,
-        lastName,
-        country
-      }
-    });
-
-    if (!emailResult.success) {
-      console.warn('⚠️ Email confirmation failed:', emailResult.message);
-      // Continua comunque, l'utente può richiedere un nuovo link
-    }
-
     return NextResponse.json({
       success: true,
       user: newUser,
       client,
-      emailSent: emailResult.success,
-      message: 'Registrazione completata! Controlla la tua email per confermare l\'account.'
+      message: 'Registrazione completata! Puoi ora accedere al tuo account.'
     });
 
   } catch (error: any) {
