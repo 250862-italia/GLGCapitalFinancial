@@ -174,16 +174,15 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Register user in Supabase
-    const { data: user, error: registerError } = await supabaseAdmin.auth.signUp({
+    // Create user directly with admin API to bypass email confirmation
+    const { data: user, error: registerError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
-      options: {
-        data: {
-          first_name: firstName,
-          last_name: lastName,
-          role: 'user'
-        }
+      email_confirm: true, // Auto-confirm email
+      user_metadata: {
+        first_name: firstName,
+        last_name: lastName,
+        role: 'user'
       }
     });
 
@@ -203,20 +202,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('User registered successfully with ID:', user.user.id);
-
-    // Auto-confirm the user's email to bypass rate limit
-    const { error: confirmError } = await supabaseAdmin.auth.admin.updateUserById(
-      user.user.id,
-      { email_confirm: true }
-    );
-
-    if (confirmError) {
-      console.error('Error confirming user email:', confirmError);
-      // Continue anyway, user can still register
-    } else {
-      console.log('User email confirmed successfully');
-    }
+    console.log('User created successfully with ID:', user.user.id);
 
     // Wait a moment to ensure the user is fully created in auth.users
     await new Promise(resolve => setTimeout(resolve, 2000));
