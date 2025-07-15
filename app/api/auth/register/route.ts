@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
-
-
 async function createClientProfile(userId: string, firstName: string, lastName: string, country: string, retries = 3) {
   for (let i = 0; i < retries; i++) {
     try {
@@ -110,17 +108,6 @@ async function createClientProfile(userId: string, firstName: string, lastName: 
   }
 }
 
-import { emailService } from '@/lib/email-service';
-
-async function sendWelcomeEmail(email: string, firstName: string, lastName: string) {
-  try {
-    return await emailService.sendWelcomeEmail(email, firstName, lastName);
-  } catch (error) {
-    console.error('Error sending welcome email:', error);
-    return false; // Don't fail registration if email fails
-  }
-}
-
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -174,7 +161,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Create user directly with admin API to bypass email confirmation
+    // Create user with admin API but WITHOUT email confirmation to avoid rate limits
     const { data: user, error: registerError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
@@ -188,10 +175,48 @@ export async function POST(request: NextRequest) {
 
     if (registerError) {
       console.error('User registration error:', registerError);
-      return NextResponse.json(
-        { error: registerError.message },
-        { status: 500 }
-      );
+      
+      // If it's a rate limit error, try a different approach
+      if (registerError.message.includes('rate limit') || registerError.message.includes('over_email_send_rate_limit')) {
+        console.log('Rate limit detected, trying alternative registration method...');
+        
+        // Create user without email confirmation and manually confirm later
+        const { data: altUser, error: altError } = await supabaseAdmin.auth.admin.createUser({
+          email,
+          password,
+          email_confirm: false, // Don't auto-confirm to avoid email sending
+          user_metadata: {
+            first_name: firstName,
+            last_name: lastName,
+            role: 'user'
+          }
+        });
+
+        if (altError) {
+          console.error('Alternative registration also failed:', altError);
+          return NextResponse.json(
+            { error: 'Registration temporarily unavailable due to email rate limits. Please try again later.' },
+            { status: 429 }
+          );
+        }
+
+        // Manually confirm the user's email
+        const { error: confirmError } = await supabaseAdmin.auth.admin.updateUserById(altUser.user.id, {
+          email_confirm: true
+        });
+
+        if (confirmError) {
+          console.error('Error confirming user email:', confirmError);
+          // Continue anyway, the user can still log in
+        }
+
+        user.user = altUser.user;
+      } else {
+        return NextResponse.json(
+          { error: registerError.message },
+          { status: 500 }
+        );
+      }
     }
 
     if (!user.user?.id) {
@@ -229,9 +254,6 @@ export async function POST(request: NextRequest) {
 
     // Create client profile with retry mechanism
     const client = await createClientProfile(user.user.id, firstName, lastName, country);
-
-    // Send welcome email (don't fail if email fails)
-    await sendWelcomeEmail(email, firstName, lastName);
 
     return NextResponse.json({
       success: true,
