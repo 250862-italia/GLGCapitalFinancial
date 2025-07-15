@@ -25,76 +25,98 @@ export async function POST(request: NextRequest) {
       });
 
       if (!authError && authData.user) {
-        console.log('✅ Login via Supabase Auth successful');
+        console.log('✅ Login tramite Supabase Auth riuscito');
         authMethod = 'supabase_auth';
         
-        // Get user data from our users table
-        const { data: userData, error: userError } = await supabaseAdmin
+        // Get user data from custom users table
+        const { data: dbUser, error: dbError } = await supabaseAdmin
           .from('users')
           .select('*')
           .eq('id', authData.user.id)
           .single();
 
-        if (userData) {
-          user = userData;
+        if (dbUser) {
+          user = {
+            id: dbUser.id,
+            email: dbUser.email,
+            first_name: dbUser.first_name,
+            last_name: dbUser.last_name,
+            email_confirmed: dbUser.email_confirmed || true // Default to true if undefined
+          };
         } else {
-          // Create user record if it doesn't exist
+          // If user doesn't exist in custom table, create it
+          console.log('📝 Creazione record nella tabella users per utente Supabase Auth');
           const { data: newUser, error: createError } = await supabaseAdmin
             .from('users')
             .insert({
               id: authData.user.id,
               email: authData.user.email,
-              first_name: authData.user.user_metadata?.first_name || '',
-              last_name: authData.user.user_metadata?.last_name || '',
-              role: 'user',
-              is_active: true,
+              first_name: '',
+              last_name: '',
               email_confirmed: true,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
+              created_at: new Date().toISOString()
             })
             .select()
             .single();
 
           if (!createError && newUser) {
-            user = newUser;
+            user = {
+              id: newUser.id,
+              email: newUser.email,
+              first_name: newUser.first_name,
+              last_name: newUser.last_name,
+              email_confirmed: true
+            };
           }
         }
 
         // Get client profile
-        const { data: clientData, error: clientError } = await supabaseAdmin
-          .from('clients')
-          .select('*')
-          .eq('user_id', authData.user.id)
-          .single();
+        if (user) {
+          const { data: clientData, error: clientError } = await supabaseAdmin
+            .from('clients')
+            .select('*')
+            .eq('user_id', user.id)
+            .single();
 
-        if (clientData) {
-          client = clientData;
+          if (!clientError && clientData) {
+            client = clientData;
+          }
         }
+
+        return NextResponse.json({
+          success: true,
+          user,
+          client,
+          authMethod,
+          access_token: authData.session?.access_token
+        });
       }
     } catch (authError) {
-      console.log('⚠️ Supabase Auth login failed, trying custom users table...');
+      console.log('❌ Login Supabase Auth fallito, provo tabella users custom');
     }
 
-    // Method 2: Try custom users table if Supabase Auth failed
-    if (!user) {
-      console.log('🔄 Trying custom users table authentication...');
-      
-      // Hash the password to compare with stored hash
+    // Method 2: Try custom users table
+    try {
       const passwordHash = createHash('sha256').update(password).digest('hex');
-
-      // Find user in our users table
-      const { data: userData, error: userError } = await supabaseAdmin
+      
+      const { data: dbUser, error: dbError } = await supabaseAdmin
         .from('users')
         .select('*')
         .eq('email', email)
         .eq('password_hash', passwordHash)
-        .eq('is_active', true)
         .single();
 
-      if (!userError && userData) {
-        console.log('✅ Login via custom users table successful');
-        authMethod = 'custom_users';
-        user = userData;
+      if (!dbError && dbUser) {
+        console.log('✅ Login tramite tabella users custom riuscito');
+        authMethod = 'custom_table';
+        
+        user = {
+          id: dbUser.id,
+          email: dbUser.email,
+          first_name: dbUser.first_name,
+          last_name: dbUser.last_name,
+          email_confirmed: dbUser.email_confirmed || true
+        };
 
         // Get client profile
         const { data: clientData, error: clientError } = await supabaseAdmin
@@ -103,42 +125,32 @@ export async function POST(request: NextRequest) {
           .eq('user_id', user.id)
           .single();
 
-        if (clientData) {
+        if (!clientError && clientData) {
           client = clientData;
         }
+
+        return NextResponse.json({
+          success: true,
+          user,
+          client,
+          authMethod
+        });
       }
+    } catch (customError) {
+      console.log('❌ Login tabella users custom fallito');
     }
 
-    // If no user found with either method
-    if (!user) {
-      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
-    }
+    // Both methods failed
+    return NextResponse.json(
+      { error: 'Invalid email or password' },
+      { status: 401 }
+    );
 
-    // Create a session-like response
-    const sessionData = {
-      user: {
-        id: user.id,
-        email: user.email,
-        first_name: user.first_name,
-        last_name: user.last_name,
-        role: user.role,
-        email_confirmed: user.email_confirmed || true
-      },
-      client: client || null,
-      access_token: `mock_token_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      refresh_token: `mock_refresh_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      auth_method: authMethod
-    };
-
-    console.log(`🎉 Login successful via ${authMethod} for user: ${user.email}`);
-
-    return NextResponse.json({ 
-      success: true, 
-      session: sessionData,
-      message: 'Login successful!'
-    });
   } catch (error) {
     console.error('Login error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 } 
