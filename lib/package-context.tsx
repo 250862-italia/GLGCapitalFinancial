@@ -47,9 +47,9 @@ const normalizePackage = (dbPackage: any): InvestmentPackage => ({
   maxInvestment: dbPackage.max_investment,
   expectedReturn: dbPackage.expected_return,
   duration: dbPackage.duration,
-  riskLevel: dbPackage.risk_level,
+  riskLevel: dbPackage.risk_level || 'medium',
   status: dbPackage.status,
-  isActive: dbPackage.is_active,
+  isActive: dbPackage.status === 'active', // Use status field instead of is_active
   features: dbPackage.features || [],
   terms: dbPackage.terms,
   createdAt: dbPackage.created_at,
