@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase';
+import { createHash } from 'crypto';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,7 +9,7 @@ async function createClientProfile(userId: string, firstName: string, lastName: 
     try {
       console.log(`Attempt ${i + 1} to create client profile for user:`, userId);
       
-      const { data: client, error: clientError } = await supabase
+      const { data: client, error: clientError } = await supabaseAdmin
         .from('clients')
         .insert({
           user_id: userId,
@@ -61,39 +62,58 @@ export async function POST(request: NextRequest) {
 
     console.log('Starting registration for:', email);
 
-    // Register user in Supabase
-    const { data: user, error: registerError } = await supabase.auth.signUp({
-      email,
-      password
-    });
+    // Check if user already exists
+    const { data: existingUser } = await supabaseAdmin
+      .from('users')
+      .select('id')
+      .eq('email', email)
+      .single();
 
-    if (registerError) {
-      console.error('User registration error:', registerError);
+    if (existingUser) {
       return NextResponse.json(
-        { error: registerError.message },
+        { error: 'Un utente con questa email esiste già' },
+        { status: 400 }
+      );
+    }
+
+    // Create password hash
+    const passwordHash = createHash('sha256').update(password).digest('hex');
+
+    // Create user in custom users table
+    const { data: user, error: userError } = await supabaseAdmin
+      .from('users')
+      .insert({
+        email,
+        password_hash: passwordHash,
+        first_name: firstName || '',
+        last_name: lastName || '',
+        email_confirmed: true, // Auto-confirm email
+        created_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (userError) {
+      console.error('User creation error:', userError);
+      return NextResponse.json(
+        { error: 'Errore nella creazione dell\'utente' },
         { status: 500 }
       );
     }
 
-    if (!user.user?.id) {
-      console.error('No user ID returned from registration');
-      return NextResponse.json(
-        { error: 'User registration failed - no user ID returned' },
-        { status: 500 }
-      );
-    }
-
-    console.log('User registered successfully with ID:', user.user.id);
-
-    // Wait a moment to ensure the user is fully created in auth.users
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    console.log('User created successfully with ID:', user.id);
 
     // Create client profile with retry mechanism
-    const client = await createClientProfile(user.user.id, firstName, lastName, country);
+    const client = await createClientProfile(user.id, firstName, lastName, country);
 
     return NextResponse.json({
       success: true,
-      user: user.user,
+      user: {
+        id: user.id,
+        email: user.email,
+        first_name: user.first_name,
+        last_name: user.last_name
+      },
       client
     });
   } catch (error) {
