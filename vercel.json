@@ -24,5 +24,11 @@
       "source": "/(.*)",
       "destination": "/"
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/process-email-queue",
+      "schedule": "*/5 * * * *"
+    }
   ]
 } 

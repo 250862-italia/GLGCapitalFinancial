@@ -1,7 +1,7 @@
 // Script per inserire una email di test nella email_queue di Supabase
 // Requisiti: npm install @supabase/supabase-js dotenv
 
-require('dotenv').config();
+require('dotenv').config({ path: '.env.local' });
 const { createClient } = require('@supabase/supabase-js');
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;

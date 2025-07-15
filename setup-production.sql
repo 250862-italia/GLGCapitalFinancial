@@ -7,6 +7,21 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- Users table is handled by Supabase Auth (auth.users)
 
+-- Email Queue table for processing emails
+CREATE TABLE IF NOT EXISTS email_queue (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    to_email VARCHAR(255) NOT NULL,
+    from_email VARCHAR(255) NOT NULL,
+    subject VARCHAR(500) NOT NULL,
+    html_content TEXT,
+    text_content TEXT,
+    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'sent', 'error', 'failed')),
+    error_message TEXT,
+    sent_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Clients table (client profiles)
 CREATE TABLE IF NOT EXISTS clients (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -137,6 +152,8 @@ CREATE TABLE IF NOT EXISTS settings (
 );
 
 -- Create indexes for better performance
+CREATE INDEX IF NOT EXISTS idx_email_queue_status ON email_queue(status);
+CREATE INDEX IF NOT EXISTS idx_email_queue_created_at ON email_queue(created_at);
 CREATE INDEX IF NOT EXISTS idx_clients_user_id ON clients(user_id);
 CREATE INDEX IF NOT EXISTS idx_packages_status ON packages(status);
 CREATE INDEX IF NOT EXISTS idx_investments_user_id ON investments(user_id);
@@ -147,6 +164,7 @@ CREATE INDEX IF NOT EXISTS idx_content_type ON content(type);
 CREATE INDEX IF NOT EXISTS idx_partnerships_status ON partnerships(status);
 
 -- Row Level Security (RLS) Policies
+ALTER TABLE email_queue ENABLE ROW LEVEL SECURITY;
 ALTER TABLE clients ENABLE ROW LEVEL SECURITY;
 ALTER TABLE packages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE investments ENABLE ROW LEVEL SECURITY;
@@ -156,6 +174,15 @@ ALTER TABLE team_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE content ENABLE ROW LEVEL SECURITY;
 ALTER TABLE partnerships ENABLE ROW LEVEL SECURITY;
 ALTER TABLE settings ENABLE ROW LEVEL SECURITY;
+
+-- Email Queue policies (only admins can access)
+CREATE POLICY "Admins can manage email queue" ON email_queue
+    FOR ALL USING (
+        EXISTS (
+            SELECT 1 FROM auth.users 
+            WHERE id = auth.uid() AND raw_user_meta_data->>'role' IN ('admin', 'superadmin')
+        )
+    );
 
 -- Users can only see their own data
 CREATE POLICY "Clients can view own profile" ON clients

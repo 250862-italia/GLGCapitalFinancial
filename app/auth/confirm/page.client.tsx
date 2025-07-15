@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 export default function ConfirmPage() {
   const searchParams = useSearchParams();
@@ -23,12 +24,33 @@ export default function ConfirmPage() {
       return;
     }
 
-    // For now, we'll simulate a successful confirmation
-    // In a real implementation, you would verify the token with Supabase
-    setTimeout(() => {
-      setStatus('success');
-      setMessage('Your email has been confirmed successfully!');
-    }, 2000);
+    // Verifica reale del token con Supabase
+    const verifyEmail = async () => {
+      try {
+        console.log('Verifying email token:', token);
+        
+        const { error } = await supabase.auth.verifyOtp({
+          token_hash: token,
+          type: 'email'
+        });
+        
+        if (error) {
+          console.error('Email verification error:', error);
+          setStatus('error');
+          setMessage('Invalid or expired confirmation token. Please try registering again.');
+        } else {
+          console.log('Email verified successfully');
+          setStatus('success');
+          setMessage('Your email has been confirmed successfully! You can now log in to your account.');
+        }
+      } catch (error) {
+        console.error('Email verification failed:', error);
+        setStatus('error');
+        setMessage('Confirmation failed. Please try again or contact support.');
+      }
+    };
+
+    verifyEmail();
   }, [searchParams]);
 
   const handleContinue = () => {

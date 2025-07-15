@@ -2,6 +2,12 @@
 export const dynamic = "force-dynamic";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
@@ -15,31 +21,45 @@ export default function AdminLoginPage() {
     setError("");
     setLoading(true);
 
-    // Credenziali hardcoded per il superadmin
-    const validEmail = "admin@glgcapital.com";
-    const validPassword = "Admin123!@#";
-
-    // Verifica credenziali
-    if (email === validEmail && password === validPassword) {
-      const adminUser = {
-        id: "superadmin-1",
-        email: email,
-        name: "Super Admin",
-        role: "super_admin"
-      };
-      
-      // Salva nel localStorage
-      localStorage.setItem("admin_user", JSON.stringify(adminUser));
-      localStorage.setItem("admin_token", "admin-token");
-      
-      // Reindirizza alla dashboard admin
-      router.push("/admin");
+    // Login con Supabase Auth
+    const { data, error: loginError } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+    if (loginError || !data.user) {
+      setError("Invalid credentials. Please contact system administrator.");
+      setLoading(false);
       return;
     }
 
-    // Se le credenziali non sono valide
-    setError("Invalid credentials. Please contact system administrator.");
-    setLoading(false);
+    // Recupera ruolo dal metadata o dalla tabella users
+    let userRole = data.user.user_metadata?.role || data.user.app_metadata?.role;
+    // Fallback: fetch dalla tabella users
+    if (!userRole) {
+      const { data: userData, error: userFetchError } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', data.user.id)
+        .single();
+      userRole = userData?.role;
+    }
+
+    if (userRole !== 'admin' && userRole !== 'superadmin') {
+      setError("Access denied: only admin/superadmin can access this area.");
+      setLoading(false);
+      return;
+    }
+
+    // Salva nel localStorage
+    const adminUser = {
+      id: data.user.id,
+      email: data.user.email,
+      name: data.user.user_metadata?.first_name || data.user.user_metadata?.name || '',
+      role: userRole
+    };
+    localStorage.setItem("admin_user", JSON.stringify(adminUser));
+    localStorage.setItem("admin_token", data.session?.access_token || "");
+    router.push("/admin");
   };
 
   return (
@@ -85,7 +105,6 @@ export default function AdminLoginPage() {
         >
           {loading ? "Accessing..." : "Login"}
         </button>
-        
         <div style={{ marginTop: 16, fontSize: 12, color: "#6b7280", textAlign: "center" }}>
           <p>Contact system administrator for access credentials</p>
         </div>
