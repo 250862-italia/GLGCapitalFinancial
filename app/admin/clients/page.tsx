@@ -1,281 +1,369 @@
 "use client";
-import { useEffect, useState } from "react";
-import { supabase } from '@/lib/supabase';
+import { useState, useEffect } from 'react';
 import AdminProtectedRoute from '@/components/auth/AdminProtectedRoute';
+import { supabase } from '@/lib/supabase';
+import { User, Mail, Phone, Calendar, Eye, Edit, Trash2, Plus, Search, Filter } from 'lucide-react';
 
 interface Client {
   id: string;
-  firstName: string;
-  lastName: string;
+  user_id: string;
+  first_name: string;
+  last_name: string;
   email: string;
   phone: string;
-  dateOfBirth?: string;
-  nationality?: string;
-  status: 'active' | 'inactive' | 'pending';
+  country: string;
   created_at: string;
+  status: string;
+  kyc_status: string;
 }
-
-const emptyClient = (): Partial<Client> => ({
-  firstName: '',
-  lastName: '',
-  email: '',
-  phone: '',
-  status: 'active',
-});
 
 export default function AdminClientsPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState<Partial<Client>>(emptyClient());
-  const [isEdit, setIsEdit] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   useEffect(() => {
     fetchClients();
-    // eslint-disable-next-line
   }, []);
 
-  async function fetchClients() {
-    setLoading(true);
-    setError(null);
-    
+  const fetchClients = async () => {
     try {
-      // Try to fetch from Supabase first
       const { data, error } = await supabase
         .from('clients')
         .select('*')
         .order('created_at', { ascending: false });
-      
+
       if (error) {
-        console.log('Supabase error, using mock data:', error.message);
-        // If Supabase fails, use mock data
-        const mockClients: Client[] = [
-          {
-            id: '1',
-            firstName: 'Mario',
-            lastName: 'Rossi',
-            email: 'mario.rossi@email.com',
-            phone: '+39 333 1234567',
-            dateOfBirth: '1985-03-15',
-            nationality: 'Italiana',
-            status: 'active',
-            created_at: '2024-01-15T10:30:00Z'
-          },
-          {
-            id: '2',
-            firstName: 'Giulia',
-            lastName: 'Bianchi',
-            email: 'giulia.bianchi@email.com',
-            phone: '+39 333 2345678',
-            dateOfBirth: '1990-07-22',
-            nationality: 'Italiana',
-            status: 'active',
-            created_at: '2024-01-20T14:20:00Z'
-          },
-          {
-            id: '3',
-            firstName: 'Luca',
-            lastName: 'Verdi',
-            email: 'luca.verdi@email.com',
-            phone: '+39 333 3456789',
-            dateOfBirth: '1988-11-08',
-            nationality: 'Italiana',
-            status: 'pending',
-            created_at: '2024-01-25T09:15:00Z'
-          },
-          {
-            id: '4',
-            firstName: 'Sofia',
-            lastName: 'Neri',
-            email: 'sofia.neri@email.com',
-            phone: '+39 333 4567890',
-            dateOfBirth: '1992-05-12',
-            nationality: 'Italiana',
-            status: 'inactive',
-            created_at: '2024-01-30T16:45:00Z'
-          },
-          {
-            id: '5',
-            firstName: 'Marco',
-            lastName: 'Gialli',
-            email: 'marco.gialli@email.com',
-            phone: '+39 333 5678901',
-            dateOfBirth: '1983-12-03',
-            nationality: 'Italiana',
-            status: 'active',
-            created_at: '2024-02-05T11:30:00Z'
-          }
-        ];
-        setClients(mockClients);
-      } else {
-        setClients(data || []);
+        console.error('Error fetching clients:', error);
+        return;
       }
-    } catch (err) {
-      console.error('Error fetching clients:', err);
-      setError('Errore nel caricamento dei clienti');
+
+      setClients(data || []);
+    } catch (error) {
+      console.error('Error:', error);
     } finally {
       setLoading(false);
     }
-  }
+  };
 
-  function openAdd() {
-    setForm(emptyClient());
-    setIsEdit(false);
-    setShowModal(true);
-  }
-  function openEdit(client: Client) {
-    setForm({ ...client });
-    setIsEdit(true);
-    setShowModal(true);
-  }
-  function closeModal() {
-    setShowModal(false);
-    setForm(emptyClient());
-    setIsEdit(false);
-  }
+  const filteredClients = clients.filter(client => {
+    const matchesSearch = 
+      client.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      client.last_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      client.email?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesFilter = filterStatus === 'all' || client.status === filterStatus;
+    
+    return matchesSearch && matchesFilter;
+  });
 
-  async function handleSave(e: any) {
-    e.preventDefault();
-    setSaving(true);
-    setError(null);
-    setSuccessMsg(null);
-    if (!isEdit && clients.some(c => c.email === form.email)) {
-      setError("Esiste già un cliente con questa email.");
-      setSaving(false);
-      return;
-    }
-    let res;
-    if (isEdit && form.id) {
-      res = await supabase.from('clients').update({
-        firstName: form.firstName,
-        lastName: form.lastName,
-        email: form.email,
-        phone: form.phone,
-        status: form.status
-      }).eq('id', form.id);
-    } else {
-      res = await supabase.from('clients').insert([
-        {
-          firstName: form.firstName,
-          lastName: form.lastName,
-          email: form.email,
-          phone: form.phone,
-          status: form.status
-        }
-      ]);
-    }
-    if (res.error) {
-      setError(res.error.message);
-      setSaving(false);
-      console.error('Errore inserimento cliente:', res.error);
-      return;
-    } else {
-      setSuccessMsg(isEdit ? 'Cliente aggiornato con successo!' : 'Cliente aggiunto con successo!');
-      closeModal();
-      fetchClients();
-    }
-    setSaving(false);
-  }
+  const handleDeleteClient = async (clientId: string) => {
+    if (!confirm('Sei sicuro di voler eliminare questo cliente?')) return;
 
-  async function handleDelete(id: string) {
-    if (!window.confirm('Sei sicuro di voler eliminare questo cliente?')) return;
-    setSaving(true);
-    setError(null);
-    const { error } = await supabase.from('clients').delete().eq('id', id);
-    if (error) setError(error.message);
-    setSaving(false);
-    fetchClients();
+    try {
+      const { error } = await supabase
+        .from('clients')
+        .delete()
+        .eq('id', clientId);
+
+      if (error) {
+        console.error('Error deleting client:', error);
+        return;
+      }
+
+      setClients(clients.filter(client => client.id !== clientId));
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active': return '#10b981';
+      case 'pending': return '#f59e0b';
+      case 'suspended': return '#ef4444';
+      default: return '#6b7280';
+    }
+  };
+
+  const getKYCStatusColor = (status: string) => {
+    switch (status) {
+      case 'verified': return '#10b981';
+      case 'pending': return '#f59e0b';
+      case 'rejected': return '#ef4444';
+      default: return '#6b7280';
+    }
+  };
+
+  if (loading) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#f9fafb'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{
+            width: 40,
+            height: 40,
+            border: '4px solid #e2e8f0',
+            borderTop: '4px solid #1a2238',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 1rem'
+          }} />
+          <p style={{ color: '#64748b' }}>Caricamento clienti...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <AdminProtectedRoute>
-      <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 4px 24px rgba(10,37,64,0.10)', padding: '2rem' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>
+    <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 4px 24px rgba(10,37,64,0.10)', padding: '2rem' }}>
+      
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
         <div>
-          <h1 style={{ fontSize: 32, fontWeight: 900, marginBottom: 8, color: 'var(--primary)' }}>Gestione Clienti</h1>
-          <p style={{ color: 'var(--foreground)', opacity: 0.8 }}>Visualizza, aggiungi, modifica o elimina clienti.</p>
+          <h1 style={{ color: 'var(--primary)', fontSize: 28, fontWeight: 800, marginBottom: 8 }}>
+            Gestione Clienti
+          </h1>
+          <p style={{ color: 'var(--foreground)', opacity: 0.8 }}>
+            Visualizza e gestisci tutti i clienti registrati
+          </p>
         </div>
-        <button onClick={openAdd} style={{ background: '#3b82f6', color: '#fff', padding: '12px 24px', border: 0, borderRadius: 8, fontWeight: 700, fontSize: 16, boxShadow: '0 2px 8px rgba(59,130,246,0.08)' }}>+ Aggiungi Cliente</button>
+        <button
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            background: 'var(--primary)',
+            color: '#fff',
+            padding: '0.75rem 1.5rem',
+            border: 'none',
+            borderRadius: 8,
+            fontWeight: 600,
+            cursor: 'pointer'
+          }}
+        >
+          <Plus size={16} />
+          Nuovo Cliente
+        </button>
       </div>
-      {error && <div style={{ background: '#fee2e2', color: '#b91c1c', padding: 16, borderRadius: 8, marginBottom: 24, fontWeight: 600 }}>{error}</div>}
-      {loading ? (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
-          <div style={{ animation: 'spin 1s linear infinite', fontSize: '24px' }}>⏳</div>
-          <span style={{ marginLeft: '1rem', fontSize: '18px', color: '#6b7280' }}>Caricamento clienti...</span>
+
+      {/* Message */}
+      <div style={{ 
+        background: '#f0fdf4', 
+        border: '1px solid #bbf7d0', 
+        borderRadius: 8, 
+        padding: '1rem', 
+        marginBottom: '2rem',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem'
+      }}>
+        <User size={20} color="#16a34a" />
+        <span style={{ color: '#16a34a', fontWeight: 600 }}>
+          Accesso diretto abilitato - Autenticazione temporaneamente disabilitata
+        </span>
+      </div>
+
+      {/* Filters */}
+      <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
+        <div style={{ position: 'relative', flex: 1, minWidth: '300px' }}>
+          <Search size={20} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} />
+          <input
+            type="text"
+            placeholder="Cerca per nome, cognome o email..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '0.75rem 1rem 0.75rem 3rem',
+              border: '1px solid #e5e7eb',
+              borderRadius: 8,
+              fontSize: 16
+            }}
+          />
         </div>
-      ) : (
-        <div style={{ overflowX: 'auto', boxShadow: '0 4px 24px rgba(30,41,59,0.07)', borderRadius: 16, background: '#fff' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 900 }}>
+        
+        <select
+          value={filterStatus}
+          onChange={(e) => setFilterStatus(e.target.value)}
+          style={{
+            padding: '0.75rem 1rem',
+            border: '1px solid #e5e7eb',
+            borderRadius: 8,
+            fontSize: 16,
+            background: '#fff'
+          }}
+        >
+          <option value="all">Tutti gli stati</option>
+          <option value="active">Attivo</option>
+          <option value="pending">In attesa</option>
+          <option value="suspended">Sospeso</option>
+        </select>
+      </div>
+
+      {/* Clients Table */}
+      <div style={{ background: 'var(--secondary)', borderRadius: 12, overflow: 'hidden' }}>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr style={{ background: '#f1f5f9', color: '#1e293b', position: 'sticky' as const, top: 0, zIndex: 1 }}>
-                <th style={thStyle}>Nome</th>
-                <th style={thStyle}>Email</th>
-                <th style={thStyle}>Telefono</th>
-                <th style={thStyle}>Stato</th>
-                <th style={thStyle}>Data Creazione</th>
-                <th style={thStyle}>Azioni</th>
+              <tr style={{ background: '#f8fafc' }}>
+                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: 'var(--primary)' }}>Cliente</th>
+                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: 'var(--primary)' }}>Contatti</th>
+                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: 'var(--primary)' }}>Paese</th>
+                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: 'var(--primary)' }}>Stato</th>
+                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: 'var(--primary)' }}>KYC</th>
+                <th style={{ padding: '1rem', textAlign: 'left', fontWeight: 600, color: 'var(--primary)' }}>Data Registrazione</th>
+                <th style={{ padding: '1rem', textAlign: 'center', fontWeight: 600, color: 'var(--primary)' }}>Azioni</th>
               </tr>
             </thead>
             <tbody>
-              {clients.map(client => (
-                <tr key={client.id} style={{ background: '#fff', borderBottom: '1px solid #e5e7eb', transition: 'background 0.2s' }}>
-                  <td style={tdStyle}>
+              {filteredClients.map((client, index) => (
+                <tr key={client.id} style={{ 
+                  borderBottom: index < filteredClients.length - 1 ? '1px solid #e5e7eb' : 'none',
+                  background: index % 2 === 0 ? '#fff' : '#f9fafb'
+                }}>
+                  <td style={{ padding: '1rem' }}>
                     <div>
-                      <strong>{client.firstName} {client.lastName}</strong>
-                      {client.dateOfBirth && (
-                        <div style={{ fontSize: 12, color: '#6b7280' }}>
-                          DOB: {new Date(client.dateOfBirth).toLocaleDateString()}
-                        </div>
-                      )}
-                      {client.nationality && (
-                        <div style={{ fontSize: 12, color: '#6b7280' }}>
-                          {client.nationality}
+                      <div style={{ fontWeight: 600, color: 'var(--primary)' }}>
+                        {client.first_name} {client.last_name}
+                      </div>
+                      <div style={{ fontSize: 14, color: '#6b7280' }}>ID: {client.user_id}</div>
+                    </div>
+                  </td>
+                  <td style={{ padding: '1rem' }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                        <Mail size={14} color="#6b7280" />
+                        <span style={{ fontSize: 14 }}>{client.email || 'N/A'}</span>
+                      </div>
+                      {client.phone && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <Phone size={14} color="#6b7280" />
+                          <span style={{ fontSize: 14 }}>{client.phone}</span>
                         </div>
                       )}
                     </div>
                   </td>
-                  <td style={tdStyle}>{client.email}</td>
-                  <td style={tdStyle}>{client.phone}</td>
-                  <td style={tdStyle}>
+                  <td style={{ padding: '1rem' }}>
+                    <span style={{ fontSize: 14 }}>{client.country || 'N/A'}</span>
+                  </td>
+                  <td style={{ padding: '1rem' }}>
                     <span style={{
-                      background: client.status === 'active' ? '#bbf7d0' : 
-                                 client.status === 'pending' ? '#fef3c7' : '#fee2e2',
-                      color: client.status === 'active' ? '#16a34a' : 
-                            client.status === 'pending' ? '#b45309' : '#b91c1c',
-                      borderRadius: 6,
-                      padding: '2px 10px',
-                      fontWeight: 700
+                      padding: '0.25rem 0.75rem',
+                      borderRadius: '9999px',
+                      fontSize: 12,
+                      fontWeight: 600,
+                      background: `${getStatusColor(client.status || 'pending')}20`,
+                      color: getStatusColor(client.status || 'pending')
                     }}>
-                      {client.status}
+                      {client.status || 'pending'}
                     </span>
                   </td>
-                  <td style={tdStyle}>{new Date(client.created_at).toLocaleDateString()}</td>
-                  <td style={tdStyle}>
-                    <button onClick={() => openEdit(client)} style={actionBtnStyle}>Modifica</button>
-                    <button onClick={() => handleDelete(client.id)} style={{ ...actionBtnStyle, background: '#dc2626' }}>Elimina</button>
+                  <td style={{ padding: '1rem' }}>
+                    <span style={{
+                      padding: '0.25rem 0.75rem',
+                      borderRadius: '9999px',
+                      fontSize: 12,
+                      fontWeight: 600,
+                      background: `${getKYCStatusColor(client.kyc_status || 'pending')}20`,
+                      color: getKYCStatusColor(client.kyc_status || 'pending')
+                    }}>
+                      {client.kyc_status || 'pending'}
+                    </span>
+                  </td>
+                  <td style={{ padding: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Calendar size={14} color="#6b7280" />
+                      <span style={{ fontSize: 14 }}>
+                        {new Date(client.created_at).toLocaleDateString('it-IT')}
+                      </span>
+                    </div>
+                  </td>
+                  <td style={{ padding: '1rem', textAlign: 'center' }}>
+                    <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+                      <button
+                        onClick={() => {
+                          setSelectedClient(client);
+                          setShowModal(true);
+                        }}
+                        style={{
+                          padding: '0.5rem',
+                          border: 'none',
+                          borderRadius: 6,
+                          background: '#3b82f6',
+                          color: '#fff',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <Eye size={16} />
+                      </button>
+                      <button
+                        style={{
+                          padding: '0.5rem',
+                          border: 'none',
+                          borderRadius: 6,
+                          background: '#10b981',
+                          color: '#fff',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <Edit size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteClient(client.id)}
+                        style={{
+                          padding: '0.5rem',
+                          border: 'none',
+                          borderRadius: 6,
+                          background: '#ef4444',
+                          color: '#fff',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
-              {clients.length === 0 && (
-                <tr>
-                  <td colSpan={6} style={{ textAlign: 'center', padding: 32, color: '#64748b', fontWeight: 600 }}>Nessun cliente trovato.</td>
-                </tr>
-              )}
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Empty State */}
+      {filteredClients.length === 0 && (
+        <div style={{ textAlign: 'center', padding: '3rem' }}>
+          <User size={64} color="#9ca3af" style={{ marginBottom: '1rem' }} />
+          <h3 style={{ color: 'var(--primary)', fontSize: 20, fontWeight: 600, marginBottom: '0.5rem' }}>
+            Nessun cliente trovato
+          </h3>
+          <p style={{ color: '#6b7280' }}>
+            {searchTerm || filterStatus !== 'all' 
+              ? 'Prova a modificare i filtri di ricerca' 
+              : 'Non ci sono ancora clienti registrati'
+            }
+          </p>
+        </div>
       )}
-      {showModal && (
+
+      {/* Client Details Modal */}
+      {showModal && selectedClient && (
         <div style={{
           position: 'fixed',
           top: 0,
           left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0,0,0,0.5)',
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(0, 0, 0, 0.5)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -283,168 +371,57 @@ export default function AdminClientsPage() {
         }}>
           <div style={{
             background: '#fff',
+            borderRadius: 16,
             padding: '2rem',
-            borderRadius: 12,
+            maxWidth: '600px',
             width: '90%',
-            maxWidth: 500,
-            maxHeight: '90vh',
-            overflowY: 'auto'
+            maxHeight: '80vh',
+            overflow: 'auto'
           }}>
-            <h2 style={{ margin: '0 0 1.5rem 0', color: '#1e293b' }}>
-              {isEdit ? 'Modifica Cliente' : 'Aggiungi Nuovo Cliente'}
-            </h2>
-            <form onSubmit={handleSave}>
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>
-                  Nome *
-                </label>
-                <input
-                  type="text"
-                  value={form.firstName || ''}
-                  onChange={(e) => setForm({ ...form, firstName: e.target.value })}
-                  required
-                  style={inputStyle}
-                />
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+              <h2 style={{ color: 'var(--primary)', fontSize: 24, fontWeight: 700 }}>
+                Dettagli Cliente
+              </h2>
+              <button
+                onClick={() => setShowModal(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: 24,
+                  cursor: 'pointer',
+                  color: '#6b7280'
+                }}
+              >
+                ×
+              </button>
+            </div>
+            
+            <div style={{ display: 'grid', gap: '1rem' }}>
+              <div>
+                <strong>Nome:</strong> {selectedClient.first_name} {selectedClient.last_name}
               </div>
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>
-                  Cognome *
-                </label>
-                <input
-                  type="text"
-                  value={form.lastName || ''}
-                  onChange={(e) => setForm({ ...form, lastName: e.target.value })}
-                  required
-                  style={inputStyle}
-                />
+              <div>
+                <strong>Email:</strong> {selectedClient.email || 'N/A'}
               </div>
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>
-                  Email *
-                </label>
-                <input
-                  type="email"
-                  value={form.email || ''}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  required
-                  style={inputStyle}
-                />
+              <div>
+                <strong>Telefono:</strong> {selectedClient.phone || 'N/A'}
               </div>
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>
-                  Telefono *
-                </label>
-                <input
-                  type="tel"
-                  value={form.phone || ''}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                  required
-                  style={inputStyle}
-                />
+              <div>
+                <strong>Paese:</strong> {selectedClient.country || 'N/A'}
               </div>
-              <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>
-                  Stato
-                </label>
-                <select
-                  value={form.status || 'active'}
-                  onChange={(e) => setForm({ ...form, status: e.target.value as any })}
-                  style={inputStyle}
-                >
-                  <option value="active">Attivo</option>
-                  <option value="pending">In Attesa</option>
-                  <option value="inactive">Inattivo</option>
-                </select>
+              <div>
+                <strong>Stato:</strong> {selectedClient.status || 'pending'}
               </div>
-              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
-                <button
-                  type="button"
-                  onClick={closeModal}
-                  style={{
-                    padding: '0.75rem 1.5rem',
-                    border: '1px solid #d1d5db',
-                    background: '#fff',
-                    color: '#374151',
-                    borderRadius: 8,
-                    fontWeight: 600,
-                    cursor: 'pointer'
-                  }}
-                >
-                  Annulla
-                </button>
-                <button
-                  type="submit"
-                  disabled={saving}
-                  style={{
-                    padding: '0.75rem 1.5rem',
-                    background: '#2563eb',
-                    color: '#fff',
-                    border: 0,
-                    borderRadius: 8,
-                    fontWeight: 600,
-                    cursor: saving ? 'not-allowed' : 'pointer',
-                    opacity: saving ? 0.6 : 1
-                  }}
-                >
-                  {saving ? 'Salvataggio...' : (isEdit ? 'Aggiorna' : 'Crea')}
-                </button>
+              <div>
+                <strong>KYC Status:</strong> {selectedClient.kyc_status || 'pending'}
               </div>
-            </form>
+              <div>
+                <strong>Data Registrazione:</strong> {new Date(selectedClient.created_at).toLocaleString('it-IT')}
+              </div>
+            </div>
           </div>
         </div>
       )}
-      {successMsg && (
-        <div style={{
-          position: 'fixed',
-          top: 20,
-          right: 20,
-          background: '#bbf7d0',
-          color: '#16a34a',
-          padding: '1rem 1.5rem',
-          borderRadius: 8,
-          fontWeight: 600,
-          zIndex: 1001,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-        }}>
-          {successMsg}
-        </div>
-      )}
-      </div>
-    </AdminProtectedRoute>
+    </div>
   );
-}
-
-const thStyle = {
-  padding: '1rem',
-  textAlign: 'left' as const,
-  fontWeight: 700,
-  fontSize: 14,
-  borderBottom: '2px solid #e5e7eb'
-};
-
-const tdStyle = {
-  padding: '1rem',
-  fontSize: 14,
-  color: '#374151'
-};
-
-const actionBtnStyle = {
-  background: '#2563eb',
-  color: '#fff',
-  border: 0,
-  padding: '0.5rem 1rem',
-  borderRadius: 6,
-  marginRight: '0.5rem',
-  cursor: 'pointer',
-  fontSize: 12,
-  fontWeight: 600
-};
-
-const inputStyle = {
-  width: '100%',
-  padding: '0.75rem',
-  border: '1px solid #d1d5db',
-  borderRadius: 8,
-  fontSize: 14,
-  color: '#374151'
-}; 
+} 
