@@ -1,3 +1,5 @@
+"use client";
+export const dynamic = "force-dynamic";
 import { InvestmentFormData } from "@/types/investment";
 
 export default function HomePage() {
@@ -33,7 +35,7 @@ export default function HomePage() {
           </span>
         </blockquote>
         <p style={{ 
-          color: '#1a3556',
+          color: '#fff',
           fontSize: '1.4rem', 
           lineHeight: 1.6,
           maxWidth: 800,
@@ -141,16 +143,40 @@ export default function HomePage() {
                 margin: '0 auto 1rem',
                 fontSize: '2rem'
               }}>
-                🛡️
+                🔒
               </div>
               <h3 style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-                Secure Framework
+                Secure & Transparent
               </h3>
               <p style={{ fontSize: '1rem', lineHeight: 1.5, opacity: 0.9 }}>
-                Transparent, regulated approach with comprehensive risk management
+                Robust collateralization and transparent reporting for all investments
               </p>
             </div>
 
+          </div>
+          
+          <div style={{ 
+            textAlign: 'center', 
+            marginTop: '2rem', 
+            paddingTop: '2rem', 
+            borderTop: '1px solid rgba(255,255,255,0.2)'
+          }}>
+            <a 
+              href="/equity-pledge" 
+              style={{
+                background: '#f59e0b',
+                color: '#0a2540',
+                padding: '1rem 2rem',
+                borderRadius: 8,
+                textDecoration: 'none',
+                fontWeight: 600,
+                fontSize: '1.1rem',
+                display: 'inline-block',
+                transition: 'all 0.3s ease'
+              }}
+            >
+              Learn About Our Equity Pledge System →
+            </a>
           </div>
         </div>
       </section>
@@ -190,31 +216,28 @@ export default function HomePage() {
           Our Services
         </h2>
         
-        <div style={{ 
-          background: '#f8fafc', 
-          padding: '2.5rem', 
-          borderRadius: 12, 
-          marginBottom: '2rem',
-          border: '1px solid #e2e8f0'
+        {/* Equity-Pledge Model Block */}
+        <div style={{
+          background: '#fff',
+          border: '2px solid #f59e0b',
+          borderRadius: 14,
+          boxShadow: '0 4px 20px rgba(245,158,11,0.08)',
+          padding: '2.5rem',
+          marginBottom: '2.5rem',
+          maxWidth: 900,
+          marginLeft: 'auto',
+          marginRight: 'auto',
         }}>
-          <h3 style={{ 
-            color: '#0a2540', 
-            fontSize: '1.8rem', 
-            fontWeight: 700, 
-            marginBottom: '1rem',
-            textAlign: 'center'
+          <h3 style={{
+            color: '#f59e0b',
+            fontSize: '1.7rem',
+            fontWeight: 800,
+            marginBottom: '1.2rem',
+            textAlign: 'center',
+            letterSpacing: 0.5
           }}>
-            Equity Pledge Investment Model
+            How Our Equity-Pledge Model Works
           </h3>
-          <p style={{ 
-            color: '#1a3556', 
-            fontSize: '1.1rem', 
-            lineHeight: 1.7,
-            marginBottom: '1.5rem',
-            textAlign: 'center'
-          }}>
-            Our flagship investment model combines the security of asset-backed financing with the growth potential of equity participation. Here's how it works:
-          </p>
           <ul style={{
             color: '#1a3556',
             fontSize: '1.1rem',
@@ -346,17 +369,40 @@ export default function HomePage() {
               fontWeight: 700, 
               marginBottom: '1rem' 
             }}>
-              Investment & Portfolio Management
+              Investments Research & Assistance
             </h3>
             <ul style={{ 
               color: '#1a3556', 
               lineHeight: 1.6,
               paddingLeft: '1.5rem'
             }}>
-              <li>Portfolio optimization and diversification strategies</li>
-              <li>Alternative investment opportunities</li>
-              <li>Risk-adjusted return optimization</li>
-              <li>Custom investment solutions for high-net-worth individuals</li>
+              <li>Research and assistance for professional and qualified investors</li>
+              <li>Purchase and credit management services through qualified private banking investors and SGRs</li>
+            </ul>
+          </div>
+
+          {/* Service 5 */}
+          <div style={{ 
+            background: '#fff', 
+            padding: '2rem', 
+            borderRadius: 12, 
+            boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
+            border: '1px solid #e2e8f0'
+          }}>
+            <h3 style={{ 
+              color: '#0a2540', 
+              fontSize: '1.4rem', 
+              fontWeight: 700, 
+              marginBottom: '1rem' 
+            }}>
+              Auction Real Estate Marketplace
+            </h3>
+            <ul style={{ 
+              color: '#1a3556', 
+              lineHeight: 1.6,
+              paddingLeft: '1.5rem'
+            }}>
+              <li>Marketplace of credit assignment and real estate rights</li>
             </ul>
           </div>
 
@@ -468,9 +514,9 @@ export default function HomePage() {
             Magnificus Dominus Consulting Europe Srl
           </h3>
           <p style={{ color: '#1a3556', fontSize: '1.1rem', lineHeight: 1.7, marginBottom: 18 }}>
-            <b>Exclusive partner for Italy of GLG Capital Group LLC.</b><br/>
-            Magnificus Dominus is a leader in strategic consulting, business development, and high-value project management. With a highly qualified team and a consolidated network, it guarantees growth, innovation, and concrete results for our Italian clients.<br/>
-            <span style={{ color: '#f59e0b', fontWeight: 700 }}>Discover how Magnificus Dominus can take your company to the next level!</span>
+            <b>Partner esclusivo per l'Italia di GLG Capital Group LLC.</b><br/>
+            Magnificus Dominus è leader nella consulenza strategica, sviluppo d'impresa e gestione di progetti ad alto valore aggiunto. Grazie a un team altamente qualificato e a una rete consolidata, garantisce crescita, innovazione e risultati concreti per i nostri clienti italiani.<br/>
+            <span style={{ color: '#f59e0b', fontWeight: 700 }}>Scopri come Magnificus Dominus può portare la tua azienda al prossimo livello!</span>
           </p>
           <a href="https://www.magnificusdominus.com" target="_blank" rel="noopener noreferrer" style={{
             background: '#0a2540',
@@ -484,7 +530,7 @@ export default function HomePage() {
             boxShadow: '0 2px 8px rgba(34,40,49,0.07)',
             marginTop: 10
           }}>
-            Visit Magnificus Dominus Website
+            Visita il sito Magnificus Dominus
           </a>
         </div>
 
