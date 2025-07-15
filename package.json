@@ -47,6 +47,7 @@
     "@playwright/test": "^1.53.2",
     "@tailwindcss/postcss": "^4.1.11",
     "@types/node": "^20",
+    "@types/nodemailer": "^6.4.17",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "autoprefixer": "^10.4.21",
