@@ -162,6 +162,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create user with admin API but WITHOUT email confirmation to avoid rate limits
+    let userData: any = null;
     const { data: user, error: registerError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
@@ -210,16 +211,18 @@ export async function POST(request: NextRequest) {
           // Continue anyway, the user can still log in
         }
 
-        user.user = altUser.user;
+        userData = altUser.user;
       } else {
         return NextResponse.json(
           { error: registerError.message },
           { status: 500 }
         );
       }
+    } else {
+      userData = user.user;
     }
 
-    if (!user.user?.id) {
+    if (!userData?.id) {
       console.error('No user ID returned from registration');
       return NextResponse.json(
         { error: 'User registration failed - no user ID returned' },
@@ -227,7 +230,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('User created successfully with ID:', user.user.id);
+    console.log('User created successfully with ID:', userData.id);
 
     // Wait a moment to ensure the user is fully created in auth.users
     await new Promise(resolve => setTimeout(resolve, 2000));
@@ -236,8 +239,8 @@ export async function POST(request: NextRequest) {
     const { error: userInsertError } = await supabaseAdmin
       .from('users')
       .insert({
-        id: user.user.id,
-        email: user.user.email,
+        id: userData.id,
+        email: userData.email,
         first_name: firstName,
         last_name: lastName,
         role: 'user',
@@ -253,11 +256,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Create client profile with retry mechanism
-    const client = await createClientProfile(user.user.id, firstName, lastName, country);
+    const client = await createClientProfile(userData.id, firstName, lastName, country);
 
     return NextResponse.json({
       success: true,
-      user: user.user,
+      user: userData,
       client,
       message: 'Registration successful! Your account has been automatically confirmed. You can now log in.'
     });
