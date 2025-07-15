@@ -62,10 +62,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const data = await response.json();
 
       if (response.ok) {
-        setUser(data.user);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        localStorage.setItem('token', data.token);
-        return { success: true };
+        // Handle both data.user and data.session.user structures
+        const userData = data.user || data.session?.user;
+        const token = data.access_token || data.session?.access_token || data.token;
+        
+        if (userData) {
+          setUser(userData);
+          localStorage.setItem('user', JSON.stringify(userData));
+          localStorage.setItem('token', token);
+          return { success: true };
+        } else {
+          return { success: false, error: 'Invalid response format' };
+        }
       } else {
         return { success: false, error: data.error };
       }
