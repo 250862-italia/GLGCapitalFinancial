@@ -88,7 +88,7 @@ export default function RegisterPage() {
       const data = await response.json();
 
       if (response.ok) {
-        setSuccess('Registration successful! Please check your email to verify your account.');
+        setSuccess('Registration successful! Your account has been automatically confirmed. You can now log in.');
         setTimeout(() => {
           router.push('/login');
         }, 3000);

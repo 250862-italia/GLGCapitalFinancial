@@ -174,11 +174,12 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Register user in Supabase
+    // Register user in Supabase (with email auto-confirmation to bypass rate limit)
     const { data: user, error: registerError } = await supabaseAdmin.auth.signUp({
       email,
       password,
       options: {
+        email_confirm: true, // Auto-confirm email to bypass rate limit
         data: {
           first_name: firstName,
           last_name: lastName,
@@ -238,7 +239,7 @@ export async function POST(request: NextRequest) {
       success: true,
       user: user.user,
       client,
-      message: 'Registration successful! Please check your email for confirmation.'
+      message: 'Registration successful! Your account has been automatically confirmed. You can now log in.'
     });
   } catch (error) {
     console.error('Registration error:', error);
