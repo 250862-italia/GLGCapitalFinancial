@@ -171,16 +171,38 @@ export default function Navigation() {
             >
               Get Started
             </Link>
+            <Link 
+              href="/admin/login" 
+              style={{
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                transition: 'all 0.2s ease',
+                color: isScrolled ? '#374151' : 'white',
+                textDecoration: 'none',
+                border: '1px solid',
+                borderColor: isScrolled ? '#d1d5db' : 'rgba(255, 255, 255, 0.3)',
+                padding: '0.5rem 1rem',
+                borderRadius: '0.5rem'
+              }}
+            >
+              Admin Console
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className={`lg:hidden p-2 rounded-lg transition-all duration-200 ${
-              isScrolled 
-                ? 'text-slate-700 hover:text-slate-900 hover:bg-slate-100' 
-                : 'text-white hover:text-amber-400 hover:bg-white/10'
-            }`}
+            style={{
+              display: 'block',
+              padding: '0.5rem',
+              borderRadius: '0.5rem',
+              transition: 'all 0.2s ease',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: isScrolled ? '#374151' : 'white'
+            }}
+            className="lg:hidden"
           >
             {isOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
@@ -188,19 +210,34 @@ export default function Navigation() {
 
         {/* Mobile Menu */}
         {isOpen && (
-          <div className="lg:hidden">
-            <div className={`px-2 pt-2 pb-3 space-y-1 ${
-              isScrolled ? 'bg-white' : 'bg-slate-900/95 backdrop-blur-md'
-            } rounded-lg mt-2 shadow-xl border border-slate-200`}>
+          <div style={{ display: 'block' }} className="lg:hidden">
+            <div style={{
+              padding: '0.5rem 1rem 0.75rem 1rem',
+              marginTop: '0.5rem',
+              borderRadius: '0.5rem',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+              border: '1px solid #e2e8f0',
+              background: isScrolled ? 'white' : 'rgba(15, 23, 42, 0.95)',
+              backdropFilter: 'blur(12px)'
+            }}>
               <Link
                 href="/"
-                className={`block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 ${
-                  isActive('/')
-                    ? 'text-amber-600 bg-amber-50'
+                style={{
+                  display: 'block',
+                  padding: '0.5rem 0.75rem',
+                  borderRadius: '0.375rem',
+                  fontSize: '1rem',
+                  fontWeight: 500,
+                  transition: 'all 0.2s ease',
+                  color: isActive('/')
+                    ? '#d97706'
                     : isScrolled
-                      ? 'text-slate-700 hover:text-slate-900 hover:bg-slate-50'
-                      : 'text-white hover:text-amber-400 hover:bg-white/10'
-                }`}
+                      ? '#374151'
+                      : 'white',
+                  background: isActive('/') ? 'rgba(217, 119, 6, 0.1)' : 'transparent',
+                  textDecoration: 'none',
+                  marginBottom: '0.25rem'
+                }}
                 onClick={() => setIsOpen(false)}
               >
                 Home
@@ -208,13 +245,22 @@ export default function Navigation() {
               
               <Link
                 href="/about"
-                className={`block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 ${
-                  isActive('/about')
-                    ? 'text-amber-600 bg-amber-50'
+                style={{
+                  display: 'block',
+                  padding: '0.5rem 0.75rem',
+                  borderRadius: '0.375rem',
+                  fontSize: '1rem',
+                  fontWeight: 500,
+                  transition: 'all 0.2s ease',
+                  color: isActive('/about')
+                    ? '#d97706'
                     : isScrolled
-                      ? 'text-slate-700 hover:text-slate-900 hover:bg-slate-50'
-                      : 'text-white hover:text-amber-400 hover:bg-white/10'
-                }`}
+                      ? '#374151'
+                      : 'white',
+                  background: isActive('/about') ? 'rgba(217, 119, 6, 0.1)' : 'transparent',
+                  textDecoration: 'none',
+                  marginBottom: '0.25rem'
+                }}
                 onClick={() => setIsOpen(false)}
               >
                 About
@@ -222,13 +268,22 @@ export default function Navigation() {
               
               <Link
                 href="/investments"
-                className={`block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 ${
-                  isActive('/investments')
-                    ? 'text-amber-600 bg-amber-50'
+                style={{
+                  display: 'block',
+                  padding: '0.5rem 0.75rem',
+                  borderRadius: '0.375rem',
+                  fontSize: '1rem',
+                  fontWeight: 500,
+                  transition: 'all 0.2s ease',
+                  color: isActive('/investments')
+                    ? '#d97706'
                     : isScrolled
-                      ? 'text-slate-700 hover:text-slate-900 hover:bg-slate-50'
-                      : 'text-white hover:text-amber-400 hover:bg-white/10'
-                }`}
+                      ? '#374151'
+                      : 'white',
+                  background: isActive('/investments') ? 'rgba(217, 119, 6, 0.1)' : 'transparent',
+                  textDecoration: 'none',
+                  marginBottom: '0.25rem'
+                }}
                 onClick={() => setIsOpen(false)}
               >
                 Investments
@@ -236,36 +291,86 @@ export default function Navigation() {
               
               <Link
                 href="/contact"
-                className={`block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 ${
-                  isActive('/contact')
-                    ? 'text-amber-600 bg-amber-50'
+                style={{
+                  display: 'block',
+                  padding: '0.5rem 0.75rem',
+                  borderRadius: '0.375rem',
+                  fontSize: '1rem',
+                  fontWeight: 500,
+                  transition: 'all 0.2s ease',
+                  color: isActive('/contact')
+                    ? '#d97706'
                     : isScrolled
-                      ? 'text-slate-700 hover:text-slate-900 hover:bg-slate-50'
-                      : 'text-white hover:text-amber-400 hover:bg-white/10'
-                }`}
+                      ? '#374151'
+                      : 'white',
+                  background: isActive('/contact') ? 'rgba(217, 119, 6, 0.1)' : 'transparent',
+                  textDecoration: 'none',
+                  marginBottom: '0.25rem'
+                }}
                 onClick={() => setIsOpen(false)}
               >
                 Contact
               </Link>
               
-              <div className="pt-4 pb-2 border-t border-slate-200">
+              <div style={{
+                paddingTop: '1rem',
+                paddingBottom: '0.5rem',
+                borderTop: '1px solid #e2e8f0',
+                marginTop: '0.5rem'
+              }}>
                 <Link
                   href="/login"
-                  className={`block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 ${
-                    isScrolled
-                      ? 'text-slate-700 hover:text-slate-900 hover:bg-slate-50'
-                      : 'text-white hover:text-amber-400 hover:bg-white/10'
-                  }`}
+                  style={{
+                    display: 'block',
+                    padding: '0.5rem 0.75rem',
+                    borderRadius: '0.375rem',
+                    fontSize: '1rem',
+                    fontWeight: 500,
+                    transition: 'all 0.2s ease',
+                    color: isScrolled ? '#374151' : 'white',
+                    textDecoration: 'none',
+                    marginBottom: '0.5rem'
+                  }}
                   onClick={() => setIsOpen(false)}
                 >
                   Sign In
                 </Link>
                 <Link
                   href="/register"
-                  className="block px-3 py-2 mt-2 rounded-md text-base font-medium bg-gradient-to-r from-amber-600 to-amber-700 text-white hover:from-amber-700 hover:to-amber-800 transition-all duration-200"
+                  style={{
+                    display: 'block',
+                    padding: '0.5rem 0.75rem',
+                    marginTop: '0.5rem',
+                    borderRadius: '0.375rem',
+                    fontSize: '1rem',
+                    fontWeight: 500,
+                    background: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)',
+                    color: 'white',
+                    textDecoration: 'none',
+                    transition: 'all 0.2s ease'
+                  }}
                   onClick={() => setIsOpen(false)}
                 >
                   Get Started
+                </Link>
+                <Link
+                  href="/admin/login"
+                  style={{
+                    display: 'block',
+                    padding: '0.5rem 0.75rem',
+                    marginTop: '0.5rem',
+                    borderRadius: '0.375rem',
+                    fontSize: '1rem',
+                    fontWeight: 500,
+                    transition: 'all 0.2s ease',
+                    color: isScrolled ? '#374151' : 'white',
+                    textDecoration: 'none',
+                    border: '1px solid',
+                    borderColor: isScrolled ? '#d1d5db' : 'rgba(255, 255, 255, 0.3)'
+                  }}
+                  onClick={() => setIsOpen(false)}
+                >
+                  Admin Console
                 </Link>
               </div>
             </div>

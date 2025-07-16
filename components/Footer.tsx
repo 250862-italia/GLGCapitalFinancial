@@ -61,13 +61,13 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/about" className="text-slate-300 hover:text-amber-400 transition-colors duration-200">
-                  Portfolio Management
+                <Link href="/dashboard" className="text-slate-300 hover:text-amber-400 transition-colors duration-200">
+                  Client Dashboard
                 </Link>
               </li>
               <li>
-                <Link href="/about" className="text-slate-300 hover:text-amber-400 transition-colors duration-200">
-                  Risk Assessment
+                <Link href="/informational-request" className="text-slate-300 hover:text-amber-400 transition-colors duration-200">
+                  Documentation Requests
                 </Link>
               </li>
             </ul>
@@ -88,18 +88,18 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/about" className="text-slate-300 hover:text-amber-400 transition-colors duration-200">
-                  Careers
+                <Link href="/login" className="text-slate-300 hover:text-amber-400 transition-colors duration-200">
+                  Client Login
                 </Link>
               </li>
               <li>
-                <Link href="/about" className="text-slate-300 hover:text-amber-400 transition-colors duration-200">
-                  News & Insights
+                <Link href="/register" className="text-slate-300 hover:text-amber-400 transition-colors duration-200">
+                  Register
                 </Link>
               </li>
               <li>
-                <Link href="/about" className="text-slate-300 hover:text-amber-400 transition-colors duration-200">
-                  Press Releases
+                <Link href="/admin/login" className="text-slate-300 hover:text-amber-400 transition-colors duration-200">
+                  Admin Console
                 </Link>
               </li>
             </ul>
@@ -159,13 +159,13 @@ export default function Footer() {
               © 2024 GLG Capital Group LLC. All rights reserved.
             </div>
             <div className="flex space-x-6 text-sm">
-              <Link href="/privacy" className="text-slate-400 hover:text-amber-400 transition-colors duration-200">
+              <Link href="/about" className="text-slate-400 hover:text-amber-400 transition-colors duration-200">
                 Privacy Policy
               </Link>
-              <Link href="/terms" className="text-slate-400 hover:text-amber-400 transition-colors duration-200">
+              <Link href="/about" className="text-slate-400 hover:text-amber-400 transition-colors duration-200">
                 Terms of Service
               </Link>
-              <Link href="/disclaimer" className="text-slate-400 hover:text-amber-400 transition-colors duration-200">
+              <Link href="/about" className="text-slate-400 hover:text-amber-400 transition-colors duration-200">
                 Legal Disclaimer
               </Link>
             </div>
