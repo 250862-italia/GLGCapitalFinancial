@@ -450,7 +450,7 @@ export default function AboutPage() {
               lineHeight: 1.6,
               marginBottom: '1rem'
             }}>
-              <strong>Magnificus Dominus Consulting Europe Srl</strong><br />
+              <strong>GLG Capital Group LLC</strong><br />
               Exclusive Partner for Italy<br />
               Specialized in strategic development, consultancy, and high-value project management.
             </p>

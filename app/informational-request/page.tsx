@@ -93,7 +93,7 @@ GLG Equity Pledge
 
 Involved Entities:
 * GLG Capital Consulting LLC (USA)
-* Magnificus Dominus Consulting Europe Srl (Italy)
+* GLG Capital Group LLC (United States)
 
 1. Subject of the Request
 I, the undersigned, as a prospective participant, hereby request detailed information regarding the "GLG Equity Pledge" program, including but not limited to:
@@ -104,12 +104,12 @@ I, the undersigned, as a prospective participant, hereby request detailed inform
 * Key risks and safeguards
 
 2. Applicant's Declarations
-* Voluntariness: I declare that this request is made of my own free will, without any solicitation or promotional activities by GLG Capital Consulting LLC, Magnificus Dominus Consulting Europe Srl, or their agents.
+* Voluntariness: I declare that this request is made of my own free will, without any solicitation or promotional activities by GLG Capital Consulting LLC, or their agents.
 * Informational Purpose: I understand that the information provided is purely informational and does not constitute a contractual offer, investment advice, or recommendation under applicable securities laws.
 * Independent Evaluation: I commit to independently assess, and if needed consult professional advisors on, the suitability of any potential investment decision.
 
 3. Data Processing Consent (EU GDPR 2016/679)
-I authorize GLG Capital Consulting LLC and Magnificus Dominus Consulting Europe Srl to process my personal data solely for the purposes of:
+I authorize GLG Capital Consulting LLC to process my personal data solely for the purposes of:
 * Providing the requested information
 * Complying with legal AML requirements
 My data will not be shared with third parties for any other purposes.

@@ -239,7 +239,7 @@ export default function ContactPage() {
               fontWeight: 700, 
               marginBottom: '1rem' 
             }}>
-              Magnificus Dominus Consulting Europe Srl
+              GLG Capital Group LLC
             </h3>
             <p style={{ 
               color: '#1a3556', 

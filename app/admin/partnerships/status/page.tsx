@@ -22,7 +22,7 @@ export default function PartnershipsManagementPage() {
   const [partnerships, setPartnerships] = useState<Partnership[]>([
     {
       id: '1',
-      name: 'Magnificus Dominus Consulting',
+      name: 'GLG Capital Group LLC',
       partnerType: 'Strategic',
       status: 'active',
       startDate: '2024-01-15',

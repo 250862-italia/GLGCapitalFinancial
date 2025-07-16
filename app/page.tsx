@@ -103,7 +103,7 @@ export default function HomePage() {
                 Global Reach
               </h3>
               <p style={{ fontSize: '1rem', lineHeight: 1.5, opacity: 0.9 }}>
-                US-based with exclusive Italian partnership through Magnificus Dominus
+                US-based financial services company
               </p>
             </div>
 
@@ -486,53 +486,15 @@ export default function HomePage() {
 
       {/* ITALIAN PARTNERS SECTION */}
       <section style={{ marginBottom: '4rem' }}>
-        <h2 style={{ 
+                <h2 style={{
           color: '#0a2540', 
           fontSize: '2.5rem', 
           fontWeight: 800, 
           marginBottom: '2rem',
           textAlign: 'center'
         }}>
-          Our Italian Partners
+          Our Partners
         </h2>
-        
-        {/* Magnificus Dominus Promo Block */}
-        <div style={{
-          background: 'linear-gradient(135deg, #f59e0b 0%, #fffbe6 100%)',
-          border: '2px solid #f59e0b',
-          borderRadius: 14,
-          boxShadow: '0 4px 20px rgba(245,158,11,0.10)',
-          padding: '2.5rem',
-          marginBottom: '2.5rem',
-          maxWidth: 900,
-          marginLeft: 'auto',
-          marginRight: 'auto',
-          textAlign: 'center'
-        }}>
-          <img src="https://www.magnificusdominus.com/wp-content/uploads/2023/09/cropped-logo-magnificus-dominus-1.png" alt="Magnificus Dominus Logo" style={{ width: 90, marginBottom: 18, borderRadius: 8, background: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.07)' }} />
-          <h3 style={{ color: '#b45309', fontSize: '1.5rem', fontWeight: 800, marginBottom: 12 }}>
-            Magnificus Dominus Consulting Europe Srl
-          </h3>
-          <p style={{ color: '#1a3556', fontSize: '1.1rem', lineHeight: 1.7, marginBottom: 18 }}>
-            <b>Partner esclusivo per l'Italia di GLG Capital Group LLC.</b><br/>
-            Magnificus Dominus è leader nella consulenza strategica, sviluppo d'impresa e gestione di progetti ad alto valore aggiunto. Grazie a un team altamente qualificato e a una rete consolidata, garantisce crescita, innovazione e risultati concreti per i nostri clienti italiani.<br/>
-            <span style={{ color: '#f59e0b', fontWeight: 700 }}>Scopri come Magnificus Dominus può portare la tua azienda al prossimo livello!</span>
-          </p>
-          <a href="https://www.magnificusdominus.com" target="_blank" rel="noopener noreferrer" style={{
-            background: '#0a2540',
-            color: '#fff',
-            padding: '1rem 2rem',
-            borderRadius: 8,
-            textDecoration: 'none',
-            fontWeight: 700,
-            fontSize: '1.1rem',
-            display: 'inline-block',
-            boxShadow: '0 2px 8px rgba(34,40,49,0.07)',
-            marginTop: 10
-          }}>
-            Visita il sito Magnificus Dominus
-          </a>
-        </div>
 
         <div style={{ 
           display: 'grid', 
@@ -540,33 +502,7 @@ export default function HomePage() {
           gap: '2rem' 
         }}>
           
-          {/* Partner 1 */}
-          <div style={{ 
-            background: '#fff', 
-            padding: '2rem', 
-            borderRadius: 12, 
-            boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
-            border: '1px solid #e2e8f0'
-          }}>
-            <h3 style={{ 
-              color: '#0a2540', 
-              fontSize: '1.4rem', 
-              fontWeight: 700, 
-              marginBottom: '1rem' 
-            }}>
-              Magnificus Dominus Consulting Europe Srl – Exclusive Partner for Italy
-            </h3>
-            <p style={{ 
-              color: '#1a3556', 
-              lineHeight: 1.6,
-              marginBottom: '1rem'
-            }}>
-              GLG Capital Group has entrusted <strong>Magnificus Dominus Consulting Europe Srl</strong> with the exclusive management of its business operations in Italy. As a specialized firm in strategic development, consultancy, and high-value project management, Magnificus Dominus ensures the growth and consolidation of GLG's initiatives in the Italian market. With a highly skilled team and a strong network, the company guarantees efficiency, innovation, and tangible results.
-            </p>
-            <p style={{ color: '#1a3556', fontSize: '0.9rem' }}>
-              For more information, contact us: <strong>www.magnificusdominus.com</strong>
-            </p>
-          </div>
+
 
           {/* Partner 2 */}
           <div style={{ 
