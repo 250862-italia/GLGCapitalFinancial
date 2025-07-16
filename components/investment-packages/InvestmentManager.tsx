@@ -249,7 +249,7 @@ export default function InvestmentManager() {
           <p className="text-gray-600 mb-4">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            className="btn-primary"
           >
             Retry
           </button>
@@ -264,7 +264,7 @@ export default function InvestmentManager() {
         <h1 className="text-3xl font-bold text-gray-900">Investment Manager</h1>
         <button
           onClick={() => setShowNewInvestment(true)}
-          className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          className="btn-primary"
         >
           New Investment
         </button>
@@ -462,7 +462,7 @@ export default function InvestmentManager() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  className="btn-primary"
                 >
                   Create Investment
                 </button>

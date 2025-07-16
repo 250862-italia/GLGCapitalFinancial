@@ -158,7 +158,7 @@ export default function TeamManagementPage() {
         </div>
         <button
           onClick={() => setShowAddForm(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors"
+          className="btn-primary"
         >
           <Plus size={16} />
           Add Member
@@ -236,7 +236,7 @@ export default function TeamManagementPage() {
             <button
               onClick={() => setActiveTab('all')}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                activeTab === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                activeTab === 'all' ? 'btn-primary' : 'btn-secondary'
               }`}
             >
               All
@@ -244,7 +244,7 @@ export default function TeamManagementPage() {
             <button
               onClick={() => setActiveTab('active')}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                activeTab === 'active' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                activeTab === 'active' ? 'btn-primary' : 'btn-secondary'
               }`}
             >
               Active
@@ -252,7 +252,7 @@ export default function TeamManagementPage() {
             <button
               onClick={() => setActiveTab('inactive')}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                activeTab === 'inactive' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                activeTab === 'inactive' ? 'btn-primary' : 'btn-secondary'
               }`}
             >
               Inactive
@@ -435,7 +435,7 @@ export default function TeamManagementPage() {
                 <button
                   type="button"
                   onClick={editingMember ? handleEditMember : handleAddMember}
-                  className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+                  className="btn-primary flex-1"
                 >
                   {editingMember ? 'Update Member' : 'Add Member'}
                 </button>

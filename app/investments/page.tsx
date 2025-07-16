@@ -153,7 +153,7 @@ export default function InvestmentsPage() {
                   <p className="text-gray-600">Durata: {pkg.duration} giorni • Rendimento atteso: {pkg.expected_return}%</p>
                   <p className="text-gray-600">Min: €{pkg.min_investment?.toLocaleString()} • Max: €{pkg.max_investment?.toLocaleString()}</p>
                 </div>
-                <button className="bg-blue-600 text-white px-4 py-2 rounded font-bold" onClick={() => handleBuy(pkg)}>Acquista</button>
+                <button className="btn-primary" onClick={() => handleBuy(pkg)}>Acquista</button>
               </div>
             ))}
           </div>
@@ -166,7 +166,7 @@ export default function InvestmentsPage() {
               <h2 className="text-xl font-bold mb-4">Acquista {selectedPackage.name}</h2>
               <label className="block mb-2 font-medium">Importo da investire (EUR)</label>
               <input type="number" min={selectedPackage.min_investment} max={selectedPackage.max_investment} value={amount} onChange={e => setAmount(e.target.value)} className="border p-2 rounded w-full mb-4" />
-              <button className="bg-green-600 text-white px-4 py-2 rounded font-bold w-full" onClick={handleConfirmBuy} disabled={loading || !amount}>Conferma Acquisto</button>
+              <button className="btn-success w-full" onClick={handleConfirmBuy} disabled={loading || !amount}>Conferma Acquisto</button>
             </div>
           </div>
         )}

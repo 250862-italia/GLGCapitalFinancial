@@ -102,7 +102,7 @@ export default function AuthErrorPage() {
             <div className="flex flex-col space-y-3">
               <Link
                 href="/login"
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="btn-primary w-full"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Login

@@ -106,7 +106,7 @@ export default function EmailDebugPage() {
           <button
             onClick={runTest}
             disabled={loading}
-            className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
               <RefreshCw className="w-5 h-5 animate-spin" />

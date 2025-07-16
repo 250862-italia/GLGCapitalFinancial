@@ -211,7 +211,7 @@ export default function AdminContentPage() {
           <p className="text-gray-600 mb-4">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            className="btn-primary"
           >
             Retry
           </button>
@@ -226,7 +226,7 @@ export default function AdminContentPage() {
         <h1 className="text-3xl font-bold text-gray-900">Content Management</h1>
         <button
           onClick={handleAdd}
-          className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          className="btn-primary"
         >
           Add Content
         </button>
@@ -506,7 +506,7 @@ export default function AdminContentPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                  className="btn-primary"
                 >
                   {showAddModal ? 'Add Content' : 'Update Content'}
                 </button>
