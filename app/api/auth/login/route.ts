@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin, supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase';
 import { createHash } from 'crypto';
 
 export const dynamic = 'force-dynamic';
@@ -13,144 +13,51 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
     }
 
-    let user = null;
-    let client = null;
-    let authMethod = '';
+    // Hash della password
+    const passwordHash = createHash('sha256').update(password).digest('hex');
+    
+    // Cerca utente nella tabella users
+    const { data: user, error: userError } = await supabaseAdmin
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .eq('password_hash', passwordHash)
+      .single();
 
-    // Method 1: Try Supabase Auth first
-    try {
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (!authError && authData.user) {
-        console.log('✅ Login tramite Supabase Auth riuscito');
-        authMethod = 'supabase_auth';
-        
-        // Get user data from custom users table
-        const { data: dbUser, error: dbError } = await supabaseAdmin
-          .from('users')
-          .select('*')
-          .eq('id', authData.user.id)
-          .single();
-
-        if (dbUser) {
-          user = {
-            id: dbUser.id,
-            email: dbUser.email,
-            first_name: dbUser.first_name,
-            last_name: dbUser.last_name,
-            email_verified: dbUser.email_verified || true // Default to true if undefined
-          };
-        } else {
-          // If user doesn't exist in custom table, create it
-          console.log('📝 Creazione record nella tabella users per utente Supabase Auth');
-          const { data: newUser, error: createError } = await supabaseAdmin
-            .from('users')
-            .insert({
-              id: authData.user.id,
-              email: authData.user.email,
-              first_name: '',
-              last_name: '',
-              email_verified: true,
-              created_at: new Date().toISOString()
-            })
-            .select()
-            .single();
-
-          if (!createError && newUser) {
-            user = {
-              id: newUser.id,
-              email: newUser.email,
-              first_name: newUser.first_name,
-              last_name: newUser.last_name,
-              email_verified: true
-            };
-          }
-        }
-
-        // Get client profile
-        if (user) {
-          const { data: clientData, error: clientError } = await supabaseAdmin
-            .from('clients')
-            .select('*')
-            .eq('user_id', user.id)
-            .single();
-
-          if (!clientError && clientData) {
-            client = clientData;
-          }
-        }
-
-        return NextResponse.json({
-          success: true,
-          user,
-          client,
-          authMethod,
-          access_token: authData.session?.access_token
-        });
-      }
-    } catch (authError) {
-      console.log('❌ Login Supabase Auth fallito, provo tabella users custom');
+    if (userError || !user) {
+      console.log('❌ Login fallito: utente non trovato o password errata');
+      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
-    // Method 2: Try custom users table
-    try {
-      const passwordHash = createHash('sha256').update(password).digest('hex');
-      
-      const { data: dbUser, error: dbError } = await supabaseAdmin
-        .from('users')
-        .select('*')
-        .eq('email', email)
-        .eq('password_hash', passwordHash)
-        .single();
-
-      if (!dbError && dbUser) {
-        console.log('✅ Login tramite tabella users custom riuscito');
-        authMethod = 'custom_table';
-        
-        user = {
-          id: dbUser.id,
-          email: dbUser.email,
-          first_name: dbUser.first_name,
-          last_name: dbUser.last_name,
-          email_confirmed: dbUser.email_confirmed || true
-        };
-
-        // Get client profile
-        const { data: clientData, error: clientError } = await supabaseAdmin
-          .from('clients')
-          .select('*')
-          .eq('user_id', user.id)
-          .single();
-
-        if (!clientError && clientData) {
-          client = clientData;
-        }
-
-        return NextResponse.json({
-          success: true,
-          user,
-          client,
-          authMethod
-        });
-      }
-    } catch (customError) {
-      console.log('❌ Login tabella users custom fallito');
+    if (!user.is_active) {
+      console.log('❌ Login fallito: utente non attivo');
+      return NextResponse.json({ error: 'Account is not active' }, { status: 401 });
     }
 
-    // Both methods failed
-    return NextResponse.json(
-      { error: 'Invalid email or password' },
-      { status: 401 }
-    );
+    // Crea token di sessione (semplice per ora)
+    const sessionToken = `session_${user.id}_${Date.now()}`;
+    
+    // Crea risposta con dati utente
+    const userData = {
+      id: user.id,
+      email: user.email,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      role: user.role,
+      is_active: user.is_active,
+      email_verified: user.email_verified
+    };
+
+    console.log('✅ Login tramite tabella users custom riuscito');
+
+    return NextResponse.json({
+      user: userData,
+      access_token: sessionToken,
+      message: 'Login successful'
+    });
 
   } catch (error) {
-    console.error('Login error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    console.error('❌ Errore durante il login:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 } 

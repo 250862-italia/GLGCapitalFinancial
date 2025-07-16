@@ -16,26 +16,39 @@ const first_name = 'Super';
 const last_name = 'Admin1';
 
 async function createUserCentralized() {
+  console.log('🔧 Inizializzazione creazione utente superadmin...');
+  
   // 1. Crea utente in Supabase Auth già confermato
   let userId;
   let userAlreadyExists = false;
+  
+  console.log('📧 Tentativo creazione utente in Supabase Auth...');
   const { data: authData, error: authError } = await supabase.auth.admin.createUser({
     email,
     password,
     email_confirm: true,
     user_metadata: { role, first_name, last_name }
   });
+  
   if (authError) {
     if (authError.message && authError.message.includes('already been registered')) {
       console.warn('⚠️ Utente già esistente in Auth, recupero ID...');
       // Recupera l'utente Auth esistente
-      const { data: existingUser, error: getUserError } = await supabase.auth.admin.listUsers({ email });
-      if (getUserError || !existingUser || !existingUser.users || existingUser.users.length === 0) {
-        console.error('❌ Impossibile recuperare utente Auth:', getUserError?.message || 'Non trovato');
+      const { data: existingUsers, error: getUserError } = await supabase.auth.admin.listUsers();
+      if (getUserError) {
+        console.error('❌ Errore recupero utenti Auth:', getUserError.message);
         return;
       }
-      userId = existingUser.users[0].id;
+      
+      const user = existingUsers.users.find(u => u.email === email);
+      if (!user) {
+        console.error('❌ Utente non trovato in Auth');
+        return;
+      }
+      
+      userId = user.id;
       userAlreadyExists = true;
+      console.log('✅ Utente Auth trovato con ID:', userId);
     } else {
       console.error('❌ Errore creazione utente Auth:', authError.message);
       return;
@@ -45,41 +58,79 @@ async function createUserCentralized() {
     console.log('✅ Utente Auth creato:', email, 'ID:', userId);
   }
 
-  // 2. Verifica se esiste già nella tabella users
-  const { data: existingUser, error: checkError } = await supabase
+  // 2. Pulisci eventuali duplicati nella tabella users
+  console.log('🧹 Pulizia duplicati nella tabella users...');
+  const { data: allUsers, error: listError } = await supabase
     .from('users')
     .select('*')
-    .eq('email', email)
-    .single();
-
-  if (checkError && !checkError.message.includes('No rows found')) {
-    console.error('❌ Errore verifica utente esistente:', checkError.message);
+    .eq('email', email);
+    
+  if (listError) {
+    console.error('❌ Errore recupero utenti:', listError.message);
     return;
   }
-
-  if (existingUser) {
-    console.log('✅ Utente già esistente nella tabella users, aggiorno ruolo se necessario...');
+  
+  if (allUsers && allUsers.length > 1) {
+    console.log(`⚠️ Trovati ${allUsers.length} utenti con email ${email}, rimuovo duplicati...`);
     
-    // Aggiorna solo se il ruolo è diverso
-    if (existingUser.role !== role) {
-      const { error: updateError } = await supabase
+    // Mantieni solo il primo e aggiornalo
+    const userToKeep = allUsers[0];
+    const usersToDelete = allUsers.slice(1);
+    
+    for (const user of usersToDelete) {
+      const { error: deleteError } = await supabase
         .from('users')
-        .update({ 
-          role,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', userId);
-
-      if (updateError) {
-        console.error('❌ Errore aggiornamento ruolo:', updateError.message);
+        .delete()
+        .eq('id', user.id);
+        
+      if (deleteError) {
+        console.error('❌ Errore eliminazione duplicato:', deleteError.message);
       } else {
-        console.log('✅ Ruolo aggiornato a:', role);
+        console.log('✅ Duplicato eliminato:', user.id);
       }
+    }
+    
+    // Aggiorna l'utente rimanente
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({
+        id: userId,
+        role,
+        is_active: true,
+        email_verified: true,
+        password_hash: 'supabase_auth_managed',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userToKeep.id);
+      
+    if (updateError) {
+      console.error('❌ Errore aggiornamento utente:', updateError.message);
     } else {
-      console.log('✅ Ruolo già corretto:', role);
+      console.log('✅ Utente aggiornato con successo');
+    }
+  } else if (allUsers && allUsers.length === 1) {
+    // Aggiorna l'utente esistente
+    console.log('✅ Utente già esistente nella tabella users, aggiorno...');
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({
+        id: userId,
+        role,
+        is_active: true,
+        email_verified: true,
+        password_hash: 'supabase_auth_managed',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', allUsers[0].id);
+      
+    if (updateError) {
+      console.error('❌ Errore aggiornamento utente:', updateError.message);
+    } else {
+      console.log('✅ Utente aggiornato con successo');
     }
   } else {
     // Inserisci nuovo utente nella tabella users
+    console.log('➕ Inserimento nuovo utente nella tabella users...');
     const { error: userError } = await supabase
       .from('users')
       .insert({
@@ -98,13 +149,15 @@ async function createUserCentralized() {
     if (userError) {
       console.error('❌ Errore inserimento in tabella users:', userError.message);
     } else {
-      if (userAlreadyExists) {
-        console.log('✅ Utente già esistente in Auth, inserito ora nella tabella users:', email);
-      } else {
-        console.log('✅ Utente inserito nella tabella users con ruolo centralizzato:', role);
-      }
+      console.log('✅ Utente inserito nella tabella users con ruolo:', role);
     }
   }
+  
+  console.log('🎉 Operazione completata!');
+  console.log('📋 Credenziali di accesso:');
+  console.log(`   Email: ${email}`);
+  console.log(`   Password: ${password}`);
+  console.log(`   Ruolo: ${role}`);
 }
 
 createUserCentralized(); 

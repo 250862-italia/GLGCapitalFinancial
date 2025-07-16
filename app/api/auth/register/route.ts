@@ -26,34 +26,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 1. Crea utente su Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: { role: 'user', first_name: firstName, last_name: lastName }
-    });
+    // Controlla se l'utente esiste già
+    const { data: existingUser } = await supabaseAdmin
+      .from('users')
+      .select('id')
+      .eq('email', email)
+      .single();
 
-    if (authError) {
-      if (authError.message && authError.message.includes('already been registered')) {
-        return NextResponse.json(
-          { error: 'Un account con questa email esiste già' },
-          { status: 409 }
-        );
-      } else {
-        return NextResponse.json(
-          { error: 'Errore nella creazione dell’account: ' + authError.message },
-          { status: 500 }
-        );
-      }
+    if (existingUser) {
+      return NextResponse.json(
+        { error: 'Un account con questa email esiste già' },
+        { status: 409 }
+      );
     }
 
-    const userId = authData.user.id;
+    // Genera un ID utente univoco
+    const userId = crypto.randomUUID();
 
     // Hash della password
     const passwordHash = createHash('sha256').update(password).digest('hex');
 
-    // 2. Crea utente nella tabella users
+    // Crea utente nella tabella users
     const { data: newUser, error: userInsertError } = await supabaseAdmin
       .from('users')
       .insert({
@@ -79,7 +72,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 3. Crea profilo cliente
+    console.log('User created successfully with ID:', userId);
+
+    // Crea profilo cliente
     const client = await createClientProfile(userId, firstName, lastName, country);
 
     return NextResponse.json({

@@ -2,12 +2,6 @@
 export const dynamic = "force-dynamic";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
@@ -21,45 +15,38 @@ export default function AdminLoginPage() {
     setError("");
     setLoading(true);
 
-    // Login con Supabase Auth
-    const { data, error: loginError } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
-    if (loginError || !data.user) {
-      setError("Invalid credentials. Please contact system administrator.");
+    try {
+      // Login tramite API custom
+      const response = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // Salva nel localStorage
+        const adminUser = {
+          id: data.user.id,
+          email: data.user.email,
+          name: data.user.name,
+          role: data.user.role
+        };
+        localStorage.setItem("admin_user", JSON.stringify(adminUser));
+        localStorage.setItem("admin_token", data.session.access_token);
+        router.push("/admin");
+      } else {
+        setError(data.error || "Login failed");
+      }
+    } catch (error) {
+      console.error('Admin login error:', error);
+      setError("Network error. Please try again.");
+    } finally {
       setLoading(false);
-      return;
     }
-
-    // Recupera ruolo dal metadata o dalla tabella users
-    let userRole = data.user.user_metadata?.role || data.user.app_metadata?.role;
-    // Fallback: fetch dalla tabella users
-    if (!userRole) {
-      const { data: userData, error: userFetchError } = await supabase
-        .from('users')
-        .select('role')
-        .eq('id', data.user.id)
-        .single();
-      userRole = userData?.role;
-    }
-
-    if (userRole !== 'admin' && userRole !== 'superadmin') {
-      setError("Access denied: only admin/superadmin can access this area.");
-      setLoading(false);
-      return;
-    }
-
-    // Salva nel localStorage
-    const adminUser = {
-      id: data.user.id,
-      email: data.user.email,
-      name: data.user.user_metadata?.first_name || data.user.user_metadata?.name || '',
-      role: userRole
-    };
-    localStorage.setItem("admin_user", JSON.stringify(adminUser));
-    localStorage.setItem("admin_token", data.session?.access_token || "");
-    router.push("/admin");
   };
 
   return (
