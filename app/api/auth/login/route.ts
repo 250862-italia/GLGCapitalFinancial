@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
             email: dbUser.email,
             first_name: dbUser.first_name,
             last_name: dbUser.last_name,
-            email_confirmed: dbUser.email_confirmed || true // Default to true if undefined
+            email_verified: dbUser.email_verified || true // Default to true if undefined
           };
         } else {
           // If user doesn't exist in custom table, create it
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
               email: authData.user.email,
               first_name: '',
               last_name: '',
-              email_confirmed: true,
+              email_verified: true,
               created_at: new Date().toISOString()
             })
             .select()
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
               email: newUser.email,
               first_name: newUser.first_name,
               last_name: newUser.last_name,
-              email_confirmed: true
+              email_verified: true
             };
           }
         }

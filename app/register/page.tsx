@@ -71,6 +71,14 @@ export default function RegisterPage() {
     setError('');
 
     try {
+      console.log('🔄 Frontend: Invio richiesta di registrazione...');
+      console.log('📤 Frontend: Dati inviati:', {
+        email: formData.email,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        country: formData.country
+      });
+
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
@@ -80,22 +88,31 @@ export default function RegisterPage() {
           email: formData.email,
           password: formData.password,
           firstName: formData.firstName,
-      lastName: formData.lastName,
+          lastName: formData.lastName,
           country: formData.country
         }),
       });
 
+      console.log('📥 Frontend: Risposta ricevuta');
+      console.log('📥 Frontend: Status:', response.status);
+      console.log('📥 Frontend: Status Text:', response.statusText);
+      console.log('📥 Frontend: Headers:', Object.fromEntries(response.headers.entries()));
+
       const data = await response.json();
+      console.log('📥 Frontend: Dati parsati:', data);
 
       if (response.ok) {
+        console.log('✅ Frontend: Registrazione riuscita, imposto successo');
         setSuccess('Registration successful! Your account has been automatically confirmed. You can now log in.');
         setTimeout(() => {
           router.push('/login');
         }, 3000);
       } else {
+        console.log('❌ Frontend: Registrazione fallita, imposto errore:', data.error);
         setError(data.error || 'Registration failed');
       }
     } catch (err) {
+      console.error('❌ Frontend: Errore durante la registrazione:', err);
       setError('Network error. Please try again.');
     } finally {
       setIsLoading(false);

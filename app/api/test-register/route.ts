@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
         password_hash: passwordHash,
         first_name: firstName || '',
         last_name: lastName || '',
-        email_confirmed: true, // Auto-confirm email
+        email_verified: true, // Auto-confirm email
         created_at: new Date().toISOString()
       })
       .select()

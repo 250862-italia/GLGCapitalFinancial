@@ -5,8 +5,10 @@ import { createHash } from 'crypto';
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
+  console.log('🔔 API /api/auth/register chiamata');
   try {
     const body = await request.json();
+    console.log('📥 Dati ricevuti:', { email: body.email, firstName: body.firstName, lastName: body.lastName, country: body.country });
     const { email, password, firstName, lastName, country } = body;
 
     // Validazione
@@ -55,7 +57,7 @@ export async function POST(request: NextRequest) {
         role: 'user',
         password_hash: passwordHash,
         is_active: true,
-        email_confirmed: true, // Confermato automaticamente per evitare problemi email
+        email_verified: true, // Confermato automaticamente per evitare problemi email
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
@@ -63,7 +65,8 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (userInsertError) {
-      console.error('Error creating user:', userInsertError);
+      console.error('❌ Error creating user:', userInsertError);
+      console.error('❌ Error details:', JSON.stringify(userInsertError, null, 2));
       return NextResponse.json(
         { error: 'Errore nella creazione dell\'account' },
         { status: 500 }
@@ -83,7 +86,8 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error: any) {
-    console.error('Registration error:', error);
+    console.error('❌ Registration error:', error);
+    console.error('❌ Error stack:', error.stack);
     return NextResponse.json(
       { error: 'Errore interno del server' },
       { status: 500 }

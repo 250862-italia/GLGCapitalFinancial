@@ -45,28 +45,64 @@ async function createUserCentralized() {
     console.log('✅ Utente Auth creato:', email, 'ID:', userId);
   }
 
-  // 2. Inserisci nella tabella custom 'users' (centralizzato)
-  const { error: userError } = await supabase
+  // 2. Verifica se esiste già nella tabella users
+  const { data: existingUser, error: checkError } = await supabase
     .from('users')
-    .insert({
-      id: userId,
-      email,
-      first_name,
-      last_name,
-      role,
-      is_active: true,
-      email_verified: true,
-      password_hash: 'supabase_auth_managed',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    });
-  if (userError) {
-    console.error('❌ Errore inserimento in tabella users:', userError.message);
-  } else {
-    if (userAlreadyExists) {
-      console.log('✅ Utente già esistente in Auth, inserito ora nella tabella users:', email);
+    .select('*')
+    .eq('email', email)
+    .single();
+
+  if (checkError && !checkError.message.includes('No rows found')) {
+    console.error('❌ Errore verifica utente esistente:', checkError.message);
+    return;
+  }
+
+  if (existingUser) {
+    console.log('✅ Utente già esistente nella tabella users, aggiorno ruolo se necessario...');
+    
+    // Aggiorna solo se il ruolo è diverso
+    if (existingUser.role !== role) {
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({ 
+          role,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userId);
+
+      if (updateError) {
+        console.error('❌ Errore aggiornamento ruolo:', updateError.message);
+      } else {
+        console.log('✅ Ruolo aggiornato a:', role);
+      }
     } else {
-      console.log('✅ Utente inserito nella tabella users con ruolo centralizzato:', role);
+      console.log('✅ Ruolo già corretto:', role);
+    }
+  } else {
+    // Inserisci nuovo utente nella tabella users
+    const { error: userError } = await supabase
+      .from('users')
+      .insert({
+        id: userId,
+        email,
+        first_name,
+        last_name,
+        role,
+        is_active: true,
+        email_verified: true,
+        password_hash: 'supabase_auth_managed',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
+
+    if (userError) {
+      console.error('❌ Errore inserimento in tabella users:', userError.message);
+    } else {
+      if (userAlreadyExists) {
+        console.log('✅ Utente già esistente in Auth, inserito ora nella tabella users:', email);
+      } else {
+        console.log('✅ Utente inserito nella tabella users con ruolo centralizzato:', role);
+      }
     }
   }
 }
