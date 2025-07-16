@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { supabaseAdmin, supabase } from '@/lib/supabase';
 import { createHash } from 'crypto';
 
 export const dynamic = 'force-dynamic';
@@ -26,27 +26,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verifica se l'utente esiste già
-    const { data: existingUser, error: checkError } = await supabaseAdmin
-      .from('users')
-      .select('id')
-      .eq('email', email)
-      .single();
+    // 1. Crea utente su Supabase Auth
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: { role: 'user', first_name: firstName, last_name: lastName }
+    });
 
-    if (existingUser) {
-      return NextResponse.json(
-        { error: 'Un account con questa email esiste già' },
-        { status: 409 }
-      );
+    if (authError) {
+      if (authError.message && authError.message.includes('already been registered')) {
+        return NextResponse.json(
+          { error: 'Un account con questa email esiste già' },
+          { status: 409 }
+        );
+      } else {
+        return NextResponse.json(
+          { error: 'Errore nella creazione dell’account: ' + authError.message },
+          { status: 500 }
+        );
+      }
     }
 
-    // Genera ID utente
-    const userId = crypto.randomUUID();
+    const userId = authData.user.id;
 
     // Hash della password
     const passwordHash = createHash('sha256').update(password).digest('hex');
 
-    // Crea utente nella tabella users
+    // 2. Crea utente nella tabella users
     const { data: newUser, error: userInsertError } = await supabaseAdmin
       .from('users')
       .insert({
@@ -57,7 +64,7 @@ export async function POST(request: NextRequest) {
         role: 'user',
         password_hash: passwordHash,
         is_active: true,
-        email_verified: true, // Confermato automaticamente per evitare problemi email
+        email_verified: true, // Confermato automaticamente
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
@@ -66,16 +73,13 @@ export async function POST(request: NextRequest) {
 
     if (userInsertError) {
       console.error('❌ Error creating user:', userInsertError);
-      console.error('❌ Error details:', JSON.stringify(userInsertError, null, 2));
       return NextResponse.json(
-        { error: 'Errore nella creazione dell\'account' },
+        { error: 'Errore nella creazione dell\'account (tabella users)' },
         { status: 500 }
       );
     }
 
-    console.log('User created successfully with ID:', userId);
-
-    // Crea profilo cliente
+    // 3. Crea profilo cliente
     const client = await createClientProfile(userId, firstName, lastName, country);
 
     return NextResponse.json({
@@ -87,7 +91,6 @@ export async function POST(request: NextRequest) {
 
   } catch (error: any) {
     console.error('❌ Registration error:', error);
-    console.error('❌ Error stack:', error.stack);
     return NextResponse.json(
       { error: 'Errore interno del server' },
       { status: 500 }

@@ -71,11 +71,7 @@ export default function Footer() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 cursor: 'pointer',
-                transition: 'transform 0.2s ease'
-              }}
-              onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
-              onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
-              >
+              }}>
                 <span style={{ color: 'white', fontSize: '0.875rem' }}>📧</span>
               </div>
               <div style={{
@@ -87,11 +83,7 @@ export default function Footer() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 cursor: 'pointer',
-                transition: 'transform 0.2s ease'
-              }}
-              onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
-              onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
-              >
+              }}>
                 <span style={{ color: 'white', fontSize: '0.875rem' }}>📱</span>
               </div>
               <div style={{
@@ -103,11 +95,7 @@ export default function Footer() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 cursor: 'pointer',
-                transition: 'transform 0.2s ease'
-              }}
-              onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
-              onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
-              >
+              }}>
                 <span style={{ color: 'white', fontSize: '0.875rem' }}>💼</span>
               </div>
             </div>
@@ -123,10 +111,7 @@ export default function Footer() {
                   textDecoration: 'none',
                   transition: 'color 0.2s ease',
                   fontSize: '0.95rem'
-                }}
-                onMouseEnter={(e) => e.target.style.color = '#f59e0b'}
-                onMouseLeave={(e) => e.target.style.color = '#cbd5e1'}
-                >
+                }}>
                   Equity Pledge System
                 </Link>
               </li>
@@ -136,10 +121,7 @@ export default function Footer() {
                   textDecoration: 'none',
                   transition: 'color 0.2s ease',
                   fontSize: '0.95rem'
-                }}
-                onMouseEnter={(e) => e.target.style.color = '#f59e0b'}
-                onMouseLeave={(e) => e.target.style.color = '#cbd5e1'}
-                >
+                }}>
                   Corporate Financing
                 </Link>
               </li>
@@ -149,10 +131,7 @@ export default function Footer() {
                   textDecoration: 'none',
                   transition: 'color 0.2s ease',
                   fontSize: '0.95rem'
-                }}
-                onMouseEnter={(e) => e.target.style.color = '#f59e0b'}
-                onMouseLeave={(e) => e.target.style.color = '#cbd5e1'}
-                >
+                }}>
                   Investment Advisory
                 </Link>
               </li>
@@ -162,10 +141,7 @@ export default function Footer() {
                   textDecoration: 'none',
                   transition: 'color 0.2s ease',
                   fontSize: '0.95rem'
-                }}
-                onMouseEnter={(e) => e.target.style.color = '#f59e0b'}
-                onMouseLeave={(e) => e.target.style.color = '#cbd5e1'}
-                >
+                }}>
                   Financial Planning
                 </Link>
               </li>
@@ -182,10 +158,7 @@ export default function Footer() {
                   textDecoration: 'none',
                   transition: 'color 0.2s ease',
                   fontSize: '0.95rem'
-                }}
-                onMouseEnter={(e) => e.target.style.color = '#f59e0b'}
-                onMouseLeave={(e) => e.target.style.color = '#cbd5e1'}
-                >
+                }}>
                   About Us
                 </Link>
               </li>
@@ -195,10 +168,7 @@ export default function Footer() {
                   textDecoration: 'none',
                   transition: 'color 0.2s ease',
                   fontSize: '0.95rem'
-                }}
-                onMouseEnter={(e) => e.target.style.color = '#f59e0b'}
-                onMouseLeave={(e) => e.target.style.color = '#cbd5e1'}
-                >
+                }}>
                   Contact
                 </Link>
               </li>
@@ -208,10 +178,7 @@ export default function Footer() {
                   textDecoration: 'none',
                   transition: 'color 0.2s ease',
                   fontSize: '0.95rem'
-                }}
-                onMouseEnter={(e) => e.target.style.color = '#f59e0b'}
-                onMouseLeave={(e) => e.target.style.color = '#cbd5e1'}
-                >
+                }}>
                   Register
                 </Link>
               </li>
@@ -221,10 +188,7 @@ export default function Footer() {
                   textDecoration: 'none',
                   transition: 'color 0.2s ease',
                   fontSize: '0.95rem'
-                }}
-                onMouseEnter={(e) => e.target.style.color = '#f59e0b'}
-                onMouseLeave={(e) => e.target.style.color = '#cbd5e1'}
-                >
+                }}>
                   Admin Console
                 </Link>
               </li>
@@ -304,10 +268,7 @@ export default function Footer() {
               textDecoration: 'none',
               fontSize: '0.875rem',
               transition: 'color 0.2s ease'
-            }}
-            onMouseEnter={(e) => e.target.style.color = '#f59e0b'}
-            onMouseLeave={(e) => e.target.style.color = '#94a3b8'}
-            >
+            }}>
               Privacy Policy
             </Link>
             <Link href="/contact" style={{ 
@@ -315,10 +276,7 @@ export default function Footer() {
               textDecoration: 'none',
               fontSize: '0.875rem',
               transition: 'color 0.2s ease'
-            }}
-            onMouseEnter={(e) => e.target.style.color = '#f59e0b'}
-            onMouseLeave={(e) => e.target.style.color = '#94a3b8'}
-            >
+            }}>
               Terms of Service
             </Link>
             <Link href="/contact" style={{ 
@@ -326,10 +284,7 @@ export default function Footer() {
               textDecoration: 'none',
               fontSize: '0.875rem',
               transition: 'color 0.2s ease'
-            }}
-            onMouseEnter={(e) => e.target.style.color = '#f59e0b'}
-            onMouseLeave={(e) => e.target.style.color = '#94a3b8'}
-            >
+            }}>
               Legal Notice
             </Link>
           </div>

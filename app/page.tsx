@@ -126,12 +126,12 @@ export default function HomePage() {
               cursor: 'pointer'
             }}
             onMouseEnter={(e) => {
-              e.target.style.transform = 'translateY(-3px)';
-              e.target.style.boxShadow = '0 12px 35px rgba(245,158,11,0.4)';
+              e.currentTarget.style.transform = 'translateY(-3px)';
+              e.currentTarget.style.boxShadow = '0 16px 45px rgba(245,158,11,0.4)';
             }}
             onMouseLeave={(e) => {
-              e.target.style.transform = 'translateY(0)';
-              e.target.style.boxShadow = '0 8px 25px rgba(245,158,11,0.3)';
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 8px 25px rgba(245,158,11,0.3)';
             }}
             >
               Start Investing Now →
@@ -150,12 +150,12 @@ export default function HomePage() {
               cursor: 'pointer'
             }}
             onMouseEnter={(e) => {
-              e.target.style.background = 'rgba(245,158,11,0.1)';
-              e.target.style.transform = 'translateY(-3px)';
+              e.currentTarget.style.background = 'rgba(245,158,11,0.1)';
+              e.currentTarget.style.transform = 'translateY(-3px)';
             }}
             onMouseLeave={(e) => {
-              e.target.style.background = 'transparent';
-              e.target.style.transform = 'translateY(0)';
+              e.currentTarget.style.background = 'transparent';
+              e.currentTarget.style.transform = 'translateY(0)';
             }}
             >
               Learn More
@@ -185,8 +185,12 @@ export default function HomePage() {
               boxShadow: '0 12px 35px rgba(245,158,11,0.2)',
               transition: 'transform 0.3s ease'
             }}
-            onMouseEnter={(e) => e.target.style.transform = 'translateY(-5px)'}
-            onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-5px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
             >
               <div style={{ fontSize: '3rem', fontWeight: 900, marginBottom: '1rem' }}>$500M+</div>
               <div style={{ fontSize: '1.1rem', fontWeight: 600 }}>Assets Under Management</div>
@@ -201,8 +205,12 @@ export default function HomePage() {
               boxShadow: '0 12px 35px rgba(15,23,42,0.15)',
               transition: 'transform 0.3s ease'
             }}
-            onMouseEnter={(e) => e.target.style.transform = 'translateY(-5px)'}
-            onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-5px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
             >
               <div style={{ fontSize: '3rem', fontWeight: 900, marginBottom: '1rem' }}>15+</div>
               <div style={{ fontSize: '1.1rem', fontWeight: 600 }}>Years of Excellence</div>
@@ -217,8 +225,12 @@ export default function HomePage() {
               boxShadow: '0 12px 35px rgba(5,150,105,0.2)',
               transition: 'transform 0.3s ease'
             }}
-            onMouseEnter={(e) => e.target.style.transform = 'translateY(-5px)'}
-            onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-5px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
             >
               <div style={{ fontSize: '3rem', fontWeight: 900, marginBottom: '1rem' }}>98%</div>
               <div style={{ fontSize: '1.1rem', fontWeight: 600 }}>Client Satisfaction</div>
@@ -233,8 +245,12 @@ export default function HomePage() {
               boxShadow: '0 12px 35px rgba(124,58,237,0.2)',
               transition: 'transform 0.3s ease'
             }}
-            onMouseEnter={(e) => e.target.style.transform = 'translateY(-5px)'}
-            onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-5px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
             >
               <div style={{ fontSize: '3rem', fontWeight: 900, marginBottom: '1rem' }}>500+</div>
               <div style={{ fontSize: '1.1rem', fontWeight: 600 }}>Global Clients</div>
@@ -407,12 +423,12 @@ export default function HomePage() {
             cursor: 'pointer'
           }}
           onMouseEnter={(e) => {
-            e.target.style.transform = 'translateY(-3px)';
-            e.target.style.boxShadow = '0 16px 45px rgba(245,158,11,0.4)';
+            e.currentTarget.style.transform = 'translateY(-3px)';
+            e.currentTarget.style.boxShadow = '0 16px 45px rgba(245,158,11,0.4)';
           }}
           onMouseLeave={(e) => {
-            e.target.style.transform = 'translateY(0)';
-            e.target.style.boxShadow = '0 12px 35px rgba(245,158,11,0.3)';
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 12px 35px rgba(245,158,11,0.3)';
           }}
           >
             Get Started Today →
@@ -420,7 +436,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <style jsx>{`
+      <style jsx global>{`
         @keyframes float {
           0%, 100% { transform: translateY(0px); }
           50% { transform: translateY(-20px); }
