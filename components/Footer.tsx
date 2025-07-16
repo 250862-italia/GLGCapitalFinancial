@@ -2,59 +2,170 @@ import Link from 'next/link';
 
 export default function Footer() {
   return (
-    <footer className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
+    <footer style={{
+      background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)',
+      color: 'white',
+      position: 'relative',
+      overflow: 'hidden'
+    }}>
+      {/* Background Pattern */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'radial-gradient(circle at 20% 80%, rgba(245,158,11,0.05) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(245,158,11,0.05) 0%, transparent 50%)',
+        zIndex: 1
+      }}></div>
+      
       {/* Main Footer Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div style={{ 
+        maxWidth: '80rem', 
+        margin: '0 auto', 
+        padding: '4rem 1rem', 
+        position: 'relative',
+        zIndex: 2
+      }}>
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+          gap: '2rem',
+          marginBottom: '3rem'
+        }}>
           {/* Company Info */}
-          <div className="lg:col-span-1">
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl flex items-center justify-center">
-                <span className="text-white font-bold text-lg">G</span>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
+              <div style={{
+                width: '2.5rem',
+                height: '2.5rem',
+                background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                borderRadius: '0.75rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <span style={{ color: 'white', fontWeight: 'bold', fontSize: '1.125rem' }}>G</span>
               </div>
               <div>
-                <div className="text-xl font-bold text-white">GLG Capital Group LLC</div>
-                <div className="text-sm text-gray-300">Financial Services</div>
+                <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'white' }}>GLG Capital Group LLC</div>
+                <div style={{ fontSize: '0.875rem', color: '#cbd5e1' }}>Financial Services</div>
               </div>
             </div>
-            <p className="text-gray-300 mb-6 leading-relaxed">
+            <p style={{ 
+              color: '#cbd5e1', 
+              marginBottom: '1.5rem', 
+              lineHeight: 1.6,
+              fontSize: '0.95rem'
+            }}>
               Professional financial services and investment solutions. 
               Specializing in equity pledge systems and corporate financing.
             </p>
-            <div className="flex space-x-4">
-              <div className="w-8 h-8 bg-gradient-to-br from-amber-500 to-amber-600 rounded-lg flex items-center justify-center">
-                <span className="text-white text-sm">📧</span>
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <div style={{
+                width: '2rem',
+                height: '2rem',
+                background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                borderRadius: '0.5rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                transition: 'transform 0.2s ease'
+              }}
+              onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
+              onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+              >
+                <span style={{ color: 'white', fontSize: '0.875rem' }}>📧</span>
               </div>
-              <div className="w-8 h-8 bg-gradient-to-br from-amber-500 to-amber-600 rounded-lg flex items-center justify-center">
-                <span className="text-white text-sm">📱</span>
+              <div style={{
+                width: '2rem',
+                height: '2rem',
+                background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                borderRadius: '0.5rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                transition: 'transform 0.2s ease'
+              }}
+              onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
+              onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+              >
+                <span style={{ color: 'white', fontSize: '0.875rem' }}>📱</span>
               </div>
-              <div className="w-8 h-8 bg-gradient-to-br from-amber-500 to-amber-600 rounded-lg flex items-center justify-center">
-                <span className="text-white text-sm">💼</span>
+              <div style={{
+                width: '2rem',
+                height: '2rem',
+                background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                borderRadius: '0.5rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                transition: 'transform 0.2s ease'
+              }}
+              onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
+              onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+              >
+                <span style={{ color: 'white', fontSize: '0.875rem' }}>💼</span>
               </div>
             </div>
           </div>
 
           {/* Services */}
           <div>
-            <h3 className="text-lg font-semibold text-white mb-4">Our Services</h3>
-            <ul className="space-y-3">
+            <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'white', marginBottom: '1rem' }}>Our Services</h3>
+            <ul style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <li>
-                <Link href="/equity-pledge" className="text-gray-300 hover:text-amber-400 transition-colors">
+                <Link href="/equity-pledge" style={{ 
+                  color: '#cbd5e1', 
+                  textDecoration: 'none',
+                  transition: 'color 0.2s ease',
+                  fontSize: '0.95rem'
+                }}
+                onMouseEnter={(e) => e.target.style.color = '#f59e0b'}
+                onMouseLeave={(e) => e.target.style.color = '#cbd5e1'}
+                >
                   Equity Pledge System
                 </Link>
               </li>
               <li>
-                <Link href="/about" className="text-gray-300 hover:text-amber-400 transition-colors">
+                <Link href="/about" style={{ 
+                  color: '#cbd5e1', 
+                  textDecoration: 'none',
+                  transition: 'color 0.2s ease',
+                  fontSize: '0.95rem'
+                }}
+                onMouseEnter={(e) => e.target.style.color = '#f59e0b'}
+                onMouseLeave={(e) => e.target.style.color = '#cbd5e1'}
+                >
                   Corporate Financing
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="text-gray-300 hover:text-amber-400 transition-colors">
+                <Link href="/contact" style={{ 
+                  color: '#cbd5e1', 
+                  textDecoration: 'none',
+                  transition: 'color 0.2s ease',
+                  fontSize: '0.95rem'
+                }}
+                onMouseEnter={(e) => e.target.style.color = '#f59e0b'}
+                onMouseLeave={(e) => e.target.style.color = '#cbd5e1'}
+                >
                   Investment Advisory
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="text-gray-300 hover:text-amber-400 transition-colors">
+                <Link href="/contact" style={{ 
+                  color: '#cbd5e1', 
+                  textDecoration: 'none',
+                  transition: 'color 0.2s ease',
+                  fontSize: '0.95rem'
+                }}
+                onMouseEnter={(e) => e.target.style.color = '#f59e0b'}
+                onMouseLeave={(e) => e.target.style.color = '#cbd5e1'}
+                >
                   Financial Planning
                 </Link>
               </li>
@@ -63,25 +174,57 @@ export default function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-lg font-semibold text-white mb-4">Quick Links</h3>
-            <ul className="space-y-3">
+            <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'white', marginBottom: '1rem' }}>Quick Links</h3>
+            <ul style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <li>
-                <Link href="/about" className="text-gray-300 hover:text-amber-400 transition-colors">
+                <Link href="/about" style={{ 
+                  color: '#cbd5e1', 
+                  textDecoration: 'none',
+                  transition: 'color 0.2s ease',
+                  fontSize: '0.95rem'
+                }}
+                onMouseEnter={(e) => e.target.style.color = '#f59e0b'}
+                onMouseLeave={(e) => e.target.style.color = '#cbd5e1'}
+                >
                   About Us
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="text-gray-300 hover:text-amber-400 transition-colors">
+                <Link href="/contact" style={{ 
+                  color: '#cbd5e1', 
+                  textDecoration: 'none',
+                  transition: 'color 0.2s ease',
+                  fontSize: '0.95rem'
+                }}
+                onMouseEnter={(e) => e.target.style.color = '#f59e0b'}
+                onMouseLeave={(e) => e.target.style.color = '#cbd5e1'}
+                >
                   Contact
                 </Link>
               </li>
               <li>
-                <Link href="/register" className="text-gray-300 hover:text-amber-400 transition-colors">
+                <Link href="/register" style={{ 
+                  color: '#cbd5e1', 
+                  textDecoration: 'none',
+                  transition: 'color 0.2s ease',
+                  fontSize: '0.95rem'
+                }}
+                onMouseEnter={(e) => e.target.style.color = '#f59e0b'}
+                onMouseLeave={(e) => e.target.style.color = '#cbd5e1'}
+                >
                   Register
                 </Link>
               </li>
               <li>
-                <Link href="/admin/login" className="text-gray-300 hover:text-amber-400 transition-colors">
+                <Link href="/admin/login" style={{ 
+                  color: '#cbd5e1', 
+                  textDecoration: 'none',
+                  transition: 'color 0.2s ease',
+                  fontSize: '0.95rem'
+                }}
+                onMouseEnter={(e) => e.target.style.color = '#f59e0b'}
+                onMouseLeave={(e) => e.target.style.color = '#cbd5e1'}
+                >
                   Admin Console
                 </Link>
               </li>
@@ -90,26 +233,51 @@ export default function Footer() {
 
           {/* Contact Info */}
           <div>
-            <h3 className="text-lg font-semibold text-white mb-4">Contact Information</h3>
-            <div className="space-y-3">
-              <div className="flex items-start space-x-3">
-                <div className="w-5 h-5 bg-amber-500 rounded-full flex-shrink-0 mt-1"></div>
+            <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: 'white', marginBottom: '1rem' }}>Contact Information</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+                <div style={{
+                  width: '0.5rem',
+                  height: '0.5rem',
+                  background: '#f59e0b',
+                  borderRadius: '50%',
+                  flexShrink: 0,
+                  marginTop: '0.5rem'
+                }}></div>
                 <div>
-                  <p className="text-gray-300 text-sm">GLG Capital Group LLC</p>
-                  <p className="text-gray-400 text-xs">Financial Services Company</p>
+                  <p style={{ color: '#cbd5e1', fontSize: '0.875rem' }}>GLG Capital Group LLC</p>
+                  <p style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Financial Services Company</p>
                 </div>
               </div>
-              <div className="flex items-start space-x-3">
-                <div className="w-5 h-5 bg-amber-500 rounded-full flex-shrink-0 mt-1"></div>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+                <div style={{
+                  width: '0.5rem',
+                  height: '0.5rem',
+                  background: '#f59e0b',
+                  borderRadius: '50%',
+                  flexShrink: 0,
+                  marginTop: '0.5rem'
+                }}></div>
                 <div>
-                  <p className="text-gray-300 text-sm">Email: info@glgcapitalgroupllc.com</p>
+                  <p style={{ color: '#cbd5e1', fontSize: '0.875rem' }}>
+                    Email: <a href="mailto:info@glgcapitalgroupllc.com" style={{ color: '#f59e0b', textDecoration: 'none' }}>
+                      info@glgcapitalgroupllc.com
+                    </a>
+                  </p>
                 </div>
               </div>
-              <div className="flex items-start space-x-3">
-                <div className="w-5 h-5 bg-amber-500 rounded-full flex-shrink-0 mt-1"></div>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+                <div style={{
+                  width: '0.5rem',
+                  height: '0.5rem',
+                  background: '#f59e0b',
+                  borderRadius: '50%',
+                  flexShrink: 0,
+                  marginTop: '0.5rem'
+                }}></div>
                 <div>
-                  <p className="text-gray-300 text-sm">Professional Financial Services</p>
-                  <p className="text-gray-400 text-xs">Investment & Advisory</p>
+                  <p style={{ color: '#cbd5e1', fontSize: '0.875rem' }}>Professional Financial Services</p>
+                  <p style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Investment & Advisory</p>
                 </div>
               </div>
             </div>
@@ -117,22 +285,53 @@ export default function Footer() {
         </div>
 
         {/* Bottom Section */}
-        <div className="border-t border-gray-700 mt-12 pt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="text-gray-400 text-sm mb-4 md:mb-0">
-              © 2024 GLG Capital Group LLC. All rights reserved.
-            </div>
-            <div className="flex space-x-6">
-              <Link href="/contact" className="text-gray-400 hover:text-amber-400 text-sm transition-colors">
-                Privacy Policy
-              </Link>
-              <Link href="/contact" className="text-gray-400 hover:text-amber-400 text-sm transition-colors">
-                Terms of Service
-              </Link>
-              <Link href="/contact" className="text-gray-400 hover:text-amber-400 text-sm transition-colors">
-                Legal Notice
-              </Link>
-            </div>
+        <div style={{ 
+          borderTop: '1px solid #475569', 
+          marginTop: '3rem', 
+          paddingTop: '2rem',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '1rem',
+          alignItems: 'center',
+          textAlign: 'center'
+        }}>
+          <div style={{ color: '#94a3b8', fontSize: '0.875rem' }}>
+            © 2024 GLG Capital Group LLC. All rights reserved.
+          </div>
+          <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+            <Link href="/contact" style={{ 
+              color: '#94a3b8', 
+              textDecoration: 'none',
+              fontSize: '0.875rem',
+              transition: 'color 0.2s ease'
+            }}
+            onMouseEnter={(e) => e.target.style.color = '#f59e0b'}
+            onMouseLeave={(e) => e.target.style.color = '#94a3b8'}
+            >
+              Privacy Policy
+            </Link>
+            <Link href="/contact" style={{ 
+              color: '#94a3b8', 
+              textDecoration: 'none',
+              fontSize: '0.875rem',
+              transition: 'color 0.2s ease'
+            }}
+            onMouseEnter={(e) => e.target.style.color = '#f59e0b'}
+            onMouseLeave={(e) => e.target.style.color = '#94a3b8'}
+            >
+              Terms of Service
+            </Link>
+            <Link href="/contact" style={{ 
+              color: '#94a3b8', 
+              textDecoration: 'none',
+              fontSize: '0.875rem',
+              transition: 'color 0.2s ease'
+            }}
+            onMouseEnter={(e) => e.target.style.color = '#f59e0b'}
+            onMouseLeave={(e) => e.target.style.color = '#94a3b8'}
+            >
+              Legal Notice
+            </Link>
           </div>
         </div>
       </div>

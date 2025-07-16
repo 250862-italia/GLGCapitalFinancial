@@ -260,36 +260,32 @@ export default function Navigation() {
                 Contacts
               </Link>
               
-              <div style={{
-                paddingTop: '1rem',
-                paddingBottom: '0.5rem',
-                borderTop: '1px solid #e2e8f0',
-                marginTop: '0.5rem'
-              }}>
+              <div style={{ borderTop: '1px solid', borderColor: isScrolled ? '#e2e8f0' : 'rgba(255, 255, 255, 0.1)', marginTop: '0.5rem', paddingTop: '0.5rem' }}>
                 <Link
                   href="/register"
                   style={{
                     display: 'block',
                     padding: '0.5rem 0.75rem',
-                    marginTop: '0.5rem',
                     borderRadius: '0.375rem',
                     fontSize: '1rem',
                     fontWeight: 500,
-                    background: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)',
+                    transition: 'all 0.2s ease',
                     color: 'white',
+                    background: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)',
                     textDecoration: 'none',
-                    transition: 'all 0.2s ease'
+                    marginBottom: '0.25rem',
+                    textAlign: 'center'
                   }}
                   onClick={() => setIsOpen(false)}
                 >
                   Register
                 </Link>
+                
                 <Link
                   href="/admin/login"
                   style={{
                     display: 'block',
                     padding: '0.5rem 0.75rem',
-                    marginTop: '0.5rem',
                     borderRadius: '0.375rem',
                     fontSize: '1rem',
                     fontWeight: 500,
@@ -297,7 +293,8 @@ export default function Navigation() {
                     color: isScrolled ? '#374151' : 'white',
                     textDecoration: 'none',
                     border: '1px solid',
-                    borderColor: isScrolled ? '#d1d5db' : 'rgba(255, 255, 255, 0.3)'
+                    borderColor: isScrolled ? '#d1d5db' : 'rgba(255, 255, 255, 0.3)',
+                    textAlign: 'center'
                   }}
                   onClick={() => setIsOpen(false)}
                 >
