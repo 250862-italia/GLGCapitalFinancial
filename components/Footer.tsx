@@ -18,8 +18,9 @@ export default function Footer() {
               </div>
             </div>
             <p className="text-slate-300 mb-6 leading-relaxed">
-              Elevating wealth management through innovative investment strategies, 
-              personalized service, and unwavering commitment to client success.
+              GLG Capital Group LLC is a premier investment firm specializing in innovative equity pledge solutions. 
+              We empower businesses and investors with strategic capital solutions, delivering consistent 12% annual returns 
+              through our proprietary share-pledge framework.
             </p>
             <div className="flex space-x-4">
               <a href="#" className="w-10 h-10 bg-slate-700 hover:bg-amber-600 rounded-lg flex items-center justify-center transition-all duration-300 group">
@@ -45,28 +46,28 @@ export default function Footer() {
             <h3 className="text-lg font-bold text-white mb-6">Our Services</h3>
             <ul className="space-y-3">
               <li>
+                <Link href="/equity-pledge" className="text-slate-300 hover:text-amber-400 transition-colors duration-200">
+                  Equity Pledge System
+                </Link>
+              </li>
+              <li>
                 <Link href="/investments" className="text-slate-300 hover:text-amber-400 transition-colors duration-200">
                   Investment Management
                 </Link>
               </li>
               <li>
                 <Link href="/about" className="text-slate-300 hover:text-amber-400 transition-colors duration-200">
-                  Private Banking
+                  Strategic Capital Solutions
                 </Link>
               </li>
               <li>
                 <Link href="/about" className="text-slate-300 hover:text-amber-400 transition-colors duration-200">
-                  Wealth Planning
+                  Portfolio Management
                 </Link>
               </li>
               <li>
                 <Link href="/about" className="text-slate-300 hover:text-amber-400 transition-colors duration-200">
-                  Portfolio Analysis
-                </Link>
-              </li>
-              <li>
-                <Link href="/about" className="text-slate-300 hover:text-amber-400 transition-colors duration-200">
-                  Risk Management
+                  Risk Assessment
                 </Link>
               </li>
             </ul>
@@ -116,7 +117,8 @@ export default function Footer() {
                 </div>
                 <div>
                   <p className="text-slate-300 text-sm leading-relaxed">
-                    123 Financial District<br />
+                    GLG Capital Group LLC<br />
+                    123 Business Center Drive<br />
                     New York, NY 10001<br />
                     United States
                   </p>
@@ -130,7 +132,7 @@ export default function Footer() {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-slate-300 text-sm">+1 (555) 123-4567</p>
+                  <p className="text-slate-300 text-sm">+1 (212) 555-0123</p>
                 </div>
               </div>
               
@@ -141,7 +143,7 @@ export default function Footer() {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-slate-300 text-sm">info@glgcapital.com</p>
+                  <p className="text-slate-300 text-sm">info@glgcapitalgroupllc.com</p>
                 </div>
               </div>
             </div>
@@ -154,7 +156,7 @@ export default function Footer() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="text-slate-400 text-sm">
-              © 2024 GLG Capital Financial Group. All rights reserved.
+              © 2024 GLG Capital Group LLC. All rights reserved.
             </div>
             <div className="flex space-x-6 text-sm">
               <Link href="/privacy" className="text-slate-400 hover:text-amber-400 transition-colors duration-200">

@@ -7,46 +7,162 @@ export default function HomePage() {
     <main style={{ maxWidth: 1200, margin: '0 auto', padding: '2rem', background: '#fff' }}>
       
       {/* HERO SECTION */}
-      <section style={{ textAlign: 'center', marginBottom: '4rem', padding: '3rem 0' }}>
-        <h1 style={{ 
-          color: '#0a2540', 
-          fontSize: '3.5rem', 
-          fontWeight: 900, 
-          marginBottom: '1.5rem',
-          lineHeight: 1.2
-        }}>
-          GLG Capital Consulting LLC
-        </h1>
-        <blockquote style={{
-          fontSize: '1.25rem',
-          color: '#0a2540',
-          fontWeight: 600,
-          background: '#f5f8fa',
-          borderLeft: '6px solid #f59e0b',
-          borderRadius: 8,
-          margin: '0 auto 2.5rem',
-          padding: '1.5rem 2rem',
-          maxWidth: 800,
-          boxShadow: '0 2px 12px rgba(10,37,64,0.06)'
-        }}>
-          Our Core Business:<br />
-          <span style={{ fontWeight: 400, color: '#1a3556', fontSize: '1.1rem', display: 'block', marginTop: 12 }}>
-            "Empower your vision. Through our premium share-pledge framework, trailblazing enterprises harness strategic capital to dominate tomorrow's markets—fueling exponential growth, unshakable resilience, and enduring legacy. Align with us, and command the future with unmatched financial mastery."
-          </span>
-        </blockquote>
-        <p style={{ 
-          color: '#fff',
-          fontSize: '1.4rem', 
-          lineHeight: 1.6,
-          maxWidth: 800,
-          margin: '0 auto 2rem'
-        }}>
-          GLG Capital Group LLC is an innovative and results-driven investment firm committed to providing tailored financial solutions and sustainable growth strategies for private clients, institutions, and businesses. Headquartered in the United States, our mission is to guide our partners toward financial success through a strategic, transparent, and client-focused approach.
-        </p>
+      <section style={{ 
+        textAlign: 'center', 
+        marginBottom: '4rem', 
+        padding: '4rem 0',
+        background: 'linear-gradient(135deg, #0a2540 0%, #1a3556 50%, #0a2540 100%)',
+        borderRadius: '20px',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        {/* Background Pattern */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'radial-gradient(circle at 20% 80%, rgba(245,158,11,0.1) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(245,158,11,0.1) 0%, transparent 50%)',
+          zIndex: 1
+        }}></div>
+        
+        <div style={{ position: 'relative', zIndex: 2 }}>
+          <div style={{
+            background: 'linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)',
+            color: '#0a2540',
+            padding: '0.5rem 1.5rem',
+            borderRadius: '25px',
+            display: 'inline-block',
+            fontSize: '0.9rem',
+            fontWeight: 600,
+            marginBottom: '1rem',
+            boxShadow: '0 4px 15px rgba(245,158,11,0.3)'
+          }}>
+            🚀 Premium Investment Solutions
+          </div>
+          
+          <h1 style={{ 
+            color: '#ffffff', 
+            fontSize: '4rem', 
+            fontWeight: 900, 
+            marginBottom: '1.5rem',
+            lineHeight: 1.1,
+            textShadow: '0 2px 10px rgba(0,0,0,0.3)'
+          }}>
+            GLG Capital Group LLC
+          </h1>
+          
+          <p style={{ 
+            color: '#e2e8f0',
+            fontSize: '1.5rem', 
+            lineHeight: 1.6,
+            maxWidth: 900,
+            margin: '0 auto 2rem',
+            fontWeight: 300
+          }}>
+            <strong style={{ color: '#f59e0b' }}>Empower your vision.</strong> Through our premium share-pledge framework, 
+            trailblazing enterprises harness strategic capital to dominate tomorrow's markets—fueling exponential growth, 
+            unshakable resilience, and enduring legacy.
+          </p>
+          
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: '1rem',
+            flexWrap: 'wrap',
+            marginTop: '2rem'
+          }}>
+            <a href="/register" style={{
+              background: 'linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)',
+              color: '#0a2540',
+              padding: '1rem 2rem',
+              borderRadius: '12px',
+              textDecoration: 'none',
+              fontWeight: 700,
+              fontSize: '1.1rem',
+              display: 'inline-block',
+              transition: 'all 0.3s ease',
+              boxShadow: '0 4px 15px rgba(245,158,11,0.3)'
+            }}>
+              Start Investing Now →
+            </a>
+            <a href="/equity-pledge" style={{
+              background: 'transparent',
+              color: '#ffffff',
+              padding: '1rem 2rem',
+              borderRadius: '12px',
+              textDecoration: 'none',
+              fontWeight: 600,
+              fontSize: '1.1rem',
+              display: 'inline-block',
+              border: '2px solid #f59e0b',
+              transition: 'all 0.3s ease'
+            }}>
+              Learn More
+            </a>
+          </div>
+        </div>
       </section>
 
-      {/* SUMMARY BOX SECTION */}
+      {/* STATS SECTION */}
       <section style={{ marginBottom: '4rem' }}>
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+          gap: '1.5rem',
+          marginBottom: '3rem'
+        }}>
+          <div style={{ 
+            background: 'linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)', 
+            color: '#0a2540', 
+            padding: '2rem', 
+            borderRadius: 16,
+            textAlign: 'center',
+            boxShadow: '0 8px 25px rgba(245,158,11,0.2)'
+          }}>
+            <div style={{ fontSize: '2.5rem', fontWeight: 900, marginBottom: '0.5rem' }}>$500M+</div>
+            <div style={{ fontSize: '1rem', fontWeight: 600 }}>Assets Under Management</div>
+          </div>
+          
+          <div style={{ 
+            background: 'linear-gradient(135deg, #0a2540 0%, #1a3556 100%)', 
+            color: 'white', 
+            padding: '2rem', 
+            borderRadius: 16,
+            textAlign: 'center',
+            boxShadow: '0 8px 25px rgba(10,37,64,0.15)'
+          }}>
+            <div style={{ fontSize: '2.5rem', fontWeight: 900, marginBottom: '0.5rem' }}>15+</div>
+            <div style={{ fontSize: '1rem', fontWeight: 600 }}>Years of Excellence</div>
+          </div>
+          
+          <div style={{ 
+            background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)', 
+            color: 'white', 
+            padding: '2rem', 
+            borderRadius: 16,
+            textAlign: 'center',
+            boxShadow: '0 8px 25px rgba(5,150,105,0.2)'
+          }}>
+            <div style={{ fontSize: '2.5rem', fontWeight: 900, marginBottom: '0.5rem' }}>98%</div>
+            <div style={{ fontSize: '1rem', fontWeight: 600 }}>Client Satisfaction</div>
+          </div>
+          
+          <div style={{ 
+            background: 'linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%)', 
+            color: 'white', 
+            padding: '2rem', 
+            borderRadius: 16,
+            textAlign: 'center',
+            boxShadow: '0 8px 25px rgba(124,58,237,0.2)'
+          }}>
+            <div style={{ fontSize: '2.5rem', fontWeight: 900, marginBottom: '0.5rem' }}>500+</div>
+            <div style={{ fontSize: '1rem', fontWeight: 600 }}>Global Clients</div>
+          </div>
+        </div>
+
+        {/* SUMMARY BOX SECTION */}
         <div style={{ 
           background: 'linear-gradient(135deg, #0a2540 0%, #1a3556 100%)', 
           color: 'white', 
@@ -177,6 +293,125 @@ export default function HomePage() {
             >
               Learn About Our Equity Pledge System →
             </a>
+          </div>
+        </div>
+      </section>
+
+      {/* WHY CHOOSE US SECTION */}
+      <section style={{ marginBottom: '4rem', padding: '3rem', background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)', borderRadius: 16 }}>
+        <h2 style={{ 
+          color: '#0a2540', 
+          fontSize: '2.5rem', 
+          fontWeight: 800, 
+          marginBottom: '1rem',
+          textAlign: 'center'
+        }}>
+          Why Choose GLG Capital Group?
+        </h2>
+        <p style={{ 
+          color: '#1a3556', 
+          fontSize: '1.2rem', 
+          lineHeight: 1.7,
+          textAlign: 'center',
+          maxWidth: 900,
+          margin: '0 auto 3rem'
+        }}>
+          We combine cutting-edge financial innovation with time-tested investment principles to deliver exceptional results for our clients.
+        </p>
+        
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
+          gap: '2rem' 
+        }}>
+          <div style={{ 
+            background: '#fff', 
+            padding: '2rem', 
+            borderRadius: 16, 
+            boxShadow: '0 8px 25px rgba(0,0,0,0.1)',
+            border: '1px solid #e2e8f0',
+            transition: 'transform 0.3s ease',
+            cursor: 'pointer'
+          }}>
+            <div style={{ 
+              background: 'linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)', 
+              width: 60, 
+              height: 60, 
+              borderRadius: '50%', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              marginBottom: '1rem',
+              fontSize: '1.5rem'
+            }}>
+              🎯
+            </div>
+            <h3 style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: '1rem', color: '#0a2540' }}>
+              Proven Track Record
+            </h3>
+            <p style={{ color: '#1a3556', lineHeight: 1.6 }}>
+              15+ years of successful investments with consistent returns and zero defaults. Our equity pledge system has delivered predictable 12% annual returns to hundreds of satisfied investors.
+            </p>
+          </div>
+          
+          <div style={{ 
+            background: '#fff', 
+            padding: '2rem', 
+            borderRadius: 16, 
+            boxShadow: '0 8px 25px rgba(0,0,0,0.1)',
+            border: '1px solid #e2e8f0',
+            transition: 'transform 0.3s ease',
+            cursor: 'pointer'
+          }}>
+            <div style={{ 
+              background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)', 
+              width: 60, 
+              height: 60, 
+              borderRadius: '50%', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              marginBottom: '1rem',
+              fontSize: '1.5rem'
+            }}>
+              🔒
+            </div>
+            <h3 style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: '1rem', color: '#0a2540' }}>
+              Rock-Solid Security
+            </h3>
+            <p style={{ color: '#1a3556', lineHeight: 1.6 }}>
+              Every investment is secured by a formal share pledge, providing multiple layers of protection. Our segregated accounts ensure your capital is always protected.
+            </p>
+          </div>
+          
+          <div style={{ 
+            background: '#fff', 
+            padding: '2rem', 
+            borderRadius: 16, 
+            boxShadow: '0 8px 25px rgba(0,0,0,0.1)',
+            border: '1px solid #e2e8f0',
+            transition: 'transform 0.3s ease',
+            cursor: 'pointer'
+          }}>
+            <div style={{ 
+              background: 'linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%)', 
+              width: 60, 
+              height: 60, 
+              borderRadius: '50%', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              marginBottom: '1rem',
+              fontSize: '1.5rem'
+            }}>
+              💡
+            </div>
+            <h3 style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: '1rem', color: '#0a2540' }}>
+              Innovative Solutions
+            </h3>
+            <p style={{ color: '#1a3556', lineHeight: 1.6 }}>
+              Our proprietary equity pledge framework combines traditional investment wisdom with modern financial innovation to create unique opportunities for growth.
+            </p>
           </div>
         </div>
       </section>
@@ -560,6 +795,117 @@ export default function HomePage() {
             </p>
           </div>
 
+        </div>
+      </section>
+
+      {/* CTA SECTION */}
+      <section style={{ 
+        marginBottom: '4rem', 
+        padding: '4rem 3rem', 
+        background: 'linear-gradient(135deg, #0a2540 0%, #1a3556 100%)', 
+        borderRadius: 20,
+        textAlign: 'center',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        {/* Background Pattern */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'radial-gradient(circle at 30% 70%, rgba(245,158,11,0.1) 0%, transparent 50%), radial-gradient(circle at 70% 30%, rgba(245,158,11,0.1) 0%, transparent 50%)',
+          zIndex: 1
+        }}></div>
+        
+        <div style={{ position: 'relative', zIndex: 2 }}>
+          <div style={{
+            background: 'linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)',
+            color: '#0a2540',
+            padding: '0.5rem 1.5rem',
+            borderRadius: '25px',
+            display: 'inline-block',
+            fontSize: '0.9rem',
+            fontWeight: 600,
+            marginBottom: '1rem',
+            boxShadow: '0 4px 15px rgba(245,158,11,0.3)'
+          }}>
+            🚀 Ready to Start Your Investment Journey?
+          </div>
+          
+          <h2 style={{ 
+            color: '#ffffff', 
+            fontSize: '3rem', 
+            fontWeight: 900, 
+            marginBottom: '1.5rem',
+            textShadow: '0 2px 10px rgba(0,0,0,0.3)'
+          }}>
+            Join GLG Capital Group Today
+          </h2>
+          
+          <p style={{ 
+            color: '#e2e8f0',
+            fontSize: '1.3rem', 
+            lineHeight: 1.6,
+            maxWidth: 800,
+            margin: '0 auto 2rem',
+            fontWeight: 300
+          }}>
+            Whether you're an individual investor seeking consistent returns or a business looking for strategic capital, 
+            our equity pledge system offers the perfect solution for your financial goals.
+          </p>
+          
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: '1.5rem',
+            flexWrap: 'wrap',
+            marginTop: '2rem'
+          }}>
+            <a href="/register" style={{
+              background: 'linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%)',
+              color: '#0a2540',
+              padding: '1.2rem 2.5rem',
+              borderRadius: '12px',
+              textDecoration: 'none',
+              fontWeight: 700,
+              fontSize: '1.2rem',
+              display: 'inline-block',
+              transition: 'all 0.3s ease',
+              boxShadow: '0 4px 15px rgba(245,158,11,0.3)'
+            }}>
+              Start Investing Now →
+            </a>
+            <a href="/contact" style={{
+              background: 'transparent',
+              color: '#ffffff',
+              padding: '1.2rem 2.5rem',
+              borderRadius: '12px',
+              textDecoration: 'none',
+              fontWeight: 600,
+              fontSize: '1.2rem',
+              display: 'inline-block',
+              border: '2px solid #f59e0b',
+              transition: 'all 0.3s ease'
+            }}>
+              Contact Our Team
+            </a>
+          </div>
+          
+          <div style={{
+            marginTop: '2rem',
+            padding: '1.5rem',
+            background: 'rgba(255,255,255,0.1)',
+            borderRadius: '12px',
+            maxWidth: 600,
+            margin: '2rem auto 0'
+          }}>
+            <p style={{ color: '#e2e8f0', fontSize: '1rem', margin: 0 }}>
+              <strong style={{ color: '#f59e0b' }}>Why wait?</strong> Join hundreds of satisfied investors who are already 
+              earning consistent 12% annual returns with our proven equity pledge system.
+            </p>
+          </div>
         </div>
       </section>
 
