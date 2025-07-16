@@ -1,17 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { createHash } from 'crypto';
+import { InputSanitizer } from '@/lib/input-sanitizer';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, password } = body;
     
-    if (!email || !password) {
-      return NextResponse.json({ error: 'Email and password are required' }, { status: 400 });
+    // Sanitize and validate input data
+    let sanitizedData;
+    try {
+      sanitizedData = InputSanitizer.sanitizeLoginData(body);
+    } catch (error: any) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
+    
+    const { email, password } = sanitizedData;
 
     // Test Supabase connection first
     const { data: connectionTest, error: connectionError } = await supabaseAdmin

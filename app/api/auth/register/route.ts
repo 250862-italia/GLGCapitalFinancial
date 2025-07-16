@@ -1,30 +1,63 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin, supabase } from '@/lib/supabase';
 import { createHash } from 'crypto';
+import { InputSanitizer } from '@/lib/input-sanitizer';
+import { getCorsHeaders } from '@/lib/cors-config';
+import { RateLimiter } from '@/lib/rate-limiter';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   console.log('🔔 API /api/auth/register chiamata');
+  
+  // Handle CORS
+  const origin = request.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
+  
+  // Handle preflight requests
+  if (request.method === 'OPTIONS') {
+    return new Response(null, {
+      status: 204,
+      headers: corsHeaders
+    });
+  }
+  
   try {
     const body = await request.json();
     console.log('📥 Dati ricevuti:', { email: body.email, firstName: body.firstName, lastName: body.lastName, country: body.country });
-    const { email, password, firstName, lastName, country } = body;
-
-    // Validazione
-    if (!email || !password || !firstName || !lastName) {
+    
+    // Check rate limit
+    const identifier = RateLimiter.getClientIdentifier(request);
+    const rateLimitResult = RateLimiter.isRateLimited(identifier, 'register');
+    
+    if (rateLimitResult.limited) {
       return NextResponse.json(
-        { error: 'Tutti i campi sono obbligatori' },
-        { status: 400 }
+        { 
+          error: 'Rate limit exceeded. Too many registration attempts.',
+          retryAfter: rateLimitResult.retryAfter
+        },
+        { 
+          status: 429, 
+          headers: {
+            ...corsHeaders,
+            ...RateLimiter.getRateLimitHeaders(identifier, 'register', false)
+          }
+        }
       );
     }
-
-    if (password.length < 6) {
+    
+    // Sanitize and validate input data
+    let sanitizedData;
+    try {
+      sanitizedData = InputSanitizer.sanitizeRegistrationData(body);
+    } catch (error: any) {
       return NextResponse.json(
-        { error: 'La password deve essere di almeno 6 caratteri' },
-        { status: 400 }
+        { error: error.message },
+        { status: 400, headers: corsHeaders }
       );
     }
+    
+    const { email, password, firstName, lastName, country } = sanitizedData;
 
     // Test Supabase connection first
     const { data: connectionTest, error: connectionError } = await supabaseAdmin
@@ -65,7 +98,7 @@ export async function POST(request: NextRequest) {
         client: mockClient,
         message: 'Registrazione completata! (Modalità offline)',
         warning: 'Database non disponibile - modalità offline attiva'
-      });
+      }, { headers: corsHeaders });
     }
 
     // Controlla se l'utente esiste già
@@ -78,7 +111,7 @@ export async function POST(request: NextRequest) {
     if (existingUser) {
       return NextResponse.json(
         { error: 'Un account con questa email esiste già' },
-        { status: 409 }
+        { status: 409, headers: corsHeaders }
       );
     }
 
@@ -110,7 +143,7 @@ export async function POST(request: NextRequest) {
       console.error('❌ Error creating user:', userInsertError);
       return NextResponse.json(
         { error: 'Errore nella creazione dell\'account (tabella users)' },
-        { status: 500 }
+        { status: 500, headers: corsHeaders }
       );
     }
 
@@ -124,13 +157,13 @@ export async function POST(request: NextRequest) {
       user: newUser,
       client,
       message: 'Registrazione completata! Puoi ora accedere al tuo account.'
-    });
+    }, { headers: corsHeaders });
 
   } catch (error: any) {
     console.error('❌ Registration error:', error);
     return NextResponse.json(
       { error: 'Errore interno del server' },
-      { status: 500 }
+      { status: 500, headers: corsHeaders }
     );
   }
 }

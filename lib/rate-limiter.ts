@@ -1,395 +1,230 @@
-interface RateLimitRule {
-  key: string;
-  limit: number; // Number of requests allowed
-  window: number; // Time window in milliseconds
-  description: string;
-}
+// Rate Limiting System
+// Prevents brute force attacks and API abuse
 
-interface RateLimitResult {
-  allowed: boolean;
-  remaining: number;
-  resetTime: Date;
-  retryAfter?: number; // Seconds to wait before retry
+interface RateLimitConfig {
+  windowMs: number; // Time window in milliseconds
+  maxRequests: number; // Maximum requests per window
+  skipSuccessfulRequests?: boolean; // Skip rate limiting for successful requests
+  skipFailedRequests?: boolean; // Skip rate limiting for failed requests
 }
 
 interface RateLimitEntry {
-  key: string;
   count: number;
-  windowStart: Date;
-  lastRequest: Date;
+  resetTime: number;
+  blocked: boolean;
+  blockUntil?: number;
 }
 
-class RateLimiter {
-  private rules: Map<string, RateLimitRule> = new Map();
-  private entries: Map<string, RateLimitEntry> = new Map();
-  private blockedIPs: Set<string> = new Set();
-  private whitelistedIPs: Set<string> = new Set();
+// In-memory storage (in production, use Redis or database)
+const rateLimitStore = new Map<string, RateLimitEntry>();
 
-  constructor() {
-    // Initialize default rules
-    this.addRule({
-      key: 'global',
-      limit: 1000,
-      window: 60 * 1000, // 1 minute
-      description: 'Global rate limit'
-    });
+// Default configurations
+const DEFAULT_CONFIGS: Record<string, RateLimitConfig> = {
+  'auth': {
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    maxRequests: 5, // 5 attempts per 15 minutes
+    skipSuccessfulRequests: true,
+    skipFailedRequests: false
+  },
+  'register': {
+    windowMs: 60 * 60 * 1000, // 1 hour
+    maxRequests: 3, // 3 registrations per hour
+    skipSuccessfulRequests: true,
+    skipFailedRequests: false
+  },
+  'api': {
+    windowMs: 60 * 1000, // 1 minute
+    maxRequests: 100, // 100 requests per minute
+    skipSuccessfulRequests: false,
+    skipFailedRequests: false
+  },
+  'admin': {
+    windowMs: 5 * 60 * 1000, // 5 minutes
+    maxRequests: 10, // 10 attempts per 5 minutes
+    skipSuccessfulRequests: true,
+    skipFailedRequests: false
+  }
+};
 
-    this.addRule({
-      key: 'auth',
-      limit: 5,
-      window: 15 * 60 * 1000, // 15 minutes
-      description: 'Authentication attempts'
-    });
-
-    this.addRule({
-      key: 'api',
-      limit: 100,
-      window: 60 * 1000, // 1 minute
-      description: 'API requests'
-    });
-
-    this.addRule({
-      key: 'investment',
-      limit: 10,
-      window: 60 * 1000, // 1 minute
-      description: 'Investment operations'
-    });
-
-    // Start cleanup interval
-    setInterval(() => {
-      this.cleanup();
-    }, 60000); // Cleanup every minute
+export class RateLimiter {
+  static getClientIdentifier(request: Request): string {
+    const ip = request.headers.get('x-forwarded-for') || 
+               request.headers.get('x-real-ip') || 
+               'unknown';
+    const userAgent = request.headers.get('user-agent') || 'unknown';
+    return `${ip}-${userAgent}`;
   }
 
-  // Add a rate limit rule
-  addRule(rule: RateLimitRule): void {
-    this.rules.set(rule.key, rule);
-    console.log(`📋 Rate limit rule added: ${rule.description}`);
-  }
-
-  // Check if request is allowed
-  checkLimit(
-    key: string,
-    identifier: string, // Usually IP address or user ID
-    ruleKey: string = 'global'
-  ): RateLimitResult {
-    // Check if IP is blocked
-    if (this.blockedIPs.has(identifier)) {
-      return {
-        allowed: false,
-        remaining: 0,
-        resetTime: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
-        retryAfter: 24 * 60 * 60 // 24 hours in seconds
-      };
-    }
-
-    // Check if IP is whitelisted
-    if (this.whitelistedIPs.has(identifier)) {
-      return {
-        allowed: true,
-        remaining: 999999,
-        resetTime: new Date(Date.now() + 60 * 1000)
-      };
-    }
-
-    const rule = this.rules.get(ruleKey);
-    if (!rule) {
-      console.warn(`⚠️ Rate limit rule not found: ${ruleKey}`);
-      return {
-        allowed: true,
-        remaining: 999999,
-        resetTime: new Date(Date.now() + 60 * 1000)
-      };
-    }
-
-    const entryKey = `${ruleKey}:${identifier}`;
-    const now = new Date();
-    let entry = this.entries.get(entryKey);
-
-    // Create new entry if doesn't exist or window has expired
-    if (!entry || now.getTime() - entry.windowStart.getTime() > rule.window) {
+  static isRateLimited(
+    identifier: string, 
+    configType: keyof typeof DEFAULT_CONFIGS = 'api',
+    success: boolean = false
+  ): { limited: boolean; remaining: number; resetTime: number; retryAfter?: number } {
+    const config = DEFAULT_CONFIGS[configType];
+    const now = Date.now();
+    
+    // Get or create rate limit entry
+    let entry = rateLimitStore.get(identifier);
+    
+    if (!entry || now > entry.resetTime) {
+      // Create new entry or reset expired entry
       entry = {
-        key: entryKey,
         count: 0,
-        windowStart: now,
-        lastRequest: now
+        resetTime: now + config.windowMs,
+        blocked: false
+      };
+      rateLimitStore.set(identifier, entry);
+    }
+
+    // Check if currently blocked
+    if (entry.blocked && entry.blockUntil && now < entry.blockUntil) {
+      return {
+        limited: true,
+        remaining: 0,
+        resetTime: entry.resetTime,
+        retryAfter: Math.ceil((entry.blockUntil - now) / 1000)
       };
     }
+
+    // Reset block if expired
+    if (entry.blocked && entry.blockUntil && now >= entry.blockUntil) {
+      entry.blocked = false;
+      entry.blockUntil = undefined;
+    }
+
+    // Skip rate limiting based on config
+    if (success && config.skipSuccessfulRequests) {
+      return {
+        limited: false,
+        remaining: config.maxRequests - entry.count,
+        resetTime: entry.resetTime
+      };
+    }
+
+    if (!success && config.skipFailedRequests) {
+      return {
+        limited: false,
+        remaining: config.maxRequests - entry.count,
+        resetTime: entry.resetTime
+      };
+    }
+
+    // Increment counter
+    entry.count++;
 
     // Check if limit exceeded
-    if (entry.count >= rule.limit) {
-      const resetTime = new Date(entry.windowStart.getTime() + rule.window);
-      const retryAfter = Math.ceil((resetTime.getTime() - now.getTime()) / 1000);
-
-      // Log rate limit violation
-      console.warn(`🚫 Rate limit exceeded: ${ruleKey} for ${identifier} (${rule.description})`);
-
+    if (entry.count > config.maxRequests) {
+      // Block for the remaining window time
+      entry.blocked = true;
+      entry.blockUntil = entry.resetTime;
+      
       return {
-        allowed: false,
+        limited: true,
         remaining: 0,
-        resetTime,
-        retryAfter
+        resetTime: entry.resetTime,
+        retryAfter: Math.ceil((entry.resetTime - now) / 1000)
       };
     }
 
-    // Update entry
-    entry.count++;
-    entry.lastRequest = now;
-    this.entries.set(entryKey, entry);
-
-    const remaining = rule.limit - entry.count;
-    const resetTime = new Date(entry.windowStart.getTime() + rule.window);
-
     return {
-      allowed: true,
-      remaining,
-      resetTime
+      limited: false,
+      remaining: Math.max(0, config.maxRequests - entry.count),
+      resetTime: entry.resetTime
     };
   }
 
-  // Check multiple rate limits
-  checkMultipleLimits(
-    identifier: string,
-    checks: Array<{ key: string; ruleKey?: string }>
-  ): { allowed: boolean; results: Record<string, RateLimitResult> } {
-    const results: Record<string, RateLimitResult> = {};
-    let allAllowed = true;
+  static getRateLimitHeaders(
+    identifier: string, 
+    configType: keyof typeof DEFAULT_CONFIGS = 'api',
+    success: boolean = false
+  ): Record<string, string> {
+    const result = this.isRateLimited(identifier, configType, success);
+    const config = DEFAULT_CONFIGS[configType];
+    
+    return {
+      'X-RateLimit-Limit': config.maxRequests.toString(),
+      'X-RateLimit-Remaining': result.remaining.toString(),
+      'X-RateLimit-Reset': Math.ceil(result.resetTime / 1000).toString(),
+      ...(result.limited && result.retryAfter ? {
+        'Retry-After': result.retryAfter.toString()
+      } : {})
+    };
+  }
 
-    for (const check of checks) {
-      const result = this.checkLimit(check.key, identifier, check.ruleKey);
-      results[check.key] = result;
-      
-      if (!result.allowed) {
-        allAllowed = false;
+  // Cleanup old entries (run periodically)
+  static cleanup(): void {
+    const now = Date.now();
+    for (const [key, entry] of rateLimitStore.entries()) {
+      if (now > entry.resetTime + (24 * 60 * 60 * 1000)) { // Keep for 24 hours after reset
+        rateLimitStore.delete(key);
       }
     }
-
-    return {
-      allowed: allAllowed,
-      results
-    };
   }
 
-  // Block an IP address
-  blockIP(ip: string, reason: string = 'Rate limit violation'): void {
-    this.blockedIPs.add(ip);
-    console.warn(`🚫 IP blocked: ${ip} - ${reason}`);
-  }
-
-  // Unblock an IP address
-  unblockIP(ip: string): void {
-    this.blockedIPs.delete(ip);
-    console.log(`✅ IP unblocked: ${ip}`);
-  }
-
-  // Whitelist an IP address
-  whitelistIP(ip: string): void {
-    this.whitelistedIPs.add(ip);
-    console.log(`✅ IP whitelisted: ${ip}`);
-  }
-
-  // Remove IP from whitelist
-  removeFromWhitelist(ip: string): void {
-    this.whitelistedIPs.delete(ip);
-    console.log(`❌ IP removed from whitelist: ${ip}`);
+  // Reset rate limit for a specific identifier
+  static reset(identifier: string): void {
+    rateLimitStore.delete(identifier);
   }
 
   // Get rate limit statistics
-  getStats(): {
-    totalRules: number;
-    totalEntries: number;
-    blockedIPs: number;
-    whitelistedIPs: number;
-    activeEntries: number;
-  } {
-    const now = Date.now();
-    const activeEntries = Array.from(this.entries.values()).filter(entry => {
-      const rule = this.rules.get(entry.key.split(':')[0]);
-      return rule && (now - entry.windowStart.getTime()) <= rule.window;
-    }).length;
-
+  static getStats(): { totalEntries: number; blockedEntries: number } {
+    let blockedCount = 0;
+    for (const entry of rateLimitStore.values()) {
+      if (entry.blocked) blockedCount++;
+    }
+    
     return {
-      totalRules: this.rules.size,
-      totalEntries: this.entries.size,
-      blockedIPs: this.blockedIPs.size,
-      whitelistedIPs: this.whitelistedIPs.size,
-      activeEntries
+      totalEntries: rateLimitStore.size,
+      blockedEntries: blockedCount
     };
   }
-
-  // Get blocked IPs
-  getBlockedIPs(): string[] {
-    return Array.from(this.blockedIPs);
-  }
-
-  // Get whitelisted IPs
-  getWhitelistedIPs(): string[] {
-    return Array.from(this.whitelistedIPs);
-  }
-
-  // Clear all entries for a specific identifier
-  clearEntries(identifier: string): void {
-    const keysToDelete: string[] = [];
-    
-    this.entries.forEach((entry, key) => {
-      if (key.includes(identifier)) {
-        keysToDelete.push(key);
-      }
-    });
-
-    keysToDelete.forEach(key => this.entries.delete(key));
-    console.log(`🧹 Cleared ${keysToDelete.length} entries for ${identifier}`);
-  }
-
-  // Cleanup expired entries
-  private cleanup(): void {
-    const now = Date.now();
-    const keysToDelete: string[] = [];
-
-    this.entries.forEach((entry, key) => {
-      const ruleKey = key.split(':')[0];
-      const rule = this.rules.get(ruleKey);
-      
-      if (rule && (now - entry.windowStart.getTime()) > rule.window) {
-        keysToDelete.push(key);
-      }
-    });
-
-    keysToDelete.forEach(key => this.entries.delete(key));
-
-    if (keysToDelete.length > 0) {
-      console.log(`🧹 Cleaned up ${keysToDelete.length} expired rate limit entries`);
-    }
-  }
 }
 
-// Specialized rate limiters for different use cases
-class AuthRateLimiter extends RateLimiter {
-  constructor() {
-    super();
+// Rate limiting middleware
+export function withRateLimit(
+  configType: keyof typeof DEFAULT_CONFIGS = 'api',
+  handler: Function
+) {
+  return async (request: Request) => {
+    const identifier = RateLimiter.getClientIdentifier(request);
     
-    // Override auth rule with stricter limits
-    this.addRule({
-      key: 'login',
-      limit: 3,
-      window: 15 * 60 * 1000, // 15 minutes
-      description: 'Login attempts'
-    });
-
-    this.addRule({
-      key: 'register',
-      limit: 2,
-      window: 60 * 60 * 1000, // 1 hour
-      description: 'Registration attempts'
-    });
-
-    this.addRule({
-      key: 'password_reset',
-      limit: 3,
-      window: 60 * 60 * 1000, // 1 hour
-      description: 'Password reset attempts'
-    });
-  }
-
-  // Check login rate limit
-  checkLoginLimit(ip: string): RateLimitResult {
-    return this.checkLimit('login', ip, 'login');
-  }
-
-  // Check registration rate limit
-  checkRegisterLimit(ip: string): RateLimitResult {
-    return this.checkLimit('register', ip, 'register');
-  }
-
-  // Check password reset rate limit
-  checkPasswordResetLimit(ip: string): RateLimitResult {
-    return this.checkLimit('password_reset', ip, 'password_reset');
-  }
-}
-
-class APIRateLimiter extends RateLimiter {
-  constructor() {
-    super();
+    // Check rate limit before processing
+    const rateLimitResult = RateLimiter.isRateLimited(identifier, configType);
     
-    // Add API-specific rules
-    this.addRule({
-      key: 'api_read',
-      limit: 200,
-      window: 60 * 1000, // 1 minute
-      description: 'API read requests'
-    });
-
-    this.addRule({
-      key: 'api_write',
-      limit: 50,
-      window: 60 * 1000, // 1 minute
-      description: 'API write requests'
-    });
-
-    this.addRule({
-      key: 'api_admin',
-      limit: 20,
-      window: 60 * 1000, // 1 minute
-      description: 'API admin requests'
-    });
-  }
-
-  // Check API rate limit based on method
-  checkAPILimit(ip: string, method: string, isAdmin: boolean = false): RateLimitResult {
-    if (isAdmin) {
-      return this.checkLimit('api_admin', ip, 'api_admin');
+    if (rateLimitResult.limited) {
+      return new Response(
+        JSON.stringify({
+          error: 'Rate limit exceeded',
+          retryAfter: rateLimitResult.retryAfter
+        }),
+        {
+          status: 429,
+          headers: {
+            'Content-Type': 'application/json',
+            ...RateLimiter.getRateLimitHeaders(identifier, configType, false)
+          }
+        }
+      );
     }
 
-    if (method === 'GET') {
-      return this.checkLimit('api_read', ip, 'api_read');
-    } else {
-      return this.checkLimit('api_write', ip, 'api_write');
-    }
-  }
-}
-
-class InvestmentRateLimiter extends RateLimiter {
-  constructor() {
-    super();
+    // Process the request
+    const response = await handler(request);
     
-    // Add investment-specific rules
-    this.addRule({
-      key: 'investment_create',
-      limit: 5,
-      window: 60 * 1000, // 1 minute
-      description: 'Investment creation'
+    // Add rate limit headers to response
+    const success = response.status < 400;
+    const headers = new Headers(response.headers);
+    Object.entries(RateLimiter.getRateLimitHeaders(identifier, configType, success))
+      .forEach(([key, value]) => headers.set(key, value));
+    
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers
     });
-
-    this.addRule({
-      key: 'investment_modify',
-      limit: 10,
-      window: 60 * 1000, // 1 minute
-      description: 'Investment modifications'
-    });
-
-    this.addRule({
-      key: 'large_investment',
-      limit: 1,
-      window: 5 * 60 * 1000, // 5 minutes
-      description: 'Large investment transactions'
-    });
-  }
-
-  // Check investment rate limit
-  checkInvestmentLimit(userId: string, amount: number): RateLimitResult {
-    if (amount > 100000) {
-      return this.checkLimit('large_investment', userId, 'large_investment');
-    }
-    return this.checkLimit('investment_create', userId, 'investment_create');
-  }
+  };
 }
 
-// Export instances
-export const authRateLimiter = new AuthRateLimiter();
-export const apiRateLimiter = new APIRateLimiter();
-export const investmentRateLimiter = new InvestmentRateLimiter();
-export const generalRateLimiter = new RateLimiter();
-
-// Export types and class
-export type { RateLimitRule, RateLimitResult, RateLimitEntry };
-export { RateLimiter }; 
+// Run cleanup every hour
+setInterval(() => {
+  RateLimiter.cleanup();
+}, 60 * 60 * 1000); 
