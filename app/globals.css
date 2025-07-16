@@ -233,6 +233,7 @@ h3 {
 
 /* Utility Classes - Complete Tailwind Replacement */
 .text-white { color: white; }
+.text-gray-700 { color: #374151; }
 .text-center { text-align: center; }
 .font-medium { font-weight: 500; }
 .font-bold { font-weight: 700; }
@@ -248,7 +249,6 @@ h3 {
 .bg-green-600 { background-color: #16a34a; }
 .bg-gray-100 { background-color: #f3f4f6; }
 .bg-gray-200 { background-color: #e5e7eb; }
-.text-gray-700 { color: #374151; }
 .hover\:bg-blue-700:hover { background-color: #1d4ed8; }
 .hover\:bg-green-700:hover { background-color: #15803d; }
 .hover\:bg-gray-200:hover { background-color: #e5e7eb; }
@@ -262,7 +262,7 @@ h3 {
 .disabled\:opacity-50:disabled { opacity: 0.5; }
 .disabled\:cursor-not-allowed:disabled { cursor: not-allowed; }
 
-/* Additional utility classes for complete coverage */
+/* Additional utility classes */
 .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
 .shadow { box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); }
 .shadow-md { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
@@ -307,7 +307,7 @@ h3 {
   background: #94a3b8;
 }
 
-/* Focus States */
+/* Focus Management */
 .focus-ring:focus {
   outline: 2px solid #f59e0b;
   outline-offset: 2px;
