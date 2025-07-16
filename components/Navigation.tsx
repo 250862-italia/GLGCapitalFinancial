@@ -50,7 +50,7 @@ export default function Navigation() {
             }}>
               <span style={{ color: 'white', fontWeight: 'bold', fontSize: '1.125rem' }}>G</span>
             </div>
-            <div style={{ display: 'none', '@media (min-width: 640px)': { display: 'block' } }}>
+            <div style={{ display: 'none' }} className="sm:block">
               <div style={{
                 fontSize: '1.25rem',
                 fontWeight: 'bold',
@@ -71,7 +71,7 @@ export default function Navigation() {
           </Link>
 
           {/* Desktop Navigation */}
-          <div style={{ display: 'none', '@media (min-width: 1024px)': { display: 'flex', alignItems: 'center', gap: '2rem' } }}>
+          <div style={{ display: 'none' }} className="lg:flex lg:items-center lg:gap-8">
             <Link 
               href="/" 
               style={{
@@ -142,7 +142,7 @@ export default function Navigation() {
           </div>
 
           {/* Auth Buttons */}
-          <div style={{ display: 'none', '@media (min-width: 1024px)': { display: 'flex', alignItems: 'center', gap: '1rem' } }}>
+          <div style={{ display: 'none' }} className="lg:flex lg:items-center lg:gap-4">
             <Link 
               href="/login" 
               style={{
