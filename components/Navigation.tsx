@@ -73,23 +73,6 @@ export default function Navigation() {
           {/* Desktop Navigation */}
           <div style={{ display: 'none' }} className="lg:flex lg:items-center lg:gap-8">
             <Link 
-              href="/" 
-              style={{
-                fontSize: '0.875rem',
-                fontWeight: 500,
-                transition: 'all 0.2s ease',
-                color: isActive('/') 
-                  ? '#d97706' 
-                  : isScrolled 
-                    ? '#374151' 
-                    : 'white',
-                textDecoration: 'none'
-              }}
-            >
-              Home
-            </Link>
-            
-            <Link 
               href="/about" 
               style={{
                 fontSize: '0.875rem',
@@ -103,16 +86,16 @@ export default function Navigation() {
                 textDecoration: 'none'
               }}
             >
-              About
+              About Us
             </Link>
             
             <Link 
-              href="/investments" 
+              href="/equity-pledge" 
               style={{
                 fontSize: '0.875rem',
                 fontWeight: 500,
                 transition: 'all 0.2s ease',
-                color: isActive('/investments') 
+                color: isActive('/equity-pledge') 
                   ? '#d97706' 
                   : isScrolled 
                     ? '#374151' 
@@ -120,7 +103,7 @@ export default function Navigation() {
                 textDecoration: 'none'
               }}
             >
-              Investments
+              Equity Pledge System
             </Link>
             
             <Link 
@@ -137,24 +120,12 @@ export default function Navigation() {
                 textDecoration: 'none'
               }}
             >
-              Contact
+              Contacts
             </Link>
           </div>
 
           {/* Auth Buttons */}
           <div style={{ display: 'none' }} className="lg:flex lg:items-center lg:gap-4">
-            <Link 
-              href="/login" 
-              style={{
-                fontSize: '0.875rem',
-                fontWeight: 500,
-                transition: 'all 0.2s ease',
-                color: isScrolled ? '#374151' : 'white',
-                textDecoration: 'none'
-              }}
-            >
-              Sign In
-            </Link>
             <Link 
               href="/register" 
               style={{
@@ -169,7 +140,7 @@ export default function Navigation() {
                 boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
               }}
             >
-              Get Started
+              Register
             </Link>
             <Link 
               href="/admin/login" 
@@ -221,29 +192,6 @@ export default function Navigation() {
               backdropFilter: 'blur(12px)'
             }}>
               <Link
-                href="/"
-                style={{
-                  display: 'block',
-                  padding: '0.5rem 0.75rem',
-                  borderRadius: '0.375rem',
-                  fontSize: '1rem',
-                  fontWeight: 500,
-                  transition: 'all 0.2s ease',
-                  color: isActive('/')
-                    ? '#d97706'
-                    : isScrolled
-                      ? '#374151'
-                      : 'white',
-                  background: isActive('/') ? 'rgba(217, 119, 6, 0.1)' : 'transparent',
-                  textDecoration: 'none',
-                  marginBottom: '0.25rem'
-                }}
-                onClick={() => setIsOpen(false)}
-              >
-                Home
-              </Link>
-              
-              <Link
                 href="/about"
                 style={{
                   display: 'block',
@@ -263,11 +211,11 @@ export default function Navigation() {
                 }}
                 onClick={() => setIsOpen(false)}
               >
-                About
+                About Us
               </Link>
               
               <Link
-                href="/investments"
+                href="/equity-pledge"
                 style={{
                   display: 'block',
                   padding: '0.5rem 0.75rem',
@@ -275,18 +223,18 @@ export default function Navigation() {
                   fontSize: '1rem',
                   fontWeight: 500,
                   transition: 'all 0.2s ease',
-                  color: isActive('/investments')
+                  color: isActive('/equity-pledge')
                     ? '#d97706'
                     : isScrolled
                       ? '#374151'
                       : 'white',
-                  background: isActive('/investments') ? 'rgba(217, 119, 6, 0.1)' : 'transparent',
+                  background: isActive('/equity-pledge') ? 'rgba(217, 119, 6, 0.1)' : 'transparent',
                   textDecoration: 'none',
                   marginBottom: '0.25rem'
                 }}
                 onClick={() => setIsOpen(false)}
               >
-                Investments
+                Equity Pledge System
               </Link>
               
               <Link
@@ -309,7 +257,7 @@ export default function Navigation() {
                 }}
                 onClick={() => setIsOpen(false)}
               >
-                Contact
+                Contacts
               </Link>
               
               <div style={{
@@ -318,23 +266,6 @@ export default function Navigation() {
                 borderTop: '1px solid #e2e8f0',
                 marginTop: '0.5rem'
               }}>
-                <Link
-                  href="/login"
-                  style={{
-                    display: 'block',
-                    padding: '0.5rem 0.75rem',
-                    borderRadius: '0.375rem',
-                    fontSize: '1rem',
-                    fontWeight: 500,
-                    transition: 'all 0.2s ease',
-                    color: isScrolled ? '#374151' : 'white',
-                    textDecoration: 'none',
-                    marginBottom: '0.5rem'
-                  }}
-                  onClick={() => setIsOpen(false)}
-                >
-                  Sign In
-                </Link>
                 <Link
                   href="/register"
                   style={{
@@ -351,7 +282,7 @@ export default function Navigation() {
                   }}
                   onClick={() => setIsOpen(false)}
                 >
-                  Get Started
+                  Register
                 </Link>
                 <Link
                   href="/admin/login"
