@@ -1,45 +1,89 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    // Fetch users from Supabase Auth and join with client profiles
-    const { data: users, error } = await supabaseAdmin.auth.admin.listUsers();
+    // Verifica autenticazione
+    const token = request.cookies.get('sb-access-token')?.value || 
+                  request.headers.get('authorization')?.replace('Bearer ', '');
+
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    // Verifica utente
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     
-    if (error) {
-      console.error('Error fetching users:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Invalid authentication' },
+        { status: 401 }
+      );
     }
 
-    // Get client profiles for all users
-    const { data: clients, error: clientsError } = await supabaseAdmin
-      .from('clients')
-      .select('*');
+    // Verifica ruolo admin
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
 
-    if (clientsError) {
-      console.error('Error fetching clients:', clientsError);
-      return NextResponse.json({ error: clientsError.message }, { status: 500 });
+    const isAdmin = profile?.role === 'admin' || profile?.role === 'superadmin';
+    
+    if (!isAdmin) {
+      return NextResponse.json(
+        { error: 'Admin access required' },
+        { status: 403 }
+      );
     }
 
-    // Combine user data with client profiles
-    const usersWithProfiles = users.users.map(user => {
-      const clientProfile = clients?.find(client => client.user_id === user.id);
-      return {
+    // Ottieni lista utenti
+    const { data: users, error: usersError } = await supabase.auth.admin.listUsers();
+
+    if (usersError) {
+      console.error('Error fetching users:', usersError);
+      return NextResponse.json(
+        { error: 'Failed to fetch users' },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      users: users.users.map(user => ({
         id: user.id,
         email: user.email,
         created_at: user.created_at,
         last_sign_in_at: user.last_sign_in_at,
-        role: user.role || 'user',
-        profile: clientProfile || null
-      };
+        email_confirmed_at: user.email_confirmed_at,
+        role: user.user_metadata?.role || 'user'
+      }))
     });
 
-    return NextResponse.json(usersWithProfiles);
   } catch (error) {
-    console.error('Admin users API error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('Users API error:', error);
+    
+    // Gestione errori di rete/connessione
+    if (error instanceof Error && error.message.includes('fetch failed')) {
+      return NextResponse.json(
+        { error: 'Service temporarily unavailable' },
+        { status: 503 }
+      );
+    }
+    
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 

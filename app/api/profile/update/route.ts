@@ -1,83 +1,98 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 
-// Force dynamic rendering to avoid static generation issues
-export const dynamic = 'force-dynamic';
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
-export async function GET(request: NextRequest) {
-  return NextResponse.json(
-    { error: 'Method not allowed' },
-    { status: 405 }
-  );
-}
-
-export async function PUT(request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userId, updates } = body;
-
-    if (!userId) {
+    
+    // Validazione input
+    if (!body.name) {
       return NextResponse.json(
-        { error: 'User ID is required' },
+        { error: 'Name is required' },
         { status: 400 }
       );
     }
 
-    // Map the updates to match the database schema (camelCase)
-    const updatesTyped: Record<string, any> = updates as Record<string, any>;
-    const updatesForDb: Record<string, any> = {};
-    
-    // Map specific fields to match database schema
-    const fieldMapping: Record<string, string> = {
-      firstName: 'firstName',
-      lastName: 'lastName',
-      dateOfBirth: 'dateOfBirth',
-      postalCode: 'postalCode',
-      profilePhoto: 'profilePhoto',
-      bankingDetails: 'bankingDetails',
-      photoUrl: 'profilePhoto', // Map to profilePhoto in DB
-      iban: 'iban',
-      bic: 'bic',
-      accountHolder: 'accountHolder',
-      usdtWallet: 'usdtWallet'
-    };
-
-    for (const key in updatesTyped) {
-      if (Object.prototype.hasOwnProperty.call(updatesTyped, key)) {
-        // Use the specific mapping if it exists, otherwise keep the key as is
-        const dbKey = fieldMapping[key] || key;
-        updatesForDb[dbKey] = updatesTyped[key];
-      }
+    // Validazione lunghezza nome
+    if (body.name.length < 2 || body.name.length > 50) {
+      return NextResponse.json(
+        { error: 'Name must be between 2 and 50 characters' },
+        { status: 400 }
+      );
     }
 
-    // Add updated_at automatically
-    updatesForDb.updated_at = new Date().toISOString();
+    // Sanitizzazione input
+    const name = body.name.trim();
+    
+    // Rimuovi caratteri pericolosi
+    const dangerousChars = /[<>\"'%]/g;
+    if (dangerousChars.test(name)) {
+      return NextResponse.json(
+        { error: 'Name contains invalid characters' },
+        { status: 400 }
+      );
+    }
 
-    console.log('Updating profile with data:', updatesForDb);
+    // Ottieni token di autenticazione
+    const token = request.cookies.get('sb-access-token')?.value || 
+                  request.headers.get('authorization')?.replace('Bearer ', '');
 
-    const { data, error } = await supabase
-      .from('clients')
-      .update(updatesForDb)
-      .eq('user_id', userId)
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    // Verifica utente
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Invalid authentication' },
+        { status: 401 }
+      );
+    }
+
+    // Aggiorna profilo
+    const { data: profile, error: updateError } = await supabase
+      .from('profiles')
+      .update({
+        name,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', user.id)
       .select()
       .single();
 
-    if (error) {
-      console.error('Profile update error:', error);
+    if (updateError) {
+      console.error('Profile update error:', updateError);
       return NextResponse.json(
-        { error: 'Failed to update profile', details: error.message },
+        { error: 'Failed to update profile' },
         { status: 500 }
       );
     }
 
     return NextResponse.json({
       success: true,
-      data,
+      profile: {
+        id: profile.id,
+        name: profile.name,
+        email: profile.email,
+        role: profile.role,
+        avatar_url: profile.avatar_url,
+        updated_at: profile.updated_at
+      },
       message: 'Profile updated successfully'
     });
 
   } catch (error) {
-    console.error('Profile update error:', error);
+    console.error('Profile update API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
