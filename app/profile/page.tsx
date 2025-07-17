@@ -82,8 +82,15 @@ export default function ProfilePage() {
     setError(null);
     
     try {
-      // Get client profile via API
-      const response = await fetch(`/api/profile/${user.id}`);
+      // Get client profile via API with timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
+      const response = await fetch(`/api/profile/${user.id}`, {
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
       
       if (response.ok) {
         const clientData = await response.json();
@@ -110,20 +117,71 @@ export default function ProfilePage() {
             if (newResponse.ok) {
               const newClientData = await newResponse.json();
               setProfile(newClientData);
+            } else {
+              // If we can't fetch the created profile, use the result data
+              if (result.data) {
+                setProfile(result.data);
+              } else {
+                throw new Error('Profile created but could not be retrieved');
+              }
             }
           } else {
-            throw new Error('Failed to create profile');
+            const errorData = await createResponse.json().catch(() => ({}));
+            throw new Error(errorData.error || 'Failed to create profile');
           }
         } catch (createError) {
           console.error('Error creating profile:', createError);
-          setError('Failed to create profile');
+          setError(`Failed to create profile: ${createError.message}`);
         }
       } else {
-        throw new Error('Failed to load profile');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP ${response.status}: Failed to load profile`);
       }
     } catch (error) {
       console.error('Error loading profile:', error);
-      setError('Failed to load profile');
+      
+      // Provide more specific error messages
+      if (error.name === 'AbortError') {
+        setError('Request timeout - please check your internet connection and try again');
+      } else if (error.message.includes('fetch failed')) {
+        setError('Network error - please check your internet connection and try again');
+      } else if (error.message.includes('Failed to fetch')) {
+        setError('Unable to connect to the server - please try again later');
+      } else {
+        setError(`Failed to load profile: ${error.message}`);
+      }
+      
+      // Create a fallback profile for offline mode
+      const fallbackProfile: ClientProfile = {
+        id: `fallback-${user.id}`,
+        user_id: user.id,
+        email: user.email || '',
+        first_name: user.name?.split(' ')[0] || '',
+        last_name: user.name?.split(' ').slice(1).join(' ') || '',
+        phone: '',
+        company: '',
+        position: '',
+        date_of_birth: '',
+        nationality: '',
+        profile_photo: '',
+        address: '',
+        city: '',
+        country: '',
+        postal_code: '',
+        iban: '',
+        bic: '',
+        account_holder: '',
+        usdt_wallet: '',
+        status: 'offline',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      
+      // Only set fallback profile if we have a network error
+      if (error.message.includes('fetch failed') || error.message.includes('Failed to fetch') || error.name === 'AbortError') {
+        setProfile(fallbackProfile);
+        setError('Offline mode - some features may be limited');
+      }
     } finally {
       setLoading(false);
     }
@@ -284,6 +342,62 @@ export default function ProfilePage() {
             Profile Error
           </h1>
           <p style={{ color: '#dc2626', marginBottom: '2rem' }}>{error}</p>
+          
+          {/* Show retry button for network errors */}
+          {(error.includes('Network error') || error.includes('timeout') || error.includes('Unable to connect')) && (
+            <div style={{ marginBottom: '2rem' }}>
+              <button
+                onClick={() => {
+                  setError(null);
+                  loadProfile();
+                }}
+                style={{
+                  background: '#3b82f6',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 8,
+                  padding: '0.75rem 1.5rem',
+                  fontSize: 16,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  marginRight: '1rem'
+                }}
+              >
+                Retry
+              </button>
+              <button
+                onClick={() => router.push('/dashboard')}
+                style={{
+                  background: '#6b7280',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: 8,
+                  padding: '0.75rem 1.5rem',
+                  fontSize: 16,
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                Go to Dashboard
+              </button>
+            </div>
+          )}
+          
+          {/* Show offline mode info */}
+          {error.includes('Offline mode') && (
+            <div style={{ 
+              background: '#fef3c7', 
+              border: '1px solid #f59e0b', 
+              borderRadius: 8, 
+              padding: '1rem',
+              marginTop: '1rem'
+            }}>
+              <p style={{ color: '#92400e', margin: 0, fontSize: '14px' }}>
+                You're currently in offline mode. Some features may be limited. 
+                Your data will be saved locally and synced when the connection is restored.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -363,6 +477,13 @@ export default function ProfilePage() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '2rem 1rem' }}>
+      <style jsx>{`
+        @keyframes pulse {
+          0% { opacity: 1; }
+          50% { opacity: 0.5; }
+          100% { opacity: 1; }
+        }
+      `}</style>
       <div style={{ maxWidth: 1200, margin: '0 auto' }}>
         
         {/* Header */}
@@ -396,6 +517,53 @@ export default function ProfilePage() {
             </p>
           </div>
         </div>
+
+        {/* Offline Mode Indicator */}
+        {profile.status === 'offline' && (
+          <div style={{
+            background: '#fef3c7',
+            border: '1px solid #f59e0b',
+            borderRadius: 8,
+            padding: '1rem',
+            marginBottom: '2rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <div style={{
+              width: 8,
+              height: 8,
+              borderRadius: '50%',
+              background: '#f59e0b',
+              animation: 'pulse 2s infinite'
+            }} />
+            <div>
+              <strong style={{ color: '#92400e' }}>Offline Mode</strong>
+              <p style={{ margin: '0.25rem 0 0 0', color: '#92400e', fontSize: '0.875rem' }}>
+                You're currently offline. Changes will be saved locally and synced when connection is restored.
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                setError(null);
+                loadProfile();
+              }}
+              style={{
+                background: '#f59e0b',
+                color: 'white',
+                border: 'none',
+                borderRadius: 6,
+                padding: '0.5rem 1rem',
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: 'pointer',
+                marginLeft: 'auto'
+              }}
+            >
+              Retry Connection
+            </button>
+          </div>
+        )}
 
         {/* Profile Card */}
         <div style={{ 

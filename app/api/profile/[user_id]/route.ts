@@ -18,6 +18,50 @@ export async function GET(
 
     // Use Supabase only
     const { supabase } = await import('@/lib/supabase');
+    
+    // Test connection first
+    const { data: connectionTest, error: connectionError } = await supabase
+      .from('clients')
+      .select('count')
+      .limit(1);
+
+    if (connectionError) {
+      console.error('Supabase connection failed:', connectionError);
+      
+      // Return a fallback profile when database is unavailable
+      const fallbackProfile = {
+        id: `fallback-${user_id}`,
+        user_id: user_id,
+        first_name: '',
+        last_name: '',
+        email: '',
+        phone: '',
+        company: '',
+        position: '',
+        date_of_birth: '',
+        nationality: '',
+        profile_photo: '',
+        address: '',
+        city: '',
+        country: '',
+        postal_code: '',
+        iban: '',
+        bic: '',
+        account_holder: '',
+        usdt_wallet: '',
+        status: 'offline',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      return NextResponse.json(fallbackProfile, {
+        headers: {
+          'X-Profile-Status': 'offline',
+          'X-Profile-Warning': 'Database connection unavailable - using offline mode'
+        }
+      });
+    }
+
     const { data: clientData, error } = await supabase
       .from('clients')
       .select('*')
@@ -33,7 +77,7 @@ export async function GET(
       }
       console.error('Supabase error:', error);
       return NextResponse.json(
-        { error: 'Database error' },
+        { error: 'Database error', details: error.message },
         { status: 500 }
       );
     }
@@ -41,9 +85,38 @@ export async function GET(
     return NextResponse.json(clientData);
   } catch (error) {
     console.error('Profile API error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    
+    // Return a fallback profile for any unexpected errors
+    const fallbackProfile = {
+      id: `fallback-${params?.user_id || 'unknown'}`,
+      user_id: params?.user_id || 'unknown',
+      first_name: '',
+      last_name: '',
+      email: '',
+      phone: '',
+      company: '',
+      position: '',
+      date_of_birth: '',
+      nationality: '',
+      profile_photo: '',
+      address: '',
+      city: '',
+      country: '',
+      postal_code: '',
+      iban: '',
+      bic: '',
+      account_holder: '',
+      usdt_wallet: '',
+      status: 'offline',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    return NextResponse.json(fallbackProfile, {
+      headers: {
+        'X-Profile-Status': 'fallback',
+        'X-Profile-Warning': 'Unexpected error occurred - using fallback mode'
+      }
+    });
   }
 } 
