@@ -131,7 +131,7 @@ export default function ProfilePage() {
           }
         } catch (createError) {
           console.error('Error creating profile:', createError);
-          setError(`Failed to create profile: ${createError.message}`);
+          setError(`Failed to create profile: ${createError instanceof Error ? createError.message : 'Unknown error'}`);
         }
       } else {
         const errorData = await response.json().catch(() => ({}));
@@ -139,16 +139,17 @@ export default function ProfilePage() {
       }
     } catch (error) {
       console.error('Error loading profile:', error);
-      
+      // Type guard per error
+      const err = error as Error;
       // Provide more specific error messages
-      if (error.name === 'AbortError') {
+      if (err.name === 'AbortError') {
         setError('Request timeout - please check your internet connection and try again');
-      } else if (error.message.includes('fetch failed')) {
+      } else if (err.message.includes('fetch failed')) {
         setError('Network error - please check your internet connection and try again');
-      } else if (error.message.includes('Failed to fetch')) {
+      } else if (err.message.includes('Failed to fetch')) {
         setError('Unable to connect to the server - please try again later');
       } else {
-        setError(`Failed to load profile: ${error.message}`);
+        setError(`Failed to load profile: ${err.message}`);
       }
       
       // Create a fallback profile for offline mode
@@ -178,7 +179,7 @@ export default function ProfilePage() {
       };
       
       // Only set fallback profile if we have a network error
-      if (error.message.includes('fetch failed') || error.message.includes('Failed to fetch') || error.name === 'AbortError') {
+      if (err.message.includes('fetch failed') || err.message.includes('Failed to fetch') || err.name === 'AbortError') {
         setProfile(fallbackProfile);
         setError('Offline mode - some features may be limited');
       }

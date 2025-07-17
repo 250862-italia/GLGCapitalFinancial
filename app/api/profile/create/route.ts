@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     
     let connectionTest, connectionError;
     try {
-      const result = await Promise.race([connectionPromise, connectionTimeout]);
+      const result = await Promise.race([connectionPromise, connectionTimeout]) as any;
       connectionTest = result.data;
       connectionError = result.error;
     } catch (timeoutError) {
