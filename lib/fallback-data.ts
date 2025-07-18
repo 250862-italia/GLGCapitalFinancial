@@ -261,6 +261,28 @@ export const fallbackData = {
   }
 };
 
+// Mock notes data for offline mode
+export const mockNotes = [
+  {
+    id: 1,
+    title: 'Today I created a Supabase project.',
+    created_at: '2025-07-18T08:00:00.000Z',
+    updated_at: '2025-07-18T08:00:00.000Z'
+  },
+  {
+    id: 2,
+    title: 'I added some data and queried it from Next.js.',
+    created_at: '2025-07-18T08:30:00.000Z',
+    updated_at: '2025-07-18T08:30:00.000Z'
+  },
+  {
+    id: 3,
+    title: 'It was awesome!',
+    created_at: '2025-07-18T09:00:00.000Z',
+    updated_at: '2025-07-18T09:00:00.000Z'
+  }
+];
+
 // Funzione helper per ottenere dati mock con timestamp aggiornati
 export function getMockData(key: keyof typeof fallbackData) {
   const data = fallbackData[key];
