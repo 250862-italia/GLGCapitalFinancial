@@ -57,8 +57,6 @@ export default function ClientDashboard() {
   const [showBankModal, setShowBankModal] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<any>(null);
   const [bankDetails, setBankDetails] = useState<{iban: string, accountHolder: string, bankName: string, reason: string} | null>(null);
-  const [supabaseConnected, setSupabaseConnected] = useState(false);
-  const [connectionError, setConnectionError] = useState<string | null>(null);
   const router = useRouter();
 
   // Real-time functionality
@@ -70,33 +68,6 @@ export default function ClientDashboard() {
   });
 
   useEffect(() => {
-    // Test Supabase connection first
-    const testConnection = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('clients')
-          .select('count')
-          .limit(1);
-        
-        if (error) {
-          console.warn('Supabase connection test failed:', error);
-          setSupabaseConnected(false);
-          setConnectionError(error.message);
-        } else {
-          setSupabaseConnected(true);
-          setConnectionError(null);
-        }
-      } catch (err) {
-        console.warn('Supabase connection test failed:', err);
-        setSupabaseConnected(false);
-        setConnectionError('Connection failed');
-      }
-    };
-
-    testConnection();
-  }, []);
-
-  useEffect(() => {
     // Load purchased investments from database and bank data from localStorage
     const loadMyInvestments = async () => {
       if (!user) {
@@ -105,8 +76,8 @@ export default function ClientDashboard() {
         return;
       }
 
-      // If Supabase is not connected, use mock data
-      if (!supabaseConnected) {
+      // If real-time is not connected, use mock data
+      if (!realtimeConnected) {
         console.log('Using mock data due to Supabase connection issues');
         const mockInvestments: Investment[] = [
           {
@@ -191,7 +162,7 @@ export default function ClientDashboard() {
 
     loadMyInvestments();
     loadBankDetails();
-  }, [user, supabaseConnected]);
+  }, [user, realtimeConnected]);
 
   // Funzione di normalizzazione per Investment (snake_case -> camelCase)
   function normalizeInvestment(inv: any): Investment {
@@ -440,26 +411,13 @@ export default function ClientDashboard() {
         <div style={{ maxWidth: 1400, margin: '0 auto' }}>
         
         {/* Connection Status Indicator */}
-        {!supabaseConnected && (
-          <div style={{
-            background: '#fef3c7',
-            border: '1px solid #f59e0b',
-            borderRadius: '8px',
-            padding: '1rem',
-            marginBottom: '1rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem'
-          }}>
-            <WifiOff size={20} color="#f59e0b" />
-            <div>
-              <strong style={{ color: '#92400e' }}>Offline Mode</strong>
-              <p style={{ margin: '0.25rem 0 0 0', color: '#92400e', fontSize: '0.875rem' }}>
-                Showing demo data. Some features may be limited.
-              </p>
-            </div>
-          </div>
-        )}
+        <div style={{ marginBottom: '1rem' }}>
+          <ConnectionStatus 
+            userId={user?.id} 
+            userRole="user" 
+            showDetails={true} 
+          />
+        </div>
         
         {/* Header */}
         <div style={{ marginBottom: '2rem' }}>
