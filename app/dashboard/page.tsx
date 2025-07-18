@@ -239,14 +239,14 @@ export default function ClientDashboard() {
         },
         body: JSON.stringify({
           to: 'corefound@glgcapitalgroupllc.com',
-          subject: `Investment Request - ${selectedPackage.name} Package - ${user.name || user.first_name || user.email}`,
+          subject: `Investment Request - ${selectedPackage.name} Package - ${user.name || user.profile?.first_name || user.email}`,
           html: `
             <h2>New Investment Request</h2>
             <p>A new investment request has been submitted:</p>
             
             <h3>Client Information:</h3>
             <ul>
-              <li><strong>Name:</strong> ${user.name || user.first_name || 'Not provided'}</li>
+              <li><strong>Name:</strong> ${user.name || user.profile?.first_name || 'Not provided'}</li>
               <li><strong>Email:</strong> ${user.email}</li>
               <li><strong>Request Date:</strong> ${new Date().toLocaleDateString()}</li>
             </ul>
@@ -277,7 +277,7 @@ export default function ClientDashboard() {
           subject: `Investment Request Confirmation - ${selectedPackage.name} Package`,
           html: `
             <h2>Investment Request Confirmation</h2>
-            <p>Dear ${user.name || user.first_name || 'Valued Customer'},</p>
+            <p>Dear ${user.name || user.profile?.first_name || 'Valued Customer'},</p>
             <p>Thank you for your investment request for the <b>${selectedPackage.name}</b> package.</p>
             
             <h3>Request Details:</h3>
@@ -311,7 +311,7 @@ export default function ClientDashboard() {
             <h3>Important Instructions:</h3>
             <ol>
               <li>Please include your account reference number in the wire transfer description</li>
-              <li>Use the following reference: <strong>Investment ${selectedPackage.name} - ${user.name || user.first_name || user.email}</strong></li>
+              <li>Use the following reference: <strong>Investment ${selectedPackage.name} - ${user.name || user.profile?.first_name || user.email}</strong></li>
               <li>Send the wire transfer to the banking details above</li>
               <li>Once the transfer is completed, please send the wire transfer receipt to our support team</li>
               <li>Your investment will be activated within 24-48 hours after we receive the payment confirmation</li>
