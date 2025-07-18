@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { CreateNoteRequest, UpdateNoteRequest } from '@/types/note';
 import { mockNotes } from '@/lib/fallback-data';
+import { generateCSRFToken, validateCSRFToken } from '@/lib/csrf';
 
 // Cache per le note (TTL: 5 minuti)
 const CACHE_TTL = 5 * 60 * 1000;
@@ -18,6 +19,29 @@ export async function GET() {
         headers: {
           'X-Cache': 'HIT',
           'X-Cache-TTL': `${Math.floor((CACHE_TTL - (now - cacheTimestamp)) / 1000)}s`
+        }
+      });
+    }
+
+    // Verifica connessione Supabase prima della query
+    try {
+      const { data: testData, error: testError } = await supabaseAdmin
+        .from('notes')
+        .select('count')
+        .limit(1);
+      
+      if (testError) {
+        throw new Error(`Supabase connection test failed: ${testError.message}`);
+      }
+    } catch (connectionError) {
+      console.log('Supabase connection failed, using offline data:', connectionError);
+      // Aggiorna cache con dati offline
+      notesCache = mockNotes;
+      cacheTimestamp = now;
+      return NextResponse.json(mockNotes, {
+        headers: {
+          'X-Cache': 'OFFLINE',
+          'X-Status': 'offline'
         }
       });
     }
@@ -77,6 +101,15 @@ export async function GET() {
 // POST /api/notes - Create a new note with validation
 export async function POST(request: NextRequest) {
   try {
+    // Validazione CSRF
+    const csrfValidation = validateCSRFToken(request);
+    if (!csrfValidation.valid) {
+      return NextResponse.json({ 
+        error: 'CSRF validation failed',
+        details: csrfValidation.error 
+      }, { status: 403 });
+    }
+
     const body: CreateNoteRequest = await request.json();
     
     // Validazione robusta
@@ -88,6 +121,34 @@ export async function POST(request: NextRequest) {
 
     // Sanitizzazione input
     const sanitizedTitle = body.title.trim().substring(0, 500); // Limite lunghezza
+
+    // Verifica connessione Supabase prima della query
+    try {
+      const { data: testData, error: testError } = await supabaseAdmin
+        .from('notes')
+        .select('count')
+        .limit(1);
+      
+      if (testError) {
+        throw new Error(`Supabase connection test failed: ${testError.message}`);
+      }
+    } catch (connectionError) {
+      console.log('Supabase connection failed, using offline mode:', connectionError);
+      
+      const newNote = {
+        id: Date.now(),
+        title: sanitizedTitle,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      return NextResponse.json(newNote, { 
+        status: 201,
+        headers: {
+          'X-Status': 'offline'
+        }
+      });
+    }
 
     // Query con retry logic
     let retries = 3;

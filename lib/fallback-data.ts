@@ -1,6 +1,45 @@
 // Dati mock per il fallback quando Supabase non è disponibile
 
 export const fallbackData = {
+  users: [
+    {
+      id: '1',
+      email: 'admin@glgcapital.com',
+      first_name: 'Admin',
+      last_name: 'User',
+      role: 'admin',
+      is_active: true,
+      email_verified: true,
+      last_login: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+      created_at: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString(),
+      updated_at: new Date().toISOString()
+    },
+    {
+      id: '2',
+      email: 'support@glgcapital.com',
+      first_name: 'Support',
+      last_name: 'Agent',
+      role: 'support',
+      is_active: true,
+      email_verified: true,
+      last_login: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+      created_at: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString(),
+      updated_at: new Date().toISOString()
+    },
+    {
+      id: '3',
+      email: 'john.doe@example.com',
+      first_name: 'John',
+      last_name: 'Doe',
+      role: 'user',
+      is_active: true,
+      email_verified: true,
+      last_login: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
+      created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+      updated_at: new Date().toISOString()
+    }
+  ],
+
   analytics: {
     overview: {
       totalUsers: 1247,
@@ -69,7 +108,7 @@ export const fallbackData = {
   clients: [
     {
       id: '1',
-      user_id: 'user-1',
+      user_id: '3',
       first_name: 'John',
       last_name: 'Doe',
       email: 'john.doe@example.com',
@@ -82,7 +121,7 @@ export const fallbackData = {
     },
     {
       id: '2',
-      user_id: 'user-2',
+      user_id: '4',
       first_name: 'Jane',
       last_name: 'Smith',
       email: 'jane.smith@example.com',
@@ -95,7 +134,7 @@ export const fallbackData = {
     },
     {
       id: '3',
-      user_id: 'user-3',
+      user_id: '5',
       first_name: 'Marco',
       last_name: 'Rossi',
       email: 'marco.rossi@example.com',
@@ -111,7 +150,7 @@ export const fallbackData = {
   investments: [
     {
       id: '1',
-      user_id: 'user-1',
+      user_id: '3',
       amount: 25000,
       currency: 'USD',
       status: 'active',
@@ -121,7 +160,7 @@ export const fallbackData = {
     },
     {
       id: '2',
-      user_id: 'user-2',
+      user_id: '4',
       amount: 50000,
       currency: 'USD',
       status: 'active',
@@ -131,7 +170,7 @@ export const fallbackData = {
     },
     {
       id: '3',
-      user_id: 'user-3',
+      user_id: '5',
       amount: 15000,
       currency: 'EUR',
       status: 'pending',

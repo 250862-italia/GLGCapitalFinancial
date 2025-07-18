@@ -2,12 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { generateCSRFToken, validateCSRFToken } from '@/lib/csrf';
 import { 
-  supabaseQueryWithRetry, 
   validateInput, 
   VALIDATION_SCHEMAS, 
   sanitizeInput,
-  performanceMonitor,
-  generateCacheKey
+  performanceMonitor
 } from '@/lib/api-optimizer';
 
 const supabase = createClient(
@@ -56,23 +54,17 @@ export async function POST(request: NextRequest) {
 
     console.log('🔄 Registrazione utente:', { email, firstName, lastName, country });
 
-    // Query con retry logic per creazione utente
-    const { data: authData, error: authError, cacheStatus } = await supabaseQueryWithRetry(
-      () => supabase.auth.admin.createUser({
-        email,
-        password,
-        email_confirm: true,
-        user_metadata: {
-          first_name: firstName,
-          last_name: lastName,
-          country
-        }
-      }),
-      {
-        maxRetries: 3,
-        timeout: 10000
+    // Creazione utente diretta con Supabase
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: {
+        first_name: firstName,
+        last_name: lastName,
+        country
       }
-    );
+    });
 
     if (authError) {
       console.error('❌ Errore creazione utente auth:', authError);
@@ -102,7 +94,7 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ Utente auth creato:', authData.user.id);
 
-    // Crea profilo utente con retry logic
+    // Crea profilo utente
     const profileData = {
       id: authData.user.id,
       name,
@@ -115,17 +107,11 @@ export async function POST(request: NextRequest) {
       updated_at: new Date().toISOString()
     };
 
-    const { data: profile, error: profileError } = await supabaseQueryWithRetry(
-      () => supabase
-        .from('profiles')
-        .insert(profileData)
-        .select()
-        .single(),
-      {
-        maxRetries: 3,
-        timeout: 8000
-      }
-    );
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .insert(profileData)
+      .select()
+      .single();
 
     if (profileError) {
       console.error('❌ Errore creazione profilo:', profileError);
@@ -149,17 +135,11 @@ export async function POST(request: NextRequest) {
         updated_at: new Date().toISOString()
       };
 
-      const { error: clientError } = await supabaseQueryWithRetry(
-        () => supabase
-          .from('clients')
-          .insert(clientData)
-          .select()
-          .single(),
-        {
-          maxRetries: 2,
-          timeout: 6000
-        }
-      );
+      const { error: clientError } = await supabase
+        .from('clients')
+        .insert(clientData)
+        .select()
+        .single();
 
       if (clientError) {
         console.error('❌ Errore creazione cliente:', clientError);
@@ -184,12 +164,10 @@ export async function POST(request: NextRequest) {
       csrfToken,
       message: 'Registrazione completata con successo. Puoi ora accedere al tuo account.',
       profileCreated: !profileError,
-      clientCreated: !profileError && !clientError,
-      cacheStatus
+      clientCreated: !profileError && !clientError
     }, {
       headers: {
-        'X-Performance': `${Date.now() - startTime}ms`,
-        'X-Cache-Status': cacheStatus
+        'X-Performance': `${Date.now() - startTime}ms`
       }
     });
 
