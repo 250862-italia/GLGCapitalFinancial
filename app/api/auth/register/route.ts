@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { generateCSRFToken } from '@/lib/csrf';
+import { generateCSRFToken, validateCSRFToken } from '@/lib/csrf';
+import { 
+  supabaseQueryWithRetry, 
+  validateInput, 
+  VALIDATION_SCHEMAS, 
+  sanitizeInput,
+  performanceMonitor,
+  generateCacheKey
+} from '@/lib/api-optimizer';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -8,115 +16,119 @@ const supabase = createClient(
 );
 
 export async function POST(request: NextRequest) {
+  const startTime = performanceMonitor.start('register_user');
+  
   try {
     const body = await request.json();
     
-    // Gestione dei campi nome dal frontend
-    const firstName = body.firstName || body.name?.split(' ')[0] || '';
-    const lastName = body.lastName || body.name?.split(' ').slice(1).join(' ') || '';
-    const fullName = body.name || `${firstName} ${lastName}`.trim();
-    
-    // Validazione input avanzata
-    if (!body.email || !body.password || (!firstName && !body.name)) {
-      return NextResponse.json(
-        { error: 'Email, password, and name are required' },
-        { status: 400 }
-      );
-    }
-
-    // Validazione formato email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(body.email)) {
-      return NextResponse.json(
-        { error: 'Invalid email format' },
-        { status: 400 }
-      );
-    }
-
-    // Validazione lunghezza password
-    if (body.password.length < 8) {
-      return NextResponse.json(
-        { error: 'Password must be at least 8 characters long' },
-        { status: 400 }
-      );
-    }
-
-    // Validazione complessità password
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/;
-    if (!passwordRegex.test(body.password)) {
-      return NextResponse.json(
-        { error: 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character' },
-        { status: 400 }
-      );
-    }
-
-    // Validazione nome
-    if (fullName.length < 2 || fullName.length > 50) {
-      return NextResponse.json(
-        { error: 'Name must be between 2 and 50 characters' },
-        { status: 400 }
-      );
-    }
-
     // Sanitizzazione input
-    const email = body.email.trim().toLowerCase();
-    const password = body.password;
-    const name = fullName.trim();
-
-    // Verifica se l'utente esiste già
-    const { data: existingUser } = await supabase.auth.admin.listUsers();
-    const userExists = existingUser.users.some(user => user.email === email);
-
-    if (userExists) {
+    const sanitizedBody = sanitizeInput(body);
+    
+    // Validazione CSRF
+    const csrfValidation = validateCSRFToken(request);
+    if (!csrfValidation.valid) {
+      performanceMonitor.end('register_user', startTime);
       return NextResponse.json(
-        { error: 'User with this email already exists' },
-        { status: 409 }
+        { error: 'CSRF token validation failed' },
+        { status: 403 }
       );
     }
 
-    // Crea nuovo utente
-    const { data, error } = await supabase.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: {
-        name
-      }
+    // Validazione input robusta
+    const validation = validateInput(sanitizedBody, {
+      email: VALIDATION_SCHEMAS.email,
+      password: VALIDATION_SCHEMAS.password,
+      firstName: (value) => VALIDATION_SCHEMAS.string(value, 100),
+      lastName: (value) => VALIDATION_SCHEMAS.string(value, 100),
+      country: VALIDATION_SCHEMAS.required
     });
 
-    if (error) {
-      console.error('Registration error:', error);
+    if (!validation.valid) {
+      performanceMonitor.end('register_user', startTime);
       return NextResponse.json(
-        { error: 'Failed to create user' },
-        { status: 500 }
+        { error: 'Invalid input data', details: validation.errors },
+        { status: 400 }
       );
     }
 
-    if (!data.user) {
-      return NextResponse.json(
-        { error: 'Failed to create user' },
-        { status: 500 }
-      );
-    }
+    const { email, password, firstName, lastName, country } = sanitizedBody;
+    const name = `${firstName} ${lastName}`.trim();
 
-    // Crea profilo utente
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .insert({
-        id: data.user.id,
-        name,
+    console.log('🔄 Registrazione utente:', { email, firstName, lastName, country });
+
+    // Query con retry logic per creazione utente
+    const { data: authData, error: authError, cacheStatus } = await supabaseQueryWithRetry(
+      () => supabase.auth.admin.createUser({
         email,
-        role: 'user',
-        first_name: firstName,
-        last_name: lastName,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      });
+        password,
+        email_confirm: true,
+        user_metadata: {
+          first_name: firstName,
+          last_name: lastName,
+          country
+        }
+      }),
+      {
+        maxRetries: 3,
+        timeout: 10000
+      }
+    );
 
-    let clientError = null;
+    if (authError) {
+      console.error('❌ Errore creazione utente auth:', authError);
+      performanceMonitor.end('register_user', startTime);
+      
+      if (authError.message.includes('already registered')) {
+        return NextResponse.json(
+          { error: 'Un utente con questa email è già registrato' },
+          { status: 409 }
+        );
+      }
+      
+      return NextResponse.json(
+        { error: 'Errore durante la registrazione. Riprova più tardi.' },
+        { status: 500 }
+      );
+    }
+
+    if (!authData?.user) {
+      console.error('❌ Nessun utente creato');
+      performanceMonitor.end('register_user', startTime);
+      return NextResponse.json(
+        { error: 'Errore durante la creazione dell\'utente' },
+        { status: 500 }
+      );
+    }
+
+    console.log('✅ Utente auth creato:', authData.user.id);
+
+    // Crea profilo utente con retry logic
+    const profileData = {
+      id: authData.user.id,
+      name,
+      email,
+      role: 'user',
+      first_name: firstName,
+      last_name: lastName,
+      country,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    const { data: profile, error: profileError } = await supabaseQueryWithRetry(
+      () => supabase
+        .from('profiles')
+        .insert(profileData)
+        .select()
+        .single(),
+      {
+        maxRetries: 3,
+        timeout: 8000
+      }
+    );
 
     if (profileError) {
-      console.error('Profile creation error:', profileError);
+      console.error('❌ Errore creazione profilo:', profileError);
       // Non fallire se il profilo non può essere creato, l'utente può aggiornarlo dopo
       console.log('⚠️ Profilo non creato, ma utente registrato con successo');
     } else {
@@ -125,55 +137,71 @@ export async function POST(request: NextRequest) {
       // Crea record cliente se il profilo è stato creato con successo
       const clientCode = `CLI${Date.now()}${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
       
-      const { error: clientCreationError } = await supabase
-        .from('clients')
-        .insert({
-          user_id: data.user.id,
-          profile_id: data.user.id,
-          client_code: clientCode,
-          status: 'active',
-          risk_profile: 'moderate',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        });
+      const clientData = {
+        user_id: authData.user.id,
+        profile_id: authData.user.id,
+        client_code: clientCode,
+        status: 'active',
+        risk_profile: 'moderate',
+        investment_preferences: {},
+        total_invested: 0.00,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
 
-      clientError = clientCreationError;
+      const { error: clientError } = await supabaseQueryWithRetry(
+        () => supabase
+          .from('clients')
+          .insert(clientData)
+          .select()
+          .single(),
+        {
+          maxRetries: 2,
+          timeout: 6000
+        }
+      );
 
       if (clientError) {
-        console.error('Client creation error:', clientError);
+        console.error('❌ Errore creazione cliente:', clientError);
         console.log('⚠️ Cliente non creato, ma utente e profilo registrati con successo');
       } else {
-        console.log('✅ Cliente creato con successo, codice:', clientCode);
+        console.log('✅ Cliente creato con successo');
       }
     }
 
-    // Genera CSRF token per la sessione
+    // Genera nuovo CSRF token per la sessione
     const csrfToken = generateCSRFToken();
 
-    // Prepara risposta
+    // Prepara risposta ottimizzata
     const response = NextResponse.json({
       success: true,
       user: {
-        id: data.user.id,
-        email: data.user.email,
+        id: authData.user.id,
+        email: authData.user.email,
         name,
         role: 'user'
       },
       csrfToken,
-      message: 'Registration successful. You can now log in to your account.',
+      message: 'Registrazione completata con successo. Puoi ora accedere al tuo account.',
       profileCreated: !profileError,
-      clientCreated: !profileError && !clientError
+      clientCreated: !profileError && !clientError,
+      cacheStatus
+    }, {
+      headers: {
+        'X-Performance': `${Date.now() - startTime}ms`,
+        'X-Cache-Status': cacheStatus
+      }
     });
 
-    // Per ora non impostiamo cookie di sessione automaticamente
-    // L'utente dovrà fare login separatamente dopo la registrazione
-
+    performanceMonitor.end('register_user', startTime);
     return response;
 
   } catch (error) {
-    console.error('Registration API error:', error);
+    console.error('❌ Errore generale registrazione:', error);
+    performanceMonitor.end('register_user', startTime);
+    
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Errore interno del server. Riprova più tardi.' },
       { status: 500 }
     );
   }

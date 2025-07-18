@@ -1,427 +1,275 @@
+import { performanceMonitor } from './api-optimizer';
+
+// Interfacce per le metriche
 interface PerformanceMetric {
-  id: string;
-  timestamp: Date;
-  type: 'api_call' | 'page_load' | 'database_query' | 'external_service' | 'user_action';
-  name: string;
-  duration: number; // in milliseconds
-  status: 'success' | 'error' | 'timeout';
-  metadata?: Record<string, any>;
-  userId?: string;
-  sessionId?: string;
+  count: number;
+  totalTime: number;
+  avgTime: number;
+  minTime: number;
+  maxTime: number;
+  lastCall: number;
+  errors: number;
 }
 
-interface PerformanceAlert {
-  id: string;
-  type: 'slow_response' | 'high_error_rate' | 'timeout' | 'memory_usage' | 'cpu_usage';
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  message: string;
-  timestamp: Date;
-  resolved: boolean;
-  metadata?: Record<string, any>;
-}
-
-interface PerformanceStats {
-  averageResponseTime: number;
-  errorRate: number;
-  throughput: number; // requests per minute
-  slowQueries: number;
-  timeouts: number;
-  memoryUsage: number;
-  cpuUsage: number;
-}
-
-class PerformanceMonitor {
-  private metrics: PerformanceMetric[] = [];
-  private alerts: PerformanceAlert[] = [];
-  private thresholds = {
-    slowResponse: 2000, // 2 seconds
-    errorRate: 0.05, // 5%
-    timeout: 10000, // 10 seconds
-    memoryUsage: 0.8, // 80%
-    cpuUsage: 0.7 // 70%
+interface SystemMetrics {
+  memory: {
+    used: number;
+    total: number;
+    percentage: number;
   };
-  private maxMetrics: number = 10000;
+  cpu: {
+    load: number;
+    cores: number;
+  };
+  uptime: number;
+  requests: {
+    total: number;
+    success: number;
+    error: number;
+    rate: number; // requests per secondo
+  };
+}
 
-  // Track API call performance
-  async trackAPICall(
-    endpoint: string,
-    method: string,
-    duration: number,
-    status: number,
-    userId?: string,
-    metadata?: Record<string, any>
-  ): Promise<void> {
-    const metric: PerformanceMetric = {
-      id: `api_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      timestamp: new Date(),
-      type: 'api_call',
-      name: `${method} ${endpoint}`,
-      duration,
-      status: status >= 400 ? 'error' : 'success',
-      metadata: {
-        endpoint,
-        method,
-        statusCode: status,
-        ...metadata
-      },
-      userId
-    };
+// Classe per il monitoraggio globale delle performance
+class GlobalPerformanceMonitor {
+  private metrics: Record<string, PerformanceMetric> = {};
+  private systemMetrics: SystemMetrics = {
+    memory: { used: 0, total: 0, percentage: 0 },
+    cpu: { load: 0, cores: 0 },
+    uptime: 0,
+    requests: { total: 0, success: 0, error: 0, rate: 0 }
+  };
+  private startTime = Date.now();
+  private requestCount = 0;
+  private lastRequestTime = Date.now();
 
-    this.addMetric(metric);
-    this.checkPerformanceThresholds(metric);
-  }
-
-  // Track page load performance
-  trackPageLoad(
-    page: string,
-    loadTime: number,
-    userId?: string,
-    metadata?: Record<string, any>
-  ): void {
-    const metric: PerformanceMetric = {
-      id: `page_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      timestamp: new Date(),
-      type: 'page_load',
-      name: page,
-      duration: loadTime,
-      status: loadTime > this.thresholds.slowResponse ? 'error' : 'success',
-      metadata: {
-        page,
-        ...metadata
-      },
-      userId
-    };
-
-    this.addMetric(metric);
-    this.checkPerformanceThresholds(metric);
-  }
-
-  // Track database query performance
-  trackDatabaseQuery(
-    query: string,
-    duration: number,
-    table?: string,
-    metadata?: Record<string, any>
-  ): void {
-    const metric: PerformanceMetric = {
-      id: `db_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      timestamp: new Date(),
-      type: 'database_query',
-      name: query.substring(0, 50) + (query.length > 50 ? '...' : ''),
-      duration,
-      status: duration > this.thresholds.slowResponse ? 'error' : 'success',
-      metadata: {
-        query,
-        table,
-        ...metadata
-      }
-    };
-
-    this.addMetric(metric);
-    this.checkPerformanceThresholds(metric);
-  }
-
-  // Track external service call
-  async trackExternalService(
-    service: string,
-    endpoint: string,
-    duration: number,
-    status: 'success' | 'error' | 'timeout',
-    metadata?: Record<string, any>
-  ): Promise<void> {
-    const metric: PerformanceMetric = {
-      id: `ext_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      timestamp: new Date(),
-      type: 'external_service',
-      name: `${service}:${endpoint}`,
-      duration,
-      status,
-      metadata: {
-        service,
-        endpoint,
-        ...metadata
-      }
-    };
-
-    this.addMetric(metric);
-    this.checkPerformanceThresholds(metric);
-  }
-
-  // Track user action performance
-  trackUserAction(
-    action: string,
-    duration: number,
-    userId?: string,
-    metadata?: Record<string, any>
-  ): void {
-    const metric: PerformanceMetric = {
-      id: `action_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      timestamp: new Date(),
-      type: 'user_action',
-      name: action,
-      duration,
-      status: duration > this.thresholds.slowResponse ? 'error' : 'success',
-      metadata: {
-        action,
-        ...metadata
-      },
-      userId
-    };
-
-    this.addMetric(metric);
-    this.checkPerformanceThresholds(metric);
-  }
-
-  // Add metric to storage
-  private addMetric(metric: PerformanceMetric): void {
-    this.metrics.push(metric);
-
-    // Keep only the last maxMetrics entries
-    if (this.metrics.length > this.maxMetrics) {
-      this.metrics = this.metrics.slice(-this.maxMetrics);
-    }
-  }
-
-  // Check performance thresholds and create alerts
-  private checkPerformanceThresholds(metric: PerformanceMetric): void {
-    // Check for slow response
-    if (metric.duration > this.thresholds.slowResponse) {
-      this.createAlert({
-        type: 'slow_response',
-        severity: metric.duration > this.thresholds.timeout ? 'critical' : 'high',
-        message: `Slow response detected: ${metric.name} took ${metric.duration}ms`,
-        metadata: {
-          metricId: metric.id,
-          duration: metric.duration,
-          threshold: this.thresholds.slowResponse
-        }
-      });
-    }
-
-    // Check for timeouts
-    if (metric.duration > this.thresholds.timeout) {
-      this.createAlert({
-        type: 'timeout',
-        severity: 'critical',
-        message: `Timeout detected: ${metric.name} took ${metric.duration}ms`,
-        metadata: {
-          metricId: metric.id,
-          duration: metric.duration,
-          threshold: this.thresholds.timeout
-        }
-      });
-    }
-
-    // Check error rate periodically
-    this.checkErrorRate();
-  }
-
-  // Check error rate and create alerts
-  private checkErrorRate(): void {
-    const recentMetrics = this.metrics.filter(
-      m => Date.now() - m.timestamp.getTime() < 5 * 60 * 1000 // Last 5 minutes
-    );
-
-    if (recentMetrics.length > 10) {
-      const errorCount = recentMetrics.filter(m => m.status === 'error').length;
-      const errorRate = errorCount / recentMetrics.length;
-
-      if (errorRate > this.thresholds.errorRate) {
-        this.createAlert({
-          type: 'high_error_rate',
-          severity: errorRate > 0.1 ? 'critical' : 'high',
-          message: `High error rate detected: ${(errorRate * 100).toFixed(1)}%`,
-          metadata: {
-            errorRate,
-            totalRequests: recentMetrics.length,
-            errorCount
-          }
-        });
-      }
-    }
-  }
-
-  // Create performance alert
-  private createAlert(alert: Omit<PerformanceAlert, 'id' | 'timestamp' | 'resolved'>): void {
-    const performanceAlert: PerformanceAlert = {
-      ...alert,
-      id: `alert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      timestamp: new Date(),
-      resolved: false
-    };
-
-    this.alerts.push(performanceAlert);
-    console.warn(`🚨 Performance Alert [${alert.severity.toUpperCase()}]: ${alert.message}`);
-  }
-
-  // Get performance statistics
-  getPerformanceStats(timeRange: number = 60 * 60 * 1000): PerformanceStats { // Default: 1 hour
-    const cutoffTime = Date.now() - timeRange;
-    const recentMetrics = this.metrics.filter(m => m.timestamp.getTime() > cutoffTime);
-
-    if (recentMetrics.length === 0) {
-      return {
-        averageResponseTime: 0,
-        errorRate: 0,
-        throughput: 0,
-        slowQueries: 0,
-        timeouts: 0,
-        memoryUsage: 0,
-        cpuUsage: 0
+  // Registra una chiamata API
+  recordAPICall(operation: string, duration: number, success: boolean = true) {
+    if (!this.metrics[operation]) {
+      this.metrics[operation] = {
+        count: 0,
+        totalTime: 0,
+        avgTime: 0,
+        minTime: duration,
+        maxTime: duration,
+        lastCall: Date.now(),
+        errors: 0
       };
     }
 
-    const totalDuration = recentMetrics.reduce((sum, m) => sum + m.duration, 0);
-    const errorCount = recentMetrics.filter(m => m.status === 'error').length;
-    const slowQueries = recentMetrics.filter(m => m.duration > this.thresholds.slowResponse).length;
-    const timeouts = recentMetrics.filter(m => m.duration > this.thresholds.timeout).length;
-    const minutesInRange = timeRange / (60 * 1000);
+    const metric = this.metrics[operation];
+    metric.count++;
+    metric.totalTime += duration;
+    metric.avgTime = metric.totalTime / metric.count;
+    metric.minTime = Math.min(metric.minTime, duration);
+    metric.maxTime = Math.max(metric.maxTime, duration);
+    metric.lastCall = Date.now();
+
+    if (!success) {
+      metric.errors++;
+    }
+
+    // Aggiorna metriche globali
+    this.requestCount++;
+    this.lastRequestTime = Date.now();
+    
+    if (success) {
+      this.systemMetrics.requests.success++;
+    } else {
+      this.systemMetrics.requests.error++;
+    }
+    
+    this.systemMetrics.requests.total = this.requestCount;
+  }
+
+  // Ottieni metriche per operazione
+  getMetrics(operation?: string): Record<string, PerformanceMetric> | PerformanceMetric | null {
+    if (operation) {
+      return this.metrics[operation] || null;
+    }
+    return { ...this.metrics };
+  }
+
+  // Ottieni metriche di sistema
+  getSystemMetrics(): SystemMetrics {
+    const now = Date.now();
+    const uptime = now - this.startTime;
+    
+    // Calcola rate delle richieste (ultimi 60 secondi)
+    const timeWindow = 60000; // 60 secondi
+    const recentRequests = Object.values(this.metrics)
+      .filter(metric => now - metric.lastCall < timeWindow)
+      .reduce((sum, metric) => sum + metric.count, 0);
+    
+    this.systemMetrics.uptime = uptime;
+    this.systemMetrics.requests.rate = recentRequests / (timeWindow / 1000);
+
+    // Aggiorna metriche di memoria (se disponibile)
+    if (typeof process !== 'undefined' && process.memoryUsage) {
+      const memUsage = process.memoryUsage();
+      this.systemMetrics.memory.used = memUsage.heapUsed;
+      this.systemMetrics.memory.total = memUsage.heapTotal;
+      this.systemMetrics.memory.percentage = (memUsage.heapUsed / memUsage.heapTotal) * 100;
+    }
+
+    return { ...this.systemMetrics };
+  }
+
+  // Ottieni report completo
+  getFullReport(): {
+    operations: Record<string, PerformanceMetric>;
+    system: SystemMetrics;
+    summary: {
+      totalOperations: number;
+      totalErrors: number;
+      avgResponseTime: number;
+      slowestOperation: string;
+      fastestOperation: string;
+      mostCalledOperation: string;
+    };
+  } {
+    const operations = this.getMetrics() as Record<string, PerformanceMetric>;
+    const system = this.getSystemMetrics();
+
+    // Calcola statistiche
+    const operationNames = Object.keys(operations);
+    const totalOperations = operationNames.reduce((sum, op) => sum + operations[op].count, 0);
+    const totalErrors = operationNames.reduce((sum, op) => sum + operations[op].errors, 0);
+    const avgResponseTime = totalOperations > 0 
+      ? operationNames.reduce((sum, op) => sum + operations[op].totalTime, 0) / totalOperations 
+      : 0;
+
+    const slowestOperation = operationNames.reduce((slowest, op) => 
+      operations[op].avgTime > operations[slowest]?.avgTime ? op : slowest, '');
+    
+    const fastestOperation = operationNames.reduce((fastest, op) => 
+      operations[op].avgTime < operations[fastest]?.avgTime ? op : fastest, '');
+    
+    const mostCalledOperation = operationNames.reduce((most, op) => 
+      operations[op].count > operations[most]?.count ? op : most, '');
 
     return {
-      averageResponseTime: totalDuration / recentMetrics.length,
-      errorRate: errorCount / recentMetrics.length,
-      throughput: recentMetrics.length / minutesInRange,
-      slowQueries,
-      timeouts,
-      memoryUsage: this.getMemoryUsage(),
-      cpuUsage: this.getCPUUsage()
-    };
-  }
-
-  // Get recent metrics
-  getRecentMetrics(limit: number = 100): PerformanceMetric[] {
-    return this.metrics
-      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-      .slice(0, limit);
-  }
-
-  // Get active alerts
-  getActiveAlerts(): PerformanceAlert[] {
-    return this.alerts.filter(alert => !alert.resolved);
-  }
-
-  // Resolve alert
-  resolveAlert(alertId: string): void {
-    const alert = this.alerts.find(a => a.id === alertId);
-    if (alert) {
-      alert.resolved = true;
-      console.log(`✅ Performance alert resolved: ${alert.message}`);
-    }
-  }
-
-  // Get slowest operations
-  getSlowestOperations(limit: number = 10): PerformanceMetric[] {
-    return this.metrics
-      .sort((a, b) => b.duration - a.duration)
-      .slice(0, limit);
-  }
-
-  // Get error-prone operations
-  getErrorProneOperations(limit: number = 10): Array<{
-    name: string;
-    totalCalls: number;
-    errorCount: number;
-    errorRate: number;
-    averageDuration: number;
-  }> {
-    const operationStats = new Map<string, {
-      totalCalls: number;
-      errorCount: number;
-      totalDuration: number;
-    }>();
-
-    this.metrics.forEach(metric => {
-      const existing = operationStats.get(metric.name) || {
-        totalCalls: 0,
-        errorCount: 0,
-        totalDuration: 0
-      };
-
-      existing.totalCalls++;
-      existing.totalDuration += metric.duration;
-      if (metric.status === 'error') {
-        existing.errorCount++;
+      operations,
+      system,
+      summary: {
+        totalOperations,
+        totalErrors,
+        avgResponseTime,
+        slowestOperation,
+        fastestOperation,
+        mostCalledOperation
       }
-
-      operationStats.set(metric.name, existing);
-    });
-
-    return Array.from(operationStats.entries())
-      .map(([name, stats]) => ({
-        name,
-        totalCalls: stats.totalCalls,
-        errorCount: stats.errorCount,
-        errorRate: stats.errorCount / stats.totalCalls,
-        averageDuration: stats.totalDuration / stats.totalCalls
-      }))
-      .filter(op => op.errorCount > 0)
-      .sort((a, b) => b.errorRate - a.errorRate)
-      .slice(0, limit);
-  }
-
-  // Set performance thresholds
-  setThresholds(thresholds: Partial<typeof this.thresholds>): void {
-    this.thresholds = { ...this.thresholds, ...thresholds };
-    console.log('📊 Performance thresholds updated:', this.thresholds);
-  }
-
-  // Clear old metrics
-  clearOldMetrics(daysToKeep: number = 7): void {
-    const cutoffDate = new Date(Date.now() - daysToKeep * 24 * 60 * 60 * 1000);
-    const initialCount = this.metrics.length;
-    
-    this.metrics = this.metrics.filter(metric => metric.timestamp > cutoffDate);
-    
-    const removedCount = initialCount - this.metrics.length;
-    console.log(`🧹 Cleared ${removedCount} old performance metrics (older than ${daysToKeep} days)`);
-  }
-
-  // Simulate memory usage (in real implementation, use actual system metrics)
-  private getMemoryUsage(): number {
-    // Simulate memory usage between 30% and 90%
-    return 0.3 + Math.random() * 0.6;
-  }
-
-  // Simulate CPU usage (in real implementation, use actual system metrics)
-  private getCPUUsage(): number {
-    // Simulate CPU usage between 20% and 80%
-    return 0.2 + Math.random() * 0.6;
-  }
-
-  // Performance decorator for functions
-  static track<T extends (...args: any[]) => any>(
-    name: string,
-    type: PerformanceMetric['type'] = 'user_action'
-  ) {
-    return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-      const originalMethod = descriptor.value;
-
-      descriptor.value = async function (...args: any[]) {
-        const startTime = Date.now();
-        let status: PerformanceMetric['status'] = 'success';
-
-        try {
-          const result = await originalMethod.apply(this, args);
-          return result;
-        } catch (error) {
-          status = 'error';
-          throw error;
-        } finally {
-          const duration = Date.now() - startTime;
-          performanceMonitor.trackUserAction(name, duration, undefined, {
-            method: propertyKey,
-            args: args.length
-          });
-        }
-      };
-
-      return descriptor;
     };
+  }
+
+  // Resetta tutte le metriche
+  reset(): void {
+    this.metrics = {};
+    this.requestCount = 0;
+    this.startTime = Date.now();
+    this.lastRequestTime = Date.now();
+  }
+
+  // Ottieni metriche in formato JSON per logging
+  toJSON(): string {
+    return JSON.stringify(this.getFullReport(), null, 2);
+  }
+
+  // Log delle metriche
+  logMetrics(): void {
+    const report = this.getFullReport();
+    console.log('📊 PERFORMANCE REPORT');
+    console.log('====================');
+    console.log(`⏱️  Uptime: ${Math.floor(report.system.uptime / 1000)}s`);
+    console.log(`📈 Requests: ${report.system.requests.total} (${report.system.requests.rate.toFixed(2)}/s)`);
+    console.log(`✅ Success Rate: ${((report.system.requests.success / report.system.requests.total) * 100).toFixed(1)}%`);
+    console.log(`💾 Memory: ${(report.system.memory.percentage).toFixed(1)}%`);
+    console.log(`🐌 Slowest: ${report.summary.slowestOperation} (${report.operations[report.summary.slowestOperation]?.avgTime.toFixed(0)}ms)`);
+    console.log(`⚡ Fastest: ${report.summary.fastestOperation} (${report.operations[report.summary.fastestOperation]?.avgTime.toFixed(0)}ms)`);
+    console.log(`🔄 Most Called: ${report.summary.mostCalledOperation} (${report.operations[report.summary.mostCalledOperation]?.count} calls)`);
   }
 }
 
-// Export singleton instance
-export const performanceMonitor = new PerformanceMonitor();
+// Istanza globale
+export const globalPerformanceMonitor = new GlobalPerformanceMonitor();
 
-// Export types
-export type { PerformanceMetric, PerformanceAlert, PerformanceStats }; 
+// Middleware per monitorare automaticamente le richieste
+export function createPerformanceMiddleware() {
+  return function performanceMiddleware(req: any, res: any, next: any) {
+    const startTime = Date.now();
+    const originalSend = res.send;
+
+    res.send = function(data: any) {
+      const duration = Date.now() - startTime;
+      const success = res.statusCode < 400;
+      
+      globalPerformanceMonitor.recordAPICall(
+        `${req.method} ${req.path}`,
+        duration,
+        success
+      );
+
+      return originalSend.call(this, data);
+    };
+
+    next();
+  };
+}
+
+// Funzione per log periodico delle metriche
+export function startPeriodicLogging(intervalMs: number = 60000) { // Default: ogni minuto
+  setInterval(() => {
+    globalPerformanceMonitor.logMetrics();
+  }, intervalMs);
+}
+
+// Funzione per ottenere metriche in formato prometheus
+export function getPrometheusMetrics(): string {
+  const report = globalPerformanceMonitor.getFullReport();
+  let prometheus = '';
+
+  // Metriche di sistema
+  prometheus += `# HELP glg_uptime_seconds Application uptime in seconds\n`;
+  prometheus += `# TYPE glg_uptime_seconds gauge\n`;
+  prometheus += `glg_uptime_seconds ${report.system.uptime / 1000}\n\n`;
+
+  prometheus += `# HELP glg_requests_total Total number of requests\n`;
+  prometheus += `# TYPE glg_requests_total counter\n`;
+  prometheus += `glg_requests_total ${report.system.requests.total}\n\n`;
+
+  prometheus += `# HELP glg_requests_success_total Total number of successful requests\n`;
+  prometheus += `# TYPE glg_requests_success_total counter\n`;
+  prometheus += `glg_requests_success_total ${report.system.requests.success}\n\n`;
+
+  prometheus += `# HELP glg_requests_error_total Total number of failed requests\n`;
+  prometheus += `# TYPE glg_requests_error_total counter\n`;
+  prometheus += `glg_requests_error_total ${report.system.requests.error}\n\n`;
+
+  prometheus += `# HELP glg_memory_usage_percentage Memory usage percentage\n`;
+  prometheus += `# TYPE glg_memory_usage_percentage gauge\n`;
+  prometheus += `glg_memory_usage_percentage ${report.system.memory.percentage}\n\n`;
+
+  // Metriche per operazione
+  for (const [operation, metric] of Object.entries(report.operations)) {
+    const safeOperation = operation.replace(/[^a-zA-Z0-9_]/g, '_');
+    
+    prometheus += `# HELP glg_operation_duration_seconds Duration of operations\n`;
+    prometheus += `# TYPE glg_operation_duration_seconds histogram\n`;
+    prometheus += `glg_operation_duration_seconds{operation="${safeOperation}"} ${metric.avgTime / 1000}\n`;
+    
+    prometheus += `# HELP glg_operation_count_total Total count of operations\n`;
+    prometheus += `# TYPE glg_operation_count_total counter\n`;
+    prometheus += `glg_operation_count_total{operation="${safeOperation}"} ${metric.count}\n`;
+    
+    prometheus += `# HELP glg_operation_errors_total Total errors for operations\n`;
+    prometheus += `# TYPE glg_operation_errors_total counter\n`;
+    prometheus += `glg_operation_errors_total{operation="${safeOperation}"} ${metric.errors}\n\n`;
+  }
+
+  return prometheus;
+}
+
+// Avvia logging periodico in produzione
+if (process.env.NODE_ENV === 'production') {
+  startPeriodicLogging();
+} 
