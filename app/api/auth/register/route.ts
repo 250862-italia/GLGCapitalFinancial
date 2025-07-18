@@ -11,8 +11,13 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
+    // Gestione dei campi nome dal frontend
+    const firstName = body.firstName || body.name?.split(' ')[0] || '';
+    const lastName = body.lastName || body.name?.split(' ').slice(1).join(' ') || '';
+    const fullName = body.name || `${firstName} ${lastName}`.trim();
+    
     // Validazione input avanzata
-    if (!body.email || !body.password || !body.name) {
+    if (!body.email || !body.password || (!firstName && !body.name)) {
       return NextResponse.json(
         { error: 'Email, password, and name are required' },
         { status: 400 }
@@ -46,7 +51,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validazione nome
-    if (body.name.length < 2 || body.name.length > 50) {
+    if (fullName.length < 2 || fullName.length > 50) {
       return NextResponse.json(
         { error: 'Name must be between 2 and 50 characters' },
         { status: 400 }
@@ -56,7 +61,7 @@ export async function POST(request: NextRequest) {
     // Sanitizzazione input
     const email = body.email.trim().toLowerCase();
     const password = body.password;
-    const name = body.name.trim();
+    const name = fullName.trim();
 
     // Verifica se l'utente esiste già
     const { data: existingUser } = await supabase.auth.admin.listUsers();
