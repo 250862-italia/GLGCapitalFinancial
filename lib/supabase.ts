@@ -94,7 +94,7 @@ export async function getSupabaseHealth() {
     } catch (error) {
       return {
         status: 'unhealthy',
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         checkpoint: currentCheckpoint,
         checkpoints: getAllCheckpoints()
       };
@@ -102,7 +102,7 @@ export async function getSupabaseHealth() {
   } catch (error) {
     return {
       status: 'unhealthy',
-      error: error.message,
+      error: error instanceof Error ? error.message : 'Unknown error',
       checkpoints: getAllCheckpoints()
     };
   }
