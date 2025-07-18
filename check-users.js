@@ -1,69 +1,62 @@
+#!/usr/bin/env node
+
 require('dotenv').config({ path: '.env.local' });
 const { createClient } = require('@supabase/supabase-js');
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-if (!supabaseUrl || !supabaseServiceKey) {
-  console.error('❌ Missing Supabase configuration');
-  process.exit(1);
-}
-
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
 async function checkUsers() {
+  console.log('🔍 Verifica Utenti nel Database Supabase');
+  console.log('========================================\n');
+
   try {
-    console.log('👥 Checking existing users...');
-    
-    // Check auth.users
-    const { data: authUsers, error: authError } = await supabaseAdmin.auth.admin.listUsers();
+    // Verifica utenti auth
+    console.log('📋 Utenti Auth:');
+    const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
     
     if (authError) {
-      console.error('❌ Error listing auth users:', authError.message);
-      return false;
-    }
-    
-    console.log('📊 Auth Users:', authUsers?.users?.length || 0);
-    
-    if (authUsers?.users && authUsers.users.length > 0) {
-      console.log('📋 Auth Users List:');
+      console.log('❌ Errore nel recupero utenti auth:', authError.message);
+    } else {
+      console.log(`✅ ${authUsers.users.length} utenti trovati:`);
       authUsers.users.forEach(user => {
-        console.log(`  - ${user.email} (${user.id}) - Created: ${user.created_at}`);
+        console.log(`   - ${user.email} (${user.id}) - ${user.email_confirmed_at ? 'Verificato' : 'Non verificato'}`);
       });
     }
-    
-    // Check clients table
-    const { data: clients, error: clientsError } = await supabaseAdmin
+
+    console.log('\n📋 Profili Utenti:');
+    const { data: profiles, error: profileError } = await supabase
+      .from('profiles')
+      .select('*');
+
+    if (profileError) {
+      console.log('❌ Errore nel recupero profili:', profileError.message);
+    } else {
+      console.log(`✅ ${profiles.length} profili trovati:`);
+      profiles.forEach(profile => {
+        console.log(`   - ${profile.name} (${profile.email}) - Ruolo: ${profile.role}`);
+      });
+    }
+
+    console.log('\n📋 Clienti:');
+    const { data: clients, error: clientError } = await supabase
       .from('clients')
       .select('*');
-    
-    if (clientsError) {
-      console.error('❌ Error listing clients:', clientsError.message);
-      return false;
-    }
-    
-    console.log('\n📊 Clients:', clients?.length || 0);
-    
-    if (clients && clients.length > 0) {
-      console.log('📋 Clients List:');
+
+    if (clientError) {
+      console.log('❌ Errore nel recupero clienti:', clientError.message);
+    } else {
+      console.log(`✅ ${clients.length} clienti trovati:`);
       clients.forEach(client => {
-        console.log(`  - ${client.first_name} ${client.last_name} (${client.user_id})`);
+        console.log(`   - ${client.first_name} ${client.last_name} (${client.email})`);
       });
     }
-    
-    return true;
-    
+
   } catch (error) {
-    console.error('❌ Error checking users:', error.message);
-    return false;
+    console.error('❌ Errore generale:', error.message);
   }
 }
 
-checkUsers().then(success => {
-  if (success) {
-    console.log('\n✅ User check completed successfully!');
-  } else {
-    console.log('\n❌ User check failed.');
-  }
-  process.exit(success ? 0 : 1);
-}); 
+checkUsers(); 
