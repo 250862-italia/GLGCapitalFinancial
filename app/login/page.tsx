@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { AlertCircle, CheckCircle, Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
+import { fetchJSONWithCSRF } from '@/lib/csrf-client';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -18,28 +19,24 @@ interface LoginData {
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
-  const [formData, setFormData] = useState<LoginData>({
-    email: '',
-    password: '',
-    rememberMe: false
-  });
-  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    setError('');
   };
 
-  const validateForm = () => {
-    return formData.email.trim() !== '' && formData.password.trim() !== '';
-  };
-
-  const handleSubmit = async () => {
-    if (!validateForm()) {
-      setError('Please fill in all required fields');
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.email.trim() || !formData.password.trim()) {
+      setError('Please fill in all fields');
       return;
     }
 
@@ -47,17 +44,45 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const result = await login(formData.email, formData.password);
-      
-      if (result.success) {
+      console.log('🔄 Frontend: Invio richiesta di login...');
+      console.log('📤 Frontend: Dati inviati:', { email: formData.email });
+
+      // Use the new CSRF-enabled fetch
+      const response = await fetchJSONWithCSRF('/api/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password
+        }),
+      });
+
+      console.log('📥 Frontend: Risposta ricevuta');
+      console.log('📥 Frontend: Status:', response.status);
+      console.log('📥 Frontend: Status Text:', response.statusText);
+
+      const data = await response.json();
+      console.log('📥 Frontend: Dati parsati:', data);
+
+      if (response.ok && data.success) {
+        console.log('✅ Frontend: Login riuscito, reindirizzamento...');
         setSuccess('Login successful! Redirecting...');
-        setTimeout(() => {
-          router.push('/dashboard');
-        }, 1000);
+        
+        // Use the auth context login method
+        const loginResult = await login(formData.email, formData.password);
+        
+        if (loginResult.success) {
+          setTimeout(() => {
+            router.push('/dashboard');
+          }, 1000);
+        } else {
+          setError(loginResult.error || 'Login failed');
+        }
       } else {
-        setError(result.error || 'Login failed');
+        console.log('❌ Frontend: Login fallito, imposto errore:', data.error);
+        setError(data.error || 'Login failed');
       }
     } catch (err) {
+      console.error('❌ Frontend: Errore durante il login:', err);
       setError('Network error. Please try again.');
     } finally {
       setIsLoading(false);
@@ -223,8 +248,8 @@ export default function LoginPage() {
             <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: 14, color: '#374151' }}>
               <input
                 type="checkbox"
-                checked={formData.rememberMe}
-                onChange={(e) => handleInputChange('rememberMe', e.target.checked)}
+                checked={false} // This state is no longer managed here
+                onChange={(e) => {}} // This handler is no longer needed
               />
               Remember me
             </label>
@@ -241,15 +266,15 @@ export default function LoginPage() {
         {/* Submit Button */}
         <button
           onClick={handleSubmit}
-          disabled={!validateForm() || isLoading}
+          disabled={!formData.email.trim() || !formData.password.trim() || isLoading}
           style={{
             width: '100%',
-            background: !validateForm() || isLoading ? '#e5e7eb' : '#059669',
+            background: !formData.email.trim() || !formData.password.trim() || isLoading ? '#e5e7eb' : '#059669',
             color: 'white',
             border: 'none',
             padding: '0.75rem',
             borderRadius: 8,
-            cursor: !validateForm() || isLoading ? 'not-allowed' : 'pointer',
+            cursor: !formData.email.trim() || !formData.password.trim() || isLoading ? 'not-allowed' : 'pointer',
             fontSize: 16,
             fontWeight: 600,
             marginBottom: '1.5rem'

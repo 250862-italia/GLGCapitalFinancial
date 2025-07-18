@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Eye, EyeOff, Lock, Mail, User, Building, Globe, AlertCircle, CheckCircle } from 'lucide-react';
+import { fetchJSONWithCSRF } from '@/lib/csrf-client';
 
 interface RegisterData {
   email: string;
@@ -37,16 +38,14 @@ export default function RegisterPage() {
   };
 
   const validateForm = () => {
-    if (!formData.email.trim() || !formData.password.trim() || !formData.confirmPassword.trim() || !formData.firstName.trim() || !formData.lastName.trim() || !formData.country.trim()) {
-      return false;
-    }
-    if (formData.password !== formData.confirmPassword) {
-      return false;
-    }
-    if (formData.password.length < 6) {
-      return false;
-    }
-    return true;
+    return formData.email && 
+           formData.password && 
+           formData.confirmPassword && 
+           formData.firstName && 
+           formData.lastName && 
+           formData.country &&
+           formData.password === formData.confirmPassword &&
+           formData.password.length >= 6;
   };
 
   const handleSubmit = async () => {
@@ -83,11 +82,9 @@ export default function RegisterPage() {
         country: formData.country
       });
 
-      const response = await fetch('/api/auth/register', {
+      // Use the new CSRF-enabled fetch
+      const response = await fetchJSONWithCSRF('/api/auth/register', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           email: formData.email,
           password: formData.password,

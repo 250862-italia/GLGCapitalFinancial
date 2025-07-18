@@ -1,17 +1,15 @@
-"use client"
-
-import { useState, useEffect, createContext, useContext } from 'react';
+"use client";
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import React from 'react';
+import { fetchJSONWithCSRF } from '@/lib/csrf-client';
 
 interface User {
   id: string;
   email: string;
   name?: string;
-  first_name?: string;
-  last_name?: string;
-  role: string;
-  is_active?: boolean;
+  role?: string;
+  profile?: any;
+  client?: any;
 }
 
 interface AuthContextType {
@@ -51,11 +49,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await fetch('/api/auth/login', {
+      // Use the new CSRF-enabled fetch
+      const response = await fetchJSONWithCSRF('/api/auth/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({ email, password }),
       });
 
@@ -103,11 +99,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const register = async (userData: any) => {
     try {
-      const response = await fetch('/api/auth/register', {
+      // Use the new CSRF-enabled fetch
+      const response = await fetchJSONWithCSRF('/api/auth/register', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(userData),
       });
 

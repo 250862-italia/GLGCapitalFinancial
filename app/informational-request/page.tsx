@@ -15,6 +15,7 @@ import {
   EyeOff
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
+import { fetchJSONWithCSRF } from '@/lib/csrf-client';
 
 export default function InformationalRequestPage() {
   const { user } = useAuth();
@@ -39,11 +40,9 @@ export default function InformationalRequestPage() {
     setError(null);
 
     try {
-      const response = await fetch('/api/informational-request', {
+      // Use the new CSRF-enabled fetch
+      const response = await fetchJSONWithCSRF('/api/informational-request', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           ...formData,
           userId: user?.id
