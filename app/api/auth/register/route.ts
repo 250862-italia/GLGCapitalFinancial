@@ -113,6 +113,8 @@ export async function POST(request: NextRequest) {
         updated_at: new Date().toISOString()
       });
 
+    let clientError = null;
+
     if (profileError) {
       console.error('Profile creation error:', profileError);
       // Non fallire se il profilo non può essere creato, l'utente può aggiornarlo dopo
@@ -123,7 +125,7 @@ export async function POST(request: NextRequest) {
       // Crea record cliente se il profilo è stato creato con successo
       const clientCode = `CLI${Date.now()}${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
       
-      const { error: clientError } = await supabase
+      const { error: clientCreationError } = await supabase
         .from('clients')
         .insert({
           user_id: data.user.id,
@@ -134,6 +136,8 @@ export async function POST(request: NextRequest) {
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         });
+
+      clientError = clientCreationError;
 
       if (clientError) {
         console.error('Client creation error:', clientError);
