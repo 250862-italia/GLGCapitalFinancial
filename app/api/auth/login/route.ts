@@ -54,10 +54,13 @@ export async function POST(request: NextRequest) {
 
     // Query con retry logic per autenticazione
     const { data: authData, error: authError, cacheStatus } = await supabaseQueryWithRetry(
-      () => supabase.auth.signInWithPassword({
-        email,
-        password
-      }),
+      async () => {
+        const result = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+        return result;
+      },
       {
         maxRetries: 3,
         timeout: 10000
