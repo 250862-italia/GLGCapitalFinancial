@@ -1,3 +1,5 @@
+import { fetchJSONWithCSRF } from './csrf-client';
+
 interface ErrorInfo {
   id: string;
   timestamp: Date;
@@ -241,11 +243,8 @@ class ErrorHandler {
   // Report error to server
   private async reportToServer(errorInfo: ErrorInfo): Promise<void> {
     try {
-      const response = await fetch('/api/errors/report', {
+      const response = await fetchJSONWithCSRF('/api/errors/report', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(errorInfo)
       });
 

@@ -19,6 +19,7 @@ import {
   DollarSign,
   TrendingUp
 } from 'lucide-react';
+import { fetchJSONWithCSRF } from '@/lib/csrf-client';
 
 interface Partnership {
   id: string;
@@ -75,7 +76,7 @@ export default function AdminPartnershipsPage() {
 
   const loadPartnerships = async () => {
     try {
-      const response = await fetch('/api/admin/partnerships');
+      const response = await fetchJSONWithCSRF('/api/admin/partnerships');
       if (response.ok) {
         const data = await response.json();
         setPartnerships(data);
@@ -235,9 +236,8 @@ export default function AdminPartnershipsPage() {
     try {
       if (showEditModal && selectedItem) {
         // Update existing partnership
-        const response = await fetch('/api/admin/partnerships', {
+        const response = await fetchJSONWithCSRF('/api/admin/partnerships', {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id: selectedItem.id, ...formData })
         });
         
@@ -248,9 +248,8 @@ export default function AdminPartnershipsPage() {
         }
       } else {
         // Add new partnership
-        const response = await fetch('/api/admin/partnerships', {
+        const response = await fetchJSONWithCSRF('/api/admin/partnerships', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData)
         });
         
@@ -272,7 +271,7 @@ export default function AdminPartnershipsPage() {
   const confirmDelete = async () => {
     if (selectedItem) {
       try {
-        const response = await fetch(`/api/admin/partnerships?id=${selectedItem.id}`, {
+        const response = await fetchJSONWithCSRF(`/api/admin/partnerships?id=${selectedItem.id}`, {
           method: 'DELETE'
         });
         

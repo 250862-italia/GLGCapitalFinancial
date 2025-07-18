@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Mail, Save, TestTube, CheckCircle, AlertCircle, Settings, Key, Globe, Users } from 'lucide-react';
+import { fetchJSONWithCSRF } from '@/lib/csrf-client';
 
 interface EmailConfig {
   service: 'resend' | 'sendgrid' | 'aws-ses';
@@ -17,7 +18,7 @@ export default function EmailSettingsPage() {
     service: 'resend',
     apiKey: '',
     fromEmail: 'noreply@glgcapitalgroupllc.com',
-    surveillanceEmail: 'push@glgcapitalgroupllc.com',
+    surveillanceEmail: 'corefound@glgcapitalgroupllc.com',
     supportEmail: 'support@glgcapitalgroupllc.com',
     adminEmail: 'admin@glgcapitalgroupllc.com'
   });
@@ -28,9 +29,10 @@ export default function EmailSettingsPage() {
 
   // Carica configurazione esistente
   useEffect(() => {
-    const savedConfig = localStorage.getItem('emailConfig');
-    if (savedConfig) {
-      setConfig(JSON.parse(savedConfig));
+    // Carica configurazione salvata
+    const saved = localStorage.getItem('emailConfig');
+    if (saved) {
+      setConfig(JSON.parse(saved));
     }
   }, []);
 
@@ -43,9 +45,8 @@ export default function EmailSettingsPage() {
       localStorage.setItem('emailConfig', JSON.stringify(config));
       
       // Aggiorna le variabili d'ambiente (simulato)
-      await fetch('/api/update-email-config', {
+      await fetchJSONWithCSRF('/api/update-email-config', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(config)
       });
 
@@ -62,9 +63,8 @@ export default function EmailSettingsPage() {
     setMessage('Invio email di test...');
 
     try {
-      const response = await fetch('/api/send-email', {
+      const response = await fetchJSONWithCSRF('/api/send-email', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           to: config.surveillanceEmail,
           subject: 'Test Configurazione Email - GLG Dashboard',

@@ -1,8 +1,9 @@
-"use client"
-
+"use client";
+export const dynamic = "force-dynamic";
 import { useState } from 'react';
 import Link from "next/link"
 import { ArrowLeft, MapPin, Mail, Clock, Phone, Send, CheckCircle } from 'lucide-react'
+import { fetchJSONWithCSRF } from '@/lib/csrf-client';
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -21,11 +22,8 @@ export default function ContactPage() {
     setIsSubmitting(true);
     
     try {
-      const response = await fetch('/api/send-email', {
+      const response = await fetchJSONWithCSRF('/api/send-email', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           to: 'corefound@glgcapitalgroupllc.com',
           subject: `Nuovo messaggio da ${formData.name} - ${formData.service}`,

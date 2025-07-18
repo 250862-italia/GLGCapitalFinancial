@@ -234,11 +234,8 @@ export default function ClientDashboard() {
 
     try {
       // Send email to GLG support with investment request
-      const supportEmailResponse = await fetch('/api/send-email', {
+      const supportEmailResponse = await fetchJSONWithCSRF('/api/send-email', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           to: 'corefound@glgcapitalgroupllc.com',
           subject: `Investment Request - ${selectedPackage.name} Package - ${user.name || user.profile?.first_name || user.email}`,
@@ -269,11 +266,8 @@ export default function ClientDashboard() {
       });
 
       // Send confirmation email to user with banking details
-      const userEmailResponse = await fetch('/api/send-email', {
+      const userEmailResponse = await fetchJSONWithCSRF('/api/send-email', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           to: user.email,
           subject: `Investment Request Confirmation - ${selectedPackage.name} Package`,

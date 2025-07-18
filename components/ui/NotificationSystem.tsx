@@ -162,7 +162,7 @@ export default function NotificationSystem({ userId, userRole = 'user' }: Notifi
     setIsLoading(true);
     try {
       // Load from database
-      const response = await fetch(`/api/notifications/${userId}`);
+      const response = await fetchJSONWithCSRF(`/api/notifications/${userId}`);
       if (response.ok) {
         const data = await response.json();
         const dbNotifications = data.map((n: any) => ({

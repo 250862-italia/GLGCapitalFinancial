@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from './use-auth';
 import { supabase } from '@/lib/supabase';
+import { fetchJSONWithCSRF } from '@/lib/csrf-client';
 
 interface ClientProfile {
   id: string;
@@ -23,11 +24,8 @@ export function useProfile() {
 
   const createProfile = async (user_id: string): Promise<ClientProfile | null> => {
     try {
-      const response = await fetch('/api/profile/create', {
+      const response = await fetchJSONWithCSRF('/api/profile/create', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({ user_id }),
       });
 
@@ -85,11 +83,8 @@ export function useProfile() {
     if (!user || !profile) return false;
 
     try {
-      const response = await fetch('/api/profile/update', {
+      const response = await fetchJSONWithCSRF('/api/profile/update', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           userId: user.id,
           updates

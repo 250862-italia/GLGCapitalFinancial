@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import AdminProtectedRoute from '@/components/auth/AdminProtectedRoute';
+import { fetchJSONWithCSRF } from '@/lib/csrf-client';
 
 interface InformationalRequest {
   id: string;
@@ -54,7 +55,7 @@ export default function InformationalRequestsPage() {
 
   const loadRequests = async () => {
     try {
-      const response = await fetch('/api/admin/informational-requests');
+      const response = await fetchJSONWithCSRF('/api/admin/informational-requests');
       
       if (!response.ok) {
         throw new Error('Failed to load requests');
@@ -72,11 +73,8 @@ export default function InformationalRequestsPage() {
 
   const updateRequestStatus = async (requestId: string, status: string) => {
     try {
-      const response = await fetch(`/api/admin/informational-requests/${requestId}`, {
+      const response = await fetchJSONWithCSRF(`/api/admin/informational-requests/${requestId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           status,
           processedBy: user?.id
@@ -97,11 +95,8 @@ export default function InformationalRequestsPage() {
 
   const resendEmail = async (request: InformationalRequest) => {
     try {
-      const response = await fetch('/api/admin/informational-requests/resend-email', {
+      const response = await fetchJSONWithCSRF('/api/admin/informational-requests/resend-email', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           requestId: request.id
         })

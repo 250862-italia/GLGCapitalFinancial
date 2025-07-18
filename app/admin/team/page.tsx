@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Search, Eye, User, Mail, Phone, Shield, Calendar } from 'lucide-react';
+import { fetchJSONWithCSRF } from '@/lib/csrf-client';
 
 interface TeamMember {
   id: string;
@@ -44,9 +45,9 @@ export default function TeamPage() {
 
   const fetchTeamMembers = async () => {
     try {
-      const response = await fetch('/api/admin/team');
+      const response = await fetchJSONWithCSRF('/api/admin/team');
       if (response.ok) {
-        const data = await response.json();
+        const data = response.data;
         setTeam(data);
       } else {
         console.error('Failed to fetch team members');
@@ -177,9 +178,8 @@ export default function TeamPage() {
     try {
       if (showEditModal && selectedItem) {
         // Update existing member
-        const response = await fetch('/api/admin/team', {
+        const response = await fetchJSONWithCSRF('/api/admin/team', {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id: selectedItem.id, ...formData })
         });
         
@@ -190,9 +190,8 @@ export default function TeamPage() {
         }
       } else {
         // Add new member
-        const response = await fetch('/api/admin/team', {
+        const response = await fetchJSONWithCSRF('/api/admin/team', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData)
         });
         
@@ -214,7 +213,7 @@ export default function TeamPage() {
   const confirmDelete = async () => {
     if (selectedItem) {
       try {
-        const response = await fetch(`/api/admin/team?id=${selectedItem.id}`, {
+        const response = await fetchJSONWithCSRF(`/api/admin/team?id=${selectedItem.id}`, {
           method: 'DELETE'
         });
         

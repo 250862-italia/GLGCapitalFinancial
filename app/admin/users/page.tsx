@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import Modal from '@/components/ui/Modal';
 import { useRouter } from 'next/navigation';
+import { fetchJSONWithCSRF } from '@/lib/csrf-client';
 
 interface User {
   id: string;
@@ -163,11 +164,8 @@ export default function AdminUsersPage() {
 
     try {
       const url = isEdit ? '/api/admin/users/update' : '/api/admin/users/create';
-      const response = await fetch(url, {
+      const response = await fetchJSONWithCSRF(url, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           ...formData,
           userId: selectedUser?.id
@@ -210,11 +208,8 @@ export default function AdminUsersPage() {
     }
 
     try {
-      const response = await fetch('/api/admin/users/change-password', {
+      const response = await fetchJSONWithCSRF('/api/admin/users/change-password', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           userId: selectedUser?.id,
           currentPassword: passwordData.currentPassword,
@@ -252,11 +247,8 @@ export default function AdminUsersPage() {
     }
 
     try {
-      const response = await fetch('/api/admin/users/delete', {
+      const response = await fetchJSONWithCSRF('/api/admin/users/delete', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({ userId: userToDelete.id }),
       });
 

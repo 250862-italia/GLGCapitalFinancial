@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Edit, Trash2, User } from 'lucide-react';
+import { fetchJSONWithCSRF } from '@/lib/csrf-client';
 
 interface InvestmentDetail {
   id: string;
@@ -32,7 +33,7 @@ export default function InvestmentDetailPage() {
 
   const loadInvestmentDetail = async (id: string) => {
     try {
-      const response = await fetch(`/api/investments/${id}`);
+      const response = await fetchJSONWithCSRF(`/api/investments/${id}`);
       if (response.ok) {
         const data = await response.json();
         setInvestment(data);

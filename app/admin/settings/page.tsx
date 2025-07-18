@@ -18,6 +18,7 @@ import {
   Server,
   Monitor
 } from 'lucide-react';
+import { fetchJSONWithCSRF } from '@/lib/csrf-client';
 
 interface SystemSettings {
   general: {
@@ -125,9 +126,8 @@ export default function AdminSettingsPage() {
     if (!settings) return;
     
     try {
-      const response = await fetch('/api/admin/settings', {
+      const response = await fetchJSONWithCSRF('/api/admin/settings', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(settings)
       });
       

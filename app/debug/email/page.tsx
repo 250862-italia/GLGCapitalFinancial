@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 import { Mail, TestTube, AlertCircle, CheckCircle, Clock, RefreshCw } from 'lucide-react';
+import { fetchJSONWithCSRF } from '@/lib/csrf-client';
 
 export default function EmailDebugPage() {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState('test@example.com');
   const [testType, setTestType] = useState('all');
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<any>(null);
@@ -21,9 +22,8 @@ export default function EmailDebugPage() {
     setResults(null);
 
     try {
-      const response = await fetch('/api/debug/email-test', {
+      const response = await fetchJSONWithCSRF('/api/debug/email-test', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, testType })
       });
 

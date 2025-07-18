@@ -96,9 +96,8 @@ export default function InvestmentsPage() {
       }
       
       // Send email with bank details
-      await fetch("/api/send-email", {
+      await fetchJSONWithCSRF("/api/send-email", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           to: user.email,
           subject: `Istruzioni Bonifico - Acquisto Pacchetto ${selectedPackage.name}`,

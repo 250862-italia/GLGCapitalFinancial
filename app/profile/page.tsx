@@ -87,7 +87,7 @@ export default function ProfilePage() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
       
-      const response = await fetch(`/api/profile/${user.id}`, {
+      const response = await fetchJSONWithCSRF(`/api/profile/${user.id}`, {
         signal: controller.signal
       });
       
@@ -112,7 +112,7 @@ export default function ProfilePage() {
             console.log('Profile created successfully:', result);
             
             // Fetch the newly created profile
-            const newResponse = await fetch(`/api/profile/${user.id}`);
+            const newResponse = await fetchJSONWithCSRF(`/api/profile/${user.id}`);
             if (newResponse.ok) {
               const newClientData = await newResponse.json();
               setProfile(newClientData);
