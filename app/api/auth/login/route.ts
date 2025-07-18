@@ -104,7 +104,6 @@ export async function POST(request: NextRequest) {
     console.log('✅ Utente autenticato:', authData.user.id);
 
     // Recupera profilo utente (TEMPORANEAMENTE DISABILITATO per risolvere ricorsione)
-    let profile: UserProfile | null = null;
     console.log('⚠️ Recupero profilo temporaneamente disabilitato per risolvere ricorsione infinita');
     
     // TODO: Riabilitare il recupero del profilo una volta risolta la ricorsione
@@ -138,19 +137,17 @@ export async function POST(request: NextRequest) {
     const csrfToken = generateCSRFToken();
 
     // Prepara risposta ottimizzata
+    const userName = authData.user.user_metadata?.name || 'Utente';
+    const userRole = 'user';
+    
     const response = NextResponse.json({
       success: true,
       user: {
         id: authData.user.id,
         email: authData.user.email,
-        name: profile?.name || authData.user.user_metadata?.name || 'Utente',
-        role: profile?.role || 'user',
-        profile: profile ? {
-          first_name: profile.first_name,
-          last_name: profile.last_name,
-          country: profile.country,
-          kyc_status: profile.kyc_status
-        } : null,
+        name: userName,
+        role: userRole,
+        profile: null, // Temporaneamente disabilitato
         client: clientData ? {
           client_code: clientData.client_code,
           status: clientData.status,
@@ -168,7 +165,7 @@ export async function POST(request: NextRequest) {
     }, {
       headers: {
         'X-Performance': `${Date.now() - startTime}ms`,
-        'X-User-Role': profile?.role || 'user'
+        'X-User-Role': userRole
       }
     });
 
