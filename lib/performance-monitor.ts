@@ -104,13 +104,11 @@ class GlobalPerformanceMonitor {
     this.systemMetrics.uptime = uptime;
     this.systemMetrics.requests.rate = recentRequests / (timeWindow / 1000);
 
-    // Aggiorna metriche di memoria (se disponibile)
-    if (typeof process !== 'undefined' && process.memoryUsage) {
-      const memUsage = process.memoryUsage();
-      this.systemMetrics.memory.used = memUsage.heapUsed;
-      this.systemMetrics.memory.total = memUsage.heapTotal;
-      this.systemMetrics.memory.percentage = (memUsage.heapUsed / memUsage.heapTotal) * 100;
-    }
+    // In Edge Runtime, non possiamo accedere a process.memoryUsage
+    // Usiamo valori simulati per compatibilità
+    this.systemMetrics.memory.used = 0;
+    this.systemMetrics.memory.total = 0;
+    this.systemMetrics.memory.percentage = 0;
 
     return { ...this.systemMetrics };
   }
@@ -183,7 +181,6 @@ class GlobalPerformanceMonitor {
     console.log(`⏱️  Uptime: ${Math.floor(report.system.uptime / 1000)}s`);
     console.log(`📈 Requests: ${report.system.requests.total} (${report.system.requests.rate.toFixed(2)}/s)`);
     console.log(`✅ Success Rate: ${((report.system.requests.success / report.system.requests.total) * 100).toFixed(1)}%`);
-    console.log(`💾 Memory: ${(report.system.memory.percentage).toFixed(1)}%`);
     console.log(`🐌 Slowest: ${report.summary.slowestOperation} (${report.operations[report.summary.slowestOperation]?.avgTime.toFixed(0)}ms)`);
     console.log(`⚡ Fastest: ${report.summary.fastestOperation} (${report.operations[report.summary.fastestOperation]?.avgTime.toFixed(0)}ms)`);
     console.log(`🔄 Most Called: ${report.summary.mostCalledOperation} (${report.operations[report.summary.mostCalledOperation]?.count} calls)`);
@@ -244,10 +241,6 @@ export function getPrometheusMetrics(): string {
   prometheus += `# HELP glg_requests_error_total Total number of failed requests\n`;
   prometheus += `# TYPE glg_requests_error_total counter\n`;
   prometheus += `glg_requests_error_total ${report.system.requests.error}\n\n`;
-
-  prometheus += `# HELP glg_memory_usage_percentage Memory usage percentage\n`;
-  prometheus += `# TYPE glg_memory_usage_percentage gauge\n`;
-  prometheus += `glg_memory_usage_percentage ${report.system.memory.percentage}\n\n`;
 
   // Metriche per operazione
   for (const [operation, metric] of Object.entries(report.operations)) {

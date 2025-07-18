@@ -157,7 +157,6 @@ function logRequest(request: NextRequest, response: NextResponse, startTime: num
   const method = request.method;
   const pathname = request.nextUrl.pathname;
   const status = response.status;
-  const userAgent = request.headers.get('user-agent') || 'unknown';
   
   // Registra nelle metriche delle performance
   globalPerformanceMonitor.recordAPICall(
@@ -251,8 +250,6 @@ export function middleware(request: NextRequest) {
       const response = NextResponse.json({
         status: 'healthy',
         timestamp: new Date().toISOString(),
-        uptime: process.uptime(),
-        memory: process.memoryUsage(),
         version: process.env.npm_package_version || '1.0.0'
       });
       

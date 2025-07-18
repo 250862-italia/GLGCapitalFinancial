@@ -1,6 +1,8 @@
 // CSRF token management - Edge Runtime compatible
 // Use a more persistent storage approach for development
 
+import { NextRequest } from 'next/server';
+
 // Global storage for CSRF tokens (persists across requests in development)
 declare global {
   var __csrfTokens: Map<string, { createdAt: number; used: boolean; useCount: number }> | undefined;
@@ -36,7 +38,91 @@ export function generateCSRFToken(): string {
   return token;
 }
 
-export function validateCSRFToken(token: string): boolean {
+// Funzione per estrarre il token CSRF da una richiesta
+function extractCSRFToken(request: NextRequest): string | null {
+  // Prova prima dall'header
+  const headerToken = request.headers.get('X-CSRF-Token');
+  if (headerToken) {
+    console.log('[CSRF] Token found in header');
+    return headerToken;
+  }
+  
+  // Prova dal body se è una richiesta POST/PUT
+  if (['POST', 'PUT', 'PATCH'].includes(request.method)) {
+    try {
+      // Per richieste JSON, il token dovrebbe essere nel body
+      // Questo è gestito nelle route API
+      console.log('[CSRF] Token should be in request body for', request.method);
+    } catch (error) {
+      console.log('[CSRF] Error reading request body:', error);
+    }
+  }
+  
+  // Prova dai query parameters
+  const url = new URL(request.url);
+  const queryToken = url.searchParams.get('csrf');
+  if (queryToken) {
+    console.log('[CSRF] Token found in query params');
+    return queryToken;
+  }
+  
+  console.log('[CSRF] No token found in request');
+  return null;
+}
+
+// Funzione per validare il token CSRF da una richiesta
+export function validateCSRFToken(request: NextRequest): { valid: boolean; token: string | null; error?: string } {
+  const token = extractCSRFToken(request);
+  
+  if (!token) {
+    console.log('[CSRF] No token provided');
+    return { valid: false, token: null, error: 'No CSRF token provided' };
+  }
+  
+  const tokenData = csrfTokens.get(token);
+  if (!tokenData) {
+    console.log('[CSRF] Token not found in storage:', token.substring(0, 10) + '...');
+    console.log('[CSRF] Available tokens:', Array.from(csrfTokens.keys()).map(t => t.substring(0, 10) + '...'));
+    
+    // In development, allow some flexibility for testing
+    if (isDevelopment) {
+      console.log('[CSRF] Development mode: allowing request despite missing token');
+      return { valid: true, token };
+    }
+    return { valid: false, token, error: 'Invalid CSRF token' };
+  }
+  
+  // Check if token is expired (1 hour)
+  const now = Date.now();
+  const tokenAge = now - tokenData.createdAt;
+  if (tokenAge > 60 * 60 * 1000) { // 1 hour
+    console.log('[CSRF] Token expired:', token.substring(0, 10) + '...');
+    csrfTokens.delete(token);
+    return { valid: false, token, error: 'CSRF token expired' };
+  }
+  
+  // In development, allow multiple uses
+  if (isDevelopment) {
+    tokenData.useCount++;
+    console.log(`[CSRF] Token used ${tokenData.useCount} times:`, token.substring(0, 10) + '...');
+    return { valid: true, token };
+  }
+  
+  // In production, one-time use
+  if (tokenData.used) {
+    console.log('[CSRF] Token already used:', token.substring(0, 10) + '...');
+    return { valid: false, token, error: 'CSRF token already used' };
+  }
+  
+  tokenData.used = true;
+  tokenData.useCount++;
+  console.log(`[CSRF] Token validated successfully:`, token.substring(0, 10) + '...');
+  
+  return { valid: true, token };
+}
+
+// Funzione legacy per compatibilità (accetta stringa)
+export function validateCSRFTokenString(token: string): boolean {
   if (!token) {
     console.log('[CSRF] No token provided');
     return false;
@@ -45,7 +131,6 @@ export function validateCSRFToken(token: string): boolean {
   const tokenData = csrfTokens.get(token);
   if (!tokenData) {
     console.log('[CSRF] Token not found in storage:', token.substring(0, 10) + '...');
-    console.log('[CSRF] Available tokens:', Array.from(csrfTokens.keys()).map(t => t.substring(0, 10) + '...'));
     
     // In development, allow some flexibility for testing
     if (isDevelopment) {
