@@ -1,473 +1,299 @@
-import { NextRequest } from 'next/server'
+import { createClient } from '@supabase/supabase-js';
 
-// Security Event Types
-export enum SecurityEventType {
-  LOGIN_ATTEMPT = 'login_attempt',
-  LOGIN_SUCCESS = 'login_success',
-  LOGIN_FAILURE = 'login_failure',
-  LOGOUT = 'logout',
-  PASSWORD_CHANGE = 'password_change',
-  ACCOUNT_LOCKED = 'account_locked',
-  SUSPICIOUS_ACTIVITY = 'suspicious_activity',
-  RATE_LIMIT_EXCEEDED = 'rate_limit_exceeded',
-  CSRF_VIOLATION = 'csrf_violation',
-  SQL_INJECTION_ATTEMPT = 'sql_injection_attempt',
-  XSS_ATTEMPT = 'xss_attempt',
-  FILE_UPLOAD_ATTEMPT = 'file_upload_attempt',
-  ADMIN_ACCESS = 'admin_access',
-  DATA_EXPORT = 'data_export',
-  CONFIGURATION_CHANGE = 'configuration_change',
-  SYSTEM_ERROR = 'system_error',
-  NETWORK_ATTACK = 'network_attack',
-  BRUTE_FORCE_ATTEMPT = 'brute_force_attempt',
-  PHISHING_ATTEMPT = 'phishing_attempt',
-  MALWARE_DETECTED = 'malware_detected',
-  UNAUTHORIZED_ACCESS = 'unauthorized_access',
-  PRIVILEGE_ESCALATION = 'privilege_escalation',
-  DATA_BREACH = 'data_breach',
-  COMPLIANCE_VIOLATION = 'compliance_violation',
-}
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
-// Security Event Severity
-export enum SecuritySeverity {
-  LOW = 'low',
-  MEDIUM = 'medium',
-  HIGH = 'high',
-  CRITICAL = 'critical',
-}
-
-// Security Event Interface
 export interface SecurityEvent {
-  id: string
-  type: SecurityEventType
-  severity: SecuritySeverity
-  timestamp: Date
-  source: string
-  ip: string
-  userAgent: string
-  userId?: string
-  email?: string
-  details: Record<string, any>
-  sessionId?: string
-  requestId?: string
-  resolved: boolean
-  falsePositive: boolean
-  notes?: string
+  eventType: string;
+  eventDetails?: any;
+  severity: 'info' | 'warning' | 'error';
+  userId?: string;
+  ipAddress?: string;
+  userAgent?: string;
 }
 
-// Security Alert Interface
-export interface SecurityAlert {
-  id: string
-  eventIds: string[]
-  type: string
-  severity: SecuritySeverity
-  timestamp: Date
-  description: string
-  recommendations: string[]
-  status: 'open' | 'investigating' | 'resolved' | 'false_positive'
-  assignedTo?: string
-  priority: 'low' | 'medium' | 'high' | 'urgent'
-  notes?: string
-}
-
-// Security Monitoring Configuration
-const SECURITY_CONFIG = {
-  ALERT_THRESHOLDS: {
-    LOGIN_FAILURES: 5,
-    RATE_LIMIT_VIOLATIONS: 10,
-    SUSPICIOUS_ACTIVITIES: 3,
-    ADMIN_ACCESS_ATTEMPTS: 2,
-    FILE_UPLOAD_ATTEMPTS: 5,
-  },
-  ALERT_WINDOW_MS: 15 * 60 * 1000, // 15 minutes
-  RETENTION_DAYS: 90,
-  AUTO_RESOLVE_HOURS: 24,
-  NOTIFICATION_EMAILS: [
-    'security@glgcapitalgroupllc.com',
-    'admin@glgcapitalgroupllc.com',
-    'push@glgcapitalgroupllc.com'
-  ],
-}
-
-// In-memory storage (in production, use database)
-const securityEvents: SecurityEvent[] = []
-const securityAlerts: SecurityAlert[] = []
-const eventCounters = new Map<string, { count: number; firstSeen: Date }>()
-
-// Security Monitoring Service
-export class SecurityMonitor {
-  static async logEvent(
-    type: SecurityEventType,
-    severity: SecuritySeverity,
-    request: NextRequest,
-    details: Record<string, any> = {},
-    userId?: string,
-    email?: string
-  ): Promise<void> {
-    const event: SecurityEvent = {
-      id: crypto.randomUUID(),
-      type,
-      severity,
-      timestamp: new Date(),
-      source: request.nextUrl.pathname,
-      ip: request.ip || request.headers.get('x-forwarded-for') || 'unknown',
-      userAgent: request.headers.get('user-agent') || 'unknown',
-      userId,
-      email,
-      details,
-      sessionId: request.headers.get('x-session-id') || undefined,
-      requestId: request.headers.get('x-request-id') || undefined,
-      resolved: false,
-      falsePositive: false,
+export async function logSecurityEvent(
+  eventType: string,
+  eventDetails?: any,
+  severity: 'info' | 'warning' | 'error' = 'info',
+  userId?: string,
+  ipAddress?: string,
+  userAgent?: string
+) {
+  try {
+    // Get current user if not provided
+    if (!userId) {
+      const { data: { user } } = await supabase.auth.getUser();
+      userId = user?.id;
     }
 
-    // Store event
-    securityEvents.push(event)
+    await supabase.from('audit_logs').insert({
+      table_name: 'security_events',
+      operation: eventType,
+      new_data: eventDetails,
+      user_id: userId,
+      timestamp: new Date().toISOString(),
+      ip_address: ipAddress,
+      user_agent: userAgent
+    });
 
-    // Update counters
-    const key = `${type}_${event.ip}`
-    const counter = eventCounters.get(key) || { count: 0, firstSeen: new Date() }
-    counter.count++
-    eventCounters.set(key, counter)
-
-    // Check for alerts
-    await this.checkForAlerts(event)
-
-    // Send immediate notification for critical events
-    if (severity === SecuritySeverity.CRITICAL) {
-      await this.sendImmediateAlert(event)
-    }
-
-    // Cleanup old events
-    this.cleanupOldEvents()
-
-    // Log to console in development
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[SECURITY] ${event.timestamp.toISOString()} - ${type} - ${severity} - ${event.ip}`)
-    }
-  }
-
-  static async checkForAlerts(event: SecurityEvent): Promise<void> {
-    const key = `${event.type}_${event.ip}`
-    const counter = eventCounters.get(key)
-    
-    if (!counter) return
-
-    const threshold = SECURITY_CONFIG.ALERT_THRESHOLDS[event.type as unknown as keyof typeof SECURITY_CONFIG.ALERT_THRESHOLDS] || 5
-    const timeWindow = Date.now() - SECURITY_CONFIG.ALERT_WINDOW_MS
-
-    // Check if we should create an alert
-    if (counter.count >= threshold && counter.firstSeen.getTime() > timeWindow) {
-      const existingAlert = securityAlerts.find(alert => 
-        alert.type === `${event.type}_threshold_exceeded` && 
-        alert.status === 'open'
-      )
-
-      if (!existingAlert) {
-        const alert: SecurityAlert = {
-          id: crypto.randomUUID(),
-          eventIds: [event.id],
-          type: `${event.type}_threshold_exceeded`,
-          severity: this.calculateAlertSeverity(event.type, counter.count),
-          timestamp: new Date(),
-          description: `${event.type} threshold exceeded (${counter.count}/${threshold}) from IP ${event.ip}`,
-          recommendations: this.generateRecommendations(event.type),
-          status: 'open',
-          priority: this.calculatePriority(event.type, counter.count),
-          notes: undefined,
-        }
-
-        securityAlerts.push(alert)
-        await this.sendAlertNotification(alert)
-      } else {
-        // Update existing alert
-        existingAlert.eventIds.push(event.id)
-        existingAlert.description = `${event.type} threshold exceeded (${counter.count}/${threshold}) from IP ${event.ip}`
-        existingAlert.priority = this.calculatePriority(event.type, counter.count)
-      }
-    }
-  }
-
-  static calculateAlertSeverity(eventType: SecurityEventType, count: number): SecuritySeverity {
-    switch (eventType) {
-      case SecurityEventType.LOGIN_FAILURE:
-      case SecurityEventType.BRUTE_FORCE_ATTEMPT:
-        return count > 20 ? SecuritySeverity.CRITICAL : SecuritySeverity.HIGH
-      case SecurityEventType.ADMIN_ACCESS:
-      case SecurityEventType.PRIVILEGE_ESCALATION:
-        return SecuritySeverity.CRITICAL
-      case SecurityEventType.SQL_INJECTION_ATTEMPT:
-      case SecurityEventType.XSS_ATTEMPT:
-        return SecuritySeverity.HIGH
-      case SecurityEventType.RATE_LIMIT_EXCEEDED:
-        return count > 50 ? SecuritySeverity.HIGH : SecuritySeverity.MEDIUM
-      default:
-        return SecuritySeverity.MEDIUM
-    }
-  }
-
-  static calculatePriority(eventType: SecurityEventType, count: number): 'low' | 'medium' | 'high' | 'urgent' {
-    switch (eventType) {
-      case SecurityEventType.LOGIN_FAILURE:
-      case SecurityEventType.BRUTE_FORCE_ATTEMPT:
-        return count > 20 ? 'urgent' : 'high'
-      case SecurityEventType.ADMIN_ACCESS:
-      case SecurityEventType.PRIVILEGE_ESCALATION:
-        return 'urgent'
-      case SecurityEventType.SQL_INJECTION_ATTEMPT:
-      case SecurityEventType.XSS_ATTEMPT:
-        return 'high'
-      case SecurityEventType.RATE_LIMIT_EXCEEDED:
-        return count > 50 ? 'high' : 'medium'
-      default:
-        return 'medium'
-    }
-  }
-
-  static generateRecommendations(eventType: SecurityEventType): string[] {
-    switch (eventType) {
-      case SecurityEventType.LOGIN_FAILURE:
-      case SecurityEventType.BRUTE_FORCE_ATTEMPT:
-        return [
-          'Block IP address temporarily',
-          'Enable two-factor authentication',
-          'Review account security settings',
-          'Monitor for additional attempts'
-        ]
-      case SecurityEventType.ADMIN_ACCESS:
-        return [
-          'Verify admin credentials',
-          'Review access logs',
-          'Enable additional authentication',
-          'Monitor admin activities'
-        ]
-      case SecurityEventType.SQL_INJECTION_ATTEMPT:
-      case SecurityEventType.XSS_ATTEMPT:
-        return [
-          'Block IP address',
-          'Review application logs',
-          'Update security rules',
-          'Scan for vulnerabilities'
-        ]
-      case SecurityEventType.RATE_LIMIT_EXCEEDED:
-        return [
-          'Implement stricter rate limiting',
-          'Review API usage patterns',
-          'Consider IP whitelisting',
-          'Monitor for DDoS attacks'
-        ]
-      default:
-        return [
-          'Investigate the incident',
-          'Review security logs',
-          'Update security policies if needed'
-        ]
-    }
-  }
-
-  static async sendImmediateAlert(event: SecurityEvent): Promise<void> {
-    const subject = `🚨 CRITICAL SECURITY ALERT: ${event.type}`
-    const body = `
-      Critical security event detected:
-      
-      Type: ${event.type}
-      Severity: ${event.severity}
-      Timestamp: ${event.timestamp.toISOString()}
-      IP: ${event.ip}
-      Source: ${event.source}
-      User Agent: ${event.userAgent}
-      Details: ${JSON.stringify(event.details, null, 2)}
-      
-      Immediate action required!
-    `
-
-    // Email notification disabled - service not available
-    console.log('Security alert would be sent:', subject)
-  }
-
-  static async sendAlertNotification(alert: SecurityAlert): Promise<void> {
-    const subject = `⚠️ Security Alert: ${alert.type}`
-    const body = `
-      Security alert triggered:
-      
-      Type: ${alert.type}
-      Severity: ${alert.severity}
-      Priority: ${alert.priority}
-      Timestamp: ${alert.timestamp.toISOString()}
-      Description: ${alert.description}
-      
-      Recommendations:
-      ${alert.recommendations.map(rec => `- ${rec}`).join('\n')}
-      
-      Please investigate and take appropriate action.
-    `
-
-    // Email notification disabled - service not available
-    console.log('Security alert would be sent:', subject)
-  }
-
-  static cleanupOldEvents(): void {
-    const cutoffDate = new Date(Date.now() - (SECURITY_CONFIG.RETENTION_DAYS * 24 * 60 * 60 * 1000))
-    
-    // Remove old events
-    const oldEventCount = securityEvents.length
-    const filteredEvents = securityEvents.filter(event => event.timestamp > cutoffDate)
-    securityEvents.length = 0
-    securityEvents.push(...filteredEvents)
-
-    // Remove old alerts
-    const filteredAlerts = securityAlerts.filter(alert => alert.timestamp > cutoffDate)
-    securityAlerts.length = 0
-    securityAlerts.push(...filteredAlerts)
-
-    // Clean up counters
-    for (const [key, counter] of eventCounters.entries()) {
-      if (counter.firstSeen < cutoffDate) {
-        eventCounters.delete(key)
-      }
-    }
-
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`[SECURITY] Cleaned up ${oldEventCount - securityEvents.length} old events`)
-    }
-  }
-
-  static getEvents(filters?: {
-    type?: SecurityEventType
-    severity?: SecuritySeverity
-    ip?: string
-    userId?: string
-    startDate?: Date
-    endDate?: Date
-  }): SecurityEvent[] {
-    return securityEvents.filter(event => {
-      if (filters?.type && event.type !== filters.type) return false
-      if (filters?.severity && event.severity !== filters.severity) return false
-      if (filters?.ip && event.ip !== filters.ip) return false
-      if (filters?.userId && event.userId !== filters.userId) return false
-      if (filters?.startDate && event.timestamp < filters.startDate) return false
-      if (filters?.endDate && event.timestamp > filters.endDate) return false
-      return true
-    }).sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-  }
-
-  static getAlerts(filters?: {
-    status?: 'open' | 'investigating' | 'resolved' | 'false_positive'
-    severity?: SecuritySeverity
-    priority?: 'low' | 'medium' | 'high' | 'urgent'
-  }): SecurityAlert[] {
-    return securityAlerts.filter(alert => {
-      if (filters?.status && alert.status !== filters.status) return false
-      if (filters?.severity && alert.severity !== filters.severity) return false
-      if (filters?.priority && alert.priority !== filters.priority) return false
-      return true
-    }).sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-  }
-
-  static getSecurityStats(): {
-    totalEvents: number
-    totalAlerts: number
-    openAlerts: number
-    criticalEvents: number
-    eventsByType: Record<string, number>
-    eventsBySeverity: Record<string, number>
-  } {
-    const eventsByType: Record<string, number> = {}
-    const eventsBySeverity: Record<string, number> = {}
-    let criticalEvents = 0
-
-    securityEvents.forEach(event => {
-      eventsByType[event.type] = (eventsByType[event.type] || 0) + 1
-      eventsBySeverity[event.severity] = (eventsBySeverity[event.severity] || 0) + 1
-      if (event.severity === SecuritySeverity.CRITICAL) criticalEvents++
-    })
-
-    return {
-      totalEvents: securityEvents.length,
-      totalAlerts: securityAlerts.length,
-      openAlerts: securityAlerts.filter(alert => alert.status === 'open').length,
-      criticalEvents,
-      eventsByType,
-      eventsBySeverity,
-    }
-  }
-
-  static async resolveAlert(alertId: string, notes?: string): Promise<void> {
-    const alert = securityAlerts.find(a => a.id === alertId)
-    if (alert) {
-      alert.status = 'resolved'
-      alert.notes = notes
-      
-      // Mark related events as resolved
-      alert.eventIds.forEach(eventId => {
-        const event = securityEvents.find(e => e.id === eventId)
-        if (event) event.resolved = true
-      })
-    }
-  }
-
-  static async markAlertAsFalsePositive(alertId: string, notes?: string): Promise<void> {
-    const alert = securityAlerts.find(a => a.id === alertId)
-    if (alert) {
-      alert.status = 'false_positive'
-      alert.notes = notes
-      
-      // Mark related events as false positive
-      alert.eventIds.forEach(eventId => {
-        const event = securityEvents.find(e => e.id === eventId)
-        if (event) event.falsePositive = true
-      })
-    }
+    console.log(`[SECURITY] ${severity.toUpperCase()}: ${eventType}`, eventDetails);
+  } catch (error) {
+    console.error('Failed to log security event:', error);
   }
 }
 
-// Security Event Helpers
+// Predefined security event types
 export const SecurityEvents = {
-  loginAttempt: (request: NextRequest, success: boolean, userId?: string, email?: string) =>
-    SecurityMonitor.logEvent(
-      success ? SecurityEventType.LOGIN_SUCCESS : SecurityEventType.LOGIN_FAILURE,
-      success ? SecuritySeverity.LOW : SecuritySeverity.MEDIUM,
-      request,
-      { success },
+  // Authentication events
+  LOGIN_ATTEMPT: 'login_attempt',
+  LOGIN_SUCCESS: 'login_success',
+  LOGIN_FAILED: 'login_failed',
+  LOGOUT: 'logout',
+  PASSWORD_CHANGE: 'password_change',
+  PASSWORD_RESET: 'password_reset',
+  
+  // Registration events
+  REGISTRATION_ATTEMPT: 'registration_attempt',
+  REGISTRATION_SUCCESS: 'registration_success',
+  REGISTRATION_FAILED: 'registration_failed',
+  
+  // MFA events
+  MFA_SETUP: 'mfa_setup',
+  MFA_VERIFICATION: 'mfa_verification',
+  MFA_FAILED: 'mfa_failed',
+  
+  // Profile events
+  PROFILE_UPDATE: 'profile_update',
+  PROFILE_VIEW: 'profile_view',
+  
+  // Admin events
+  ADMIN_ACTION: 'admin_action',
+  USER_MANAGEMENT: 'user_management',
+  
+  // Suspicious activity
+  SUSPICIOUS_ACTIVITY: 'suspicious_activity',
+  RATE_LIMIT_EXCEEDED: 'rate_limit_exceeded',
+  INVALID_TOKEN: 'invalid_token',
+  CSRF_VIOLATION: 'csrf_violation',
+  
+  // Data access events
+  DATA_ACCESS: 'data_access',
+  DATA_MODIFICATION: 'data_modification',
+  DATA_EXPORT: 'data_export',
+  
+  // System events
+  SYSTEM_ERROR: 'system_error',
+  CONFIGURATION_CHANGE: 'configuration_change'
+} as const;
+
+// Helper functions for common security events
+export const SecurityMonitor = {
+  // Authentication monitoring
+  async logLoginAttempt(email: string, success: boolean, ipAddress?: string, userAgent?: string) {
+    await logSecurityEvent(
+      success ? SecurityEvents.LOGIN_SUCCESS : SecurityEvents.LOGIN_FAILED,
+      { email, success, timestamp: new Date().toISOString() },
+      success ? 'info' : 'warning',
+      undefined,
+      ipAddress,
+      userAgent
+    );
+  },
+
+  async logPasswordChange(userId: string, ipAddress?: string, userAgent?: string) {
+    await logSecurityEvent(
+      SecurityEvents.PASSWORD_CHANGE,
+      { userId, timestamp: new Date().toISOString() },
+      'warning',
       userId,
-      email
-    ),
+      ipAddress,
+      userAgent
+    );
+  },
 
-  suspiciousActivity: (request: NextRequest, details: Record<string, any>, userId?: string) =>
-    SecurityMonitor.logEvent(
-      SecurityEventType.SUSPICIOUS_ACTIVITY,
-      SecuritySeverity.HIGH,
-      request,
-      details,
-      userId
-    ),
+  async logRegistrationAttempt(email: string, success: boolean, ipAddress?: string, userAgent?: string) {
+    await logSecurityEvent(
+      success ? SecurityEvents.REGISTRATION_SUCCESS : SecurityEvents.REGISTRATION_FAILED,
+      { email, success, timestamp: new Date().toISOString() },
+      success ? 'info' : 'warning',
+      undefined,
+      ipAddress,
+      userAgent
+    );
+  },
 
-  adminAccess: (request: NextRequest, userId: string, email: string) =>
-    SecurityMonitor.logEvent(
-      SecurityEventType.ADMIN_ACCESS,
-      SecuritySeverity.HIGH,
-      request,
-      { adminAccess: true },
+  // MFA monitoring
+  async logMFASetup(userId: string, method: string, ipAddress?: string, userAgent?: string) {
+    await logSecurityEvent(
+      SecurityEvents.MFA_SETUP,
+      { userId, method, timestamp: new Date().toISOString() },
+      'info',
       userId,
-      email
-    ),
+      ipAddress,
+      userAgent
+    );
+  },
 
-  rateLimitExceeded: (request: NextRequest, limit: number, current: number) =>
-    SecurityMonitor.logEvent(
-      SecurityEventType.RATE_LIMIT_EXCEEDED,
-      SecuritySeverity.MEDIUM,
-      request,
-      { limit, current }
-    ),
+  async logMFAVerification(userId: string, success: boolean, method: string, ipAddress?: string, userAgent?: string) {
+    await logSecurityEvent(
+      success ? SecurityEvents.MFA_VERIFICATION : SecurityEvents.MFA_FAILED,
+      { userId, method, success, timestamp: new Date().toISOString() },
+      success ? 'info' : 'warning',
+      userId,
+      ipAddress,
+      userAgent
+    );
+  },
 
-  csrfViolation: (request: NextRequest) =>
-    SecurityMonitor.logEvent(
-      SecurityEventType.CSRF_VIOLATION,
-      SecuritySeverity.HIGH,
-      request,
-      { csrfViolation: true }
-    ),
+  // Suspicious activity monitoring
+  async logSuspiciousActivity(
+    eventType: string,
+    details: any,
+    userId?: string,
+    ipAddress?: string,
+    userAgent?: string
+  ) {
+    await logSecurityEvent(
+      SecurityEvents.SUSPICIOUS_ACTIVITY,
+      { eventType, details, timestamp: new Date().toISOString() },
+      'error',
+      userId,
+      ipAddress,
+      userAgent
+    );
+  },
+
+  async logCSRFViolation(ipAddress?: string, userAgent?: string) {
+    await logSecurityEvent(
+      SecurityEvents.CSRF_VIOLATION,
+      { timestamp: new Date().toISOString() },
+      'error',
+      undefined,
+      ipAddress,
+      userAgent
+    );
+  },
+
+  async logRateLimitExceeded(endpoint: string, ipAddress?: string, userAgent?: string) {
+    await logSecurityEvent(
+      SecurityEvents.RATE_LIMIT_EXCEEDED,
+      { endpoint, timestamp: new Date().toISOString() },
+      'warning',
+      undefined,
+      ipAddress,
+      userAgent
+    );
+  },
+
+  // Admin action monitoring
+  async logAdminAction(
+    action: string,
+    details: any,
+    adminUserId: string,
+    ipAddress?: string,
+    userAgent?: string
+  ) {
+    await logSecurityEvent(
+      SecurityEvents.ADMIN_ACTION,
+      { action, details, timestamp: new Date().toISOString() },
+      'info',
+      adminUserId,
+      ipAddress,
+      userAgent
+    );
+  },
+
+  // Data access monitoring
+  async logDataAccess(
+    resource: string,
+    action: 'read' | 'write' | 'delete',
+    userId: string,
+    ipAddress?: string,
+    userAgent?: string
+  ) {
+    await logSecurityEvent(
+      SecurityEvents.DATA_ACCESS,
+      { resource, action, timestamp: new Date().toISOString() },
+      'info',
+      userId,
+      ipAddress,
+      userAgent
+    );
+  },
+
+  // System monitoring
+  async logSystemError(error: Error, context?: any) {
+    await logSecurityEvent(
+      SecurityEvents.SYSTEM_ERROR,
+      { 
+        error: error.message, 
+        stack: error.stack, 
+        context,
+        timestamp: new Date().toISOString() 
+      },
+      'error'
+    );
+  }
+};
+
+// Rate limiting utility
+export class RateLimiter {
+  private attempts: Map<string, { count: number; resetTime: number }> = new Map();
+  private windowMs: number;
+  private maxAttempts: number;
+
+  constructor(windowMs: number = 60000, maxAttempts: number = 5) {
+    this.windowMs = windowMs;
+    this.maxAttempts = maxAttempts;
+  }
+
+  isRateLimited(key: string): boolean {
+    const now = Date.now();
+    const attempt = this.attempts.get(key);
+
+    if (!attempt || now > attempt.resetTime) {
+      // Reset or create new attempt
+      this.attempts.set(key, { count: 1, resetTime: now + this.windowMs });
+      return false;
+    }
+
+    if (attempt.count >= this.maxAttempts) {
+      return true;
+    }
+
+    attempt.count++;
+    return false;
+  }
+
+  getRemainingAttempts(key: string): number {
+    const attempt = this.attempts.get(key);
+    if (!attempt) return this.maxAttempts;
+    return Math.max(0, this.maxAttempts - attempt.count);
+  }
+
+  reset(key: string): void {
+    this.attempts.delete(key);
+  }
 }
 
-// Export default security monitor
-export default SecurityMonitor 
+// Export rate limiter instances for different use cases
+export const loginRateLimiter = new RateLimiter(300000, 5); // 5 attempts per 5 minutes
+export const registrationRateLimiter = new RateLimiter(600000, 3); // 3 attempts per 10 minutes
+export const apiRateLimiter = new RateLimiter(60000, 100); // 100 requests per minute
+
+// Utility to get client IP and user agent
+export function getClientInfo(request: Request): { ipAddress?: string; userAgent?: string } {
+  const userAgent = request.headers.get('user-agent') || undefined;
+  
+  // Try to get IP from various headers
+  const ipAddress = 
+    request.headers.get('x-forwarded-for')?.split(',')[0] ||
+    request.headers.get('x-real-ip') ||
+    request.headers.get('cf-connecting-ip') ||
+    undefined;
+
+  return { ipAddress, userAgent };
+} 
