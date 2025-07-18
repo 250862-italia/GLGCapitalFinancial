@@ -151,7 +151,7 @@ export default function DashboardSidebar({ isOpen, onToggle }: DashboardSidebarP
           background: 'rgba(255,255,255,0.05)'
         }}>
           <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>
-            {user.name || user.first_name || user.email}
+            {user.name || user.profile?.first_name || user.email}
           </div>
           <div style={{ fontSize: '0.875rem', opacity: 0.8 }}>
             {isSuperAdmin ? 'Super Administrator' : 'Client'}
