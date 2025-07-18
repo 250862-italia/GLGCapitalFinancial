@@ -93,10 +93,10 @@ export async function POST(request: NextRequest) {
 
       console.log('✅ Utente auth creato:', authData.user.id);
 
-      // Crea profilo utente
+      // Crea profilo utente con struttura corretta
       const profileData = {
         id: authData.user.id,
-        name,
+        name: `${firstName} ${lastName}`,
         email,
         role: 'user',
         first_name: firstName,
