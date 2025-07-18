@@ -76,6 +76,11 @@ export function validateCSRFToken(request: NextRequest): { valid: boolean; token
   
   if (!token) {
     console.log('[CSRF] No token provided');
+    // In development, allow some flexibility for missing tokens (but not invalid ones)
+    if (isDevelopment) {
+      console.log('[CSRF] Development mode: allowing request despite missing token');
+      return { valid: true, token: null };
+    }
     return { valid: false, token: null, error: 'No CSRF token provided' };
   }
   
@@ -84,11 +89,7 @@ export function validateCSRFToken(request: NextRequest): { valid: boolean; token
     console.log('[CSRF] Token not found in storage:', token.substring(0, 10) + '...');
     console.log('[CSRF] Available tokens:', Array.from(csrfTokens.keys()).map(t => t.substring(0, 10) + '...'));
     
-    // In development, allow some flexibility for testing
-    if (isDevelopment) {
-      console.log('[CSRF] Development mode: allowing request despite missing token');
-      return { valid: true, token };
-    }
+    // Always reject invalid tokens, even in development
     return { valid: false, token, error: 'Invalid CSRF token' };
   }
   
@@ -125,6 +126,11 @@ export function validateCSRFToken(request: NextRequest): { valid: boolean; token
 export function validateCSRFTokenString(token: string): boolean {
   if (!token) {
     console.log('[CSRF] No token provided');
+    // In development, allow some flexibility for missing tokens (but not invalid ones)
+    if (isDevelopment) {
+      console.log('[CSRF] Development mode: allowing request despite missing token');
+      return true;
+    }
     return false;
   }
   
@@ -132,11 +138,7 @@ export function validateCSRFTokenString(token: string): boolean {
   if (!tokenData) {
     console.log('[CSRF] Token not found in storage:', token.substring(0, 10) + '...');
     
-    // In development, allow some flexibility for testing
-    if (isDevelopment) {
-      console.log('[CSRF] Development mode: allowing request despite missing token');
-      return true;
-    }
+    // Always reject invalid tokens, even in development
     return false;
   }
   
