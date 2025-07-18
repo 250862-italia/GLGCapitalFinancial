@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { fetchJSONWithCSRF } from '@/lib/csrf-client';
 import { useRealtime } from '@/hooks/use-realtime';
 import RealtimeEvents from '@/components/ui/RealtimeEvents';
+import ConnectionStatus from '@/components/ui/ConnectionStatus';
 import ProtectedRoute from '../../components/auth/ProtectedRoute';
 import { 
   TrendingUp, 

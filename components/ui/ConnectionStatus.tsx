@@ -1,87 +1,125 @@
-'use client';
+"use client";
 
 import { useState, useEffect } from 'react';
+import { useRealtime } from '@/hooks/use-realtime';
+import { Wifi, WifiOff, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
 
 interface ConnectionStatusProps {
-  isConnected: boolean;
-  message?: string;
+  userId?: string;
+  userRole?: 'user' | 'admin' | 'superadmin';
+  showDetails?: boolean;
 }
 
-export default function ConnectionStatus({ isConnected, message }: ConnectionStatusProps) {
-  const [isVisible, setIsVisible] = useState(false);
+export default function ConnectionStatus({ 
+  userId, 
+  userRole = 'user',
+  showDetails = false 
+}: ConnectionStatusProps) {
+  const [isOnline, setIsOnline] = useState(true);
+  const [retryCount, setRetryCount] = useState(0);
+  
+  const { 
+    isConnected: realtimeConnected, 
+    connectionStatus,
+    requestNotificationPermission 
+  } = useRealtime({
+    userId,
+    userRole,
+    enableNotifications: true,
+    enableInvestments: true
+  });
 
+  // Monitor browser online/offline status
   useEffect(() => {
-    if (!isConnected) {
-      setIsVisible(true);
-      const timer = setTimeout(() => setIsVisible(false), 10000); // Hide after 10 seconds
-      return () => clearTimeout(timer);
-    }
-  }, [isConnected]);
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
 
-  if (!isVisible || isConnected) return null;
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // Auto-retry connection
+  const handleRetry = () => {
+    setRetryCount(prev => prev + 1);
+    window.location.reload();
+  };
+
+  const getStatusColor = () => {
+    if (!isOnline) return '#dc2626'; // Red
+    if (!realtimeConnected) return '#ea580c'; // Orange
+    return '#16a34a'; // Green
+  };
+
+  const getStatusText = () => {
+    if (!isOnline) return 'Offline';
+    if (!realtimeConnected) return 'Connecting...';
+    return 'Connected';
+  };
+
+  const getStatusIcon = () => {
+    if (!isOnline) return <WifiOff size={16} />;
+    if (!realtimeConnected) return <RefreshCw size={16} className="animate-spin" />;
+    return <Wifi size={16} />;
+  };
 
   return (
     <div style={{
-      position: 'fixed',
-      top: '20px',
-      right: '20px',
-      backgroundColor: '#fef3c7',
-      border: '1px solid #f59e0b',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px',
+      padding: '8px 12px',
       borderRadius: '8px',
-      padding: '12px 16px',
-      zIndex: 1000,
-      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-      maxWidth: '300px'
+      background: isOnline && realtimeConnected ? '#f0fdf4' : '#fef3c7',
+      border: `1px solid ${getStatusColor()}`,
+      fontSize: '14px',
+      color: getStatusColor()
     }}>
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px'
-      }}>
-        <div style={{
-          width: '8px',
-          height: '8px',
-          backgroundColor: '#f59e0b',
-          borderRadius: '50%',
-          animation: 'pulse 2s infinite'
-        }} />
-        <div>
-          <div style={{
-            fontWeight: '600',
-            color: '#92400e',
-            fontSize: '14px'
-          }}>
-            Database Connection Issue
-          </div>
-          <div style={{
-            color: '#92400e',
-            fontSize: '12px',
-            marginTop: '2px'
-          }}>
-            {message || 'Using demo data. Some features may be limited.'}
-          </div>
+      {getStatusIcon()}
+      <span style={{ fontWeight: '500' }}>
+        {getStatusText()}
+      </span>
+      
+      {showDetails && (
+        <div style={{ marginLeft: '8px', fontSize: '12px', opacity: 0.8 }}>
+          • {connectionStatus.subscriptions} subs
+          • {connectionStatus.events} events
         </div>
+      )}
+      
+      {(!isOnline || !realtimeConnected) && (
         <button
-          onClick={() => setIsVisible(false)}
+          onClick={handleRetry}
           style={{
-            background: 'none',
+            marginLeft: '8px',
+            padding: '4px 8px',
+            borderRadius: '4px',
             border: 'none',
-            color: '#92400e',
+            background: getStatusColor(),
+            color: 'white',
+            fontSize: '12px',
             cursor: 'pointer',
-            fontSize: '16px',
-            padding: '0',
-            marginLeft: 'auto'
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px'
           }}
         >
-          ×
+          <RefreshCw size={12} />
+          Retry
         </button>
-      </div>
-      <style jsx>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
-        }
-      `}</style>
+      )}
+      
+      {isOnline && realtimeConnected && (
+        <CheckCircle size={16} style={{ marginLeft: '4px' }} />
+      )}
+      
+      {(!isOnline || !realtimeConnected) && (
+        <AlertCircle size={16} style={{ marginLeft: '4px' }} />
+      )}
     </div>
   );
 } 
