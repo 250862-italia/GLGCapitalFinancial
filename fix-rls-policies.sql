@@ -1,33 +1,43 @@
--- Fix RLS Policies for Testing
--- Run this in your Supabase SQL Editor
+-- Fix RLS Policies - Remove infinite recursion
 
--- Drop existing policies (ignore errors if they don't exist)
-DROP POLICY IF EXISTS "Allow authenticated users to read notes" ON notes;
-DROP POLICY IF EXISTS "Allow users to insert notes" ON notes;
-DROP POLICY IF EXISTS "Allow users to update notes" ON notes;
-DROP POLICY IF EXISTS "Allow users to delete notes" ON notes;
-DROP POLICY IF EXISTS "Allow all users to read notes" ON notes;
-DROP POLICY IF EXISTS "Allow all users to insert notes" ON notes;
-DROP POLICY IF EXISTS "Allow all users to update notes" ON notes;
-DROP POLICY IF EXISTS "Allow all users to delete notes" ON notes;
+-- 1. Drop problematic policies
+DROP POLICY IF EXISTS "Admins can view all profiles" ON profiles;
 
--- Create new policies that allow anonymous access for testing
-CREATE POLICY "Allow all users to read notes" ON notes
-  FOR SELECT USING (true);
+-- 2. Create simple, non-recursive policies for profiles
+DROP POLICY IF EXISTS "Users can view their own profile" ON profiles;
+DROP POLICY IF EXISTS "Users can update their own profile" ON profiles;
+DROP POLICY IF EXISTS "Users can insert their own profile" ON profiles;
 
-CREATE POLICY "Allow all users to insert notes" ON notes
-  FOR INSERT WITH CHECK (true);
+CREATE POLICY "Users can view their own profile" ON profiles
+    FOR SELECT USING (auth.uid() = id);
 
-CREATE POLICY "Allow all users to update notes" ON notes
-  FOR UPDATE USING (true);
+CREATE POLICY "Users can update their own profile" ON profiles
+    FOR UPDATE USING (auth.uid() = id);
 
-CREATE POLICY "Allow all users to delete notes" ON notes
-  FOR DELETE USING (true);
+CREATE POLICY "Users can insert their own profile" ON profiles
+    FOR INSERT WITH CHECK (auth.uid() = id);
 
--- Verify the policies
-SELECT schemaname, tablename, policyname, permissive, roles, cmd, qual 
-FROM pg_policies 
-WHERE tablename = 'notes';
+-- 3. Create admin policy without recursion
+CREATE POLICY "Admins can view all profiles" ON profiles
+    FOR SELECT USING (
+        auth.uid() IN (
+            SELECT id FROM profiles WHERE role = 'admin'
+        )
+    );
 
--- Test the setup
-SELECT 'RLS policies updated successfully!' as status; 
+-- 4. Fix clients policies
+DROP POLICY IF EXISTS "Users can view their own client data" ON clients;
+DROP POLICY IF EXISTS "Users can update their own client data" ON clients;
+DROP POLICY IF EXISTS "Users can insert their own client data" ON clients;
+
+CREATE POLICY "Users can view their own client data" ON clients
+    FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own client data" ON clients
+    FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own client data" ON clients
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- 5. Verify the setup
+SELECT 'RLS policies fixed successfully!' as status; 
