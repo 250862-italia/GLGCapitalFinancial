@@ -9,6 +9,17 @@ import {
   generateCacheKey
 } from '@/lib/api-optimizer';
 
+// Interface per il profilo utente
+interface UserProfile {
+  id: string;
+  first_name: string;
+  last_name: string;
+  country: string;
+  kyc_status: string;
+  role: string;
+  name?: string;
+}
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -93,7 +104,7 @@ export async function POST(request: NextRequest) {
     console.log('✅ Utente autenticato:', authData.user.id);
 
     // Recupera profilo utente (TEMPORANEAMENTE DISABILITATO per risolvere ricorsione)
-    let profile = null;
+    let profile: UserProfile | null = null;
     console.log('⚠️ Recupero profilo temporaneamente disabilitato per risolvere ricorsione infinita');
     
     // TODO: Riabilitare il recupero del profilo una volta risolta la ricorsione
