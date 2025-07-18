@@ -107,6 +107,8 @@ export async function POST(request: NextRequest) {
         name,
         email,
         role: 'user',
+        first_name: firstName,
+        last_name: lastName,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       });
@@ -114,6 +116,31 @@ export async function POST(request: NextRequest) {
     if (profileError) {
       console.error('Profile creation error:', profileError);
       // Non fallire se il profilo non può essere creato, l'utente può aggiornarlo dopo
+      console.log('⚠️ Profilo non creato, ma utente registrato con successo');
+    } else {
+      console.log('✅ Profilo creato con successo');
+      
+      // Crea record cliente se il profilo è stato creato con successo
+      const clientCode = `CLI${Date.now()}${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
+      
+      const { error: clientError } = await supabase
+        .from('clients')
+        .insert({
+          user_id: data.user.id,
+          profile_id: data.user.id,
+          client_code: clientCode,
+          status: 'active',
+          risk_profile: 'moderate',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+
+      if (clientError) {
+        console.error('Client creation error:', clientError);
+        console.log('⚠️ Cliente non creato, ma utente e profilo registrati con successo');
+      } else {
+        console.log('✅ Cliente creato con successo, codice:', clientCode);
+      }
     }
 
     // Genera CSRF token per la sessione
@@ -129,7 +156,9 @@ export async function POST(request: NextRequest) {
         role: 'user'
       },
       csrfToken,
-      message: 'Registration successful'
+      message: 'Registration successful. You can now log in to your account.',
+      profileCreated: !profileError,
+      clientCreated: !profileError && !clientError
     });
 
     // Per ora non impostiamo cookie di sessione automaticamente
