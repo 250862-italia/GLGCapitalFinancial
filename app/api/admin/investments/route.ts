@@ -33,16 +33,16 @@ export async function GET(request: NextRequest) {
       
       // Combine offline data
       const investmentsWithDetails = investments.map(investment => {
-        const user = users.find(u => u.id === investment.client_id);
-        const client = clients.find(c => c.id === investment.client_id);
+        const user = users.find(u => u.id === investment.user_id);
+        const client = clients.find(c => c.user_id === investment.user_id);
         
         return {
           id: investment.id,
-          user_id: investment.client_id,
+          user_id: investment.user_id,
           amount: investment.amount,
           currency: investment.currency,
           status: investment.status,
-          investment_type: 'package',
+          investment_type: investment.investment_type || 'package',
           created_at: investment.created_at,
           updated_at: investment.updated_at,
           user: user || null,
@@ -71,16 +71,16 @@ export async function GET(request: NextRequest) {
       const clients = offlineDataManager.getClients();
       
       const investmentsWithDetails = offlineInvestments.map(investment => {
-        const user = users.find(u => u.id === investment.client_id);
-        const client = clients.find(c => c.id === investment.client_id);
+        const user = users.find(u => u.id === investment.user_id);
+        const client = clients.find(c => c.user_id === investment.user_id);
         
         return {
           id: investment.id,
-          user_id: investment.client_id,
+          user_id: investment.user_id,
           amount: investment.amount,
           currency: investment.currency,
           status: investment.status,
-          investment_type: 'package',
+          investment_type: investment.investment_type || 'package',
           created_at: investment.created_at,
           updated_at: investment.updated_at,
           user: user || null,
@@ -142,16 +142,16 @@ export async function GET(request: NextRequest) {
     const clients = offlineDataManager.getClients();
     
     const investmentsWithDetails = investments.map(investment => {
-      const user = users.find(u => u.id === investment.client_id);
-      const client = clients.find(c => c.id === investment.client_id);
+      const user = users.find(u => u.id === investment.user_id);
+      const client = clients.find(c => c.user_id === investment.user_id);
       
       return {
         id: investment.id,
-        user_id: investment.client_id,
+        user_id: investment.user_id,
         amount: investment.amount,
         currency: investment.currency,
         status: investment.status,
-        investment_type: 'package',
+        investment_type: investment.investment_type || 'package',
         created_at: investment.created_at,
         updated_at: investment.updated_at,
         user: user || null,
