@@ -40,6 +40,27 @@ class OfflineDataManager {
     return this.data.analytics || {};
   }
 
+  // Dashboard overview method
+  getDashboardOverview() {
+    const totalUsers = this.data.users?.length || 0;
+    const activeUsers = this.data.users?.filter(user => user.is_active).length || 0;
+    const totalInvestments = this.data.investments?.reduce((sum, inv) => sum + (inv.amount || 0), 0) || 0;
+    const totalRevenue = totalInvestments * 0.1; // 10% revenue assumption
+
+    return {
+      overview: {
+        totalUsers,
+        activeUsers,
+        totalInvestments,
+        totalRevenue,
+        userGrowth: 12.5,
+        revenueGrowth: 8.3
+      },
+      recentActivity: this.data.investments?.slice(-5) || [],
+      topClients: this.data.clients?.slice(-3) || []
+    };
+  }
+
   // Helper method to get data by key
   getData(key: keyof typeof fallbackData) {
     return this.data[key];
