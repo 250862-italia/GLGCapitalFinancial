@@ -201,12 +201,11 @@ export default function ProfilePage() {
     
     try {
       const response = await fetchJSONWithCSRF('/api/profile/update', {
-        method: 'PUT',
+        method: 'POST',
         body: JSON.stringify({
-          userId: user.id,
-          updates: editForm
-        
-      })
+          user_id: user.id,
+          ...editForm
+        })
       });
 
       if (!response.ok) {
