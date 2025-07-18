@@ -1,0 +1,91 @@
+#!/bin/bash
+
+echo "🚀 RENDIAMO L'ADMIN DASHBOARD OPERATIVA!"
+echo "=========================================="
+
+# Verifica che il server sia in esecuzione
+echo "📋 Verifica server in esecuzione..."
+if ! pgrep -f "next dev" > /dev/null; then
+    echo "⚠️  Server non in esecuzione, avvio..."
+    npm run dev &
+    sleep 5
+else
+    echo "✅ Server già in esecuzione"
+fi
+
+# Verifica connessione Supabase
+echo "📋 Verifica connessione Supabase..."
+node -e "
+const { createClient } = require('@supabase/supabase-js');
+const supabase = createClient(process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+supabase.from('profiles').select('count').limit(1).then(() => {
+    console.log('✅ Connessione Supabase OK');
+}).catch(err => {
+    console.log('❌ Errore connessione Supabase:', err.message);
+});
+"
+
+# Mostra istruzioni per lo script SQL
+echo ""
+echo "📋 PROSSIMI PASSI PER RENDERE OPERATIVA:"
+echo "=========================================="
+echo ""
+echo "1️⃣  ESEGUI SCRIPT SQL IN SUPABASE:"
+echo "   • Vai su https://supabase.com/dashboard"
+echo "   • Seleziona il tuo progetto GLG Capital"
+echo "   • Clicca su 'SQL Editor' nella sidebar"
+echo "   • Clicca su 'New query'"
+echo "   • Copia tutto il contenuto del file: create-missing-tables-pure-sql.sql"
+echo "   • Incolla nel SQL Editor"
+echo "   • Clicca 'Run' (pulsante blu)"
+echo "   • Aspetta che completi"
+echo ""
+echo "2️⃣  VERIFICA ESECUZIONE:"
+echo "   • Dovresti vedere messaggi di successo come:"
+echo "     ✅ Packages table created successfully"
+echo "     ✅ Investments table created successfully"
+echo "     ✅ Payments table created successfully"
+echo "     ✅ KYC requests table created successfully"
+echo "     ✅ Informational requests table created successfully"
+echo "     ✅ Clients table updated successfully"
+echo ""
+echo "3️⃣  TESTA ADMIN DASHBOARD:"
+echo "   • Vai su http://localhost:3000/admin/login"
+echo "   • Login con:"
+echo "     Email: admin@glgcapital.com"
+echo "     Password: GLGAdmin2024!"
+echo "   • Verifica accesso alla dashboard"
+echo ""
+echo "4️⃣  VERIFICA OPERAZIONI CRUD:"
+echo "   • Testa tutte le sezioni:"
+echo "     - Users Management (CREATE, READ, UPDATE, DELETE)"
+echo "     - Team Management (CREATE, READ, UPDATE, DELETE)"
+echo "     - Packages Management (CREATE, READ, UPDATE, DELETE)"
+echo "     - Partnerships (CREATE, READ, UPDATE, DELETE)"
+echo "     - Content Management (CREATE, READ, UPDATE, DELETE)"
+echo "     - Clients Management (READ, DELETE)"
+echo "     - Analytics (CREATE, READ, UPDATE, DELETE)"
+echo ""
+echo "5️⃣  VERIFICA FINALE:"
+echo "   • Esegui: node verify-admin-operational.js"
+echo "   • Tutti i test dovrebbero passare"
+echo ""
+echo "🎉 DOPO QUESTI PASSI L'ADMIN DASHBOARD SARÀ COMPLETAMENTE OPERATIVA!"
+echo ""
+echo "📄 File di riferimento:"
+echo "   • RENDI_ADMIN_OPERATIVA.md - Guida completa"
+echo "   • ADMIN_CRUD_STATUS.md - Status dettagliato"
+echo "   • create-missing-tables-pure-sql.sql - Script SQL"
+echo "   • verify-admin-operational.js - Script di verifica"
+echo ""
+echo "🌐 URLs disponibili:"
+echo "   • Frontend: http://localhost:3000"
+echo "   • Admin Login: http://localhost:3000/admin/login"
+echo "   • Admin Dashboard: http://localhost:3000/admin"
+echo ""
+echo "🔧 Credenziali Admin:"
+echo "   • Email: admin@glgcapital.com"
+echo "   • Password: GLGAdmin2024!"
+echo ""
+echo "=========================================="
+echo "🚀 PRONTO PER RENDERE OPERATIVA!" 
