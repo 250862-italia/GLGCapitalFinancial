@@ -8,7 +8,7 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 // Validate required environment variables
-if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceKey) {
+if (!supabaseUrl || !supabaseAnonKey) {
   console.error('❌ Missing required Supabase environment variables:');
   console.error('NEXT_PUBLIC_SUPABASE_URL:', !!supabaseUrl);
   console.error('NEXT_PUBLIC_SUPABASE_ANON_KEY:', !!supabaseAnonKey);
@@ -19,9 +19,25 @@ if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceKey) {
   }
 }
 
-// Create Supabase clients
+// Create Supabase client (available on both client and server)
 export const supabase = createClient(supabaseUrl!, supabaseAnonKey!);
-export const supabaseAdmin = createClient(supabaseUrl!, supabaseServiceKey!);
+
+// Create admin client only on server-side
+// @ts-ignore - supabaseAdmin is null on client-side, but this is intentional
+export const supabaseAdmin = typeof window === 'undefined' && supabaseServiceKey 
+  ? createClient(supabaseUrl!, supabaseServiceKey)
+  : null;
+
+// Type-safe wrapper for supabaseAdmin
+export function getSupabaseAdmin() {
+  if (typeof window !== 'undefined') {
+    throw new Error('Supabase admin client is only available on the server side');
+  }
+  if (!supabaseAdmin) {
+    throw new Error('Supabase admin client not available - missing service role key');
+  }
+  return supabaseAdmin;
+}
 
 // New checkpoint-based client
 export async function getSupabase() {

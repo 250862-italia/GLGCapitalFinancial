@@ -8,8 +8,24 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
+    // Check if supabaseAdmin is available
+    if (!supabaseAdmin) {
+      console.log('Supabase admin client not available, using offline data');
+      const clients = offlineDataManager.getClients();
+      const users = offlineDataManager.getUsers();
+      const userMap = new Map(users.map(u => [u.id, u]));
+      const data = clients.map(client => ({
+        ...client,
+        user: userMap.get(client.user_id)
+      }));
+      return NextResponse.json({
+        data,
+        warning: 'Database connection unavailable - using offline mode'
+      });
+    }
+
     // Test Supabase connection first
-    const connectionPromise = supabaseAdmin
+    const connectionPromise = supabaseAdmin!
       .from('clients')
       .select('count')
       .limit(1);
@@ -48,7 +64,7 @@ export async function GET() {
     }
 
     // First get all clients without join to avoid RLS recursion
-    const { data: clients, error: clientsError } = await supabaseAdmin
+    const { data: clients, error: clientsError } = await supabaseAdmin!
       .from('clients')
       .select('*')
       .order('created_at', { ascending: false });
@@ -73,7 +89,7 @@ export async function GET() {
     }
 
     // Then get users separately
-    const { data: users, error: usersError } = await supabaseAdmin
+    const { data: users, error: usersError } = await supabaseAdmin!
       .from('users')
       .select('id, email, first_name, last_name, role, is_active, last_login, created_at, updated_at')
       .in('id', clients?.map(c => c.user_id) || []);
@@ -165,7 +181,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Client ID is required' }, { status: 400 });
     }
 
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await supabaseAdmin!
       .from('clients')
       .update(updateData)
       .eq('id', id)
@@ -193,7 +209,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Client ID is required' }, { status: 400 });
     }
 
-    const { error } = await supabaseAdmin
+    const { error } = await supabaseAdmin!
       .from('clients')
       .delete()
       .eq('id', id);

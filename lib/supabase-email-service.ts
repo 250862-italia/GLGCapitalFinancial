@@ -22,6 +22,11 @@ class SupabaseEmailService {
 
   async sendEmail(emailData: SupabaseEmailData): Promise<EmailResult> {
     try {
+      // Check if supabaseAdmin is available (server-side only)
+      if (!supabaseAdmin) {
+        throw new Error('Supabase admin client not available - server-side only');
+      }
+
       console.log('📧 Sending email via Supabase Auth:', {
         to: emailData.to,
         subject: emailData.subject,
@@ -58,6 +63,10 @@ class SupabaseEmailService {
 
   private async sendConfirmationEmail(email: string, data?: Record<string, any>): Promise<EmailResult> {
     try {
+      if (!supabaseAdmin) {
+        throw new Error('Supabase admin client not available');
+      }
+
       // Per Supabase, dobbiamo prima creare l'utente e poi inviare l'email di conferma
       // Generiamo una password temporanea
       const tempPassword = this.generateTempPassword();
@@ -111,6 +120,10 @@ class SupabaseEmailService {
 
   private async sendMagicLink(email: string): Promise<EmailResult> {
     try {
+      if (!supabaseAdmin) {
+        throw new Error('Supabase admin client not available');
+      }
+
       const { data, error } = await supabaseAdmin.auth.admin.generateLink({
         type: 'magiclink',
         email: email,
@@ -137,6 +150,10 @@ class SupabaseEmailService {
 
   private async sendPasswordReset(email: string): Promise<EmailResult> {
     try {
+      if (!supabaseAdmin) {
+        throw new Error('Supabase admin client not available');
+      }
+
       const { data, error } = await supabaseAdmin.auth.admin.generateLink({
         type: 'recovery',
         email: email,
@@ -163,6 +180,10 @@ class SupabaseEmailService {
 
   private async sendCustomEmail(emailData: SupabaseEmailData): Promise<EmailResult> {
     try {
+      if (!supabaseAdmin) {
+        throw new Error('Supabase admin client not available');
+      }
+
       const { data, error } = await supabaseAdmin
         .from('email_queue')
         .insert({
@@ -199,6 +220,11 @@ class SupabaseEmailService {
 
   private async saveEmailToQueue(emailData: any): Promise<void> {
     try {
+      if (!supabaseAdmin) {
+        console.warn('⚠️ Supabase admin client not available, skipping email queue save');
+        return;
+      }
+
       await supabaseAdmin
         .from('email_queue')
         .insert(emailData);
@@ -276,6 +302,11 @@ GLG Capital Group Team
 
   async checkEmailStatus(emailId: string): Promise<{ status: string; delivered: boolean }> {
     try {
+      if (!supabaseAdmin) {
+        console.warn('⚠️ Supabase admin client not available, cannot check email status');
+        return { status: 'unknown', delivered: false };
+      }
+
       const { data, error } = await supabaseAdmin
         .from('email_queue')
         .select('status, sent_at')

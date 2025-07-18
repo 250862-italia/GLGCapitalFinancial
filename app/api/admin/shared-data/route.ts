@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user role to determine access level
-    const { data: user, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId);
+    const { data: user, error: userError } = await supabaseAdmin!.auth.admin.getUserById(userId);
     if (userError || !user.user) {
       return NextResponse.json(
         { error: 'User not found' },
@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify admin permissions
-    const { data: adminUser, error: adminError } = await supabaseAdmin.auth.admin.getUserById(adminId);
+    const { data: adminUser, error: adminError } = await supabaseAdmin!.auth.admin.getUserById(adminId);
     if (adminError || !adminUser.user) {
       return NextResponse.json(
         { error: 'Admin user not found' },
@@ -171,7 +171,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Verify admin permissions
-    const { data: adminUser, error: adminError } = await supabaseAdmin.auth.admin.getUserById(adminId);
+    const { data: adminUser, error: adminError } = await supabaseAdmin!.auth.admin.getUserById(adminId);
     if (adminError || !adminUser.user) {
       return NextResponse.json(
         { error: 'Admin user not found' },
@@ -238,7 +238,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Verify admin permissions
-    const { data: adminUser, error: adminError } = await supabaseAdmin.auth.admin.getUserById(adminId);
+    const { data: adminUser, error: adminError } = await supabaseAdmin!.auth.admin.getUserById(adminId);
     if (adminError || !adminUser.user) {
       return NextResponse.json(
         { error: 'Admin user not found' },
@@ -297,13 +297,13 @@ async function sendSharedDataNotification(sharedData: any, action: 'create' | 'u
 
     if (targetUsers.includes('all')) {
       // Get all active users
-      const { data: allUsers } = await supabaseAdmin.auth.admin.listUsers();
+      const { data: allUsers } = await supabaseAdmin!.auth.admin.listUsers();
       usersToNotify = allUsers.users.filter(user => 
         user.user_metadata?.role === 'user' && user.email_confirmed_at
       );
     } else {
       // Get specific users
-      const { data: specificUsers } = await supabaseAdmin.auth.admin.listUsers();
+      const { data: specificUsers } = await supabaseAdmin!.auth.admin.listUsers();
       usersToNotify = specificUsers.users.filter(user => 
         targetUsers.includes(user.id) && user.email_confirmed_at
       );

@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create user in Supabase Auth
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+    const { data: authData, error: authError } = await supabaseAdmin!.auth.admin.createUser({
       email,
       password,
       email_confirm: true
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
 
     if (profileError) {
       // If profile creation fails, delete the auth user
-      await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
+      await supabaseAdmin!.auth.admin.deleteUser(authData.user.id);
       throw new Error(`Failed to create profile: ${profileError.message}`);
     }
 

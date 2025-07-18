@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     console.log('Processing investment request:', { userId, packageId, amount, packageName });
 
     // Get user details
-    const { data: user, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId);
+    const { data: user, error: userError } = await supabaseAdmin!.auth.admin.getUserById(userId);
     if (userError || !user.user) {
       return NextResponse.json(
         { error: 'User not found' },

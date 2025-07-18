@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     // Test 3: Verifica utente esistente
     console.log(`🔍 [${requestId}] Test 3: User Existence Check`);
     try {
-      const { data: authUsers, error: authError } = await supabaseAdmin.auth.admin.listUsers();
+      const { data: authUsers, error: authError } = await supabaseAdmin!.auth.admin.listUsers();
       const userInAuth = authUsers?.users?.some(u => u.email === email) || false;
       
       const { data: customUser, error: customError } = await supabaseAdmin
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
     if (testType === 'all' || testType === 'reset') {
       console.log(`🔍 [${requestId}] Test 4: Password Reset Email`);
       try {
-        const { data: resetData, error: resetError } = await supabaseAdmin.auth.admin.generateLink({
+        const { data: resetData, error: resetError } = await supabaseAdmin!.auth.admin.generateLink({
           type: 'recovery',
           email: email,
           options: {

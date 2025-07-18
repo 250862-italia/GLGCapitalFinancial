@@ -44,8 +44,19 @@ interface AnalyticsData {
 
 export async function GET() {
   try {
+    // Check if supabaseAdmin is available
+    if (!supabaseAdmin) {
+      console.log('Supabase admin client not available, using offline data');
+      const dashboardData = offlineDataManager.getDashboardOverview();
+      return NextResponse.json({
+        overview: dashboardData.overview,
+        analytics: offlineDataManager.getAnalytics(),
+        warning: 'Database connection unavailable - using offline mode'
+      });
+    }
+
     // Test Supabase connection first
-    const connectionPromise = supabaseAdmin
+    const connectionPromise = supabaseAdmin!
       .from('users')
       .select('count')
       .limit(1);
@@ -77,7 +88,7 @@ export async function GET() {
     }
 
     // Fetch users data
-    const { data: users, error: usersError } = await supabaseAdmin
+    const { data: users, error: usersError } = await supabaseAdmin!
       .from('profiles')
       .select('*');
 
@@ -92,7 +103,7 @@ export async function GET() {
     }
 
     // Fetch investments data
-    const { data: investments, error: investmentsError } = await supabaseAdmin
+    const { data: investments, error: investmentsError } = await supabaseAdmin!
       .from('investments')
       .select('*');
 
@@ -107,7 +118,7 @@ export async function GET() {
     }
 
     // Fetch payments data
-    const { data: payments, error: paymentsError } = await supabaseAdmin
+    const { data: payments, error: paymentsError } = await supabaseAdmin!
       .from('payments')
       .select('*');
 

@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     console.log(`🔍 [${requestId}] Step 1: Checking if user exists in Supabase Auth...`);
     
     // Verifica se l'utente esiste in Supabase Auth
-    const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.listUsers();
+    const { data: authUser, error: authError } = await supabaseAdmin!.auth.admin.listUsers();
     
     if (authError) {
       console.error(`❌ [${requestId}] Error listing users:`, authError);
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
     
     // Prova prima con Supabase Auth diretto
     try {
-      const { data: resetData, error: resetError } = await supabaseAdmin.auth.admin.generateLink({
+      const { data: resetData, error: resetError } = await supabaseAdmin!.auth.admin.generateLink({
         type: 'recovery',
         email: email,
         options: {

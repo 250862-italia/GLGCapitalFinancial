@@ -4,7 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 export async function POST(request: NextRequest) {
   try {
     // Execute the reload_schema_cache function
-    const { data, error } = await supabaseAdmin.rpc('reload_schema_cache');
+    const { data, error } = await supabaseAdmin!.rpc('reload_schema_cache');
     
     if (error) {
       console.error('Schema cache reload error:', error);
