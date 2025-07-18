@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { getMockData } from '@/lib/fallback-data';
+import { offlineDataManager } from '@/lib/offline-data';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,6 +8,45 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
+    // Test Supabase connection first
+    const connectionPromise = supabaseAdmin
+      .from('clients')
+      .select('count')
+      .limit(1);
+    
+    const connectionTimeout = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Connection timeout')), 5000)
+    );
+    
+    let connectionTest, connectionError;
+    try {
+      const result = await Promise.race([connectionPromise, connectionTimeout]) as any;
+      connectionTest = result.data;
+      connectionError = result.error;
+    } catch (timeoutError) {
+      connectionError = timeoutError;
+    }
+
+    if (connectionError) {
+      console.log('Supabase connection failed, using offline data:', connectionError.message);
+      
+      // Use offline data
+      const clients = offlineDataManager.getClients();
+      const users = offlineDataManager.getUsers();
+      
+      // Combine offline data
+      const userMap = new Map(users.map(u => [u.id, u]));
+      const data = clients.map(client => ({
+        ...client,
+        user: userMap.get(client.user_id)
+      }));
+      
+      return NextResponse.json({
+        data,
+        warning: 'Database connection unavailable - using offline mode'
+      });
+    }
+
     // First get all clients without join to avoid RLS recursion
     const { data: clients, error: clientsError } = await supabaseAdmin
       .from('clients')
@@ -15,8 +54,22 @@ export async function GET() {
       .order('created_at', { ascending: false });
 
     if (clientsError) {
-      console.log('Supabase error, using fallback data:', clientsError.message);
-      return NextResponse.json(getMockData('clients'));
+      console.log('Supabase error, using offline data:', clientsError.message);
+      
+      // Fallback to offline data
+      const offlineClients = offlineDataManager.getClients();
+      const offlineUsers = offlineDataManager.getUsers();
+      
+      const userMap = new Map(offlineUsers.map(u => [u.id, u]));
+      const data = offlineClients.map(client => ({
+        ...client,
+        user: userMap.get(client.user_id)
+      }));
+      
+      return NextResponse.json({
+        data,
+        warning: 'Database error - using offline mode'
+      });
     }
 
     // Then get users separately
@@ -26,8 +79,22 @@ export async function GET() {
       .in('id', clients?.map(c => c.user_id) || []);
 
     if (usersError) {
-      console.log('Supabase error, using fallback data:', usersError.message);
-      return NextResponse.json(getMockData('clients'));
+      console.log('Supabase error, using offline data:', usersError.message);
+      
+      // Fallback to offline data
+      const offlineClients = offlineDataManager.getClients();
+      const offlineUsers = offlineDataManager.getUsers();
+      
+      const userMap = new Map(offlineUsers.map(u => [u.id, u]));
+      const data = offlineClients.map(client => ({
+        ...client,
+        user: userMap.get(client.user_id)
+      }));
+      
+      return NextResponse.json({
+        data,
+        warning: 'Database error - using offline mode'
+      });
     }
 
     // Combine the data
@@ -65,11 +132,27 @@ export async function GET() {
       user_updated_at: client.user?.updated_at
     })) || [];
 
-    return NextResponse.json(transformedData);
+    return NextResponse.json({
+      data: transformedData
+    });
   } catch (error) {
     console.error('Error in GET /api/admin/clients:', error);
-    console.log('Using fallback data due to exception');
-    return NextResponse.json(getMockData('clients'));
+    console.log('Using offline data due to exception');
+    
+    // Final fallback to offline data
+    const clients = offlineDataManager.getClients();
+    const users = offlineDataManager.getUsers();
+    
+    const userMap = new Map(users.map(u => [u.id, u]));
+    const data = clients.map(client => ({
+      ...client,
+      user: userMap.get(client.user_id)
+    }));
+    
+    return NextResponse.json({
+      data,
+      warning: 'System error - using offline mode'
+    });
   }
 }
 

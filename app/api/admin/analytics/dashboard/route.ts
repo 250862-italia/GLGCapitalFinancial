@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { getMockData } from '@/lib/fallback-data';
+import { offlineDataManager } from '@/lib/offline-data';
 
 interface AnalyticsData {
   overview: {
@@ -44,14 +44,51 @@ interface AnalyticsData {
 
 export async function GET() {
   try {
+    // Test Supabase connection first
+    const connectionPromise = supabaseAdmin
+      .from('users')
+      .select('count')
+      .limit(1);
+    
+    const connectionTimeout = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Connection timeout')), 5000)
+    );
+    
+    let connectionTest, connectionError;
+    try {
+      const result = await Promise.race([connectionPromise, connectionTimeout]) as any;
+      connectionTest = result.data;
+      connectionError = result.error;
+    } catch (timeoutError) {
+      connectionError = timeoutError;
+    }
+
+    if (connectionError) {
+      console.log('Supabase connection failed, using offline data:', connectionError.message);
+      
+      // Use offline data
+      const dashboardData = offlineDataManager.getDashboardOverview();
+      
+      return NextResponse.json({
+        overview: dashboardData.overview,
+        analytics: offlineDataManager.getAnalytics(),
+        warning: 'Database connection unavailable - using offline mode'
+      });
+    }
+
     // Fetch users data
     const { data: users, error: usersError } = await supabaseAdmin
       .from('profiles')
       .select('*');
 
     if (usersError) {
-      console.log('Supabase error, using fallback data:', usersError.message);
-      return NextResponse.json(getMockData('analytics'));
+      console.log('Supabase error, using offline data:', usersError.message);
+      const dashboardData = offlineDataManager.getDashboardOverview();
+      return NextResponse.json({
+        overview: dashboardData.overview,
+        analytics: offlineDataManager.getAnalytics(),
+        warning: 'Database error - using offline mode'
+      });
     }
 
     // Fetch investments data
@@ -60,8 +97,13 @@ export async function GET() {
       .select('*');
 
     if (investmentsError) {
-      console.log('Supabase error, using fallback data:', investmentsError.message);
-      return NextResponse.json(getMockData('analytics'));
+      console.log('Supabase error, using offline data:', investmentsError.message);
+      const dashboardData = offlineDataManager.getDashboardOverview();
+      return NextResponse.json({
+        overview: dashboardData.overview,
+        analytics: offlineDataManager.getAnalytics(),
+        warning: 'Database error - using offline mode'
+      });
     }
 
     // Fetch payments data
@@ -70,8 +112,13 @@ export async function GET() {
       .select('*');
 
     if (paymentsError) {
-      console.log('Supabase error, using fallback data:', paymentsError.message);
-      return NextResponse.json(getMockData('analytics'));
+      console.log('Supabase error, using offline data:', paymentsError.message);
+      const dashboardData = offlineDataManager.getDashboardOverview();
+      return NextResponse.json({
+        overview: dashboardData.overview,
+        analytics: offlineDataManager.getAnalytics(),
+        warning: 'Database error - using offline mode'
+      });
     }
 
     // Calculate metrics
@@ -174,7 +221,15 @@ export async function GET() {
     return NextResponse.json(analyticsData);
   } catch (error: any) {
     console.error('Error fetching analytics dashboard data:', error);
-    console.log('Using fallback data due to exception');
-    return NextResponse.json(getMockData('analytics'));
+    console.log('Using offline data due to exception');
+    
+    // Final fallback to offline data
+    const dashboardData = offlineDataManager.getDashboardOverview();
+    
+    return NextResponse.json({
+      overview: dashboardData.overview,
+      analytics: offlineDataManager.getAnalytics(),
+      warning: 'System error - using offline mode'
+    });
   }
 } 
