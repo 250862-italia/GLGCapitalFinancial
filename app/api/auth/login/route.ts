@@ -92,19 +92,32 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ Utente autenticato:', authData.user.id);
 
-    // Recupera profilo utente
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', authData.user.id)
-      .single();
+    // Recupera profilo utente (temporaneamente saltato se c'è ricorsione)
+    let profile = null;
+    let profileError = null;
+    
+    try {
+      const { data: profileData, error: profileErr } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authData.user.id)
+        .single();
 
-    if (profileError) {
-      console.error('❌ Errore recupero profilo:', profileError);
-      // Non fallire se il profilo non può essere recuperato
-      console.log('⚠️ Profilo non recuperato, ma utente autenticato');
-    } else {
-      console.log('✅ Profilo recuperato con successo');
+      if (profileErr) {
+        console.error('❌ Errore recupero profilo:', profileErr);
+        // Se c'è ricorsione infinita, saltiamo il profilo
+        if (profileErr.message.includes('infinite recursion')) {
+          console.log('⚠️ Ricorsione infinita rilevata, profilo saltato');
+        } else {
+          console.log('⚠️ Profilo non recuperato, ma utente autenticato');
+        }
+      } else {
+        console.log('✅ Profilo recuperato con successo');
+        profile = profileData;
+      }
+    } catch (error) {
+      console.error('❌ Errore generale recupero profilo:', error);
+      console.log('⚠️ Profilo saltato a causa di errore');
     }
 
     // Recupera dati cliente se disponibili
