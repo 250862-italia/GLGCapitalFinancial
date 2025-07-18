@@ -5,6 +5,7 @@ import { Plus, Edit, Trash2, Eye, User, Loader2, AlertCircle, CheckCircle } from
 import Modal from "@/components/ui/Modal";
 import { useRouter } from "next/navigation";
 import { InvestmentFormData } from "@/types/investment";
+import { fetchJSONWithCSRF } from "@/lib/csrf-client";
 
 // Tipo per investimenti con join
 interface InvestmentWithJoin extends InvestmentFormData {
@@ -32,7 +33,7 @@ export default function AdminInvestmentsPage() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/investments");
+      const res = await fetchJSONWithCSRF("/api/investments");
       const data = await res.json();
       if (res.ok) setInvestments(data);
       else setError(data.error || "Errore nel caricamento investimenti");
@@ -52,9 +53,8 @@ export default function AdminInvestmentsPage() {
     setSuccess("");
     setLoading(true);
     try {
-      const res = await fetch("/api/investments", {
+      const res = await fetchJSONWithCSRF("/api/investments", {
         method: isEdit ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData)
       });
       const data = await res.json();
@@ -77,7 +77,7 @@ export default function AdminInvestmentsPage() {
     setSuccess("");
     setLoading(true);
     try {
-      const res = await fetch(`/api/investments?id=${investmentToDelete.id}`, { method: "DELETE" });
+      const res = await fetchJSONWithCSRF(`/api/investments?id=${investmentToDelete.id}`, { method: "DELETE" });
       const data = await res.json();
       if (res.ok) {
         setSuccess("Investimento eliminato!");
@@ -98,9 +98,8 @@ export default function AdminInvestmentsPage() {
     setError("");
     setSuccess("");
     try {
-      const res = await fetch("/api/investments", {
+      const res = await fetchJSONWithCSRF("/api/investments", {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: invId, status: newStatus })
       });
       const data = await res.json();

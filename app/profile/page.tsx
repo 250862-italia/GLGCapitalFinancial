@@ -24,6 +24,7 @@ import {
   Camera
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { fetchJSONWithCSRF } from '@/lib/csrf-client';
 import { useAuth } from '@/hooks/use-auth';
 
 interface ClientProfile {
@@ -100,12 +101,10 @@ export default function ProfilePage() {
         console.log('No client profile found for user:', user.id, '- Creating profile automatically');
         
         try {
-          const createResponse = await fetch('/api/profile/create', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ user_id: user.id }),
+          const createResponse = await fetchJSONWithCSRF('/api/profile/create', {
+        method: 'POST',
+        body: JSON.stringify({ user_id: user.id 
+      }),
           });
 
           if (createResponse.ok) {
@@ -201,15 +200,13 @@ export default function ProfilePage() {
     setSaving(true);
     
     try {
-      const response = await fetch('/api/profile/update', {
+      const response = await fetchJSONWithCSRF('/api/profile/update', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           userId: user.id,
           updates: editForm
-        })
+        
+      })
       });
 
       if (!response.ok) {
@@ -278,9 +275,10 @@ export default function ProfilePage() {
       formData.append('photo', file);
       formData.append('user_id', user.id);
 
-      const response = await fetch('/api/profile/upload-photo', {
+      const response = await fetchJSONWithCSRF('/api/profile/upload-photo', {
         method: 'POST',
         body: formData
+      
       });
 
       if (!response.ok) {

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Bell, X, CheckCircle, AlertCircle, Info, Clock, Settings, UserPlus, DollarSign, Shield, UserCheck, UserX, RefreshCw } from 'lucide-react';
 import realtimeManager, { RealtimeEvent } from '@/lib/realtime-manager';
+import { fetchJSONWithCSRF } from '@/lib/csrf-client';
 
 interface Notification {
   id: string;
@@ -199,10 +200,10 @@ export default function NotificationSystem({ userId, userRole = 'user' }: Notifi
 
     // Update in database
     try {
-      await fetch(`/api/notifications/${userId}`, {
+      await fetchJSONWithCSRF(`/api/notifications/${userId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ notificationId, status: 'read' })
+        body: JSON.stringify({ notificationId, status: 'read' 
+      })
       });
     } catch (error) {
       console.error('Error marking notification as read:', error);
@@ -216,10 +217,10 @@ export default function NotificationSystem({ userId, userRole = 'user' }: Notifi
 
     // Update in database
     try {
-      await fetch(`/api/notifications/${userId}`, {
+      await fetchJSONWithCSRF(`/api/notifications/${userId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ markAllRead: true })
+        body: JSON.stringify({ markAllRead: true 
+      })
       });
     } catch (error) {
       console.error('Error marking all notifications as read:', error);
@@ -233,10 +234,10 @@ export default function NotificationSystem({ userId, userRole = 'user' }: Notifi
 
     // Delete from database
     try {
-      await fetch(`/api/notifications/${userId}`, {
+      await fetchJSONWithCSRF(`/api/notifications/${userId}`, {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ notificationId })
+        body: JSON.stringify({ notificationId 
+      })
       });
     } catch (error) {
       console.error('Error deleting notification:', error);

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Note, CreateNoteRequest } from '@/types/note';
+import { fetchJSONWithCSRF } from '@/lib/csrf-client';
 
 export default function NotesPage() {
   const [notes, setNotes] = useState<Note[]>([]);
@@ -13,7 +14,7 @@ export default function NotesPage() {
   const fetchNotes = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/notes');
+      const response = await fetchJSONWithCSRF('/api/notes');
       if (!response.ok) {
         throw new Error('Failed to fetch notes');
       }
@@ -31,11 +32,8 @@ export default function NotesPage() {
     if (!newNoteTitle.trim()) return;
 
     try {
-      const response = await fetch('/api/notes', {
+      const response = await fetchJSONWithCSRF('/api/notes', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({ title: newNoteTitle.trim() } as CreateNoteRequest),
       });
 
@@ -54,7 +52,7 @@ export default function NotesPage() {
   // Delete a note
   const deleteNote = async (id: number) => {
     try {
-      const response = await fetch(`/api/notes/${id}`, {
+      const response = await fetchJSONWithCSRF(`/api/notes/${id}`, {
         method: 'DELETE',
       });
 
@@ -73,11 +71,8 @@ export default function NotesPage() {
     if (!newTitle.trim()) return;
 
     try {
-      const response = await fetch(`/api/notes/${id}`, {
+      const response = await fetchJSONWithCSRF(`/api/notes/${id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({ title: newTitle.trim() }),
       });
 
