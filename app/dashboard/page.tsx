@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/lib/supabase';
 import { fetchJSONWithCSRF } from '@/lib/csrf-client';
-import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import ProtectedRoute from '../../components/auth/ProtectedRoute';
 import { 
   TrendingUp, 
   TrendingDown, 
