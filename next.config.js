@@ -6,6 +6,9 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
 
+  // Disabilita l'ottimizzazione automatica dei font per evitare warning preload
+  optimizeFonts: false,
+
   // Configurazione per risolvere problemi di deploy Vercel
   experimental: {
     // Impedisce il rendering statico delle API routes

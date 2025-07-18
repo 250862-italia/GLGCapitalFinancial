@@ -4,7 +4,11 @@ import { AuthProvider } from '@/hooks/use-auth';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
 
-const inter = Inter({ subsets: ['latin'] });
+const inter = Inter({ 
+  subsets: ['latin'],
+  display: 'swap',
+  preload: false
+});
 
 // Forza il rendering dinamico per evitare problemi con useRouter
 export const dynamic = 'force-dynamic';
