@@ -22,6 +22,8 @@
     "fix-rls": "node -e \"console.log('Execute scripts/fix-rls-policies.sql in Supabase SQL Editor')\"",
     "test:load": "npx artillery run scripts/load-test.yml",
     "test:api": "npx jest tests/api.test.js",
+    "test:supabase": "node test-new-supabase.js",
+    "setup:supabase": "node setup-new-supabase.js",
     "notify:success": "node scripts/notify.js success",
     "notify:failure": "node scripts/notify.js failure",
     "deploy:check": "npm run lint && npm run typecheck && npm run build && npm run test:security",
