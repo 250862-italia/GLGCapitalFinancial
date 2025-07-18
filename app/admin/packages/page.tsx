@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from '@/lib/supabase';
 import type { CSSProperties } from 'react';
-import { useRouter } from 'next/navigation';
 
 export default function AdminPackagesPage() {
   const [packages, setPackages] = useState<any[]>([]);
@@ -12,10 +11,6 @@ export default function AdminPackagesPage() {
   const [form, setForm] = useState<any>(emptyForm());
   const [isEdit, setIsEdit] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [user, setUser] = useState<any>(null);
-  const [role, setRole] = useState<string | null>(null);
-  const [authChecked, setAuthChecked] = useState(false);
-  const router = useRouter();
 
   function emptyForm() {
     return {
@@ -31,28 +26,7 @@ export default function AdminPackagesPage() {
   }
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { user }, error } = await supabase.auth.getUser();
-      if (!user) {
-        setError('Devi essere autenticato per accedere a questa pagina.');
-        setAuthChecked(true);
-        return;
-      }
-      setUser(user);
-      // Recupera ruolo custom da user_metadata
-      const userRole = user.user_metadata?.role || user.app_metadata?.role || null;
-      setRole(userRole);
-      if (!['admin', 'superadmin'].includes(userRole)) {
-        setError('Accesso negato: solo admin/superadmin possono gestire i pacchetti.');
-      }
-      setAuthChecked(true);
-    };
-    checkAuth();
-  }, []);
-
-  useEffect(() => {
     fetchPackages();
-    // eslint-disable-next-line
   }, []);
 
   async function fetchPackages() {
@@ -155,8 +129,6 @@ export default function AdminPackagesPage() {
   const modalContentStyle = { background: '#fff', padding: '24px', borderRadius: '8px', width: '90%', maxWidth: '600px', maxHeight: '90vh', overflow: 'auto' };
   const inputStyle = { width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '14px' };
 
-  // Blocca la UI se non admin/superadmin o non autenticato
-  if (!authChecked) return <div>Controllo autenticazione...</div>;
   if (error) return <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '24px', borderRadius: '8px', margin: '40px auto', maxWidth: 600, fontSize: 18 }}>{error}</div>;
 
   return (
