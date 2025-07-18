@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/lib/supabase';
 import { fetchJSONWithCSRF } from '@/lib/csrf-client';
+import { useRealtime } from '@/hooks/use-realtime';
+import RealtimeEvents from '@/components/ui/RealtimeEvents';
 import ProtectedRoute from '../../components/auth/ProtectedRoute';
 import { 
   TrendingUp, 
@@ -57,6 +59,14 @@ export default function ClientDashboard() {
   const [supabaseConnected, setSupabaseConnected] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const router = useRouter();
+
+  // Real-time functionality
+  const { isConnected: realtimeConnected, events: realtimeEvents } = useRealtime({
+    userId: user?.id,
+    userRole: 'user',
+    enableNotifications: true,
+    enableInvestments: true
+  });
 
   useEffect(() => {
     // Test Supabase connection first
