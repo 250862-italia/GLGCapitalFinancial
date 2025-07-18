@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { generateCSRFToken, validateCSRFToken } from '@/lib/csrf';
 import { 
-  supabaseQueryWithRetry, 
   validateInput, 
   VALIDATION_SCHEMAS, 
   sanitizeInput,
@@ -52,20 +51,11 @@ export async function POST(request: NextRequest) {
 
     console.log('🔄 Login utente:', { email });
 
-    // Query con retry logic per autenticazione
-    const { data: authData, error: authError, cacheStatus } = await supabaseQueryWithRetry(
-      async () => {
-        const result = await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
-        return result;
-      },
-      {
-        maxRetries: 3,
-        timeout: 10000
-      }
-    );
+    // Autenticazione diretta con Supabase
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
 
     if (authError) {
       console.error('❌ Errore autenticazione:', authError);
@@ -102,22 +92,12 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ Utente autenticato:', authData.user.id);
 
-    // Recupera profilo utente con cache
-    const cacheKey = generateCacheKey('user_profile', { userId: authData.user.id });
-    
-    const { data: profile, error: profileError } = await supabaseQueryWithRetry(
-      () => supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', authData.user.id)
-        .single(),
-      {
-        maxRetries: 2,
-        timeout: 8000,
-        cacheKey,
-        cacheTTL: 10 * 60 * 1000 // 10 minuti per i profili
-      }
-    );
+    // Recupera profilo utente
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', authData.user.id)
+      .single();
 
     if (profileError) {
       console.error('❌ Errore recupero profilo:', profileError);
@@ -130,21 +110,11 @@ export async function POST(request: NextRequest) {
     // Recupera dati cliente se disponibili
     let clientData = null;
     if (profile) {
-      const clientCacheKey = generateCacheKey('user_client', { userId: authData.user.id });
-      
-      const { data: client, error: clientError } = await supabaseQueryWithRetry(
-        () => supabase
-          .from('clients')
-          .select('*')
-          .eq('user_id', authData.user.id)
-          .single(),
-        {
-          maxRetries: 2,
-          timeout: 6000,
-          cacheKey: clientCacheKey,
-          cacheTTL: 5 * 60 * 1000 // 5 minuti per i clienti
-        }
-      );
+      const { data: client, error: clientError } = await supabase
+        .from('clients')
+        .select('*')
+        .eq('user_id', authData.user.id)
+        .single();
 
       if (clientError) {
         console.error('❌ Errore recupero cliente:', clientError);
@@ -184,12 +154,10 @@ export async function POST(request: NextRequest) {
         expires_at: authData.session?.expires_at
       },
       csrfToken,
-      message: 'Accesso effettuato con successo',
-      cacheStatus
+      message: 'Accesso effettuato con successo'
     }, {
       headers: {
         'X-Performance': `${Date.now() - startTime}ms`,
-        'X-Cache-Status': cacheStatus,
         'X-User-Role': profile?.role || 'user'
       }
     });
