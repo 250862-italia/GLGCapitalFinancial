@@ -24,11 +24,14 @@ const SECURITY_CONFIG = {
     ALLOWED_ORIGINS: [
       'http://localhost:3000',
       'http://localhost:3001',
+      'http://localhost:3002',
       'https://glg-capital-financial.vercel.app',
-      'https://glgcapitalfinancial.com'
+      'https://glgcapitalfinancial.com',
+      'https://www.glgcapitalgroup.com',
+      'https://glgcapitalgroup.com'
     ],
     ALLOWED_METHODS: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    ALLOWED_HEADERS: ['Content-Type', 'Authorization', 'X-CSRF-Token']
+    ALLOWED_HEADERS: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'X-Requested-With']
   }
 };
 
@@ -108,6 +111,25 @@ function checkCORS(request: NextRequest): { allowed: boolean; headers: Record<st
   const origin = request.headers.get('origin');
   const method = request.method;
   
+  // In development, be more permissive
+  if (process.env.NODE_ENV === 'development') {
+    // Allow all localhost origins in development
+    if (!origin || origin.startsWith('http://localhost:')) {
+      const corsHeaders: Record<string, string> = {
+        'Access-Control-Allow-Origin': origin || 'http://localhost:3000',
+        'Access-Control-Allow-Methods': SECURITY_CONFIG.CORS.ALLOWED_METHODS.join(', '),
+        'Access-Control-Allow-Headers': SECURITY_CONFIG.CORS.ALLOWED_HEADERS.join(', '),
+        'Access-Control-Allow-Credentials': 'true',
+        'Access-Control-Max-Age': '86400' // 24 ore
+      };
+      
+      return {
+        allowed: true,
+        headers: corsHeaders
+      };
+    }
+  }
+  
   // Controlla origine
   const isAllowedOrigin = !origin || SECURITY_CONFIG.CORS.ALLOWED_ORIGINS.includes(origin);
   
@@ -125,6 +147,7 @@ function checkCORS(request: NextRequest): { allowed: boolean; headers: Record<st
     'Access-Control-Allow-Origin': origin || '*',
     'Access-Control-Allow-Methods': SECURITY_CONFIG.CORS.ALLOWED_METHODS.join(', '),
     'Access-Control-Allow-Headers': SECURITY_CONFIG.CORS.ALLOWED_HEADERS.join(', '),
+    'Access-Control-Allow-Credentials': 'true',
     'Access-Control-Max-Age': '86400' // 24 ore
   };
   

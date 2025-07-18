@@ -2,21 +2,26 @@ import { createClient } from '@supabase/supabase-js';
 import { getSupabaseClient, getCurrentCheckpoint, getAllCheckpoints, refreshCheckpoints, initializeCheckpoints } from './supabase-checkpoints';
 import { getSupabaseFunctionRegion } from './supabase-region';
 
-// Legacy client for backward compatibility
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 
-                   (process.env.NODE_ENV === 'development' ? 'http://localhost:54321' : 'http://localhost:54321');
+// Get Supabase configuration from environment variables
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 
-                       (process.env.NODE_ENV === 'development' ? 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0' : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0');
+// Validate required environment variables
+if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceKey) {
+  console.error('❌ Missing required Supabase environment variables:');
+  console.error('NEXT_PUBLIC_SUPABASE_URL:', !!supabaseUrl);
+  console.error('NEXT_PUBLIC_SUPABASE_ANON_KEY:', !!supabaseAnonKey);
+  console.error('SUPABASE_SERVICE_ROLE_KEY:', !!supabaseServiceKey);
+  
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('Missing required Supabase environment variables');
+  }
+}
 
-// Legacy client (fallback)
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-// Admin client with service role key
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 
-                          (process.env.NODE_ENV === 'development' ? 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU' : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU');
-
-export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+// Create Supabase clients
+export const supabase = createClient(supabaseUrl!, supabaseAnonKey!);
+export const supabaseAdmin = createClient(supabaseUrl!, supabaseServiceKey!);
 
 // New checkpoint-based client
 export async function getSupabase() {
