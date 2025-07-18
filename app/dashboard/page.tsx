@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/lib/supabase';
 import { fetchJSONWithCSRF } from '@/lib/csrf-client';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -429,8 +430,9 @@ export default function ClientDashboard() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '2rem 1rem' }}>
-      <div style={{ maxWidth: 1400, margin: '0 auto' }}>
+    <ProtectedRoute>
+      <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '2rem 1rem' }}>
+        <div style={{ maxWidth: 1400, margin: '0 auto' }}>
         
         {/* Connection Status Indicator */}
         {!supabaseConnected && (
@@ -757,7 +759,8 @@ export default function ClientDashboard() {
           onClose={() => {}}
           duration={5000}
         />
+        </div>
       </div>
-    </div>
+    </ProtectedRoute>
   );
 }
