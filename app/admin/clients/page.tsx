@@ -108,9 +108,34 @@ export default function AdminClientsPage() {
         return;
       }
 
-      console.log('✅ Clients fetched:', data?.length || 0, 'clients');
-      console.log('📊 Sample client data:', data?.[0]);
-      setClients(data || []);
+      // Filtra i clienti corrotti che sono oggetti errore
+      const validClients = (data || []).filter(client => {
+        if (!client || typeof client !== 'object') {
+          console.warn('⚠️ Skipping invalid client (not an object):', client);
+          return false;
+        }
+        
+        // Controlla se è un oggetto errore
+        if (client.type && client.message && client.code) {
+          console.warn('⚠️ Skipping error object in clients:', client);
+          return false;
+        }
+        
+        // Controlla se ha i campi minimi richiesti
+        if (!client.id || !client.first_name || !client.last_name) {
+          console.warn('⚠️ Skipping client with missing required fields:', client);
+          return false;
+        }
+        
+        return true;
+      });
+
+      console.log('✅ Clients fetched:', validClients.length, 'valid clients out of', data?.length || 0, 'total');
+      if (validClients.length > 0) {
+        console.log('📊 Sample valid client data:', validClients[0]);
+      }
+      
+      setClients(validClients);
     } catch (error) {
       console.error('❌ Unexpected error fetching clients:', error);
     } finally {
@@ -478,11 +503,18 @@ export default function AdminClientsPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredClients.map((client, index) => (
-                <tr key={client.id} style={{ 
-                  borderBottom: index < filteredClients.length - 1 ? '1px solid #e5e7eb' : 'none',
-                  background: index % 2 === 0 ? '#fff' : '#f9fafb'
-                }}>
+              {filteredClients.map((client, index) => {
+                // Controllo di sicurezza finale prima del rendering
+                if (!isValidClient(client)) {
+                  console.warn('⚠️ Skipping invalid client during rendering:', client);
+                  return null;
+                }
+                
+                return (
+                  <tr key={client.id} style={{ 
+                    borderBottom: index < filteredClients.length - 1 ? '1px solid #e5e7eb' : 'none',
+                    background: index % 2 === 0 ? '#fff' : '#f9fafb'
+                  }}>
                   <td style={{ padding: '1rem' }}>
                     <div>
                       <div style={{ fontWeight: 600, color: 'var(--primary)' }}>
@@ -615,7 +647,8 @@ export default function AdminClientsPage() {
                     </div>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>
