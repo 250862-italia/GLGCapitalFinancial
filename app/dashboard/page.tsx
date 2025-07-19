@@ -214,6 +214,18 @@ export default function ClientDashboard() {
       return;
     }
 
+    // Set the selected package for the modal
+    setSelectedPackage(pkg);
+    setShowBankModal(true);
+  };
+
+  // Function to confirm purchase
+  const handleConfirmBuy = async () => {
+    if (!selectedPackage || !user) {
+      alert('Please select a package to invest in.');
+      return;
+    }
+
     try {
       // Send email to GLG support with investment request
       const supportEmailResponse = await fetchJSONWithCSRF('/api/send-email', {
@@ -710,7 +722,7 @@ export default function ClientDashboard() {
               )}
               <div style={{ display: 'flex', gap: 16, justifyContent: 'flex-end' }}>
                 <button onClick={() => { setShowBankModal(false); setSelectedPackage(null); }} style={{ background: '#d1d5db', color: '#1f2937', padding: '0.5rem 1rem', border: 'none', borderRadius: 6, fontWeight: 500 }}>Cancel</button>
-                <button onClick={handleBuy} style={{ background: '#059669', color: 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: 6, fontWeight: 500, cursor: 'pointer' }}>Send Investment Instructions</button>
+                <button onClick={handleConfirmBuy} style={{ background: '#059669', color: 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: 6, fontWeight: 500, cursor: 'pointer' }}>Send Investment Instructions</button>
               </div>
             </div>
           </div>
