@@ -6,6 +6,7 @@ import Modal from "@/components/ui/Modal";
 import { useRouter } from "next/navigation";
 import { InvestmentFormData } from "@/types/investment";
 import { fetchJSONWithCSRF } from "@/lib/csrf-client";
+import InvestmentNotifications from "@/components/admin/InvestmentNotifications";
 
 // Tipo per investimenti con join
 interface InvestmentWithJoin extends InvestmentFormData {
@@ -136,8 +137,25 @@ export default function AdminInvestmentsPage() {
     (!statusFilter || inv.status === statusFilter)
   );
 
+  // Get admin user ID for notifications
+  const getAdminId = () => {
+    try {
+      const adminUser = localStorage.getItem('admin_user');
+      if (adminUser) {
+        const adminData = JSON.parse(adminUser);
+        return adminData.id || 'admin';
+      }
+    } catch (e) {
+      console.warn('Error parsing admin user data:', e);
+    }
+    return 'admin';
+  };
+
   return (
-    <div style={{ background: "#fff", borderRadius: 16, boxShadow: "0 4px 24px rgba(10,37,64,0.10)", padding: "2rem" }}>
+    <>
+      {/* Real-time investment notifications */}
+      <InvestmentNotifications adminId={getAdminId()} />
+      <div style={{ background: "#fff", borderRadius: 16, boxShadow: "0 4px 24px rgba(10,37,64,0.10)", padding: "2rem" }}>
       <section style={{ marginBottom: "2rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h1 style={{ color: "var(--primary)", fontSize: 32, fontWeight: 900, margin: 0 }}>Gestione Investimenti</h1>
         <button
@@ -236,7 +254,8 @@ export default function AdminInvestmentsPage() {
           </div>
         </Modal>
       )}
-    </div>
+      </div>
+    </>
   );
 }
 

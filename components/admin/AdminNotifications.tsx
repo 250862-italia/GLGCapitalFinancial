@@ -43,12 +43,22 @@ export default function AdminNotifications({ adminId }: AdminNotificationsProps)
 
   useEffect(() => {
     loadNotifications();
-    // Simulate real-time notifications
-    const interval = setInterval(() => {
-      checkNewNotifications();
-    }, 10000); // Check every 10 seconds
+    
+    // Setup real-time notifications using the realtime manager
+    if (typeof window !== 'undefined') {
+      const { realtimeManager } = require('@/lib/realtime-manager');
+      
+      // Subscribe to admin events
+      const adminSubs = realtimeManager.subscribeToAdminEvents(adminId, (event) => {
+        const notification = convertRealtimeEventToNotification(event);
+        addNotification(notification);
+      });
 
-    return () => clearInterval(interval);
+      // Cleanup subscriptions
+      return () => {
+        adminSubs.forEach(sub => sub.unsubscribe());
+      };
+    }
   }, [adminId]);
 
   const loadNotifications = () => {
@@ -130,33 +140,7 @@ export default function AdminNotifications({ adminId }: AdminNotificationsProps)
     setNotifications(mockNotifications);
   };
 
-  const checkNewNotifications = () => {
-    // Simulate new notifications
-    const shouldAddNotification = Math.random() > 0.9; // 10% chance
-    
-    if (shouldAddNotification) {
-      const notificationTypes: AdminNotification['type'][] = [
-        'user_registration',
-        'investment',
-        'security_alert',
-        'payment_processed'
-      ];
-      
-      const randomType = notificationTypes[Math.floor(Math.random() * notificationTypes.length)];
-      
-      const newNotification: AdminNotification = {
-        id: Date.now().toString(),
-        type: randomType,
-        title: getNotificationTitle(randomType),
-        message: getNotificationMessage(randomType),
-        timestamp: new Date(),
-        read: false,
-        priority: 'medium'
-      };
-      
-      setNotifications(prev => [newNotification, ...prev]);
-    }
-  };
+
 
   const getNotificationTitle = (type: AdminNotification['type']): string => {
     switch (type) {
@@ -189,6 +173,46 @@ export default function AdminNotifications({ adminId }: AdminNotificationsProps)
         return 'System maintenance or update notification.';
       default:
         return 'You have a new notification.';
+    }
+  };
+
+  const convertRealtimeEventToNotification = (event: any): AdminNotification => {
+    const baseNotification: AdminNotification = {
+      id: event.id || Date.now().toString(),
+      type: event.type as AdminNotification['type'],
+      title: getNotificationTitle(event.type),
+      message: getNotificationMessage(event.type),
+      timestamp: event.timestamp || new Date(),
+      read: false,
+      priority: event.priority || 'medium',
+      metadata: event.data
+    };
+
+    // Add specific details for investment notifications
+    if (event.type === 'investment' && event.data) {
+      baseNotification.title = 'New Investment Request';
+      baseNotification.message = `${event.data.client_name || 'A client'} (${event.data.client_email || 'N/A'}) has requested to invest $${event.data.amount?.toLocaleString() || 'N/A'} in the ${event.data.package_name || 'N/A'} package.`;
+      baseNotification.priority = 'high';
+      baseNotification.action = {
+        label: 'Review Investment',
+        url: `/admin/investments`
+      };
+    }
+
+    return baseNotification;
+  };
+
+  const addNotification = (notification: AdminNotification) => {
+    setNotifications(prev => [notification, ...prev]);
+    
+    // Show browser notification for high priority events
+    if (notification.priority === 'high' || notification.priority === 'critical') {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification(`GLG Admin - ${notification.title}`, {
+          body: notification.message,
+          icon: '/favicon.ico'
+        });
+      }
     }
   };
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import AdminNotifications from '@/components/admin/AdminNotifications';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -84,5 +85,25 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     return null; // Will redirect to login
   }
 
-  return <>{children}</>;
+  // Get admin user ID for notifications
+  const getAdminId = () => {
+    try {
+      const adminUser = localStorage.getItem('admin_user');
+      if (adminUser) {
+        const adminData = JSON.parse(adminUser);
+        return adminData.id || 'admin';
+      }
+    } catch (e) {
+      console.warn('Error parsing admin user data:', e);
+    }
+    return 'admin';
+  };
+
+  return (
+    <>
+      {/* Real-time notifications for admin */}
+      <AdminNotifications adminId={getAdminId()} />
+      {children}
+    </>
+  );
 } 

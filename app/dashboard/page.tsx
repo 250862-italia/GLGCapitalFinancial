@@ -334,6 +334,32 @@ export default function ClientDashboard() {
         monthlyEarnings: 0
       };
 
+      // Send real-time notification to admin
+      try {
+        const adminNotificationResponse = await fetchJSONWithCSRF('/api/admin/notifications/investment', {
+          method: 'POST',
+          body: JSON.stringify({
+            userId: user.id,
+            userName: user.name || user.profile?.first_name || user.email,
+            userEmail: user.email,
+            packageName: selectedPackage.name,
+            amount: selectedPackage.minInvestment || selectedPackage.minAmount || 1000,
+            expectedReturn: selectedPackage.expectedReturn || selectedPackage.daily_return || 1.0,
+            duration: selectedPackage.duration || 30,
+            investmentId: newInvestment.id
+          })
+        });
+
+        if (adminNotificationResponse.ok) {
+          console.log('✅ Real-time notification sent to admin');
+        } else {
+          console.warn('⚠️ Failed to send real-time notification to admin');
+        }
+      } catch (notificationError) {
+        console.warn('⚠️ Error sending real-time notification:', notificationError);
+        // Don't fail the investment if notification fails
+      }
+
       const updated = [...myInvestments, newInvestment];
       setMyInvestments(updated);
       
