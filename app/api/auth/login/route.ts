@@ -8,6 +8,15 @@ import {
   performanceMonitor,
   generateCacheKey
 } from '@/lib/api-optimizer';
+import { 
+  withErrorHandling, 
+  createValidationError, 
+  createAuthError, 
+  createInternalError,
+  handleSupabaseError,
+  addRequestId,
+  generateRequestId
+} from '@/lib/error-handler';
 
 // Interface per il profilo utente
 interface UserProfile {
@@ -25,38 +34,34 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export async function POST(request: NextRequest) {
+export const POST = withErrorHandling(async (request: NextRequest) => {
   const startTime = performanceMonitor.start('login_user');
   
-  try {
-    const body = await request.json();
-    
-    // Sanitizzazione input
-    const sanitizedBody = sanitizeInput(body);
-    
-    // Validazione CSRF
-    const csrfValidation = validateCSRFToken(request);
-    if (!csrfValidation.valid) {
-      performanceMonitor.end('login_user', startTime);
-      return NextResponse.json(
-        { error: 'CSRF token validation failed' },
-        { status: 403 }
-      );
-    }
+  // Aggiungi request ID se non presente
+  addRequestId(request);
+  
+  const body = await request.json();
+  
+  // Sanitizzazione input
+  const sanitizedBody = sanitizeInput(body);
+  
+  // Validazione CSRF
+  const csrfValidation = validateCSRFToken(request);
+  if (!csrfValidation.valid) {
+    performanceMonitor.end('login_user', startTime);
+    throw new Error('CSRF token validation failed');
+  }
 
-    // Validazione input robusta
-    const validation = validateInput(sanitizedBody, {
-      email: VALIDATION_SCHEMAS.email,
-      password: VALIDATION_SCHEMAS.required
-    });
+  // Validazione input robusta
+  const validation = validateInput(sanitizedBody, {
+    email: VALIDATION_SCHEMAS.email,
+    password: VALIDATION_SCHEMAS.required
+  });
 
-    if (!validation.valid) {
-      performanceMonitor.end('login_user', startTime);
-      return NextResponse.json(
-        { error: 'Invalid input data', details: validation.errors },
-        { status: 400 }
-      );
-    }
+  if (!validation.valid) {
+    performanceMonitor.end('login_user', startTime);
+    throw new Error(`Invalid input data: ${validation.errors.join(', ')}`);
+  }
 
     const { email, password } = sanitizedBody;
 
@@ -73,32 +78,20 @@ export async function POST(request: NextRequest) {
       performanceMonitor.end('login_user', startTime);
       
       if (authError.message.includes('Invalid login credentials')) {
-        return NextResponse.json(
-          { error: 'Credenziali non valide. Verifica email e password.' },
-          { status: 401 }
-        );
+        throw new Error('Credenziali non valide. Verifica email e password.');
       }
       
       if (authError.message.includes('Email not confirmed')) {
-        return NextResponse.json(
-          { error: 'Email non confermata. Controlla la tua casella email.' },
-          { status: 401 }
-        );
+        throw new Error('Email non confermata. Controlla la tua casella email.');
       }
       
-      return NextResponse.json(
-        { error: 'Errore durante l\'accesso. Riprova più tardi.' },
-        { status: 500 }
-      );
+      throw new Error('Errore durante l\'accesso. Riprova più tardi.');
     }
 
     if (!authData?.user) {
       console.error('❌ Nessun utente autenticato');
       performanceMonitor.end('login_user', startTime);
-      return NextResponse.json(
-        { error: 'Errore durante l\'autenticazione' },
-        { status: 500 }
-      );
+      throw new Error('Errore durante l\'autenticazione');
     }
 
     console.log('✅ Utente autenticato:', authData.user.id);
@@ -172,13 +165,4 @@ export async function POST(request: NextRequest) {
     performanceMonitor.end('login_user', startTime);
     return response;
 
-  } catch (error) {
-    console.error('❌ Errore generale login:', error);
-    performanceMonitor.end('login_user', startTime);
-    
-    return NextResponse.json(
-      { error: 'Errore interno del server. Riprova più tardi.' },
-      { status: 500 }
-    );
-  }
-} 
+  }); 

@@ -1,407 +1,354 @@
-import { fetchJSONWithCSRF } from './csrf-client';
+// Error Handler Centralizzato per GLG Capital Financial
+// Sistema unificato per gestione errori, logging e monitoring
 
-interface ErrorInfo {
-  id: string;
-  timestamp: Date;
-  type: 'client' | 'server' | 'network' | 'validation' | 'auth' | 'unknown';
+import { NextRequest, NextResponse } from 'next/server';
+
+// Tipi di errore standardizzati
+export enum ErrorType {
+  VALIDATION = 'VALIDATION_ERROR',
+  AUTHENTICATION = 'AUTHENTICATION_ERROR',
+  AUTHORIZATION = 'AUTHORIZATION_ERROR',
+  NOT_FOUND = 'NOT_FOUND_ERROR',
+  DATABASE = 'DATABASE_ERROR',
+  EXTERNAL_API = 'EXTERNAL_API_ERROR',
+  RATE_LIMIT = 'RATE_LIMIT_ERROR',
+  INTERNAL = 'INTERNAL_ERROR',
+  NETWORK = 'NETWORK_ERROR',
+  TIMEOUT = 'TIMEOUT_ERROR'
+}
+
+// Livelli di severità
+export enum ErrorSeverity {
+  LOW = 'low',
+  MEDIUM = 'medium',
+  HIGH = 'high',
+  CRITICAL = 'critical'
+}
+
+// Interfaccia per errori standardizzati
+export interface AppError {
+  type: ErrorType;
   message: string;
-  stack?: string;
+  code: string;
+  severity: ErrorSeverity;
+  details?: any;
+  timestamp: Date;
+  requestId?: string;
   userId?: string;
-  sessionId?: string;
-  url?: string;
+  path?: string;
+  method?: string;
   userAgent?: string;
-  metadata?: Record<string, any>;
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  handled: boolean;
+  ip?: string;
 }
 
-interface ErrorHandlerConfig {
-  enableLogging: boolean;
-  enableReporting: boolean;
-  enableUserNotifications: boolean;
-  maxErrors: number;
-  reportToServer: boolean;
-}
-
-class ErrorHandler {
-  private errors: ErrorInfo[] = [];
-  private config: ErrorHandlerConfig;
-  private isInitialized: boolean = false;
-
-  constructor(config: Partial<ErrorHandlerConfig> = {}) {
-    this.config = {
-      enableLogging: config.enableLogging ?? true,
-      enableReporting: config.enableReporting ?? true,
-      enableUserNotifications: config.enableUserNotifications ?? true,
-      maxErrors: config.maxErrors ?? 1000,
-      reportToServer: config.reportToServer ?? true
-    };
-
-    this.initialize();
+// Configurazione errori
+const ERROR_CONFIG = {
+  [ErrorType.VALIDATION]: {
+    statusCode: 400,
+    severity: ErrorSeverity.LOW,
+    logLevel: 'warn'
+  },
+  [ErrorType.AUTHENTICATION]: {
+    statusCode: 401,
+    severity: ErrorSeverity.MEDIUM,
+    logLevel: 'warn'
+  },
+  [ErrorType.AUTHORIZATION]: {
+    statusCode: 403,
+    severity: ErrorSeverity.MEDIUM,
+    logLevel: 'warn'
+  },
+  [ErrorType.NOT_FOUND]: {
+    statusCode: 404,
+    severity: ErrorSeverity.LOW,
+    logLevel: 'info'
+  },
+  [ErrorType.DATABASE]: {
+    statusCode: 500,
+    severity: ErrorSeverity.HIGH,
+    logLevel: 'error'
+  },
+  [ErrorType.EXTERNAL_API]: {
+    statusCode: 502,
+    severity: ErrorSeverity.MEDIUM,
+    logLevel: 'error'
+  },
+  [ErrorType.RATE_LIMIT]: {
+    statusCode: 429,
+    severity: ErrorSeverity.LOW,
+    logLevel: 'warn'
+  },
+  [ErrorType.INTERNAL]: {
+    statusCode: 500,
+    severity: ErrorSeverity.HIGH,
+    logLevel: 'error'
+  },
+  [ErrorType.NETWORK]: {
+    statusCode: 503,
+    severity: ErrorSeverity.MEDIUM,
+    logLevel: 'error'
+  },
+  [ErrorType.TIMEOUT]: {
+    statusCode: 408,
+    severity: ErrorSeverity.MEDIUM,
+    logLevel: 'warn'
   }
+};
 
-  // Initialize error handling
-  private initialize(): void {
-    if (this.isInitialized) return;
+// Classe per creazione errori
+export class AppErrorBuilder {
+  private error: Partial<AppError>;
 
-    // Handle unhandled promise rejections
-    window.addEventListener('unhandledrejection', (event) => {
-      this.handleError(event.reason, 'client', 'unhandled_promise');
-    });
-
-    // Handle JavaScript errors
-    window.addEventListener('error', (event) => {
-      this.handleError(event.error || new Error(event.message), 'client', 'javascript_error', {
-        filename: event.filename,
-        lineno: event.lineno,
-        colno: event.colno
-      });
-    });
-
-    // Handle React errors (if in React environment)
-    if (typeof window !== 'undefined' && (window as any).React) {
-      this.setupReactErrorBoundary();
-    }
-
-    this.isInitialized = true;
-    console.log('✅ Error handler initialized');
-  }
-
-  // Handle different types of errors
-  handleError(
-    error: Error | string,
-    type: ErrorInfo['type'] = 'unknown',
-    context?: string,
-    metadata?: Record<string, any>
-  ): void {
-    const errorInfo: ErrorInfo = {
-      id: `error_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      timestamp: new Date(),
+  constructor(type: ErrorType, message: string, code: string) {
+    this.error = {
       type,
-      message: typeof error === 'string' ? error : error.message,
-      stack: typeof error === 'string' ? undefined : error.stack,
-      url: window.location.href,
-      userAgent: navigator.userAgent,
-      metadata: {
-        context,
-        ...metadata
-      },
-      severity: this.determineSeverity(error, type),
-      handled: false
-    };
-
-    // Add to errors array
-    this.errors.push(errorInfo);
-
-    // Keep only the last maxErrors entries
-    if (this.errors.length > this.config.maxErrors) {
-      this.errors = this.errors.slice(-this.config.maxErrors);
-    }
-
-    // Log error
-    if (this.config.enableLogging) {
-      this.logError(errorInfo);
-    }
-
-    // Report to server
-    if (this.config.reportToServer) {
-      this.reportToServer(errorInfo);
-    }
-
-    // Show user notification for critical errors
-    if (this.config.enableUserNotifications && errorInfo.severity === 'critical') {
-      this.showUserNotification(errorInfo);
-    }
-
-    // Handle specific error types
-    this.handleSpecificError(errorInfo);
-  }
-
-  // Handle specific error types
-  private handleSpecificError(errorInfo: ErrorInfo): void {
-    switch (errorInfo.type) {
-      case 'auth':
-        this.handleAuthError(errorInfo);
-        break;
-      case 'network':
-        this.handleNetworkError(errorInfo);
-        break;
-      case 'validation':
-        this.handleValidationError(errorInfo);
-        break;
-      case 'server':
-        this.handleServerError(errorInfo);
-        break;
-      default:
-        this.handleGenericError(errorInfo);
-    }
-  }
-
-  // Handle authentication errors
-  private handleAuthError(errorInfo: ErrorInfo): void {
-    console.warn('🔐 Authentication error:', errorInfo.message);
-    
-    // Redirect to login if token is invalid
-    if (errorInfo.message.includes('token') || errorInfo.message.includes('unauthorized')) {
-      setTimeout(() => {
-        window.location.href = '/login';
-      }, 2000);
-    }
-  }
-
-  // Handle network errors
-  private handleNetworkError(errorInfo: ErrorInfo): void {
-    console.warn('🌐 Network error:', errorInfo.message);
-    
-    // Show offline notification
-    this.showUserNotification({
-      ...errorInfo,
-      message: 'Network connection lost. Please check your internet connection.',
-      severity: 'medium'
-    });
-  }
-
-  // Handle validation errors
-  private handleValidationError(errorInfo: ErrorInfo): void {
-    console.warn('✅ Validation error:', errorInfo.message);
-    
-    // Show user-friendly validation message
-    this.showUserNotification({
-      ...errorInfo,
-      message: 'Please check your input and try again.',
-      severity: 'low'
-    });
-  }
-
-  // Handle server errors
-  private handleServerError(errorInfo: ErrorInfo): void {
-    console.error('🖥️ Server error:', errorInfo.message);
-    
-    // Show maintenance notification
-    this.showUserNotification({
-      ...errorInfo,
-      message: 'Server is temporarily unavailable. Please try again later.',
-      severity: 'high'
-    });
-  }
-
-  // Handle generic errors
-  private handleGenericError(errorInfo: ErrorInfo): void {
-    console.error('❌ Generic error:', errorInfo.message);
-  }
-
-  // Determine error severity
-  private determineSeverity(error: Error | string, type: ErrorInfo['type']): ErrorInfo['severity'] {
-    const message = typeof error === 'string' ? error : error.message.toLowerCase();
-
-    // Critical errors
-    if (message.includes('out of memory') || 
-        message.includes('stack overflow') ||
-        message.includes('fatal')) {
-      return 'critical';
-    }
-
-    // High severity errors
-    if (type === 'server' || 
-        message.includes('database') ||
-        message.includes('payment') ||
-        message.includes('security')) {
-      return 'high';
-    }
-
-    // Medium severity errors
-    if (type === 'network' || 
-        message.includes('timeout') ||
-        message.includes('connection')) {
-      return 'medium';
-    }
-
-    // Low severity errors
-    return 'low';
-  }
-
-  // Log error
-  private logError(errorInfo: ErrorInfo): void {
-    const logMessage = `[${errorInfo.severity.toUpperCase()}] ${errorInfo.type}: ${errorInfo.message}`;
-    
-    switch (errorInfo.severity) {
-      case 'critical':
-        console.error(logMessage, errorInfo);
-        break;
-      case 'high':
-        console.error(logMessage, errorInfo);
-        break;
-      case 'medium':
-        console.warn(logMessage, errorInfo);
-        break;
-      case 'low':
-        console.info(logMessage, errorInfo);
-        break;
-    }
-  }
-
-  // Report error to server
-  private async reportToServer(errorInfo: ErrorInfo): Promise<void> {
-    try {
-      const response = await fetchJSONWithCSRF('/api/errors/report', {
-        method: 'POST',
-        body: JSON.stringify(errorInfo)
-      });
-
-      if (response.ok) {
-        console.log('📤 Error reported to server');
-      }
-    } catch (error) {
-      console.error('❌ Failed to report error to server:', error);
-    }
-  }
-
-  // Show user notification
-  private showUserNotification(errorInfo: ErrorInfo): void {
-    // Create notification element
-    const notification = document.createElement('div');
-    notification.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: ${this.getSeverityColor(errorInfo.severity)};
-      color: white;
-      padding: 1rem;
-      border-radius: 8px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      z-index: 10000;
-      max-width: 400px;
-      font-family: system-ui, sans-serif;
-    `;
-
-    notification.innerHTML = `
-      <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-        <span style="font-weight: 600;">${this.getSeverityIcon(errorInfo.severity)} ${errorInfo.severity.toUpperCase()}</span>
-        <button onclick="this.parentElement.parentElement.remove()" style="margin-left: auto; background: none; border: none; color: white; cursor: pointer;">×</button>
-      </div>
-      <div>${errorInfo.message}</div>
-    `;
-
-    document.body.appendChild(notification);
-
-    // Auto-remove after 5 seconds
-    setTimeout(() => {
-      if (notification.parentElement) {
-        notification.remove();
-      }
-    }, 5000);
-  }
-
-  // Get severity color
-  private getSeverityColor(severity: ErrorInfo['severity']): string {
-    switch (severity) {
-      case 'critical':
-        return '#dc2626';
-      case 'high':
-        return '#d97706';
-      case 'medium':
-        return '#3b82f6';
-      case 'low':
-        return '#059669';
-      default:
-        return '#6b7280';
-    }
-  }
-
-  // Get severity icon
-  private getSeverityIcon(severity: ErrorInfo['severity']): string {
-    switch (severity) {
-      case 'critical':
-        return '🚨';
-      case 'high':
-        return '⚠️';
-      case 'medium':
-        return 'ℹ️';
-      case 'low':
-        return '💡';
-      default:
-        return '❓';
-    }
-  }
-
-  // Setup React error boundary
-  private setupReactErrorBoundary(): void {
-    // This would be implemented in a React Error Boundary component
-    console.log('⚛️ React error boundary setup (implement in ErrorBoundary component)');
-  }
-
-  // Get error statistics
-  getErrorStats(): {
-    totalErrors: number;
-    errorsByType: Record<ErrorInfo['type'], number>;
-    errorsBySeverity: Record<ErrorInfo['severity'], number>;
-    recentErrors: ErrorInfo[];
-    errorRate: number; // errors per hour
-  } {
-    const now = Date.now();
-    const oneHourAgo = now - 60 * 60 * 1000;
-    
-    const recentErrors = this.errors.filter(error => 
-      error.timestamp.getTime() > oneHourAgo
-    );
-
-    const errorsByType: Record<ErrorInfo['type'], number> = {
-      client: 0,
-      server: 0,
-      network: 0,
-      validation: 0,
-      auth: 0,
-      unknown: 0
-    };
-
-    const errorsBySeverity: Record<ErrorInfo['severity'], number> = {
-      low: 0,
-      medium: 0,
-      high: 0,
-      critical: 0
-    };
-
-    this.errors.forEach(error => {
-      errorsByType[error.type]++;
-      errorsBySeverity[error.severity]++;
-    });
-
-    return {
-      totalErrors: this.errors.length,
-      errorsByType,
-      errorsBySeverity,
-      recentErrors: recentErrors.slice(-10), // Last 10 errors
-      errorRate: recentErrors.length
+      message,
+      code,
+      severity: ERROR_CONFIG[type].severity,
+      timestamp: new Date()
     };
   }
 
-  // Clear old errors
-  clearOldErrors(daysToKeep: number = 7): void {
-    const cutoffDate = new Date(Date.now() - daysToKeep * 24 * 60 * 60 * 1000);
-    const initialCount = this.errors.length;
-    
-    this.errors = this.errors.filter(error => error.timestamp > cutoffDate);
-    
-    const removedCount = initialCount - this.errors.length;
-    console.log(`🧹 Cleared ${removedCount} old errors (older than ${daysToKeep} days)`);
+  withDetails(details: any): AppErrorBuilder {
+    this.error.details = details;
+    return this;
   }
 
-  // Get recent errors
-  getRecentErrors(limit: number = 50): ErrorInfo[] {
-    return this.errors
-      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-      .slice(0, limit);
+  withRequest(request: NextRequest): AppErrorBuilder {
+    this.error.requestId = request.headers.get('x-request-id') || undefined;
+    this.error.path = request.nextUrl.pathname;
+    this.error.method = request.method;
+    this.error.userAgent = request.headers.get('user-agent') || undefined;
+    this.error.ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+                   request.headers.get('x-real-ip') ||
+                   request.ip ||
+                   'unknown';
+    return this;
   }
 
-  // Update configuration
-  updateConfig(newConfig: Partial<ErrorHandlerConfig>): void {
-    this.config = { ...this.config, ...newConfig };
-    console.log('⚙️ Error handler configuration updated');
+  withUser(userId: string): AppErrorBuilder {
+    this.error.userId = userId;
+    return this;
+  }
+
+  build(): AppError {
+    return this.error as AppError;
   }
 }
 
-// Export singleton instance
-export const errorHandler = new ErrorHandler();
+// Funzioni helper per creare errori comuni
+export const createValidationError = (message: string, details?: any) => 
+  new AppErrorBuilder(ErrorType.VALIDATION, message, 'VALIDATION_ERROR')
+    .withDetails(details);
 
-// Export types
-export type { ErrorInfo, ErrorHandlerConfig }; 
+export const createAuthError = (message: string) => 
+  new AppErrorBuilder(ErrorType.AUTHENTICATION, message, 'AUTH_ERROR');
+
+export const createAuthzError = (message: string) => 
+  new AppErrorBuilder(ErrorType.AUTHORIZATION, message, 'AUTHZ_ERROR');
+
+export const createNotFoundError = (resource: string) => 
+  new AppErrorBuilder(ErrorType.NOT_FOUND, `${resource} not found`, 'NOT_FOUND_ERROR');
+
+export const createDatabaseError = (message: string, details?: any) => 
+  new AppErrorBuilder(ErrorType.DATABASE, message, 'DB_ERROR')
+    .withDetails(details);
+
+export const createInternalError = (message: string, details?: any) => 
+  new AppErrorBuilder(ErrorType.INTERNAL, message, 'INTERNAL_ERROR')
+    .withDetails(details);
+
+// Logger centralizzato
+class ErrorLogger {
+  private logError(error: AppError) {
+    const logData = {
+      timestamp: error.timestamp.toISOString(),
+      type: error.type,
+      code: error.code,
+      severity: error.severity,
+      message: error.message,
+      requestId: error.requestId,
+      userId: error.userId,
+      path: error.path,
+      method: error.method,
+      ip: error.ip,
+      userAgent: error.userAgent,
+      details: error.details
+    };
+
+    const logLevel = ERROR_CONFIG[error.type].logLevel;
+    
+    switch (logLevel) {
+      case 'info':
+        console.info('[ERROR-LOG]', JSON.stringify(logData, null, 2));
+        break;
+      case 'warn':
+        console.warn('[ERROR-LOG]', JSON.stringify(logData, null, 2));
+        break;
+      case 'error':
+        console.error('[ERROR-LOG]', JSON.stringify(logData, null, 2));
+        break;
+      default:
+        console.log('[ERROR-LOG]', JSON.stringify(logData, null, 2));
+    }
+
+    // In produzione, invia a servizio di monitoring esterno
+    if (process.env.NODE_ENV === 'production') {
+      this.sendToMonitoring(logData);
+    }
+  }
+
+  private sendToMonitoring(logData: any) {
+    // Implementazione per inviare errori a servizi di monitoring
+    // Es: Sentry, LogRocket, DataDog, etc.
+    try {
+      // Placeholder per integrazione con servizi esterni
+      if (process.env.SENTRY_DSN) {
+        // Sentry.captureException(logData);
+      }
+    } catch (e) {
+      console.error('Failed to send error to monitoring service:', e);
+    }
+  }
+
+  log(error: AppError) {
+    this.logError(error);
+  }
+}
+
+// Istanza globale del logger
+export const errorLogger = new ErrorLogger();
+
+// Funzione per gestire errori e creare response
+export function handleError(error: AppError, request?: NextRequest): NextResponse {
+  const config = ERROR_CONFIG[error.type];
+  
+  // Log dell'errore
+  errorLogger.log(error);
+
+  // Prepara response
+  const responseData = {
+    success: false,
+    error: {
+      type: error.type,
+      message: error.message,
+      code: error.code,
+      ...(process.env.NODE_ENV === 'development' && { details: error.details })
+    },
+    timestamp: error.timestamp.toISOString(),
+    requestId: error.requestId
+  };
+
+  // Headers per debugging
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'X-Error-Type': error.type,
+    'X-Error-Code': error.code
+  };
+
+  if (error.requestId) {
+    headers['X-Request-ID'] = error.requestId;
+  }
+
+  return NextResponse.json(responseData, {
+    status: config.statusCode,
+    headers
+  });
+}
+
+// Wrapper per API routes con gestione errori automatica
+export function withErrorHandling(handler: Function) {
+  return async (request: NextRequest) => {
+    try {
+      return await handler(request);
+    } catch (error: any) {
+      // Determina il tipo di errore
+      let appError: AppError;
+
+      if (error instanceof Error) {
+        // Errori JavaScript standard
+        if (error.message.includes('validation')) {
+          appError = createValidationError(error.message).withRequest(request).build();
+        } else if (error.message.includes('auth') || error.message.includes('unauthorized')) {
+          appError = createAuthError(error.message).withRequest(request).build();
+        } else if (error.message.includes('not found')) {
+          appError = createNotFoundError('Resource').withRequest(request).build();
+        } else if (error.message.includes('database') || error.message.includes('db')) {
+          appError = createDatabaseError(error.message).withRequest(request).build();
+        } else {
+          appError = createInternalError(error.message).withRequest(request).build();
+        }
+      } else {
+        // Errori generici
+        appError = createInternalError('Unknown error occurred').withRequest(request).build();
+      }
+
+      return handleError(appError, request);
+    }
+  };
+}
+
+// Funzione per validazione input con errori standardizzati
+export function validateWithError(data: any, schema: Record<string, (value: any) => boolean>, request?: NextRequest) {
+  const errors: string[] = [];
+
+  for (const [field, validator] of Object.entries(schema)) {
+    if (!validator(data[field])) {
+      errors.push(`Invalid ${field}`);
+    }
+  }
+
+  if (errors.length > 0) {
+    const error = createValidationError('Validation failed', { errors })
+      .withRequest(request!)
+      .build();
+    throw new Error(JSON.stringify(error));
+  }
+
+  return true;
+}
+
+// Funzione per gestire errori Supabase
+export function handleSupabaseError(error: any, operation: string, request?: NextRequest): AppError {
+  let appError: AppError;
+
+  if (error.code === 'PGRST116') {
+    // RLS policy violation
+    appError = createAuthzError(`Access denied for ${operation}`).withRequest(request!).build();
+  } else if (error.code === '23505') {
+    // Unique constraint violation
+    appError = createValidationError(`Duplicate entry for ${operation}`).withRequest(request!).build();
+  } else if (error.code === '23503') {
+    // Foreign key violation
+    appError = createValidationError(`Referenced record not found for ${operation}`).withRequest(request!).build();
+  } else if (error.message?.includes('JWT')) {
+    // JWT errors
+    appError = createAuthError(`Authentication failed for ${operation}`).withRequest(request!).build();
+  } else {
+    // Generic database error
+    appError = createDatabaseError(`Database operation failed: ${operation}`, { 
+      code: error.code, 
+      message: error.message 
+    }).withRequest(request!).build();
+  }
+
+  return appError;
+}
+
+// Utility per creare request ID
+export function generateRequestId(): string {
+  return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+}
+
+// Middleware per aggiungere request ID
+export function addRequestId(request: NextRequest): void {
+  if (!request.headers.get('x-request-id')) {
+    request.headers.set('x-request-id', generateRequestId());
+  }
+}
+
+// Export delle funzioni principali
+export {
+  AppErrorBuilder as ErrorBuilder,
+  ERROR_CONFIG
+}; 

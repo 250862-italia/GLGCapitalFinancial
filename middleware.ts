@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { globalPerformanceMonitor } from '@/lib/performance-monitor';
+import { generateRequestId } from '@/lib/error-handler';
 
 // Configurazione sicurezza
 const SECURITY_CONFIG = {
@@ -196,6 +197,11 @@ function logRequest(request: NextRequest, response: NextResponse, startTime: num
 
 export function middleware(request: NextRequest) {
   const startTime = Date.now();
+  
+  // Aggiungi request ID se non presente
+  if (!request.headers.get('x-request-id')) {
+    request.headers.set('x-request-id', generateRequestId());
+  }
   
   try {
     // Pulisci cache rate limiting periodicamente

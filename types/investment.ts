@@ -13,6 +13,17 @@ export interface InvestmentFormData {
   notes?: string;
 }
 
+// Re-export dei tipi dal database types
+export type {
+  Investment as DatabaseInvestment,
+  CreateInvestment,
+  UpdateInvestment,
+  InvestmentPackage,
+  CreateInvestmentPackage,
+  UpdateInvestmentPackage
+} from './database';
+
+// Tipo legacy per compatibilità frontend
 export interface Investment {
   id: string;
   // Proprietà camelCase (usate lato frontend se normalizzate)
