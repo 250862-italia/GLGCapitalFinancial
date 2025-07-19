@@ -510,6 +510,18 @@ export default function AdminClientsPage() {
                   return null;
                 }
                 
+                // Controllo aggiuntivo per oggetti errore
+                if (client && typeof client === 'object' && client.type && client.message && client.code) {
+                  console.warn('⚠️ Skipping error object during rendering:', client);
+                  return null;
+                }
+                
+                // Controllo per assicurarsi che client.id sia una stringa valida
+                if (!client.id || typeof client.id !== 'string') {
+                  console.warn('⚠️ Skipping client with invalid ID:', client);
+                  return null;
+                }
+                
                 return (
                   <tr key={client.id} style={{ 
                     borderBottom: index < filteredClients.length - 1 ? '1px solid #e5e7eb' : 'none',
@@ -518,9 +530,9 @@ export default function AdminClientsPage() {
                   <td style={{ padding: '1rem' }}>
                     <div>
                       <div style={{ fontWeight: 600, color: 'var(--primary)' }}>
-                        {sanitizeValue(client.first_name)} {sanitizeValue(client.last_name)}
+                        {sanitizeValue(client.first_name || 'N/A')} {sanitizeValue(client.last_name || 'N/A')}
                       </div>
-                      <div style={{ fontSize: 14, color: '#6b7280' }}>ID: {sanitizeValue(client.client_code || client.id)}</div>
+                      <div style={{ fontSize: 14, color: '#6b7280' }}>ID: {sanitizeValue(client.client_code || client.id || 'N/A')}</div>
                     </div>
                   </td>
                   <td style={{ padding: '1rem' }}>
@@ -585,7 +597,7 @@ export default function AdminClientsPage() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <CreditCard size={14} color="#6b7280" />
                       <span style={{ fontSize: 14, fontWeight: 600 }}>
-                        €{(client.total_invested || 0).toLocaleString()}
+                        €{(typeof client.total_invested === 'number' ? client.total_invested : 0).toLocaleString()}
                       </span>
                     </div>
                   </td>
@@ -593,7 +605,7 @@ export default function AdminClientsPage() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <Calendar size={14} color="#6b7280" />
                       <span style={{ fontSize: 14 }}>
-                        {new Date(client.created_at).toLocaleDateString('it-IT')}
+                        {client.created_at ? new Date(client.created_at).toLocaleDateString('it-IT') : 'N/A'}
                       </span>
                     </div>
                   </td>
