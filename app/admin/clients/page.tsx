@@ -143,6 +143,13 @@ export default function AdminClientsPage() {
     }
   };
 
+  // Funzione per verificare se un cliente ha dati validi
+  const isValidClient = (client: any): boolean => {
+    if (!client || typeof client !== 'object') return false;
+    if (client.type && client.message && client.code) return false;
+    return true;
+  };
+
   const filteredClients = clients.filter(client => {
     // Prima verifica che il cliente sia valido
     if (!isValidClient(client)) {
@@ -371,13 +378,6 @@ export default function AdminClientsPage() {
       }
     }
     return String(value);
-  };
-
-  // Funzione per verificare se un cliente ha dati validi
-  const isValidClient = (client: any): boolean => {
-    if (!client || typeof client !== 'object') return false;
-    if (client.type && client.message && client.code) return false;
-    return true;
   };
 
   if (loading) {
