@@ -22,51 +22,27 @@ class EmailService {
 
   constructor() {
     this.config = {
-      service: 'supabase',
+      service: 'simulated', // Cambiato a simulated per ora
       fromEmail: 'noreply@glgcapitalgroupllc.com'
     };
   }
 
   async sendEmail(emailData: EmailData): Promise<{ success: boolean; message: string; service: string }> {
     try {
-      console.log('📧 Sending email via Supabase:', {
+      console.log('📧 Sending email:', {
         to: emailData.to,
         subject: emailData.subject,
         service: this.config.service
       });
 
-      // Store email in Supabase for processing
-      const { data, error } = await supabase
-        .from('email_queue')
-        .insert([
-          {
-            to_email: emailData.to,
-            subject: emailData.subject,
-            html_content: emailData.html,
-            text_content: emailData.text,
-            from_email: emailData.from || this.config.fromEmail,
-            status: 'pending',
-            created_at: new Date().toISOString()
-          }
-        ]);
+      // Per ora usiamo il servizio simulato che mostra l'email nella console
+      return this.simulateEmail(emailData);
 
-      if (error) {
-        console.error('❌ Error storing email in queue:', error);
-        
-        // Fallback: simulate email sending
-        return this.simulateEmail(emailData);
-      }
-
-      console.log('✅ Email queued successfully in Supabase');
-      
-      // In a real implementation, you would have a Supabase Edge Function
-      // that processes the email queue and sends emails via SMTP or other services
-      
-      return {
-        success: true,
-        message: 'Email queued successfully',
-        service: 'supabase'
-      };
+      // TODO: Implementare invio email reale con servizi come:
+      // - Resend.com
+      // - SendGrid
+      // - AWS SES
+      // - Nodemailer con SMTP
 
     } catch (error) {
       console.error('❌ Email service error:', error);
@@ -75,15 +51,18 @@ class EmailService {
   }
 
   private simulateEmail(emailData: EmailData): { success: boolean; message: string; service: string } {
-    console.log('📧 Simulating email send:', {
-      to: emailData.to,
-      subject: emailData.subject,
-      from: emailData.from || this.config.fromEmail
-    });
+    console.log('📧 === EMAIL SIMULATA ===');
+    console.log('📧 To:', emailData.to);
+    console.log('📧 From:', emailData.from || this.config.fromEmail);
+    console.log('📧 Subject:', emailData.subject);
+    console.log('📧 HTML Content:', emailData.html);
+    console.log('📧 Text Content:', emailData.text);
+    console.log('📧 === FINE EMAIL ===');
 
+    // In produzione, qui andrebbe l'invio email reale
     return {
       success: true,
-      message: 'Email simulated (Supabase not available)',
+      message: 'Email simulata (controlla la console per vedere il contenuto)',
       service: 'simulated'
     };
   }
@@ -200,90 +179,93 @@ class EmailService {
       </div>
     `;
 
-    try {
-      // Send to client
-      await this.sendEmail({
-        to: userEmail,
-        subject: `Investment Request Confirmation - ${packageName} Package`,
-        html: clientEmailHtml
-      });
+    // Send email to client
+    const clientResult = await this.sendEmail({
+      to: userEmail,
+      subject: 'Investment Request Confirmed - GLG Capital Group',
+      html: clientEmailHtml
+    });
 
-      // Send to support team
-      await this.sendEmail({
-        to: 'corefound@glgcapitalgroupllc.com',
-        subject: `Investment Request - ${packageName} Package - ${userName}`,
-        html: supportEmailHtml
-      });
+    // Send email to support team
+    const supportResult = await this.sendEmail({
+      to: 'support@glgcapitalgroupllc.com',
+      subject: `New Investment Request - ${userName}`,
+      html: supportEmailHtml
+    });
 
-      console.log('✅ Investment notification emails sent successfully');
-      return true;
-    } catch (error) {
-      console.error('❌ Error sending investment notification emails:', error);
-      return false;
-    }
+    return clientResult.success && supportResult.success;
   }
 
   async sendInformationalRequestEmail(requestData: any): Promise<boolean> {
-    const emailContent = `
-Informational Request Form
-GLG Equity Pledge
+    const { name, email, request_type, subject, message } = requestData;
 
-Involved Entities:
-* GLG Capital Consulting LLC (USA)
-* GLG Capital Group LLC (United States)
-
-1. Subject of the Request
-I, the undersigned, as a prospective participant, hereby request detailed information regarding the "GLG Equity Pledge" program, including but not limited to:
-* Operational and legal structure
-* Financial terms and durations
-* Share pledge mechanism
-* Repayment procedures and timelines
-* Key risks and safeguards
-
-2. Applicant's Declarations
-* Voluntariness: I declare that this request is made of my own free will, without any solicitation or promotional activities by GLG Capital Consulting LLC, or their agents.
-* Informational Purpose: I understand that the information provided is purely informational and does not constitute a contractual offer, investment advice, or recommendation under applicable securities laws.
-* Independent Evaluation: I commit to independently assess, and if needed consult professional advisors on, the suitability of any potential investment decision.
-
-3. Data Processing Consent (EU GDPR 2016/679)
-I authorize GLG Capital Consulting LLC to process my personal data solely for the purposes of:
-* Providing the requested information
-* Complying with legal AML requirements
-My data will not be shared with third parties for any other purposes.
-
-4. U.S. Regulatory References
-By submitting this form, you acknowledge that GLG Capital Consulting LLC operates in compliance with the following key U.S. laws and regulations:
-* Securities Act of 1933 & Securities Exchange Act of 1934: Governing private placements and exempt offerings under Regulation D.
-* Bank Secrecy Act (BSA) & USA PATRIOT Act: Mandating customer identification (CIP), suspicious activity monitoring, and AML due diligence.
-* Investment Advisers Act of 1940: Applicable to advisory activities and fiduciary standards for U.S. investors.
-* California Consumer Privacy Act (CCPA): Protecting personal data and consumer privacy for California residents.
-
-5. Submission Channels
-Please send the requested information via one of the following:
-* Email: corefound@glgcapitalconsulting.com
-
----
-APPLICANT INFORMATION:
-Name: ${requestData.first_name} ${requestData.last_name}
-Email: ${requestData.email}
-Phone: ${requestData.phone || 'Not provided'}
-Company: ${requestData.company || 'Not provided'}
-Position: ${requestData.position || 'Not provided'}
-Country: ${requestData.country || 'Not provided'}
-City: ${requestData.city || 'Not provided'}
-Additional Notes: ${requestData.additionalNotes || 'None'}
-
-Request ID: ${requestData.id}
-Date: ${new Date().toLocaleDateString()}
-Time: ${new Date().toLocaleTimeString()}
+    const emailHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: #3b82f6; color: white; padding: 20px; text-align: center; border-radius: 8px;">
+          <h2 style="margin: 0;">New Informational Request</h2>
+        </div>
+        
+        <div style="background: white; padding: 20px; border: 1px solid #e5e7eb; border-radius: 0 0 8px 8px;">
+          <h3>Request Details:</h3>
+          <ul style="margin: 10px 0; padding-left: 20px;">
+            <li><strong>Name:</strong> ${name}</li>
+            <li><strong>Email:</strong> ${email}</li>
+            <li><strong>Request Type:</strong> ${request_type}</li>
+            <li><strong>Subject:</strong> ${subject}</li>
+            <li><strong>Date:</strong> ${new Date().toLocaleString()}</li>
+          </ul>
+          
+          <h4>Message:</h4>
+          <div style="background: #f3f4f6; padding: 15px; border-radius: 6px; margin: 15px 0;">
+            <p style="margin: 0; white-space: pre-wrap;">${message}</p>
+          </div>
+          
+          <p>Please respond to this request as soon as possible.</p>
+        </div>
+      </div>
     `;
 
     const result = await this.sendEmail({
-      to: 'corefound@glgcapitalconsulting.com',
-      subject: `Informational Request - ${requestData.first_name} ${requestData.last_name}`,
-      text: emailContent,
-      html: emailContent.replace(/\n/g, '<br>'),
-      from: requestData.email
+      to: 'info@glgcapitalgroupllc.com',
+      subject: `New ${request_type} Request - ${name}`,
+      html: emailHtml
+    });
+
+    return result.success;
+  }
+
+  async sendContactFormEmail(contactData: any): Promise<boolean> {
+    const { name, email, subject, message } = contactData;
+
+    const emailHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: #059669; color: white; padding: 20px; text-align: center; border-radius: 8px;">
+          <h2 style="margin: 0;">New Contact Form Submission</h2>
+        </div>
+        
+        <div style="background: white; padding: 20px; border: 1px solid #e5e7eb; border-radius: 0 0 8px 8px;">
+          <h3>Contact Details:</h3>
+          <ul style="margin: 10px 0; padding-left: 20px;">
+            <li><strong>Name:</strong> ${name}</li>
+            <li><strong>Email:</strong> ${email}</li>
+            <li><strong>Subject:</strong> ${subject}</li>
+            <li><strong>Date:</strong> ${new Date().toLocaleString()}</li>
+          </ul>
+          
+          <h4>Message:</h4>
+          <div style="background: #f3f4f6; padding: 15px; border-radius: 6px; margin: 15px 0;">
+            <p style="margin: 0; white-space: pre-wrap;">${message}</p>
+          </div>
+          
+          <p>Please respond to this contact request as soon as possible.</p>
+        </div>
+      </div>
+    `;
+
+    const result = await this.sendEmail({
+      to: 'corefound@glgcapitalgroupllc.com',
+      subject: `New message from ${name} - ${subject}`,
+      html: emailHtml
     });
 
     return result.success;

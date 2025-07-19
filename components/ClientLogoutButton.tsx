@@ -5,12 +5,26 @@ export default function ClientLogoutButton({ onLogout }: { onLogout?: () => void
   const router = useSafeRouter();
 
   const handleLogout = () => {
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
-    localStorage.removeItem('admin_user');
-    localStorage.removeItem('admin_token');
-    if (onLogout) onLogout();
-    router.push('/');
+    try {
+      // Clear all user data
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      localStorage.removeItem('admin_user');
+      localStorage.removeItem('admin_token');
+      
+      // Clear any cookies
+      document.cookie = 'auth-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      document.cookie = 'admin-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      
+      if (onLogout) onLogout();
+      
+      // Force redirect to home
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Fallback redirect
+      window.location.href = '/';
+    }
   };
 
   return (

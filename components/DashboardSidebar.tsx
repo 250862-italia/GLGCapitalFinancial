@@ -46,8 +46,15 @@ export default function DashboardSidebar({ isOpen, onToggle }: DashboardSidebarP
   }, []);
 
   const handleLogout = () => {
-    logout();
-    router.push('/');
+    try {
+      logout();
+      // Force redirect to home
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Fallback redirect
+      window.location.href = '/';
+    }
   };
 
   const menuItems = [

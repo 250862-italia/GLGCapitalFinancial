@@ -71,10 +71,27 @@ export default function AdminDashboardPage() {
 
   // Logout function
   const handleLogout = () => {
-    localStorage.removeItem("admin_user");
-    localStorage.removeItem("admin_token");
-    addLog("Admin logged out successfully");
-    router.push('/');
+    try {
+      // Clear all admin data
+      localStorage.removeItem("admin_user");
+      localStorage.removeItem("admin_token");
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+      
+      // Clear any cookies
+      document.cookie = 'auth-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      document.cookie = 'admin-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      
+      addLog("Admin logged out successfully");
+      
+      // Force redirect to home
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Logout error:', error);
+      addLog("Logout error: " + error);
+      // Fallback redirect
+      window.location.href = '/';
+    }
   };
 
   // Listener globale per log (window.dispatchEvent(new CustomEvent('admin-log', { detail: 'messaggio' })))
