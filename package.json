@@ -61,6 +61,7 @@
     "next-i18next": "^15.4.2",
     "node-fetch": "^3.3.2",
     "nodemailer": "^7.0.5",
+    "puppeteer": "^24.14.0",
     "rate-limiter-flexible": "^4.0.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
