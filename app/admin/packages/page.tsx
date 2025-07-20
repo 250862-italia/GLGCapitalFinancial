@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useState } from "react";
-import { supabase } from '@/lib/supabase';
 import type { CSSProperties } from 'react';
 
 export default function AdminPackagesPage() {
@@ -19,7 +18,7 @@ export default function AdminPackagesPage() {
       description: '',
       min_investment: '',
       max_investment: '',
-      duration: '',
+      duration_months: '',
       expected_return: '',
       status: 'active'
     };
@@ -32,9 +31,32 @@ export default function AdminPackagesPage() {
   async function fetchPackages() {
     setLoading(true);
     setError(null);
-    const { data, error } = await supabase.from('packages').select('*').order('created_at', { ascending: false });
-    if (error) setError(error.message);
-    else setPackages(data || []);
+    
+    try {
+      const adminToken = localStorage.getItem('admin_token');
+      if (!adminToken) {
+        setError('Admin token not found. Please login again.');
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch('/api/admin/packages', {
+        headers: {
+          'x-admin-session': adminToken
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch packages');
+      }
+
+      const data = await response.json();
+      setPackages(data.packages || []);
+    } catch (err: any) {
+      setError(err.message || 'Failed to fetch packages');
+    }
+    
     setLoading(false);
   }
 
@@ -58,41 +80,61 @@ export default function AdminPackagesPage() {
     e.preventDefault();
     setSaving(true);
     setError(null);
+    
     try {
-      let res;
-      if (isEdit && form.id) {
-        res = await supabase.from('packages').update({
-          name: form.name,
-          description: form.description,
-          min_investment: Number(form.min_investment),
-          max_investment: Number(form.max_investment),
-          duration: Number(form.duration),
-          expected_return: Number(form.expected_return),
-          status: form.status
-        }).eq('id', form.id);
-      } else {
-        res = await supabase.from('packages').insert([
-          {
-            name: form.name,
-            description: form.description,
-            min_investment: Number(form.min_investment),
-            max_investment: Number(form.max_investment),
-            duration: Number(form.duration),
-            expected_return: Number(form.expected_return),
-            status: form.status
-          }
-        ]);
+      const adminToken = localStorage.getItem('admin_token');
+      if (!adminToken) {
+        setError('Admin token not found. Please login again.');
+        setSaving(false);
+        return;
       }
-      if (res.error) {
-        if (res.error.message.match(/permission denied|no insert policy|RLS/)) {
-          setError('Errore di permessi: le policy RLS potrebbero essere troppo restrittive. Contatta un amministratore.');
-        } else {
-          setError(res.error.message);
-        }
-      } else closeModal();
+
+      const packageData = {
+        name: form.name,
+        description: form.description,
+        min_investment: Number(form.min_investment),
+        max_investment: Number(form.max_investment),
+        duration_months: Number(form.duration_months),
+        expected_return: Number(form.expected_return),
+        status: form.status
+      };
+
+      let response;
+      if (isEdit && form.id) {
+        // Update existing package
+        response = await fetch('/api/admin/packages', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-session': adminToken
+          },
+          body: JSON.stringify({
+            id: form.id,
+            ...packageData
+          })
+        });
+      } else {
+        // Create new package
+        response = await fetch('/api/admin/packages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-session': adminToken
+          },
+          body: JSON.stringify(packageData)
+        });
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to save package');
+      }
+
+      closeModal();
     } catch (err: any) {
-      setError('Errore imprevisto: ' + (err.message || err));
+      setError(err.message || 'Failed to save package');
     }
+    
     setSaving(false);
     fetchPackages();
   }
@@ -101,18 +143,32 @@ export default function AdminPackagesPage() {
     if (!window.confirm('Sei sicuro di voler eliminare questo pacchetto?')) return;
     setSaving(true);
     setError(null);
+    
     try {
-      const { error } = await supabase.from('packages').delete().eq('id', id);
-      if (error) {
-        if (error.message.match(/permission denied|no delete policy|RLS/)) {
-          setError('Errore di permessi: le policy RLS potrebbero essere troppo restrittive. Contatta un amministratore.');
-        } else {
-          setError(error.message);
-        }
+      const adminToken = localStorage.getItem('admin_token');
+      if (!adminToken) {
+        setError('Admin token not found. Please login again.');
+        setSaving(false);
+        return;
       }
+
+      const response = await fetch(`/api/admin/packages?id=${id}`, {
+        method: 'DELETE',
+        headers: {
+          'x-admin-session': adminToken
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete package');
+      }
+
+      console.log('Package deleted successfully');
     } catch (err: any) {
-      setError('Errore imprevisto: ' + (err.message || err));
+      setError(err.message || 'Failed to delete package');
     }
+    
     setSaving(false);
     fetchPackages();
   }
@@ -150,7 +206,7 @@ export default function AdminPackagesPage() {
               <th style={thStyle}>Descrizione</th>
               <th style={thStyle}>Min Invest.</th>
               <th style={thStyle}>Max Invest.</th>
-              <th style={thStyle}>Durata (giorni)</th>
+              <th style={thStyle}>Durata (mesi)</th>
               <th style={thStyle}>Rendimento (%)</th>
               <th style={thStyle}>Stato</th>
               <th style={thStyle}>Azioni</th>
@@ -163,7 +219,7 @@ export default function AdminPackagesPage() {
                 <td style={{ ...tdStyle, maxWidth: 220, whiteSpace: 'pre-line', overflow: 'hidden', textOverflow: 'ellipsis' }}>{pkg.description}</td>
                 <td style={tdStyle}>€{pkg.min_investment?.toLocaleString()}</td>
                 <td style={tdStyle}>€{pkg.max_investment?.toLocaleString()}</td>
-                <td style={tdStyle}>{pkg.duration}</td>
+                <td style={tdStyle}>{pkg.duration_months} mesi</td>
                 <td style={tdStyle}>{pkg.expected_return}%</td>
                 <td style={tdStyle}>
                   <span style={{ 
@@ -214,8 +270,8 @@ export default function AdminPackagesPage() {
                 </div>
                 <div style={{ display: 'flex', gap: 12 }}>
                   <label style={{ flex: 1 }}>
-                    Durata (giorni)*
-                    <input required type="number" value={form.duration} onChange={e => setForm({ ...form, duration: e.target.value })} style={inputStyle} />
+                    Durata (mesi)*
+                    <input required type="number" value={form.duration_months} onChange={e => setForm({ ...form, duration_months: e.target.value })} style={inputStyle} />
                   </label>
                   <label style={{ flex: 1 }}>
                     Rendimento Atteso (%)*
