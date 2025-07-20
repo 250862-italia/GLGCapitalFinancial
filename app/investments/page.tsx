@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from '@/lib/supabase';
 import { fetchJSONWithCSRF } from '@/lib/csrf-client';
 import { useRouter } from 'next/navigation';
+import PaymentMethodModal, { PaymentMethod } from '@/components/investment-packages/PaymentMethodModal';
 
 const BANK_DETAILS = `
 Beneficiario: GLG capital group LLC
@@ -22,6 +23,8 @@ export default function InvestmentsPage() {
   const [selectedPackage, setSelectedPackage] = useState<any | null>(null);
   const [amount, setAmount] = useState("");
   const [user, setUser] = useState<any>(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -69,23 +72,36 @@ export default function InvestmentsPage() {
       return;
     }
     setSelectedPackage(pkg);
+    setAmount(pkg.min_investment?.toString() || "1000");
     setSuccessMsg("");
     setErrorMsg("");
+    setShowPaymentModal(true);
   };
 
-  const handleConfirmBuy = async () => {
+  const handlePaymentMethodSelected = async (paymentMethod: PaymentMethod) => {
     if (!selectedPackage || !amount || !user) return;
     
+    setSelectedPaymentMethod(paymentMethod);
+    setShowPaymentModal(false);
     setLoading(true);
     setSuccessMsg("");
     setErrorMsg("");
     
     try {
-      // Save investment
+      // Calculate total amount including fees
+      let totalAmount = parseFloat(amount);
+      if (paymentMethod.id === 'credit_card') {
+        totalAmount = totalAmount * 1.025 + 0.30;
+      } else if (paymentMethod.id === 'crypto') {
+        totalAmount = totalAmount * 1.01;
+      }
+      
+      // Save investment with payment method
       const { error: investError } = await supabase.from('investments').insert({
         user_id: user.id,
         package_id: selectedPackage.id,
         amount: parseFloat(amount),
+        payment_method: paymentMethod.id,
         status: 'pending',
         created_at: new Date().toISOString()
       });
@@ -95,19 +111,50 @@ export default function InvestmentsPage() {
         throw new Error(investError.message);
       }
       
-      // Send email with bank details
+      // Send email based on payment method
+      let emailSubject = '';
+      let emailHtml = '';
+      
+      switch (paymentMethod.id) {
+        case 'bank_transfer':
+          emailSubject = `Istruzioni Bonifico - Acquisto Pacchetto ${selectedPackage.name}`;
+          emailHtml = `<p>Gentile ${user.email},<br/>grazie per aver scelto il pacchetto <b>${selectedPackage.name}</b>.<br/><br/>Per completare l'acquisto, effettua un bonifico alle seguenti coordinate bancarie:</p><pre>${BANK_DETAILS}</pre><p><b>Causale:</b> Acquisto pacchetto ${selectedPackage.name} - ${user.email}<br/><b>Importo:</b> ${amount} EUR</p><p>Una volta effettuato il bonifico, invia la ricevuta a <a href='mailto:corefound@glgcapitalgroupllc.com'>corefound@glgcapitalgroupllc.com</a>.</p><p>Cordiali saluti,<br/>GLG Capital Group LLC</p>`;
+          break;
+          
+        case 'credit_card':
+          emailSubject = `Pagamento Carta - Acquisto Pacchetto ${selectedPackage.name}`;
+          emailHtml = `<p>Gentile ${user.email},<br/>grazie per aver scelto il pacchetto <b>${selectedPackage.name}</b>.<br/><br/>Il tuo pagamento con carta di credito è stato elaborato con successo.</p><p><b>Dettagli:</b><br/>- Pacchetto: ${selectedPackage.name}<br/>- Importo: ${amount} EUR<br/>- Commissioni: ${(totalAmount - parseFloat(amount)).toFixed(2)} EUR<br/>- Totale: ${totalAmount.toFixed(2)} EUR</p><p>Il tuo investimento sarà attivato entro 24 ore.</p><p>Cordiali saluti,<br/>GLG Capital Group LLC</p>`;
+          break;
+          
+        case 'crypto':
+          emailSubject = `Istruzioni Crypto - Acquisto Pacchetto ${selectedPackage.name}`;
+          emailHtml = `<p>Gentile ${user.email},<br/>grazie per aver scelto il pacchetto <b>${selectedPackage.name}</b>.<br/><br/>Per completare il pagamento in criptovalute, invia ${totalAmount.toFixed(2)} EUR equivalenti a uno dei seguenti indirizzi:</p><p><b>Bitcoin (BTC):</b> bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh<br/><b>Ethereum (ETH):</b> 0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6<br/><b>USDT (TRC20):</b> TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t</p><p><b>Importo da inviare:</b> ${totalAmount.toFixed(2)} EUR equivalenti<br/><b>Commissioni:</b> ${(totalAmount - parseFloat(amount)).toFixed(2)} EUR</p><p>Una volta effettuato il pagamento, invia la ricevuta della transazione a <a href='mailto:corefound@glgcapitalgroupllc.com'>corefound@glgcapitalgroupllc.com</a>.</p><p>Cordiali saluti,<br/>GLG Capital Group LLC</p>`;
+          break;
+      }
+      
       await fetchJSONWithCSRF("/api/send-email", {
         method: "POST",
         body: JSON.stringify({
           to: user.email,
-          subject: `Istruzioni Bonifico - Acquisto Pacchetto ${selectedPackage.name}`,
-          html: `<p>Gentile ${user.email},<br/>grazie per aver scelto il pacchetto <b>${selectedPackage.name}</b>.<br/><br/>Per completare l'acquisto, effettua un bonifico alle seguenti coordinate bancarie:</p><pre>${BANK_DETAILS}</pre><p><b>Causale:</b> Acquisto pacchetto ${selectedPackage.name} - ${user.email}<br/><b>Importo:</b> ${amount} EUR</p><p>Una volta effettuato il bonifico, invia la ricevuta a <a href='mailto:corefound@glgcapitalgroupllc.com'>corefound@glgcapitalgroupllc.com</a>.</p><p>Cordiali saluti,<br/>GLG Capital Group LLC</p>`
+          subject: emailSubject,
+          html: emailHtml
         })
       });
       
-      setSuccessMsg("Richiesta di acquisto inviata! Controlla la tua email per le istruzioni di pagamento.");
+      // Send notification to admin
+      await fetchJSONWithCSRF("/api/send-email", {
+        method: "POST",
+        body: JSON.stringify({
+          to: 'corefound@glgcapitalgroupllc.com',
+          subject: `Nuovo Investimento - ${paymentMethod.name} - ${selectedPackage.name}`,
+          html: `<p>Nuovo investimento ricevuto:</p><p><b>Cliente:</b> ${user.email}<br/><b>Pacchetto:</b> ${selectedPackage.name}<br/><b>Importo:</b> ${amount} EUR<br/><b>Metodo di pagamento:</b> ${paymentMethod.name}<br/><b>Totale:</b> ${totalAmount.toFixed(2)} EUR</p>`
+        })
+      });
+      
+      setSuccessMsg(`Richiesta di acquisto inviata! Controlla la tua email per le istruzioni di pagamento con ${paymentMethod.name}.`);
       setSelectedPackage(null);
       setAmount("");
+      setSelectedPaymentMethod(null);
     } catch (err: any) {
       console.error('Purchase error:', err);
       setErrorMsg("Errore durante l'acquisto: " + (err.message || err));
@@ -158,18 +205,19 @@ export default function InvestmentsPage() {
             ))}
           </div>
         )}
-        {/* Modale acquisto */}
-        {selectedPackage && (
-          <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full relative">
-              <button className="absolute top-2 right-2 text-gray-400 hover:text-gray-700" onClick={() => setSelectedPackage(null)}>&times;</button>
-              <h2 className="text-xl font-bold mb-4">Acquista {selectedPackage.name}</h2>
-              <label className="block mb-2 font-medium">Importo da investire (EUR)</label>
-              <input type="number" min={selectedPackage.min_investment} max={selectedPackage.max_investment} value={amount} onChange={e => setAmount(e.target.value)} className="border p-2 rounded w-full mb-4" />
-              <button className="btn-success w-full" onClick={handleConfirmBuy} disabled={loading || !amount}>Conferma Acquisto</button>
-            </div>
-          </div>
-        )}
+        {/* Modale selezione metodo di pagamento */}
+        <PaymentMethodModal
+          isOpen={showPaymentModal}
+          onClose={() => {
+            setShowPaymentModal(false);
+            setSelectedPackage(null);
+            setSelectedPaymentMethod(null);
+          }}
+          onConfirm={handlePaymentMethodSelected}
+          packageName={selectedPackage?.name || ''}
+          amount={parseFloat(amount) || 0}
+          loading={loading}
+        />
       </div>
     </div>
   );

@@ -30,6 +30,7 @@ import {
   PieChart,
   AlertCircle
 } from 'lucide-react';
+import PaymentMethodModal, { PaymentMethod } from '@/components/investment-packages/PaymentMethodModal';
 import { Investment } from "@/types/investment";
 import { Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import UserProfile from "../../components/UserProfile";
@@ -55,7 +56,9 @@ export default function ClientDashboard() {
   const [selectedTimeframe, setSelectedTimeframe] = useState<'1d' | '7d' | '30d' | '90d'>('30d');
   const [isLoading, setIsLoading] = useState(true);
   const [showBankModal, setShowBankModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<any>(null);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod | null>(null);
   const [bankDetails, setBankDetails] = useState<{iban: string, accountHolder: string, bankName: string, reason: string} | null>(null);
   const router = useRouter();
 
@@ -214,25 +217,35 @@ export default function ClientDashboard() {
       return;
     }
 
-    // Set the selected package for the modal
+    // Set the selected package for the payment modal
     setSelectedPackage(pkg);
-    setShowBankModal(true);
+    setShowPaymentModal(true);
   };
 
-  // Function to confirm purchase
-  const handleConfirmBuy = async () => {
+  // Function to handle payment method selection
+  const handlePaymentMethodSelected = async (paymentMethod: PaymentMethod) => {
     if (!selectedPackage || !user) {
       alert('Please select a package to invest in.');
       return;
     }
 
     try {
+      const amount = selectedPackage.minInvestment || selectedPackage.minAmount || 1000;
+      
+      // Calculate total amount including fees
+      let totalAmount = amount;
+      if (paymentMethod.id === 'credit_card') {
+        totalAmount = amount * 1.025 + 0.30;
+      } else if (paymentMethod.id === 'crypto') {
+        totalAmount = amount * 1.01;
+      }
+
       // Send email to GLG support with investment request
       const supportEmailResponse = await fetchJSONWithCSRF('/api/send-email', {
         method: 'POST',
         body: JSON.stringify({
           to: 'corefound@glgcapitalgroupllc.com',
-          subject: `Investment Request - ${selectedPackage.name} Package - ${user.name || user.profile?.first_name || user.email}`,
+          subject: `Investment Request - ${paymentMethod.name} - ${selectedPackage.name} Package - ${user.name || user.profile?.first_name || user.email}`,
           html: `
             <h2>New Investment Request</h2>
             <p>A new investment request has been submitted:</p>
@@ -247,25 +260,28 @@ export default function ClientDashboard() {
             <h3>Package Details:</h3>
             <ul>
               <li><strong>Package:</strong> ${selectedPackage.name}</li>
-              <li><strong>Investment Amount:</strong> $${selectedPackage.minInvestment || selectedPackage.minAmount || 1000}</li>
+              <li><strong>Investment Amount:</strong> $${amount}</li>
+              <li><strong>Payment Method:</strong> ${paymentMethod.name}</li>
+              <li><strong>Total Amount:</strong> $${totalAmount.toFixed(2)}</li>
               <li><strong>Expected Return:</strong> ${selectedPackage.expectedReturn || selectedPackage.daily_return || 1.0}% daily</li>
               <li><strong>Duration:</strong> ${selectedPackage.duration || 30} days</li>
             </ul>
 
-            <p>Please process this investment request and send banking details to the client.</p>
+            <p>Please process this investment request and send payment instructions to the client.</p>
             
             <p>Best regards,<br>GLG Capital Group System</p>
           `
         })
       });
 
-      // Send confirmation email to user with banking details
-      const userEmailResponse = await fetchJSONWithCSRF('/api/send-email', {
-        method: 'POST',
-        body: JSON.stringify({
-          to: user.email,
-          subject: `Investment Request Confirmation - ${selectedPackage.name} Package`,
-          html: `
+      // Send confirmation email to user based on payment method
+      let userEmailSubject = '';
+      let userEmailHtml = '';
+      
+      switch (paymentMethod.id) {
+        case 'bank_transfer':
+          userEmailSubject = `Investment Request Confirmation - ${selectedPackage.name} Package`;
+          userEmailHtml = `
             <h2>Investment Request Confirmation</h2>
             <p>Dear ${user.name || user.profile?.first_name || 'Valued Customer'},</p>
             <p>Thank you for your investment request for the <b>${selectedPackage.name}</b> package.</p>
@@ -273,7 +289,8 @@ export default function ClientDashboard() {
             <h3>Request Details:</h3>
             <ul>
               <li><strong>Package:</strong> ${selectedPackage.name}</li>
-              <li><strong>Investment Amount:</strong> $${selectedPackage.minInvestment || selectedPackage.minAmount || 1000}</li>
+              <li><strong>Investment Amount:</strong> $${amount}</li>
+              <li><strong>Payment Method:</strong> ${paymentMethod.name}</li>
               <li><strong>Expected Return:</strong> ${selectedPackage.expectedReturn || selectedPackage.daily_return || 1.0}% daily</li>
               <li><strong>Duration:</strong> ${selectedPackage.duration || 30} days</li>
             </ul>
@@ -311,7 +328,76 @@ export default function ClientDashboard() {
             <p>If you have any questions or need assistance, please contact our support team at corefound@glgcapitalgroupllc.com</p>
             
             <p>Best regards,<br>GLG Capital Group Team</p>
-          `
+          `;
+          break;
+          
+        case 'credit_card':
+          userEmailSubject = `Payment Confirmation - ${selectedPackage.name} Package`;
+          userEmailHtml = `
+            <h2>Payment Confirmation</h2>
+            <p>Dear ${user.name || user.profile?.first_name || 'Valued Customer'},</p>
+            <p>Thank you for your payment for the <b>${selectedPackage.name}</b> package.</p>
+            
+            <h3>Payment Details:</h3>
+            <ul>
+              <li><strong>Package:</strong> ${selectedPackage.name}</li>
+              <li><strong>Investment Amount:</strong> $${amount}</li>
+              <li><strong>Payment Method:</strong> ${paymentMethod.name}</li>
+              <li><strong>Processing Fee:</strong> $${(totalAmount - amount).toFixed(2)}</li>
+              <li><strong>Total Paid:</strong> $${totalAmount.toFixed(2)}</li>
+            </ul>
+
+            <p>Your investment will be activated within 24 hours.</p>
+            
+            <p>Best regards,<br>GLG Capital Group Team</p>
+          `;
+          break;
+          
+        case 'crypto':
+          userEmailSubject = `Crypto Payment Instructions - ${selectedPackage.name} Package`;
+          userEmailHtml = `
+            <h2>Crypto Payment Instructions</h2>
+            <p>Dear ${user.name || user.profile?.first_name || 'Valued Customer'},</p>
+            <p>Thank you for your investment request for the <b>${selectedPackage.name}</b> package.</p>
+            
+            <h3>Payment Details:</h3>
+            <ul>
+              <li><strong>Package:</strong> ${selectedPackage.name}</li>
+              <li><strong>Investment Amount:</strong> $${amount}</li>
+              <li><strong>Payment Method:</strong> ${paymentMethod.name}</li>
+              <li><strong>Processing Fee:</strong> $${(totalAmount - amount).toFixed(2)}</li>
+              <li><strong>Total to Pay:</strong> $${totalAmount.toFixed(2)}</li>
+            </ul>
+
+            <h3>Crypto Wallet Addresses:</h3>
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <p><strong>Bitcoin (BTC):</strong> bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh</p>
+              <p><strong>Ethereum (ETH):</strong> 0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6</p>
+              <p><strong>USDT (TRC20):</strong> TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t</p>
+            </div>
+
+            <h3>Important Instructions:</h3>
+            <ol>
+              <li>Send exactly $${totalAmount.toFixed(2)} worth of cryptocurrency to any of the addresses above</li>
+              <li>Include your email address in the transaction memo/reference</li>
+              <li>Once the payment is confirmed, send the transaction hash to our support team</li>
+              <li>Your investment will be activated within 2-4 hours after confirmation</li>
+            </ol>
+
+            <h3>Contact Information:</h3>
+            <p>If you have any questions or need assistance, please contact our support team at corefound@glgcapitalgroupllc.com</p>
+            
+            <p>Best regards,<br>GLG Capital Group Team</p>
+          `;
+          break;
+      }
+
+      const userEmailResponse = await fetchJSONWithCSRF('/api/send-email', {
+        method: 'POST',
+        body: JSON.stringify({
+          to: user.email,
+          subject: userEmailSubject,
+          html: userEmailHtml
         })
       });
 
@@ -323,12 +409,12 @@ export default function ClientDashboard() {
       const newInvestment: Investment = {
         id: selectedPackage.id || String(Date.now()),
         packageName: selectedPackage.name,
-        amount: selectedPackage.minInvestment || selectedPackage.minAmount || 1000,
+        amount: amount,
         dailyReturn: selectedPackage.expectedReturn || selectedPackage.daily_return || 1.0,
         duration: selectedPackage.duration || 30,
         startDate: new Date().toISOString().split('T')[0],
         endDate: new Date(Date.now() + (selectedPackage.duration || 30) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        status: 'pending_payment', // Changed to pending_payment until payment is confirmed
+        status: 'pending_payment',
         totalEarned: 0,
         dailyEarnings: 0,
         monthlyEarnings: 0
@@ -341,9 +427,10 @@ export default function ClientDashboard() {
           body: JSON.stringify({
             userId: user.id,
             packageId: selectedPackage.id,
-            amount: selectedPackage.minInvestment || selectedPackage.minAmount || 1000,
+            amount: amount,
             packageName: selectedPackage.name,
-            notifyAdmin: true // Flag to trigger admin notification
+            paymentMethod: paymentMethod.id,
+            notifyAdmin: true
           })
         });
 
@@ -354,17 +441,17 @@ export default function ClientDashboard() {
         }
       } catch (notificationError) {
         console.warn('⚠️ Error creating investment:', notificationError);
-        // Don't fail the investment if notification fails
       }
 
       const updated = [...myInvestments, newInvestment];
       setMyInvestments(updated);
       
-      setShowBankModal(false);
+      setShowPaymentModal(false);
       setSelectedPackage(null);
+      setSelectedPaymentMethod(null);
       
       // Show success message
-      alert('Investment request submitted successfully! Check your email for banking details and instructions.');
+      alert(`Investment request submitted successfully! Check your email for ${paymentMethod.name} instructions.`);
       
     } catch (error) {
       console.error('Error processing investment:', error);
@@ -717,39 +804,19 @@ export default function ClientDashboard() {
         </div>
 
         {/* Banking Details Modal */}
-        {showBankModal && (
-          <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-            <div style={{ background: 'white', borderRadius: 12, padding: 32, minWidth: 350, boxShadow: '0 4px 24px rgba(10,37,64,0.10)' }}>
-              <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16 }}>Investment Confirmation</h2>
-              {selectedPackage && (
-                <div style={{ marginBottom: 24 }}>
-                  <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 8, padding: 16, marginBottom: 16 }}>
-                    <h3 style={{ margin: '0 0 12px 0', color: '#166534' }}>Package Details</h3>
-                    <div><b>Package:</b> {selectedPackage.name}</div>
-                    <div><b>Investment Amount:</b> ${selectedPackage.minInvestment || selectedPackage.minAmount || 1000}</div>
-                    <div><b>Expected Return:</b> {selectedPackage.expectedReturn || selectedPackage.daily_return || 1.0}% daily</div>
-                    <div><b>Duration:</b> {selectedPackage.duration || 30} days</div>
-                  </div>
-                  <div style={{ background: '#fef3c7', border: '1px solid #f59e0b', borderRadius: 8, padding: 16 }}>
-                    <h3 style={{ margin: '0 0 12px 0', color: '#92400e' }}>Next Steps</h3>
-                    <p style={{ margin: '0 0 8px 0', fontSize: 14, color: '#92400e' }}>
-                      Click "Send Investment Instructions" to receive an email with:
-                    </p>
-                    <ul style={{ margin: 0, paddingLeft: 20, fontSize: 14, color: '#92400e' }}>
-                      <li>Complete banking details for wire transfer</li>
-                      <li>Step-by-step payment instructions</li>
-                      <li>Reference number for your investment</li>
-                    </ul>
-                  </div>
-                </div>
-              )}
-              <div style={{ display: 'flex', gap: 16, justifyContent: 'flex-end' }}>
-                <button onClick={() => { setShowBankModal(false); setSelectedPackage(null); }} style={{ background: '#d1d5db', color: '#1f2937', padding: '0.5rem 1rem', border: 'none', borderRadius: 6, fontWeight: 500 }}>Cancel</button>
-                <button onClick={handleConfirmBuy} style={{ background: '#059669', color: 'white', padding: '0.5rem 1rem', border: 'none', borderRadius: 6, fontWeight: 500, cursor: 'pointer' }}>Send Investment Instructions</button>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Modale selezione metodo di pagamento */}
+        <PaymentMethodModal
+          isOpen={showPaymentModal}
+          onClose={() => {
+            setShowPaymentModal(false);
+            setSelectedPackage(null);
+            setSelectedPaymentMethod(null);
+          }}
+          onConfirm={handlePaymentMethodSelected}
+          packageName={selectedPackage?.name || ''}
+          amount={selectedPackage?.minInvestment || selectedPackage?.minAmount || 1000}
+          loading={false}
+        />
 
         <Toast
           message={""}

@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { userId, packageId, amount, packageName } = body;
+    const { userId, packageId, amount, packageName, paymentMethod } = body;
 
     if (!userId || !packageId || !amount) {
       return NextResponse.json(
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('Processing investment request:', { userId, packageId, amount, packageName });
+    console.log('Processing investment request:', { userId, packageId, amount, packageName, paymentMethod });
 
     // Get user details
     const { data: user, error: userError } = await supabaseAdmin!.auth.admin.getUserById(userId);
@@ -91,9 +91,10 @@ export async function POST(request: NextRequest) {
         user_id: userId,
         package_id: packageId,
         amount: parseFloat(amount),
+        payment_method: paymentMethod || 'bank_transfer',
         status: 'pending',
         expected_return: 1.8, // Default daily return
-        notes: `Investment request for ${packageName} package`
+        notes: `Investment request for ${packageName} package via ${paymentMethod || 'bank_transfer'}`
       })
       .select()
       .single();
