@@ -78,9 +78,11 @@ export default function ProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [editingField, setEditingField] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [editForm, setEditForm] = useState<Partial<ClientProfile>>({});
+  const [editForm, setEditForm] = useState<Record<string, any>>({});
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [hasChanges, setHasChanges] = useState(false);
+  const [originalData, setOriginalData] = useState<Record<string, any>>({});
 
   useEffect(() => {
     if (user) {
@@ -222,45 +224,95 @@ export default function ProfilePage() {
   const startEditingField = (fieldName: string, currentValue: any) => {
     setEditingField(fieldName);
     setEditForm(prev => ({ ...prev, [fieldName]: currentValue }));
+    setOriginalData(prev => ({ ...prev, [fieldName]: currentValue }));
   };
 
   const cancelEditingField = () => {
     setEditingField(null);
     setEditForm({});
+    setHasChanges(false);
   };
 
-  const saveField = async (fieldName: string) => {
-    if (!profile || !user) return;
+  const handleFieldChange = (fieldName: string, value: any) => {
+    setEditForm(prev => ({ ...prev, [fieldName]: value }));
+    
+    // Check if value has changed from original
+    const originalValue = originalData[fieldName];
+    const hasChanged = value !== originalValue;
+    
+    if (hasChanged) {
+      setHasChanges(true);
+    } else {
+      // Check if any other fields have changes
+      const otherFieldsHaveChanges = Object.keys(editForm).some(key => {
+        if (key === fieldName) return false;
+        return editForm[key] !== originalData[key];
+      });
+      setHasChanges(otherFieldsHaveChanges);
+    }
+  };
+
+  const saveAllChanges = async () => {
+    if (!profile || !user || !hasChanges) return;
     
     setSaving(true);
     setError(null);
     
     try {
+      // Prepare all changed fields
+      const changedFields: Record<string, any> = {};
+      Object.keys(editForm).forEach(fieldName => {
+        const currentValue = editForm[fieldName];
+        const originalValue = originalData[fieldName];
+        if (currentValue !== originalValue) {
+          changedFields[fieldName] = currentValue;
+        }
+      });
+
+      if (Object.keys(changedFields).length === 0) {
+        setSaving(false);
+        return;
+      }
+
       const response = await fetchJSONWithCSRF(`/api/profile/update`, {
         method: 'POST',
         body: JSON.stringify({
           user_id: user.id,
-          [fieldName]: editForm[fieldName]
+          ...changedFields
         })
       });
 
       if (response.ok) {
         const result = await response.json();
-        setProfile(prev => prev ? { ...prev, [fieldName]: editForm[fieldName] } : null);
+        
+        // Update profile with all changed fields
+        setProfile(prev => prev ? { ...prev, ...changedFields } : null);
+        
+        // Reset editing state
         setEditingField(null);
         setEditForm({});
-        setSuccessMessage(`${fieldName.replace(/_/g, ' ')} updated successfully!`);
+        setOriginalData({});
+        setHasChanges(false);
+        
+        setSuccessMessage('All changes saved successfully!');
         setTimeout(() => setSuccessMessage(null), 3000);
       } else {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to update field');
+        throw new Error(errorData.error || 'Failed to save changes');
       }
     } catch (error) {
-      console.error('Error updating field:', error);
-      setError(`Update error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error('Error saving changes:', error);
+      setError(`Save error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setSaving(false);
     }
+  };
+
+  const cancelAllChanges = () => {
+    setEditingField(null);
+    setEditForm({});
+    setOriginalData({});
+    setHasChanges(false);
   };
 
   const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -415,30 +467,93 @@ export default function ProfilePage() {
         <div style={{ 
           display: 'flex', 
           alignItems: 'center', 
-          gap: '1rem', 
+          justifyContent: 'space-between',
           marginBottom: '2rem' 
         }}>
-          <button
-            onClick={() => router.back()}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              padding: '0.5rem',
-              borderRadius: '6px',
-              color: '#6b7280'
-            }}
-          >
-            <ArrowLeft size={24} />
-          </button>
-          <h1 style={{ 
-            fontSize: '2rem', 
-            fontWeight: 700, 
-            color: '#1f2937', 
-            margin: 0 
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '1rem' 
           }}>
-            User Profile
-          </h1>
+            <button
+              onClick={() => router.back()}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '0.5rem',
+                borderRadius: '6px',
+                color: '#6b7280'
+              }}
+            >
+              <ArrowLeft size={24} />
+            </button>
+            <h1 style={{ 
+              fontSize: '2rem', 
+              fontWeight: 700, 
+              color: '#1f2937', 
+              margin: 0 
+            }}>
+              User Profile
+            </h1>
+          </div>
+
+          {/* Save/Cancel Buttons */}
+          {hasChanges && (
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '1rem' 
+            }}>
+              <button
+                onClick={cancelAllChanges}
+                disabled={saving}
+                style={{
+                  background: '#6b7280',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '0.75rem 1.5rem',
+                  fontSize: '1rem',
+                  fontWeight: 600,
+                  cursor: saving ? 'not-allowed' : 'pointer',
+                  opacity: saving ? 0.5 : 1
+                }}
+              >
+                Cancel All
+              </button>
+              <button
+                onClick={saveAllChanges}
+                disabled={saving}
+                style={{
+                  background: '#059669',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '0.75rem 1.5rem',
+                  fontSize: '1rem',
+                  fontWeight: 600,
+                  cursor: saving ? 'not-allowed' : 'pointer',
+                  opacity: saving ? 0.5 : 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}
+              >
+                {saving ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save size={16} />
+                    Save All Changes
+                  </>
+                )}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Success Message */}
@@ -606,9 +721,7 @@ export default function ProfilePage() {
                   fieldName="first_name"
                   editing={editingField === 'first_name'}
                   onStartEdit={() => startEditingField('first_name', profile.first_name)}
-                  onCancel={cancelEditingField}
-                  onSave={() => saveField('first_name')}
-                  saving={saving}
+                  onFieldChange={handleFieldChange}
                   icon={<User size={16} />}
                 />
                 <InlineEditableField
@@ -617,9 +730,7 @@ export default function ProfilePage() {
                   fieldName="last_name"
                   editing={editingField === 'last_name'}
                   onStartEdit={() => startEditingField('last_name', profile.last_name)}
-                  onCancel={cancelEditingField}
-                  onSave={() => saveField('last_name')}
-                  saving={saving}
+                  onFieldChange={handleFieldChange}
                   icon={<User size={16} />}
                 />
                 <InlineEditableField
@@ -628,9 +739,7 @@ export default function ProfilePage() {
                   fieldName="email"
                   editing={editingField === 'email'}
                   onStartEdit={() => startEditingField('email', profile.email)}
-                  onCancel={cancelEditingField}
-                  onSave={() => saveField('email')}
-                  saving={saving}
+                  onFieldChange={handleFieldChange}
                   icon={<Mail size={16} />}
                   type="email"
                 />
@@ -640,9 +749,7 @@ export default function ProfilePage() {
                   fieldName="phone"
                   editing={editingField === 'phone'}
                   onStartEdit={() => startEditingField('phone', profile.phone)}
-                  onCancel={cancelEditingField}
-                  onSave={() => saveField('phone')}
-                  saving={saving}
+                  onFieldChange={handleFieldChange}
                   icon={<Phone size={16} />}
                 />
                 <InlineEditableField
@@ -651,9 +758,7 @@ export default function ProfilePage() {
                   fieldName="date_of_birth"
                   editing={editingField === 'date_of_birth'}
                   onStartEdit={() => startEditingField('date_of_birth', formatDateForInput(profile.date_of_birth))}
-                  onCancel={cancelEditingField}
-                  onSave={() => saveField('date_of_birth')}
-                  saving={saving}
+                  onFieldChange={handleFieldChange}
                   icon={<Calendar size={16} />}
                   type="date"
                 />
@@ -663,9 +768,7 @@ export default function ProfilePage() {
                   fieldName="nationality"
                   editing={editingField === 'nationality'}
                   onStartEdit={() => startEditingField('nationality', profile.nationality)}
-                  onCancel={cancelEditingField}
-                  onSave={() => saveField('nationality')}
-                  saving={saving}
+                  onFieldChange={handleFieldChange}
                   icon={<Globe size={16} />}
                   options={[
                     { value: 'italian', label: 'Italian' },
@@ -687,9 +790,7 @@ export default function ProfilePage() {
                   fieldName="company"
                   editing={editingField === 'company'}
                   onStartEdit={() => startEditingField('company', profile.company)}
-                  onCancel={cancelEditingField}
-                  onSave={() => saveField('company')}
-                  saving={saving}
+                  onFieldChange={handleFieldChange}
                   icon={<Building size={16} />}
                 />
                 <InlineEditableField
@@ -698,9 +799,7 @@ export default function ProfilePage() {
                   fieldName="position"
                   editing={editingField === 'position'}
                   onStartEdit={() => startEditingField('position', profile.position)}
-                  onCancel={cancelEditingField}
-                  onSave={() => saveField('position')}
-                  saving={saving}
+                  onFieldChange={handleFieldChange}
                   icon={<User size={16} />}
                 />
               </div>
@@ -740,9 +839,7 @@ export default function ProfilePage() {
                   fieldName="address"
                   editing={editingField === 'address'}
                   onStartEdit={() => startEditingField('address', profile.address)}
-                  onCancel={cancelEditingField}
-                  onSave={() => saveField('address')}
-                  saving={saving}
+                  onFieldChange={handleFieldChange}
                   icon={<MapPin size={16} />}
                 />
                 <InlineEditableField
@@ -751,9 +848,7 @@ export default function ProfilePage() {
                   fieldName="city"
                   editing={editingField === 'city'}
                   onStartEdit={() => startEditingField('city', profile.city)}
-                  onCancel={cancelEditingField}
-                  onSave={() => saveField('city')}
-                  saving={saving}
+                  onFieldChange={handleFieldChange}
                   icon={<MapPin size={16} />}
                 />
                 <InlineEditableField
@@ -762,9 +857,7 @@ export default function ProfilePage() {
                   fieldName="country"
                   editing={editingField === 'country'}
                   onStartEdit={() => startEditingField('country', profile.country)}
-                  onCancel={cancelEditingField}
-                  onSave={() => saveField('country')}
-                  saving={saving}
+                  onFieldChange={handleFieldChange}
                   icon={<Globe size={16} />}
                   options={[
                     { value: 'italy', label: 'Italy' },
@@ -786,9 +879,7 @@ export default function ProfilePage() {
                   fieldName="postal_code"
                   editing={editingField === 'postal_code'}
                   onStartEdit={() => startEditingField('postal_code', profile.postal_code)}
-                  onCancel={cancelEditingField}
-                  onSave={() => saveField('postal_code')}
-                  saving={saving}
+                  onFieldChange={handleFieldChange}
                   icon={<MapPin size={16} />}
                 />
               </div>
@@ -828,9 +919,7 @@ export default function ProfilePage() {
                   fieldName="iban"
                   editing={editingField === 'iban'}
                   onStartEdit={() => startEditingField('iban', profile.iban)}
-                  onCancel={cancelEditingField}
-                  onSave={() => saveField('iban')}
-                  saving={saving}
+                  onFieldChange={handleFieldChange}
                   icon={<CreditCard size={16} />}
                 />
                 <InlineEditableField
@@ -839,9 +928,7 @@ export default function ProfilePage() {
                   fieldName="bic"
                   editing={editingField === 'bic'}
                   onStartEdit={() => startEditingField('bic', profile.bic)}
-                  onCancel={cancelEditingField}
-                  onSave={() => saveField('bic')}
-                  saving={saving}
+                  onFieldChange={handleFieldChange}
                   icon={<CreditCard size={16} />}
                 />
                 <InlineEditableField
@@ -850,9 +937,7 @@ export default function ProfilePage() {
                   fieldName="account_holder"
                   editing={editingField === 'account_holder'}
                   onStartEdit={() => startEditingField('account_holder', profile.account_holder)}
-                  onCancel={cancelEditingField}
-                  onSave={() => saveField('account_holder')}
-                  saving={saving}
+                  onFieldChange={handleFieldChange}
                   icon={<User size={16} />}
                 />
                 <InlineEditableField
@@ -861,9 +946,7 @@ export default function ProfilePage() {
                   fieldName="usdt_wallet"
                   editing={editingField === 'usdt_wallet'}
                   onStartEdit={() => startEditingField('usdt_wallet', profile.usdt_wallet)}
-                  onCancel={cancelEditingField}
-                  onSave={() => saveField('usdt_wallet')}
-                  saving={saving}
+                  onFieldChange={handleFieldChange}
                   icon={<CreditCard size={16} />}
                 />
               </div>
@@ -903,9 +986,7 @@ export default function ProfilePage() {
                   fieldName="annual_income"
                   editing={editingField === 'annual_income'}
                   onStartEdit={() => startEditingField('annual_income', profile.annual_income)}
-                  onCancel={cancelEditingField}
-                  onSave={() => saveField('annual_income')}
-                  saving={saving}
+                  onFieldChange={handleFieldChange}
                   icon={<Banknote size={16} />}
                   type="number"
                 />
@@ -915,9 +996,7 @@ export default function ProfilePage() {
                   fieldName="net_worth"
                   editing={editingField === 'net_worth'}
                   onStartEdit={() => startEditingField('net_worth', profile.net_worth)}
-                  onCancel={cancelEditingField}
-                  onSave={() => saveField('net_worth')}
-                  saving={saving}
+                  onFieldChange={handleFieldChange}
                   icon={<Banknote size={16} />}
                   type="number"
                 />
@@ -927,9 +1006,7 @@ export default function ProfilePage() {
                   fieldName="monthly_investment_budget"
                   editing={editingField === 'monthly_investment_budget'}
                   onStartEdit={() => startEditingField('monthly_investment_budget', profile.monthly_investment_budget)}
-                  onCancel={cancelEditingField}
-                  onSave={() => saveField('monthly_investment_budget')}
-                  saving={saving}
+                  onFieldChange={handleFieldChange}
                   icon={<Banknote size={16} />}
                   type="number"
                 />
@@ -939,9 +1016,7 @@ export default function ProfilePage() {
                   fieldName="emergency_fund"
                   editing={editingField === 'emergency_fund'}
                   onStartEdit={() => startEditingField('emergency_fund', profile.emergency_fund)}
-                  onCancel={cancelEditingField}
-                  onSave={() => saveField('emergency_fund')}
-                  saving={saving}
+                  onFieldChange={handleFieldChange}
                   icon={<Banknote size={16} />}
                   type="number"
                 />
@@ -951,9 +1026,7 @@ export default function ProfilePage() {
                   fieldName="debt_amount"
                   editing={editingField === 'debt_amount'}
                   onStartEdit={() => startEditingField('debt_amount', profile.debt_amount)}
-                  onCancel={cancelEditingField}
-                  onSave={() => saveField('debt_amount')}
-                  saving={saving}
+                  onFieldChange={handleFieldChange}
                   icon={<Banknote size={16} />}
                   type="number"
                 />
@@ -963,9 +1036,7 @@ export default function ProfilePage() {
                   fieldName="credit_score"
                   editing={editingField === 'credit_score'}
                   onStartEdit={() => startEditingField('credit_score', profile.credit_score)}
-                  onCancel={cancelEditingField}
-                  onSave={() => saveField('credit_score')}
-                  saving={saving}
+                  onFieldChange={handleFieldChange}
                   icon={<Shield size={16} />}
                   type="number"
                 />
@@ -1006,9 +1077,7 @@ export default function ProfilePage() {
                   fieldName="employment_status"
                   editing={editingField === 'employment_status'}
                   onStartEdit={() => startEditingField('employment_status', profile.employment_status)}
-                  onCancel={cancelEditingField}
-                  onSave={() => saveField('employment_status')}
-                  saving={saving}
+                  onFieldChange={handleFieldChange}
                   icon={<Building size={16} />}
                   options={[
                     { value: 'employed', label: 'Employed' },
@@ -1025,9 +1094,7 @@ export default function ProfilePage() {
                   fieldName="employer_name"
                   editing={editingField === 'employer_name'}
                   onStartEdit={() => startEditingField('employer_name', profile.employer_name)}
-                  onCancel={cancelEditingField}
-                  onSave={() => saveField('employer_name')}
-                  saving={saving}
+                  onFieldChange={handleFieldChange}
                   icon={<Building size={16} />}
                 />
                 <InlineEditableField
@@ -1036,9 +1103,7 @@ export default function ProfilePage() {
                   fieldName="job_title"
                   editing={editingField === 'job_title'}
                   onStartEdit={() => startEditingField('job_title', profile.job_title)}
-                  onCancel={cancelEditingField}
-                  onSave={() => saveField('job_title')}
-                  saving={saving}
+                  onFieldChange={handleFieldChange}
                   icon={<User size={16} />}
                 />
                 <InlineEditableField
@@ -1047,9 +1112,7 @@ export default function ProfilePage() {
                   fieldName="years_employed"
                   editing={editingField === 'years_employed'}
                   onStartEdit={() => startEditingField('years_employed', profile.years_employed)}
-                  onCancel={cancelEditingField}
-                  onSave={() => saveField('years_employed')}
-                  saving={saving}
+                  onFieldChange={handleFieldChange}
                   icon={<Calendar size={16} />}
                   type="number"
                 />
@@ -1059,9 +1122,7 @@ export default function ProfilePage() {
                   fieldName="investment_experience"
                   editing={editingField === 'investment_experience'}
                   onStartEdit={() => startEditingField('investment_experience', profile.investment_experience)}
-                  onCancel={cancelEditingField}
-                  onSave={() => saveField('investment_experience')}
-                  saving={saving}
+                  onFieldChange={handleFieldChange}
                   icon={<FileText size={16} />}
                   options={[
                     { value: 'beginner', label: 'Beginner' },
@@ -1076,9 +1137,7 @@ export default function ProfilePage() {
                   fieldName="risk_tolerance"
                   editing={editingField === 'risk_tolerance'}
                   onStartEdit={() => startEditingField('risk_tolerance', profile.risk_tolerance)}
-                  onCancel={cancelEditingField}
-                  onSave={() => saveField('risk_tolerance')}
-                  saving={saving}
+                  onFieldChange={handleFieldChange}
                   icon={<Shield size={16} />}
                   options={[
                     { value: 'low', label: 'Low' },
@@ -1093,9 +1152,7 @@ export default function ProfilePage() {
                   fieldName="source_of_funds"
                   editing={editingField === 'source_of_funds'}
                   onStartEdit={() => startEditingField('source_of_funds', profile.source_of_funds)}
-                  onCancel={cancelEditingField}
-                  onSave={() => saveField('source_of_funds')}
-                  saving={saving}
+                  onFieldChange={handleFieldChange}
                   icon={<Banknote size={16} />}
                   options={[
                     { value: 'savings', label: 'Savings' },
@@ -1110,9 +1167,7 @@ export default function ProfilePage() {
                   fieldName="tax_residency"
                   editing={editingField === 'tax_residency'}
                   onStartEdit={() => startEditingField('tax_residency', profile.tax_residency)}
-                  onCancel={cancelEditingField}
-                  onSave={() => saveField('tax_residency')}
-                  saving={saving}
+                  onFieldChange={handleFieldChange}
                   icon={<Globe size={16} />}
                   options={[
                     { value: 'italy', label: 'Italy' },
@@ -1134,9 +1189,7 @@ export default function ProfilePage() {
                   fieldName="tax_id"
                   editing={editingField === 'tax_id'}
                   onStartEdit={() => startEditingField('tax_id', profile.tax_id)}
-                  onCancel={cancelEditingField}
-                  onSave={() => saveField('tax_id')}
-                  saving={saving}
+                  onFieldChange={handleFieldChange}
                   icon={<FileText size={16} />}
                 />
               </div>
@@ -1155,9 +1208,7 @@ function InlineEditableField({
   fieldName,
   editing = false, 
   onStartEdit,
-  onCancel,
-  onSave,
-  saving = false,
+  onFieldChange,
   icon,
   type = "text",
   options = null
@@ -1167,9 +1218,7 @@ function InlineEditableField({
   fieldName: string;
   editing?: boolean;
   onStartEdit: () => void;
-  onCancel: () => void;
-  onSave: () => void;
-  saving?: boolean;
+  onFieldChange: (fieldName: string, value: any) => void;
   icon?: React.ReactNode;
   type?: string;
   options?: { value: string; label: string }[] | null;
@@ -1180,19 +1229,14 @@ function InlineEditableField({
     setEditValue(value);
   }, [value]);
 
-  const handleSave = () => {
-    if (editValue !== value) {
-      onSave();
-    } else {
-      onCancel();
-    }
+  const handleChange = (newValue: any) => {
+    setEditValue(newValue);
+    onFieldChange(fieldName, newValue);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSave();
-    } else if (e.key === 'Escape') {
-      onCancel();
+    if (e.key === 'Escape') {
+      onStartEdit(); // This will cancel editing
     }
   };
 
@@ -1226,7 +1270,7 @@ function InlineEditableField({
           {options ? (
             <select
               value={editValue || ''}
-              onChange={(e) => setEditValue(e.target.value)}
+              onChange={(e) => handleChange(e.target.value)}
               onKeyDown={handleKeyPress}
               style={{
                 flex: 1,
@@ -1249,7 +1293,7 @@ function InlineEditableField({
             <input
               type={type}
               value={editValue || ''}
-              onChange={(e) => setEditValue(e.target.value)}
+              onChange={(e) => handleChange(e.target.value)}
               onKeyDown={handleKeyPress}
               style={{
                 flex: 1,
@@ -1261,36 +1305,6 @@ function InlineEditableField({
               autoFocus
             />
           )}
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            style={{
-              background: '#059669',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              padding: '0.5rem',
-              cursor: saving ? 'not-allowed' : 'pointer',
-              opacity: saving ? 0.5 : 1
-            }}
-          >
-            {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-          </button>
-          <button
-            onClick={onCancel}
-            disabled={saving}
-            style={{
-              background: '#6b7280',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              padding: '0.5rem',
-              cursor: saving ? 'not-allowed' : 'pointer',
-              opacity: saving ? 0.5 : 1
-            }}
-          >
-            <X size={16} />
-          </button>
         </div>
       ) : (
         <div style={{ 
