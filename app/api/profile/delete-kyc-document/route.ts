@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { getSupabaseAdmin } from '@/lib/supabase';
 
 export async function DELETE(request: NextRequest) {
   try {
+    const supabase = getSupabaseAdmin();
     const body = await request.json();
     const { document_id, user_id } = body;
 

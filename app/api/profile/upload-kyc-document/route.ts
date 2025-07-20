@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { getSupabaseAdmin } from '@/lib/supabase';
 import { v4 as uuidv4 } from 'uuid';
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = getSupabaseAdmin();
     const formData = await request.formData();
     const document = formData.get('document') as File;
     const documentType = formData.get('document_type') as string;
