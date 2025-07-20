@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from '@/lib/supabase';
 import AdminProtectedRoute from '@/components/auth/AdminProtectedRoute';
+import { fetchJSONWithCSRF } from '@/lib/csrf-client';
 
 interface KYCRequest {
   id: string;
@@ -9,12 +10,59 @@ interface KYCRequest {
   user_email: string;
   user_name: string;
   status: 'pending' | 'approved' | 'rejected' | 'under_review';
-  document_type: 'passport' | 'id_card' | 'drivers_license' | 'utility_bill';
-  document_url: string;
+  document_type: string;
   submitted_at: string;
-  reviewed_at?: string;
-  reviewer_notes?: string;
-  verification_level: 'basic' | 'enhanced' | 'full';
+  updated_at: string;
+  verification_level: string;
+  
+  // Personal Information
+  personal_info: {
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone?: string;
+    date_of_birth?: string;
+    nationality?: string;
+    address?: string;
+    city?: string;
+    country?: string;
+    postal_code?: string;
+  };
+
+  // Banking Information
+  banking_info: {
+    iban?: string;
+    bic?: string;
+    account_holder?: string;
+    usdt_wallet?: string;
+  };
+
+  // Financial Information
+  financial_info: {
+    annual_income?: number;
+    net_worth?: number;
+    investment_experience?: string;
+    risk_tolerance?: string;
+    monthly_investment_budget?: number;
+    emergency_fund?: number;
+    debt_amount?: number;
+    credit_score?: number;
+    employment_status?: string;
+    employer_name?: string;
+    job_title?: string;
+    years_employed?: number;
+    source_of_funds?: string;
+    tax_residency?: string;
+    tax_id?: string;
+  };
+
+  // Investment Profile
+  investment_profile: {
+    total_invested?: number;
+    risk_profile?: string;
+    investment_goals?: any;
+    preferred_investment_types?: any;
+  };
 }
 
 export default function AdminKYCPage() {
@@ -33,49 +81,21 @@ export default function AdminKYCPage() {
   const fetchKYCRequests = async () => {
     setLoading(true);
     try {
-      // Simulate KYC data since we don't have a real KYC table
-      const mockKYCData: KYCRequest[] = [
-        {
-          id: '1',
-          user_id: 'user-1',
-          user_email: 'john.doe@example.com',
-          user_name: 'John Doe',
-          status: 'pending',
-          document_type: 'passport',
-          document_url: '/documents/passport-1.pdf',
-          submitted_at: '2024-01-15T10:30:00Z',
-          verification_level: 'basic'
-        },
-        {
-          id: '2',
-          user_id: 'user-2',
-          user_email: 'jane.smith@example.com',
-          user_name: 'Jane Smith',
-          status: 'approved',
-          document_type: 'id_card',
-          document_url: '/documents/id-card-2.pdf',
-          submitted_at: '2024-01-10T14:20:00Z',
-          reviewed_at: '2024-01-12T09:15:00Z',
-          reviewer_notes: 'Documents verified successfully',
-          verification_level: 'enhanced'
-        },
-        {
-          id: '3',
-          user_id: 'user-3',
-          user_email: 'mike.wilson@example.com',
-          user_name: 'Mike Wilson',
-          status: 'rejected',
-          document_type: 'drivers_license',
-          document_url: '/documents/license-3.pdf',
-          submitted_at: '2024-01-08T16:45:00Z',
-          reviewed_at: '2024-01-09T11:30:00Z',
-          reviewer_notes: 'Document expired, please provide current ID',
-          verification_level: 'basic'
-        }
-      ];
+      const response = await fetchJSONWithCSRF('/api/admin/kyc');
       
-      setKycRequests(mockKYCData);
+      if (!response.ok) {
+        throw new Error('Failed to fetch KYC data');
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        setKycRequests(result.data);
+      } else {
+        throw new Error(result.error || 'Failed to fetch KYC data');
+      }
     } catch (error) {
+      console.error('Error fetching KYC requests:', error);
       setError("Failed to load KYC requests");
     } finally {
       setLoading(false);
@@ -84,20 +104,30 @@ export default function AdminKYCPage() {
 
   const handleStatusUpdate = async (requestId: string, newStatus: KYCRequest['status'], notes?: string) => {
     try {
-      // In a real implementation, this would update the database
+      const response = await fetchJSONWithCSRF('/api/admin/kyc', {
+        method: 'PUT',
+        body: JSON.stringify({
+          clientId: requestId,
+          status: newStatus,
+          notes
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update KYC status');
+      }
+
+      // Update local state
       setKycRequests(prev => prev.map(req => 
         req.id === requestId 
-          ? { 
-              ...req, 
-              status: newStatus, 
-              reviewed_at: new Date().toISOString(),
-              reviewer_notes: notes 
-            }
+          ? { ...req, status: newStatus, updated_at: new Date().toISOString() }
           : req
       ));
+      
       setShowModal(false);
       setSelectedRequest(null);
     } catch (error) {
+      console.error('Error updating KYC status:', error);
       setError("Failed to update KYC status");
     }
   };
@@ -127,6 +157,14 @@ export default function AdminKYCPage() {
       case 'under_review': return 'In Revisione';
       default: return status;
     }
+  };
+
+  const formatCurrency = (amount: number | undefined) => {
+    if (!amount) return '-';
+    return new Intl.NumberFormat('it-IT', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount);
   };
 
   if (loading) {
@@ -206,10 +244,10 @@ export default function AdminKYCPage() {
             <thead>
               <tr style={{ borderBottom: '2px solid #e0e3eb' }}>
                 <th style={{ textAlign: 'left', padding: '1rem', fontWeight: 600 }}>Cliente</th>
-                <th style={{ textAlign: 'left', padding: '1rem', fontWeight: 600 }}>Tipo Documento</th>
                 <th style={{ textAlign: 'left', padding: '1rem', fontWeight: 600 }}>Stato</th>
-                <th style={{ textAlign: 'left', padding: '1rem', fontWeight: 600 }}>Livello Verifica</th>
-                <th style={{ textAlign: 'left', padding: '1rem', fontWeight: 600 }}>Data Invio</th>
+                <th style={{ textAlign: 'left', padding: '1rem', fontWeight: 600 }}>Informazioni Bancarie</th>
+                <th style={{ textAlign: 'left', padding: '1rem', fontWeight: 600 }}>Informazioni Finanziarie</th>
+                <th style={{ textAlign: 'left', padding: '1rem', fontWeight: 600 }}>Data Registrazione</th>
                 <th style={{ textAlign: 'left', padding: '1rem', fontWeight: 600 }}>Azioni</th>
               </tr>
             </thead>
@@ -220,19 +258,10 @@ export default function AdminKYCPage() {
                     <div>
                       <div style={{ fontWeight: 600 }}>{request.user_name}</div>
                       <div style={{ fontSize: '14px', color: '#6b7280' }}>{request.user_email}</div>
+                      <div style={{ fontSize: '12px', color: '#9ca3af' }}>
+                        {request.personal_info.country || 'N/A'}
+                      </div>
                     </div>
-                  </td>
-                  <td style={{ padding: '1rem' }}>
-                    <span style={{ 
-                      background: '#f3f4f6', 
-                      padding: '4px 8px', 
-                      borderRadius: '4px', 
-                      fontSize: '14px' 
-                    }}>
-                      {request.document_type === 'passport' ? 'Passaporto' :
-                       request.document_type === 'id_card' ? 'Carta d\'Identità' :
-                       request.document_type === 'drivers_license' ? 'Patente' : 'Bolletta'}
-                    </span>
                   </td>
                   <td style={{ padding: '1rem' }}>
                     <span style={{ 
@@ -247,15 +276,18 @@ export default function AdminKYCPage() {
                     </span>
                   </td>
                   <td style={{ padding: '1rem' }}>
-                    <span style={{ 
-                      background: '#f3f4f6', 
-                      padding: '4px 8px', 
-                      borderRadius: '4px', 
-                      fontSize: '14px' 
-                    }}>
-                      {request.verification_level === 'basic' ? 'Base' :
-                       request.verification_level === 'enhanced' ? 'Avanzato' : 'Completo'}
-                    </span>
+                    <div style={{ fontSize: '14px' }}>
+                      <div><strong>IBAN:</strong> {request.banking_info.iban || 'N/A'}</div>
+                      <div><strong>Intestatario:</strong> {request.banking_info.account_holder || 'N/A'}</div>
+                      <div><strong>Wallet USDT:</strong> {request.banking_info.usdt_wallet ? 'Presente' : 'N/A'}</div>
+                    </div>
+                  </td>
+                  <td style={{ padding: '1rem' }}>
+                    <div style={{ fontSize: '14px' }}>
+                      <div><strong>Reddito:</strong> {formatCurrency(request.financial_info.annual_income)}</div>
+                      <div><strong>Patrimonio:</strong> {formatCurrency(request.financial_info.net_worth)}</div>
+                      <div><strong>Esperienza:</strong> {request.financial_info.investment_experience || 'N/A'}</div>
+                    </div>
                   </td>
                   <td style={{ padding: '1rem' }}>
                     {new Date(request.submitted_at).toLocaleDateString('it-IT')}
@@ -309,49 +341,79 @@ export default function AdminKYCPage() {
               background: 'white',
               padding: '2rem',
               borderRadius: '12px',
-              maxWidth: '500px',
+              maxWidth: '800px',
               width: '90%',
-              maxHeight: '80vh',
+              maxHeight: '90vh',
               overflow: 'auto'
             }}>
               <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '1rem' }}>
                 Revisione KYC - {selectedRequest.user_name}
               </h2>
               
-              <div style={{ marginBottom: '1rem' }}>
-                <strong>Email:</strong> {selectedRequest.user_email}
-              </div>
-              <div style={{ marginBottom: '1rem' }}>
-                <strong>Tipo Documento:</strong> {selectedRequest.document_type}
-              </div>
-              <div style={{ marginBottom: '1rem' }}>
-                <strong>Stato Attuale:</strong> 
-                <span style={{ 
-                  background: getStatusColor(selectedRequest.status) + '20',
-                  color: getStatusColor(selectedRequest.status),
-                  padding: '4px 8px',
-                  borderRadius: '4px',
-                  marginLeft: '8px'
-                }}>
-                  {getStatusText(selectedRequest.status)}
-                </span>
+              {/* Personal Information */}
+              <div style={{ marginBottom: '2rem' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '1rem', color: '#374151' }}>
+                  Informazioni Personali
+                </h3>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', fontSize: '14px' }}>
+                  <div><strong>Nome:</strong> {selectedRequest.personal_info.first_name}</div>
+                  <div><strong>Cognome:</strong> {selectedRequest.personal_info.last_name}</div>
+                  <div><strong>Email:</strong> {selectedRequest.personal_info.email}</div>
+                  <div><strong>Telefono:</strong> {selectedRequest.personal_info.phone || 'N/A'}</div>
+                  <div><strong>Data di Nascita:</strong> {selectedRequest.personal_info.date_of_birth || 'N/A'}</div>
+                  <div><strong>Nazionalità:</strong> {selectedRequest.personal_info.nationality || 'N/A'}</div>
+                  <div><strong>Indirizzo:</strong> {selectedRequest.personal_info.address || 'N/A'}</div>
+                  <div><strong>Città:</strong> {selectedRequest.personal_info.city || 'N/A'}</div>
+                  <div><strong>Paese:</strong> {selectedRequest.personal_info.country || 'N/A'}</div>
+                  <div><strong>CAP:</strong> {selectedRequest.personal_info.postal_code || 'N/A'}</div>
+                </div>
               </div>
 
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '4px', fontWeight: 600 }}>
-                  Note del revisore:
-                </label>
-                <textarea
-                  defaultValue={selectedRequest.reviewer_notes || ''}
-                  id="reviewer-notes"
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '4px',
-                    minHeight: '100px'
-                  }}
-                />
+              {/* Banking Information */}
+              <div style={{ marginBottom: '2rem' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '1rem', color: '#059669' }}>
+                  Informazioni Bancarie
+                </h3>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', fontSize: '14px' }}>
+                  <div><strong>IBAN:</strong> {selectedRequest.banking_info.iban || 'N/A'}</div>
+                  <div><strong>BIC/SWIFT:</strong> {selectedRequest.banking_info.bic || 'N/A'}</div>
+                  <div><strong>Intestatario:</strong> {selectedRequest.banking_info.account_holder || 'N/A'}</div>
+                  <div><strong>Wallet USDT:</strong> {selectedRequest.banking_info.usdt_wallet || 'N/A'}</div>
+                </div>
+              </div>
+
+              {/* Financial Information */}
+              <div style={{ marginBottom: '2rem' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '1rem', color: '#dc2626' }}>
+                  Informazioni Finanziarie
+                </h3>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', fontSize: '14px' }}>
+                  <div><strong>Reddito Annuale:</strong> {formatCurrency(selectedRequest.financial_info.annual_income)}</div>
+                  <div><strong>Patrimonio Netto:</strong> {formatCurrency(selectedRequest.financial_info.net_worth)}</div>
+                  <div><strong>Budget Mensile Investimenti:</strong> {formatCurrency(selectedRequest.financial_info.monthly_investment_budget)}</div>
+                  <div><strong>Fondo di Emergenza:</strong> {formatCurrency(selectedRequest.financial_info.emergency_fund)}</div>
+                  <div><strong>Debito Totale:</strong> {formatCurrency(selectedRequest.financial_info.debt_amount)}</div>
+                  <div><strong>Credit Score:</strong> {selectedRequest.financial_info.credit_score || 'N/A'}</div>
+                  <div><strong>Stato Occupazionale:</strong> {selectedRequest.financial_info.employment_status || 'N/A'}</div>
+                  <div><strong>Datore di Lavoro:</strong> {selectedRequest.financial_info.employer_name || 'N/A'}</div>
+                  <div><strong>Posizione:</strong> {selectedRequest.financial_info.job_title || 'N/A'}</div>
+                  <div><strong>Anni di Impiego:</strong> {selectedRequest.financial_info.years_employed || 'N/A'}</div>
+                  <div><strong>Fonte dei Fondi:</strong> {selectedRequest.financial_info.source_of_funds || 'N/A'}</div>
+                  <div><strong>Residenza Fiscale:</strong> {selectedRequest.financial_info.tax_residency || 'N/A'}</div>
+                  <div><strong>Esperienza Investimenti:</strong> {selectedRequest.financial_info.investment_experience || 'N/A'}</div>
+                  <div><strong>Tolleranza al Rischio:</strong> {selectedRequest.financial_info.risk_tolerance || 'N/A'}</div>
+                </div>
+              </div>
+
+              {/* Investment Profile */}
+              <div style={{ marginBottom: '2rem' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '1rem', color: '#7c3aed' }}>
+                  Profilo di Investimento
+                </h3>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', fontSize: '14px' }}>
+                  <div><strong>Totale Investito:</strong> {formatCurrency(selectedRequest.investment_profile.total_invested)}</div>
+                  <div><strong>Profilo di Rischio:</strong> {selectedRequest.investment_profile.risk_profile || 'N/A'}</div>
+                </div>
               </div>
 
               <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
@@ -365,7 +427,7 @@ export default function AdminKYCPage() {
                     cursor: 'pointer'
                   }}
                 >
-                  Annulla
+                  Chiudi
                 </button>
                 <button
                   onClick={() => handleStatusUpdate(selectedRequest.id, 'rejected')}
