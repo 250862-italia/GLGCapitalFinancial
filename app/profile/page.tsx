@@ -76,10 +76,11 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<ClientProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [editing, setEditing] = useState(false);
+  const [editingField, setEditingField] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [editForm, setEditForm] = useState<Partial<ClientProfile>>({});
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -201,101 +202,64 @@ export default function ProfilePage() {
         emergency_fund: 0,
         debt_amount: 0,
         credit_score: 0,
-        employment_status: 'employed',
+        employment_status: '',
         employer_name: '',
         job_title: '',
         years_employed: 0,
-        source_of_funds: 'employment',
+        source_of_funds: '',
         tax_residency: '',
         tax_id: '',
-        status: 'offline',
+        status: 'active',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
-      
-      // Only set fallback profile if we have a network error
-      if (err.message.includes('fetch failed') || err.message.includes('Failed to fetch') || err.name === 'AbortError') {
-        setProfile(fallbackProfile);
-        setError('Connection error - please try again');
-      }
+      setProfile(fallbackProfile);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSave = async () => {
+  const startEditingField = (fieldName: string, currentValue: any) => {
+    setEditingField(fieldName);
+    setEditForm(prev => ({ ...prev, [fieldName]: currentValue }));
+  };
+
+  const cancelEditingField = () => {
+    setEditingField(null);
+    setEditForm({});
+  };
+
+  const saveField = async (fieldName: string) => {
     if (!profile || !user) return;
     
-    // If user is admin, don't try to update client profile
-    if (user.role === 'admin' || user.role === 'superadmin') {
-      console.log('User is admin, skipping client profile update');
-      setEditing(false);
-      return;
-    }
-    
     setSaving(true);
+    setError(null);
     
     try {
-      const response = await fetchJSONWithCSRF('/api/profile/update', {
+      const response = await fetchJSONWithCSRF(`/api/profile/update`, {
         method: 'POST',
         body: JSON.stringify({
           user_id: user.id,
-          ...editForm
+          [fieldName]: editForm[fieldName]
         })
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to update profile');
-      }
-
-      const result = await response.json();
-      
-      if (result.success) {
-        // Reload profile data
-        await loadProfile();
-        setEditing(false);
+      if (response.ok) {
+        const result = await response.json();
+        setProfile(prev => prev ? { ...prev, [fieldName]: editForm[fieldName] } : null);
+        setEditingField(null);
+        setEditForm({});
+        setSuccessMessage(`${fieldName.replace(/_/g, ' ')} aggiornato con successo!`);
+        setTimeout(() => setSuccessMessage(null), 3000);
       } else {
-        throw new Error(result.error || 'Failed to update profile');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to update field');
       }
-      
     } catch (error) {
-      console.error('Profile update error:', error);
-      setError('Failed to update profile');
+      console.error('Error updating field:', error);
+      setError(`Errore nell'aggiornamento: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`);
     } finally {
       setSaving(false);
-    }
-  };
-
-  const handleCancel = () => {
-    setEditForm(profile || {});
-    setEditing(false);
-  };
-
-  // Format date for input field (YYYY-MM-DD format)
-  const formatDateForInput = (dateString: string | null | undefined) => {
-    if (!dateString) return '';
-    try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return '';
-      return date.toISOString().split('T')[0];
-    } catch {
-      return '';
-    }
-  };
-
-  // Format date for display
-  const formatDateForDisplay = (dateString: string | null | undefined) => {
-    if (!dateString) return '';
-    try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return '';
-      return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-    } catch {
-      return dateString;
     }
   };
 
@@ -304,7 +268,8 @@ export default function ProfilePage() {
     if (!file || !user) return;
 
     setUploadingPhoto(true);
-    
+    setError(null);
+
     try {
       const formData = new FormData();
       formData.append('photo', file);
@@ -313,111 +278,87 @@ export default function ProfilePage() {
       const response = await fetchJSONWithCSRF('/api/profile/upload-photo', {
         method: 'POST',
         body: formData
-      
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to upload photo');
-      }
-
-      const result = await response.json();
-      
-      if (result.success) {
-        // Reload profile data to show new photo
-        await loadProfile();
+      if (response.ok) {
+        const result = await response.json();
+        setProfile(prev => prev ? { ...prev, profile_photo: result.photo_url } : null);
+        setSuccessMessage('Foto profilo aggiornata con successo!');
+        setTimeout(() => setSuccessMessage(null), 3000);
       } else {
-        throw new Error(result.error || 'Failed to upload photo');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to upload photo');
       }
-      
     } catch (error) {
-      console.error('Photo upload error:', error);
-      setError('Failed to upload photo');
+      console.error('Error uploading photo:', error);
+      setError(`Errore nel caricamento della foto: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`);
     } finally {
       setUploadingPhoto(false);
     }
   };
 
-  if (loading) {
+  const formatDateForInput = (dateString: string | null | undefined) => {
+    if (!dateString) return '';
+    try {
+      const date = new Date(dateString);
+      return date.toISOString().split('T')[0];
+    } catch {
+      return '';
+    }
+  };
+
+  const formatDateForDisplay = (dateString: string | null | undefined) => {
+    if (!dateString) return 'Non specificato';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('it-IT');
+    } catch {
+      return 'Data non valida';
+    }
+  };
+
+  const formatCurrency = (value: number | null | undefined) => {
+    if (value === null || value === undefined) return 'Non specificato';
+    return new Intl.NumberFormat('it-IT', {
+      style: 'currency',
+      currency: 'EUR'
+    }).format(value);
+  };
+
+  const formatNumber = (value: number | null | undefined) => {
+    if (value === null || value === undefined) return 'Non specificato';
+    return new Intl.NumberFormat('it-IT').format(value);
+  };
+
+  if (!user) {
     return (
       <div style={{ 
         minHeight: '100vh', 
+        background: '#f8fafc', 
         display: 'flex', 
         alignItems: 'center', 
-        justifyContent: 'center',
-        background: '#f9fafb'
+        justifyContent: 'center' 
       }}>
         <div style={{ textAlign: 'center' }}>
-          <Loader2 size={48} style={{ animation: 'spin 1s linear infinite', marginBottom: '1rem' }} />
-          <p style={{ color: '#64748b', fontSize: 18 }}>Loading profile...</p>
+          <Loader2 size={48} className="animate-spin mx-auto mb-4" />
+          <p>Caricamento...</p>
         </div>
       </div>
     );
   }
 
-  if (error) {
+  if (loading) {
     return (
       <div style={{ 
         minHeight: '100vh', 
+        background: '#f8fafc', 
         display: 'flex', 
         alignItems: 'center', 
-        justifyContent: 'center',
-        background: '#f9fafb'
+        justifyContent: 'center' 
       }}>
-        <div style={{ 
-          background: 'white', 
-          borderRadius: 16, 
-          padding: '3rem',
-          boxShadow: '0 4px 24px rgba(10,37,64,0.10)',
-          textAlign: 'center',
-          maxWidth: 500
-        }}>
-          <AlertCircle size={64} color="#dc2626" style={{ marginBottom: '1rem' }} />
-          <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#1f2937', marginBottom: '1rem' }}>
-            Profile Error
-          </h1>
-          <p style={{ color: '#dc2626', marginBottom: '2rem' }}>{error}</p>
-          
-          {/* Show retry button for network errors */}
-          {(error.includes('Network error') || error.includes('timeout') || error.includes('Unable to connect')) && (
-            <div style={{ marginBottom: '2rem' }}>
-              <button
-                onClick={() => {
-                  setError(null);
-                  loadProfile();
-                }}
-                style={{
-                  background: '#3b82f6',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: 8,
-                  padding: '0.75rem 1.5rem',
-                  fontSize: 16,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  marginRight: '1rem'
-                }}
-              >
-                Retry
-              </button>
-              <button
-                onClick={() => router.push('/dashboard')}
-                style={{
-                  background: '#6b7280',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: 8,
-                  padding: '0.75rem 1.5rem',
-                  fontSize: 16,
-                  fontWeight: 600,
-                  cursor: 'pointer'
-                }}
-              >
-                Go to Dashboard
-              </button>
-            </div>
-          )}
-          
-
+        <div style={{ textAlign: 'center' }}>
+          <Loader2 size={48} className="animate-spin mx-auto mb-4" />
+          <p>Caricamento profilo...</p>
         </div>
       </div>
     );
@@ -427,68 +368,33 @@ export default function ProfilePage() {
     return (
       <div style={{ 
         minHeight: '100vh', 
+        background: '#f8fafc', 
         display: 'flex', 
         alignItems: 'center', 
-        justifyContent: 'center',
-        background: '#f9fafb'
+        justifyContent: 'center' 
       }}>
-        <div style={{ 
-          background: 'white', 
-          borderRadius: 16, 
-          padding: '3rem',
-          boxShadow: '0 4px 24px rgba(10,37,64,0.10)',
-          textAlign: 'center',
-          maxWidth: 500
-        }}>
-          <User size={64} color="#6b7280" style={{ marginBottom: '1rem' }} />
-          <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#1f2937', marginBottom: '1rem' }}>
-            Profile Not Found
-          </h1>
-          <p style={{ color: '#dc2626', marginBottom: '2rem' }}>No profile data found. Please complete your profile information.</p>
-        </div>
-      </div>
-    );
-  }
-
-  // If user is admin, show admin message
-  if (user && (user.role === 'admin' || user.role === 'superadmin')) {
-    return (
-      <div style={{ 
-        minHeight: '100vh', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        background: '#f9fafb'
-      }}>
-        <div style={{ 
-          background: 'white', 
-          borderRadius: 16, 
-          padding: '3rem',
-          boxShadow: '0 4px 24px rgba(10,37,64,0.10)',
-          textAlign: 'center',
-          maxWidth: 500
-        }}>
-          <Shield size={64} color="#3b82f6" style={{ marginBottom: '1rem' }} />
-          <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#1f2937', marginBottom: '1rem' }}>
-            Admin Profile
-          </h1>
-          <p style={{ color: '#6b7280', marginBottom: '2rem' }}>
-            You are logged in as an administrator. Client profiles are managed through the admin dashboard.
-          </p>
+        <div style={{ textAlign: 'center' }}>
+          <AlertCircle size={48} className="mx-auto mb-4 text-red-500" />
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '1rem' }}>
+            Errore nel caricamento del profilo
+          </h2>
+          {error && (
+            <p style={{ color: '#6b7280', marginBottom: '1rem' }}>{error}</p>
+          )}
           <button
-            onClick={() => router.push('/admin')}
+            onClick={loadProfile}
             style={{
               background: '#3b82f6',
               color: 'white',
               border: 'none',
-              borderRadius: 8,
+              borderRadius: '8px',
               padding: '0.75rem 1.5rem',
-              fontSize: 16,
+              fontSize: '1rem',
               fontWeight: 600,
               cursor: 'pointer'
             }}
           >
-            Go to Admin Dashboard
+            Riprova
           </button>
         </div>
       </div>
@@ -496,115 +402,129 @@ export default function ProfilePage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f9fafb', padding: '2rem 1rem' }}>
-      <style jsx>{`
-        @keyframes pulse {
-          0% { opacity: 1; }
-          50% { opacity: 0.5; }
-          100% { opacity: 1; }
-        }
-      `}</style>
-      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-        
+    <div style={{ 
+      minHeight: '100vh', 
+      background: '#f8fafc', 
+      padding: '2rem' 
+    }}>
+      <div style={{ 
+        maxWidth: '1200px', 
+        margin: '0 auto' 
+      }}>
         {/* Header */}
         <div style={{ 
           display: 'flex', 
           alignItems: 'center', 
-          gap: '1rem',
-          marginBottom: '2rem'
+          gap: '1rem', 
+          marginBottom: '2rem' 
         }}>
           <button
-            onClick={() => router.push('/dashboard')}
+            onClick={() => router.back()}
             style={{
-              background: 'white',
-              border: '1px solid #e5e7eb',
-              borderRadius: 8,
-              padding: '0.5rem',
+              background: 'none',
+              border: 'none',
               cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
+              padding: '0.5rem',
+              borderRadius: '6px',
+              color: '#6b7280'
             }}
           >
-            <ArrowLeft size={20} color="#6b7280" />
+            <ArrowLeft size={24} />
           </button>
-          <div>
-            <h1 style={{ fontSize: '32px', fontWeight: 800, color: '#1f2937', margin: 0 }}>
-              User Profile
-            </h1>
-            <p style={{ fontSize: '16px', color: '#6b7280', margin: 0 }}>
-              Manage your personal information
-            </p>
-          </div>
+          <h1 style={{ 
+            fontSize: '2rem', 
+            fontWeight: 700, 
+            color: '#1f2937', 
+            margin: 0 
+          }}>
+            Profilo Utente
+          </h1>
         </div>
 
-        {/* Profile Card */}
-        <div style={{ 
-          background: 'white', 
-          borderRadius: 16, 
-          boxShadow: '0 4px 24px rgba(10,37,64,0.10)',
-          overflow: 'hidden'
-        }}>
-          {/* Profile Header */}
-          <div style={{
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            padding: '2rem',
-            color: 'white',
-            position: 'relative'
+        {/* Success Message */}
+        {successMessage && (
+          <div style={{ 
+            background: '#d1fae5', 
+            color: '#065f46', 
+            padding: '1rem', 
+            borderRadius: '8px', 
+            marginBottom: '1.5rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-              <div style={{ position: 'relative' }}>
-                <div style={{ 
-                  background: 'rgba(255,255,255,0.2)', 
-                  borderRadius: '50%', 
-                  width: 100, 
-                  height: 100, 
-                  display: 'flex', 
-                  alignItems: 'center', 
+            <CheckCircle size={20} />
+            {successMessage}
+          </div>
+        )}
+
+        {/* Error Message */}
+        {error && (
+          <div style={{ 
+            background: '#fee2e2', 
+            color: '#b91c1c', 
+            padding: '1rem', 
+            borderRadius: '8px', 
+            marginBottom: '1.5rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <AlertCircle size={20} />
+            {error}
+          </div>
+        )}
+
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: '1fr 2fr', 
+          gap: '2rem' 
+        }}>
+          {/* Profile Photo Section */}
+          <div style={{ 
+            background: 'white', 
+            borderRadius: '12px', 
+            padding: '2rem', 
+            border: '1px solid #e5e7eb',
+            height: 'fit-content'
+          }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ 
+                position: 'relative', 
+                display: 'inline-block', 
+                marginBottom: '1rem' 
+              }}>
+                <div style={{
+                  width: '120px',
+                  height: '120px',
+                  borderRadius: '50%',
+                  background: profile.profile_photo ? `url(${profile.profile_photo})` : '#e5e7eb',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  border: '3px solid #e5e7eb',
+                  display: 'flex',
+                  alignItems: 'center',
                   justifyContent: 'center',
-                  border: '3px solid rgba(255,255,255,0.3)'
+                  margin: '0 auto'
                 }}>
-                                  {profile.profile_photo ? (
-                  <img
-                    src={profile.profile_photo} 
-                      alt="Profile" 
-                      style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
-                    />
-                  ) : (
-                    <User size={48} color="#fff" />
+                  {!profile.profile_photo && (
+                    <User size={48} color="#9ca3af" />
                   )}
                 </div>
-                {uploadingPhoto && (
-                  <div style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: 'rgba(0,0,0,0.5)',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <Loader2 size={24} color="white" style={{ animation: 'spin 1s linear infinite' }} />
-                  </div>
-                )}
                 <label style={{
                   position: 'absolute',
-                  bottom: 0,
-                  right: 0,
-                  background: 'rgba(255,255,255,0.9)',
-                  color: '#667eea',
+                  bottom: '0',
+                  right: '0',
+                  background: '#3b82f6',
+                  color: 'white',
                   borderRadius: '50%',
-                  width: 32,
-                  height: 32,
+                  width: '32px',
+                  height: '32px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   cursor: 'pointer',
-                  fontSize: 12,
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+                  border: '2px solid white'
                 }}>
                   <Camera size={16} />
                   <input
@@ -616,360 +536,545 @@ export default function ProfilePage() {
                   />
                 </label>
               </div>
-              <div style={{ flex: 1 }}>
-                <h2 style={{ fontSize: '28px', fontWeight: 700, margin: 0, marginBottom: '0.5rem' }}>
-                  {profile.first_name} {profile.last_name}
-                </h2>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Mail size={16} />
-                    <span>{profile.email}</span>
-                  </div>
-                  {profile.phone && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <Phone size={16} />
-                      <span>{profile.phone}</span>
-                    </div>
-                  )}
+              {uploadingPhoto && (
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  gap: '0.5rem',
+                  color: '#6b7280',
+                  fontSize: '0.875rem'
+                }}>
+                  <Loader2 size={16} className="animate-spin" />
+                  Caricamento...
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <span style={{ 
-                    background: 'rgba(255,255,255,0.2)', 
-                    color: 'white', 
-                    padding: '0.25rem 0.75rem', 
-                    borderRadius: 12, 
-                    fontSize: 12, 
-                    fontWeight: 600 
-                  }}>
-                    Status: {profile.status}
-                  </span>
-                </div>
-              </div>
-              <div>
-                {editing ? (
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <button
-                      onClick={handleSave}
-                      disabled={saving}
-                      style={{
-                        background: 'rgba(255,255,255,0.9)',
-                        color: '#059669',
-                        border: 'none',
-                        borderRadius: 8,
-                        padding: '0.5rem 1rem',
-                        fontSize: 14,
-                        fontWeight: 600,
-                        cursor: saving ? 'not-allowed' : 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem'
-                      }}
-                    >
-                      {saving ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Save size={16} />}
-                      Save
-                    </button>
-                    <button
-                      onClick={handleCancel}
-                      style={{
-                        background: 'rgba(255,255,255,0.9)',
-                        color: '#6b7280',
-                        border: 'none',
-                        borderRadius: 8,
-                        padding: '0.5rem 1rem',
-                        fontSize: 14,
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem'
-                      }}
-                    >
-                      <X size={16} />
-                      Cancel
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setEditing(true)}
-                    style={{
-                      background: 'rgba(255,255,255,0.9)',
-                      color: '#667eea',
-                      border: 'none',
-                      borderRadius: 8,
-                      padding: '0.5rem 1rem',
-                      fontSize: 14,
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem'
-                    }}
-                  >
-                    <Edit size={16} />
-                    Edit Profile
-                  </button>
-                )}
-              </div>
+              )}
+              <h2 style={{ 
+                fontSize: '1.5rem', 
+                fontWeight: 600, 
+                color: '#1f2937', 
+                margin: '0.5rem 0' 
+              }}>
+                {profile.first_name} {profile.last_name}
+              </h2>
+              <p style={{ 
+                color: '#6b7280', 
+                margin: 0 
+              }}>
+                {profile.email}
+              </p>
             </div>
           </div>
-          
-          {/* Profile Content */}
-          <div style={{ padding: '2rem' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '2rem' }}>
-              
-              {/* Personal Information */}
+
+          {/* Profile Information */}
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: '1.5rem' 
+          }}>
+            {/* Personal Information */}
+            <div style={{ 
+              background: 'white', 
+              borderRadius: '12px', 
+              padding: '1.5rem', 
+              border: '1px solid #e5e7eb' 
+            }}>
               <div style={{ 
-                background: '#f8fafc', 
-                borderRadius: 12, 
-                padding: '1.5rem',
-                border: '1px solid #e2e8f0'
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '0.75rem', 
+                marginBottom: '1.5rem' 
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
-                  <User size={20} color="#667eea" />
-                  <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#1f2937', margin: 0 }}>
-                    Personal Information
-                  </h3>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <ProfileField 
-                    label="First Name" 
-                    value={editing ? editForm.first_name : profile.first_name}
-                    editing={editing}
-                                          onChange={(value) => setEditForm(prev => ({ ...prev, first_name: value }))}
-                  />
-                  <ProfileField 
-                    label="Last Name" 
-                    value={editing ? editForm.last_name : profile.last_name}
-                    editing={editing}
-                                          onChange={(value) => setEditForm(prev => ({ ...prev, last_name: value }))}
-                  />
-                  <ProfileField 
-                    label="Date of Birth" 
-                                          value={editing ? formatDateForInput(editForm.date_of_birth) : formatDateForDisplay(profile.date_of_birth)}
-                    icon={<Calendar size={14} />}
-                    editing={editing}
-                                          onChange={(value) => setEditForm(prev => ({ ...prev, date_of_birth: value }))}
-                  />
-                  <ProfileField 
-                    label="Nationality" 
-                    value={editing ? editForm.nationality : profile.nationality}
-                    icon={<Globe size={14} />}
-                    editing={editing}
-                    onChange={(value) => setEditForm(prev => ({ ...prev, nationality: value }))}
-                  />
-                  <ProfileField 
-                    label="Phone" 
-                    value={editing ? editForm.phone : profile.phone}
-                    icon={<Phone size={14} />}
-                    editing={editing}
-                    onChange={(value) => setEditForm(prev => ({ ...prev, phone: value }))}
-                  />
-                  <ProfileField 
-                    label="Email" 
-                    value={profile.email}
-                    icon={<Mail size={14} />}
-                    editing={false}
-                  />
-                </div>
+                <User size={20} color="#3b82f6" />
+                <h3 style={{ 
+                  fontSize: '18px', 
+                  fontWeight: 600, 
+                  color: '#1f2937', 
+                  margin: 0 
+                }}>
+                  Informazioni Personali
+                </h3>
               </div>
-
-              {/* Address Information */}
               <div style={{ 
-                background: '#f8fafc', 
-                borderRadius: 12, 
-                padding: '1.5rem',
-                border: '1px solid #e2e8f0'
+                display: 'grid', 
+                gridTemplateColumns: '1fr 1fr', 
+                gap: '1rem' 
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
-                  <MapPin size={20} color="#059669" />
-                  <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#1f2937', margin: 0 }}>
-                    Address Information
-                  </h3>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
-                  <ProfileField 
-                    label="Address" 
-                    value={editing ? editForm.address : profile.address}
-                    editing={editing}
-                    onChange={(value) => setEditForm(prev => ({ ...prev, address: value }))}
-                  />
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                    <ProfileField 
-                      label="City" 
-                      value={editing ? editForm.city : profile.city}
-                      editing={editing}
-                      onChange={(value) => setEditForm(prev => ({ ...prev, city: value }))}
-                    />
-                    <ProfileField 
-                      label="Country" 
-                      value={editing ? editForm.country : profile.country}
-                      editing={editing}
-                      onChange={(value) => setEditForm(prev => ({ ...prev, country: value }))}
-                    />
-                  </div>
-                </div>
+                <InlineEditableField
+                  label="Nome"
+                  value={profile.first_name}
+                  fieldName="first_name"
+                  editing={editingField === 'first_name'}
+                  onStartEdit={() => startEditingField('first_name', profile.first_name)}
+                  onCancel={cancelEditingField}
+                  onSave={() => saveField('first_name')}
+                  saving={saving}
+                  icon={<User size={16} />}
+                />
+                <InlineEditableField
+                  label="Cognome"
+                  value={profile.last_name}
+                  fieldName="last_name"
+                  editing={editingField === 'last_name'}
+                  onStartEdit={() => startEditingField('last_name', profile.last_name)}
+                  onCancel={cancelEditingField}
+                  onSave={() => saveField('last_name')}
+                  saving={saving}
+                  icon={<User size={16} />}
+                />
+                <InlineEditableField
+                  label="Email"
+                  value={profile.email}
+                  fieldName="email"
+                  editing={editingField === 'email'}
+                  onStartEdit={() => startEditingField('email', profile.email)}
+                  onCancel={cancelEditingField}
+                  onSave={() => saveField('email')}
+                  saving={saving}
+                  icon={<Mail size={16} />}
+                  type="email"
+                />
+                <InlineEditableField
+                  label="Telefono"
+                  value={profile.phone}
+                  fieldName="phone"
+                  editing={editingField === 'phone'}
+                  onStartEdit={() => startEditingField('phone', profile.phone)}
+                  onCancel={cancelEditingField}
+                  onSave={() => saveField('phone')}
+                  saving={saving}
+                  icon={<Phone size={16} />}
+                />
+                <InlineEditableField
+                  label="Data di Nascita"
+                  value={formatDateForDisplay(profile.date_of_birth)}
+                  fieldName="date_of_birth"
+                  editing={editingField === 'date_of_birth'}
+                  onStartEdit={() => startEditingField('date_of_birth', formatDateForInput(profile.date_of_birth))}
+                  onCancel={cancelEditingField}
+                  onSave={() => saveField('date_of_birth')}
+                  saving={saving}
+                  icon={<Calendar size={16} />}
+                  type="date"
+                />
+                <InlineEditableField
+                  label="Nazionalità"
+                  value={profile.nationality}
+                  fieldName="nationality"
+                  editing={editingField === 'nationality'}
+                  onStartEdit={() => startEditingField('nationality', profile.nationality)}
+                  onCancel={cancelEditingField}
+                  onSave={() => saveField('nationality')}
+                  saving={saving}
+                  icon={<Globe size={16} />}
+                />
+                <InlineEditableField
+                  label="Azienda"
+                  value={profile.company}
+                  fieldName="company"
+                  editing={editingField === 'company'}
+                  onStartEdit={() => startEditingField('company', profile.company)}
+                  onCancel={cancelEditingField}
+                  onSave={() => saveField('company')}
+                  saving={saving}
+                  icon={<Building size={16} />}
+                />
+                <InlineEditableField
+                  label="Posizione"
+                  value={profile.position}
+                  fieldName="position"
+                  editing={editingField === 'position'}
+                  onStartEdit={() => startEditingField('position', profile.position)}
+                  onCancel={cancelEditingField}
+                  onSave={() => saveField('position')}
+                  saving={saving}
+                  icon={<User size={16} />}
+                />
               </div>
+            </div>
 
-              {/* Banking Information */}
+            {/* Address Information */}
+            <div style={{ 
+              background: 'white', 
+              borderRadius: '12px', 
+              padding: '1.5rem', 
+              border: '1px solid #e5e7eb' 
+            }}>
               <div style={{ 
-                background: '#f8fafc', 
-                borderRadius: 12, 
-                padding: '1.5rem',
-                border: '1px solid #e2e8f0'
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '0.75rem', 
+                marginBottom: '1.5rem' 
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
-                  <CreditCard size={20} color="#059669" />
-                  <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#1f2937', margin: 0 }}>
-                    Banking Information
-                  </h3>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
-                  <ProfileField 
-                    label="IBAN" 
-                    value={editing ? editForm.iban : profile.iban}
-                    editing={editing}
-                    onChange={(value) => setEditForm(prev => ({ ...prev, iban: value }))}
-                  />
-                  <ProfileField 
-                    label="BIC/SWIFT" 
-                    value={editing ? editForm.bic : profile.bic}
-                    editing={editing}
-                    onChange={(value) => setEditForm(prev => ({ ...prev, bic: value }))}
-                  />
-                  <ProfileField 
-                    label="Account Holder" 
-                    value={editing ? editForm.account_holder : profile.account_holder}
-                    editing={editing}
-                    onChange={(value) => setEditForm(prev => ({ ...prev, account_holder: value }))}
-                  />
-                  <ProfileField 
-                    label="USDT Wallet" 
-                    value={editing ? editForm.usdt_wallet : profile.usdt_wallet}
-                    editing={editing}
-                    onChange={(value) => setEditForm(prev => ({ ...prev, usdt_wallet: value }))}
-                  />
-                </div>
+                <MapPin size={20} color="#059669" />
+                <h3 style={{ 
+                  fontSize: '18px', 
+                  fontWeight: 600, 
+                  color: '#1f2937', 
+                  margin: 0 
+                }}>
+                  Indirizzo
+                </h3>
               </div>
-
-              {/* Financial Information */}
               <div style={{ 
-                background: '#f8fafc', 
-                borderRadius: 12, 
-                padding: '1.5rem',
-                border: '1px solid #e2e8f0'
+                display: 'grid', 
+                gridTemplateColumns: '1fr 1fr', 
+                gap: '1rem' 
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
-                  <Banknote size={20} color="#dc2626" />
-                  <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#1f2937', margin: 0 }}>
-                    Financial Information
-                  </h3>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <ProfileField 
-                    label="Annual Income (USD)" 
-                    value={editing ? editForm.annual_income : profile.annual_income}
-                    editing={editing}
-                    onChange={(value) => setEditForm(prev => ({ ...prev, annual_income: parseFloat(value) || 0 }))}
-                  />
-                  <ProfileField 
-                    label="Net Worth (USD)" 
-                    value={editing ? editForm.net_worth : profile.net_worth}
-                    editing={editing}
-                    onChange={(value) => setEditForm(prev => ({ ...prev, net_worth: parseFloat(value) || 0 }))}
-                  />
-                  <ProfileField 
-                    label="Monthly Investment Budget (USD)" 
-                    value={editing ? editForm.monthly_investment_budget : profile.monthly_investment_budget}
-                    editing={editing}
-                    onChange={(value) => setEditForm(prev => ({ ...prev, monthly_investment_budget: parseFloat(value) || 0 }))}
-                  />
-                  <ProfileField 
-                    label="Emergency Fund (USD)" 
-                    value={editing ? editForm.emergency_fund : profile.emergency_fund}
-                    editing={editing}
-                    onChange={(value) => setEditForm(prev => ({ ...prev, emergency_fund: parseFloat(value) || 0 }))}
-                  />
-                  <ProfileField 
-                    label="Debt Amount (USD)" 
-                    value={editing ? editForm.debt_amount : profile.debt_amount}
-                    editing={editing}
-                    onChange={(value) => setEditForm(prev => ({ ...prev, debt_amount: parseFloat(value) || 0 }))}
-                  />
-                  <ProfileField 
-                    label="Credit Score" 
-                    value={editing ? editForm.credit_score : profile.credit_score}
-                    editing={editing}
-                    onChange={(value) => setEditForm(prev => ({ ...prev, credit_score: parseInt(value) || 0 }))}
-                  />
-                </div>
-                
-                {/* Employment Information */}
-                <div style={{ marginTop: '1.5rem' }}>
-                  <h4 style={{ fontSize: '16px', fontWeight: 600, color: '#374151', marginBottom: '1rem' }}>
-                    Employment Information
-                  </h4>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                    <ProfileField 
-                      label="Employment Status" 
-                      value={editing ? editForm.employment_status : profile.employment_status}
-                      editing={editing}
-                      onChange={(value) => setEditForm(prev => ({ ...prev, employment_status: value }))}
-                    />
-                    <ProfileField 
-                      label="Employer Name" 
-                      value={editing ? editForm.employer_name : profile.employer_name}
-                      editing={editing}
-                      onChange={(value) => setEditForm(prev => ({ ...prev, employer_name: value }))}
-                    />
-                    <ProfileField 
-                      label="Job Title" 
-                      value={editing ? editForm.job_title : profile.job_title}
-                      editing={editing}
-                      onChange={(value) => setEditForm(prev => ({ ...prev, job_title: value }))}
-                    />
-                    <ProfileField 
-                      label="Years Employed" 
-                      value={editing ? editForm.years_employed : profile.years_employed}
-                      editing={editing}
-                      onChange={(value) => setEditForm(prev => ({ ...prev, years_employed: parseInt(value) || 0 }))}
-                    />
-                  </div>
-                </div>
-
-                {/* Investment Profile */}
-                <div style={{ marginTop: '1.5rem' }}>
-                  <h4 style={{ fontSize: '16px', fontWeight: 600, color: '#374151', marginBottom: '1rem' }}>
-                    Investment Profile
-                  </h4>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                    <ProfileField 
-                      label="Investment Experience" 
-                      value={editing ? editForm.investment_experience : profile.investment_experience}
-                      editing={editing}
-                      onChange={(value) => setEditForm(prev => ({ ...prev, investment_experience: value }))}
-                    />
-                    <ProfileField 
-                      label="Risk Tolerance" 
-                      value={editing ? editForm.risk_tolerance : profile.risk_tolerance}
-                      editing={editing}
-                      onChange={(value) => setEditForm(prev => ({ ...prev, risk_tolerance: value }))}
-                    />
-                    <ProfileField 
-                      label="Source of Funds" 
-                      value={editing ? editForm.source_of_funds : profile.source_of_funds}
-                      editing={editing}
-                      onChange={(value) => setEditForm(prev => ({ ...prev, source_of_funds: value }))}
-                    />
-                    <ProfileField 
-                      label="Tax Residency" 
-                      value={editing ? editForm.tax_residency : profile.tax_residency}
-                      editing={editing}
-                      onChange={(value) => setEditForm(prev => ({ ...prev, tax_residency: value }))}
-                    />
-                  </div>
-                </div>
+                <InlineEditableField
+                  label="Indirizzo"
+                  value={profile.address}
+                  fieldName="address"
+                  editing={editingField === 'address'}
+                  onStartEdit={() => startEditingField('address', profile.address)}
+                  onCancel={cancelEditingField}
+                  onSave={() => saveField('address')}
+                  saving={saving}
+                  icon={<MapPin size={16} />}
+                />
+                <InlineEditableField
+                  label="Città"
+                  value={profile.city}
+                  fieldName="city"
+                  editing={editingField === 'city'}
+                  onStartEdit={() => startEditingField('city', profile.city)}
+                  onCancel={cancelEditingField}
+                  onSave={() => saveField('city')}
+                  saving={saving}
+                  icon={<MapPin size={16} />}
+                />
+                <InlineEditableField
+                  label="Paese"
+                  value={profile.country}
+                  fieldName="country"
+                  editing={editingField === 'country'}
+                  onStartEdit={() => startEditingField('country', profile.country)}
+                  onCancel={cancelEditingField}
+                  onSave={() => saveField('country')}
+                  saving={saving}
+                  icon={<Globe size={16} />}
+                />
+                <InlineEditableField
+                  label="CAP"
+                  value={profile.postal_code}
+                  fieldName="postal_code"
+                  editing={editingField === 'postal_code'}
+                  onStartEdit={() => startEditingField('postal_code', profile.postal_code)}
+                  onCancel={cancelEditingField}
+                  onSave={() => saveField('postal_code')}
+                  saving={saving}
+                  icon={<MapPin size={16} />}
+                />
               </div>
+            </div>
 
+            {/* Banking Information */}
+            <div style={{ 
+              background: 'white', 
+              borderRadius: '12px', 
+              padding: '1.5rem', 
+              border: '1px solid #e5e7eb' 
+            }}>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '0.75rem', 
+                marginBottom: '1.5rem' 
+              }}>
+                <CreditCard size={20} color="#dc2626" />
+                <h3 style={{ 
+                  fontSize: '18px', 
+                  fontWeight: 600, 
+                  color: '#1f2937', 
+                  margin: 0 
+                }}>
+                  Informazioni Bancarie
+                </h3>
+              </div>
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: '1fr 1fr', 
+                gap: '1rem' 
+              }}>
+                <InlineEditableField
+                  label="IBAN"
+                  value={profile.iban}
+                  fieldName="iban"
+                  editing={editingField === 'iban'}
+                  onStartEdit={() => startEditingField('iban', profile.iban)}
+                  onCancel={cancelEditingField}
+                  onSave={() => saveField('iban')}
+                  saving={saving}
+                  icon={<CreditCard size={16} />}
+                />
+                <InlineEditableField
+                  label="BIC/SWIFT"
+                  value={profile.bic}
+                  fieldName="bic"
+                  editing={editingField === 'bic'}
+                  onStartEdit={() => startEditingField('bic', profile.bic)}
+                  onCancel={cancelEditingField}
+                  onSave={() => saveField('bic')}
+                  saving={saving}
+                  icon={<CreditCard size={16} />}
+                />
+                <InlineEditableField
+                  label="Intestatario"
+                  value={profile.account_holder}
+                  fieldName="account_holder"
+                  editing={editingField === 'account_holder'}
+                  onStartEdit={() => startEditingField('account_holder', profile.account_holder)}
+                  onCancel={cancelEditingField}
+                  onSave={() => saveField('account_holder')}
+                  saving={saving}
+                  icon={<User size={16} />}
+                />
+                <InlineEditableField
+                  label="Wallet USDT"
+                  value={profile.usdt_wallet}
+                  fieldName="usdt_wallet"
+                  editing={editingField === 'usdt_wallet'}
+                  onStartEdit={() => startEditingField('usdt_wallet', profile.usdt_wallet)}
+                  onCancel={cancelEditingField}
+                  onSave={() => saveField('usdt_wallet')}
+                  saving={saving}
+                  icon={<CreditCard size={16} />}
+                />
+              </div>
+            </div>
+
+            {/* Financial Information */}
+            <div style={{ 
+              background: 'white', 
+              borderRadius: '12px', 
+              padding: '1.5rem', 
+              border: '1px solid #e5e7eb' 
+            }}>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '0.75rem', 
+                marginBottom: '1.5rem' 
+              }}>
+                <Banknote size={20} color="#dc2626" />
+                <h3 style={{ 
+                  fontSize: '18px', 
+                  fontWeight: 600, 
+                  color: '#1f2937', 
+                  margin: 0 
+                }}>
+                  Informazioni Finanziarie
+                </h3>
+              </div>
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: '1fr 1fr', 
+                gap: '1rem' 
+              }}>
+                <InlineEditableField
+                  label="Reddito Annuale (EUR)"
+                  value={formatCurrency(profile.annual_income)}
+                  fieldName="annual_income"
+                  editing={editingField === 'annual_income'}
+                  onStartEdit={() => startEditingField('annual_income', profile.annual_income)}
+                  onCancel={cancelEditingField}
+                  onSave={() => saveField('annual_income')}
+                  saving={saving}
+                  icon={<Banknote size={16} />}
+                  type="number"
+                />
+                <InlineEditableField
+                  label="Patrimonio Netto (EUR)"
+                  value={formatCurrency(profile.net_worth)}
+                  fieldName="net_worth"
+                  editing={editingField === 'net_worth'}
+                  onStartEdit={() => startEditingField('net_worth', profile.net_worth)}
+                  onCancel={cancelEditingField}
+                  onSave={() => saveField('net_worth')}
+                  saving={saving}
+                  icon={<Banknote size={16} />}
+                  type="number"
+                />
+                <InlineEditableField
+                  label="Budget Mensile Investimenti (EUR)"
+                  value={formatCurrency(profile.monthly_investment_budget)}
+                  fieldName="monthly_investment_budget"
+                  editing={editingField === 'monthly_investment_budget'}
+                  onStartEdit={() => startEditingField('monthly_investment_budget', profile.monthly_investment_budget)}
+                  onCancel={cancelEditingField}
+                  onSave={() => saveField('monthly_investment_budget')}
+                  saving={saving}
+                  icon={<Banknote size={16} />}
+                  type="number"
+                />
+                <InlineEditableField
+                  label="Fondo Emergenza (EUR)"
+                  value={formatCurrency(profile.emergency_fund)}
+                  fieldName="emergency_fund"
+                  editing={editingField === 'emergency_fund'}
+                  onStartEdit={() => startEditingField('emergency_fund', profile.emergency_fund)}
+                  onCancel={cancelEditingField}
+                  onSave={() => saveField('emergency_fund')}
+                  saving={saving}
+                  icon={<Banknote size={16} />}
+                  type="number"
+                />
+                <InlineEditableField
+                  label="Debito Totale (EUR)"
+                  value={formatCurrency(profile.debt_amount)}
+                  fieldName="debt_amount"
+                  editing={editingField === 'debt_amount'}
+                  onStartEdit={() => startEditingField('debt_amount', profile.debt_amount)}
+                  onCancel={cancelEditingField}
+                  onSave={() => saveField('debt_amount')}
+                  saving={saving}
+                  icon={<Banknote size={16} />}
+                  type="number"
+                />
+                <InlineEditableField
+                  label="Punteggio di Credito"
+                  value={formatNumber(profile.credit_score)}
+                  fieldName="credit_score"
+                  editing={editingField === 'credit_score'}
+                  onStartEdit={() => startEditingField('credit_score', profile.credit_score)}
+                  onCancel={cancelEditingField}
+                  onSave={() => saveField('credit_score')}
+                  saving={saving}
+                  icon={<Shield size={16} />}
+                  type="number"
+                />
+              </div>
+            </div>
+
+            {/* Employment and Investment Profile */}
+            <div style={{ 
+              background: 'white', 
+              borderRadius: '12px', 
+              padding: '1.5rem', 
+              border: '1px solid #e5e7eb' 
+            }}>
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '0.75rem', 
+                marginBottom: '1.5rem' 
+              }}>
+                <Building size={20} color="#7c3aed" />
+                <h3 style={{ 
+                  fontSize: '18px', 
+                  fontWeight: 600, 
+                  color: '#1f2937', 
+                  margin: 0 
+                }}>
+                  Lavoro e Profilo di Investimento
+                </h3>
+              </div>
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: '1fr 1fr', 
+                gap: '1rem' 
+              }}>
+                <InlineEditableField
+                  label="Stato Occupazionale"
+                  value={profile.employment_status}
+                  fieldName="employment_status"
+                  editing={editingField === 'employment_status'}
+                  onStartEdit={() => startEditingField('employment_status', profile.employment_status)}
+                  onCancel={cancelEditingField}
+                  onSave={() => saveField('employment_status')}
+                  saving={saving}
+                  icon={<Building size={16} />}
+                />
+                <InlineEditableField
+                  label="Nome Datore di Lavoro"
+                  value={profile.employer_name}
+                  fieldName="employer_name"
+                  editing={editingField === 'employer_name'}
+                  onStartEdit={() => startEditingField('employer_name', profile.employer_name)}
+                  onCancel={cancelEditingField}
+                  onSave={() => saveField('employer_name')}
+                  saving={saving}
+                  icon={<Building size={16} />}
+                />
+                <InlineEditableField
+                  label="Titolo di Lavoro"
+                  value={profile.job_title}
+                  fieldName="job_title"
+                  editing={editingField === 'job_title'}
+                  onStartEdit={() => startEditingField('job_title', profile.job_title)}
+                  onCancel={cancelEditingField}
+                  onSave={() => saveField('job_title')}
+                  saving={saving}
+                  icon={<User size={16} />}
+                />
+                <InlineEditableField
+                  label="Anni di Impiego"
+                  value={formatNumber(profile.years_employed)}
+                  fieldName="years_employed"
+                  editing={editingField === 'years_employed'}
+                  onStartEdit={() => startEditingField('years_employed', profile.years_employed)}
+                  onCancel={cancelEditingField}
+                  onSave={() => saveField('years_employed')}
+                  saving={saving}
+                  icon={<Calendar size={16} />}
+                  type="number"
+                />
+                <InlineEditableField
+                  label="Esperienza di Investimento"
+                  value={profile.investment_experience}
+                  fieldName="investment_experience"
+                  editing={editingField === 'investment_experience'}
+                  onStartEdit={() => startEditingField('investment_experience', profile.investment_experience)}
+                  onCancel={cancelEditingField}
+                  onSave={() => saveField('investment_experience')}
+                  saving={saving}
+                  icon={<FileText size={16} />}
+                />
+                <InlineEditableField
+                  label="Tolleranza al Rischio"
+                  value={profile.risk_tolerance}
+                  fieldName="risk_tolerance"
+                  editing={editingField === 'risk_tolerance'}
+                  onStartEdit={() => startEditingField('risk_tolerance', profile.risk_tolerance)}
+                  onCancel={cancelEditingField}
+                  onSave={() => saveField('risk_tolerance')}
+                  saving={saving}
+                  icon={<Shield size={16} />}
+                />
+                <InlineEditableField
+                  label="Fonte dei Fondi"
+                  value={profile.source_of_funds}
+                  fieldName="source_of_funds"
+                  editing={editingField === 'source_of_funds'}
+                  onStartEdit={() => startEditingField('source_of_funds', profile.source_of_funds)}
+                  onCancel={cancelEditingField}
+                  onSave={() => saveField('source_of_funds')}
+                  saving={saving}
+                  icon={<Banknote size={16} />}
+                />
+                <InlineEditableField
+                  label="Residenza Fiscale"
+                  value={profile.tax_residency}
+                  fieldName="tax_residency"
+                  editing={editingField === 'tax_residency'}
+                  onStartEdit={() => startEditingField('tax_residency', profile.tax_residency)}
+                  onCancel={cancelEditingField}
+                  onSave={() => saveField('tax_residency')}
+                  saving={saving}
+                  icon={<Globe size={16} />}
+                />
+                <InlineEditableField
+                  label="Codice Fiscale"
+                  value={profile.tax_id}
+                  fieldName="tax_id"
+                  editing={editingField === 'tax_id'}
+                  onStartEdit={() => startEditingField('tax_id', profile.tax_id)}
+                  onCancel={cancelEditingField}
+                  onSave={() => saveField('tax_id')}
+                  saving={saving}
+                  icon={<FileText size={16} />}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -978,108 +1083,171 @@ export default function ProfilePage() {
   );
 }
 
-function ProfileField({ 
+// Inline Editable Field Component
+function InlineEditableField({ 
   label, 
   value, 
-  icon, 
+  fieldName,
   editing = false, 
-  onChange 
+  onStartEdit,
+  onCancel,
+  onSave,
+  saving = false,
+  icon,
+  type = "text"
 }: { 
   label: string; 
   value: any; 
-  icon?: React.ReactNode; 
+  fieldName: string;
   editing?: boolean;
-  onChange?: (value: string) => void;
+  onStartEdit: () => void;
+  onCancel: () => void;
+  onSave: () => void;
+  saving?: boolean;
+  icon?: React.ReactNode;
+  type?: string;
 }) {
-  // Determine input type based on label
-  const getInputType = () => {
-    if (label.toLowerCase().includes('date of birth') || label.toLowerCase().includes('birth')) {
-      return 'date';
+  const [editValue, setEditValue] = useState(value);
+
+  useEffect(() => {
+    setEditValue(value);
+  }, [value]);
+
+  const handleSave = () => {
+    if (editValue !== value) {
+      onSave();
+    } else {
+      onCancel();
     }
-    if (label.toLowerCase().includes('email')) {
-      return 'email';
-    }
-    if (label.toLowerCase().includes('phone')) {
-      return 'tel';
-    }
-    if (label.toLowerCase().includes('credit score') || label.toLowerCase().includes('years')) {
-      return 'number';
-    }
-    if (label.toLowerCase().includes('usd') || label.toLowerCase().includes('income') || 
-        label.toLowerCase().includes('worth') || label.toLowerCase().includes('budget') || 
-        label.toLowerCase().includes('fund') || label.toLowerCase().includes('debt')) {
-      return 'number';
-    }
-    return 'text';
   };
 
-  // Format value for display
-  const formatValue = (val: any) => {
-    if (val === null || val === undefined || val === '') {
-      return <span style={{ color: '#d1d5db' }}>-</span>;
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSave();
+    } else if (e.key === 'Escape') {
+      onCancel();
     }
-    
-    // Format currency values
-    if (label.toLowerCase().includes('usd') || label.toLowerCase().includes('income') || 
-        label.toLowerCase().includes('worth') || label.toLowerCase().includes('budget') || 
-        label.toLowerCase().includes('fund') || label.toLowerCase().includes('debt')) {
-      return `$${Number(val).toLocaleString()}`;
-    }
-    
-    // Format credit score
-    if (label.toLowerCase().includes('credit score')) {
-      return val.toString();
-    }
-    
-    return val.toString();
   };
 
-  const inputType = getInputType();
+  const displayValue = value || 'Non specificato';
 
   return (
     <div style={{ 
-      background: 'white', 
-      borderRadius: 8, 
-      padding: '0.75rem',
-      border: '1px solid #e5e7eb'
+      display: 'flex', 
+      flexDirection: 'column', 
+      gap: '0.5rem' 
     }}>
-      <div style={{ 
-        color: '#6b7280', 
-        fontSize: '12px', 
-        fontWeight: 600, 
-        marginBottom: '0.5rem',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.5rem'
+      <label style={{ 
+        fontSize: '0.875rem', 
+        fontWeight: 500, 
+        color: '#374151' 
       }}>
-        {icon && icon}
         {label}
-      </div>
-      {editing && onChange ? (
-        <input
-          type={inputType}
-          value={value || ''}
-          onChange={(e) => onChange(e.target.value)}
-          style={{
-            width: '100%',
-            border: '1px solid #d1d5db',
-            borderRadius: 4,
-            padding: '0.5rem',
-            fontSize: '14px',
-            fontWeight: 500,
-            color: '#1f2937',
-            background: 'white'
-          }}
-          step={inputType === 'number' ? 'any' : undefined}
-          min={inputType === 'number' ? '0' : undefined}
-        />
+      </label>
+      
+      {editing ? (
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '0.5rem' 
+        }}>
+          {icon && (
+            <div style={{ color: '#6b7280' }}>
+              {icon}
+            </div>
+          )}
+          <input
+            type={type}
+            value={editValue || ''}
+            onChange={(e) => setEditValue(e.target.value)}
+            onKeyDown={handleKeyPress}
+            style={{
+              flex: 1,
+              padding: '0.5rem',
+              border: '1px solid #d1d5db',
+              borderRadius: '6px',
+              fontSize: '0.875rem'
+            }}
+            autoFocus
+          />
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            style={{
+              background: '#059669',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              padding: '0.5rem',
+              cursor: saving ? 'not-allowed' : 'pointer',
+              opacity: saving ? 0.5 : 1
+            }}
+          >
+            {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+          </button>
+          <button
+            onClick={onCancel}
+            disabled={saving}
+            style={{
+              background: '#6b7280',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              padding: '0.5rem',
+              cursor: saving ? 'not-allowed' : 'pointer',
+              opacity: saving ? 0.5 : 1
+            }}
+          >
+            <X size={16} />
+          </button>
+        </div>
       ) : (
         <div style={{ 
-          color: '#1f2937', 
-          fontSize: '14px', 
-          fontWeight: 500 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between',
+          padding: '0.75rem',
+          background: '#f9fafb',
+          borderRadius: '6px',
+          border: '1px solid #e5e7eb'
         }}>
-          {formatValue(value)}
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '0.5rem' 
+          }}>
+            {icon && (
+              <div style={{ color: '#6b7280' }}>
+                {icon}
+              </div>
+            )}
+            <span style={{ 
+              fontSize: '0.875rem', 
+              color: '#374151' 
+            }}>
+              {displayValue}
+            </span>
+          </div>
+          <button
+            onClick={onStartEdit}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#6b7280',
+              cursor: 'pointer',
+              padding: '0.25rem',
+              borderRadius: '4px',
+              transition: 'color 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = '#3b82f6';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = '#6b7280';
+            }}
+          >
+            <Edit size={14} />
+          </button>
         </div>
       )}
     </div>
