@@ -193,10 +193,7 @@ export async function GET(request: NextRequest) {
 
     const { data: investments, error } = await supabaseAdmin
       .from('investments')
-      .select(`
-        *,
-        package:packages(name, description, duration, expected_return, min_investment)
-      `)
+      .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
