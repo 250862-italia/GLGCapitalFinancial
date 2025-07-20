@@ -1,512 +1,310 @@
-"use client";
-import { useEffect, useState } from "react";
-import { supabase } from '@/lib/supabase';
-import AdminProtectedRoute from '@/components/auth/AdminProtectedRoute';
-import { fetchJSONWithCSRF } from '@/lib/csrf-client';
+'use client';
 
-interface KYCRequest {
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { 
+  Eye, 
+  Download, 
+  CheckCircle, 
+  XCircle, 
+  Clock,
+  FileText,
+  User,
+  Mail,
+  Calendar
+} from 'lucide-react';
+
+interface KYCDocument {
+  id: string;
+  type: string;
+  filename: string;
+  url: string;
+  uploaded_at: string;
+  status: 'pending' | 'approved' | 'rejected';
+}
+
+interface Client {
   id: string;
   user_id: string;
-  user_email: string;
-  user_name: string;
-  status: 'pending' | 'approved' | 'rejected' | 'under_review';
-  document_type: string;
-  submitted_at: string;
-  updated_at: string;
-  verification_level: string;
-  
-  // Personal Information
-  personal_info: {
-    first_name: string;
-    last_name: string;
-    email: string;
-    phone?: string;
-    date_of_birth?: string;
-    nationality?: string;
-    address?: string;
-    city?: string;
-    country?: string;
-    postal_code?: string;
-  };
-
-  // Banking Information
-  banking_info: {
-    iban?: string;
-    bic?: string;
-    account_holder?: string;
-    usdt_wallet?: string;
-  };
-
-  // Financial Information
-  financial_info: {
-    annual_income?: number;
-    net_worth?: number;
-    investment_experience?: string;
-    risk_tolerance?: string;
-    monthly_investment_budget?: number;
-    emergency_fund?: number;
-    debt_amount?: number;
-    credit_score?: number;
-    employment_status?: string;
-    employer_name?: string;
-    job_title?: string;
-    years_employed?: number;
-    source_of_funds?: string;
-    tax_residency?: string;
-    tax_id?: string;
-  };
-
-  // Investment Profile
-  investment_profile: {
-    total_invested?: number;
-    risk_profile?: string;
-    investment_goals?: any;
-    preferred_investment_types?: any;
-  };
+  first_name: string;
+  last_name: string;
+  email: string;
+  kyc_documents: KYCDocument[];
+  created_at: string;
 }
 
 export default function AdminKYCPage() {
-  const [kycRequests, setKycRequests] = useState<KYCRequest[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [selectedRequest, setSelectedRequest] = useState<KYCRequest | null>(null);
-  const [showModal, setShowModal] = useState(false);
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
 
   useEffect(() => {
-    fetchKYCRequests();
+    fetchKYCDocuments();
   }, []);
 
-  const fetchKYCRequests = async () => {
-    setLoading(true);
-    setError("");
+  const fetchKYCDocuments = async () => {
     try {
-      // Get admin session
-      const adminToken = localStorage.getItem('admin_token');
-      
-      if (!adminToken) {
-        setError("Sessione admin non valida");
-        setLoading(false);
-        return;
-      }
-
-      const response = await fetchJSONWithCSRF('/api/admin/kyc', {
-        headers: {
-          'x-admin-session': adminToken
-        }
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || errorData.details || 'Failed to fetch KYC data');
-      }
-
-      const result = await response.json();
-      
-      if (result.success) {
-        setKycRequests(result.data);
-        if (result.message) {
-          console.log('ℹ️ KYC API message:', result.message);
-        }
+      const response = await fetch('/api/admin/kyc');
+      if (response.ok) {
+        const data = await response.json();
+        setClients(data.clients || []);
       } else {
-        throw new Error(result.error || result.details || 'Failed to fetch KYC data');
+        console.error('Failed to fetch KYC documents');
       }
     } catch (error) {
-      console.error('Error fetching KYC requests:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to load KYC requests';
-      setError(errorMessage);
-      
-      // If it's a database error, show helpful message
-      if (errorMessage.includes('relation') || errorMessage.includes('table')) {
-        setError("Database table not found. Please run the SQL migration script first.");
-      }
+      console.error('Error fetching KYC documents:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleStatusUpdate = async (requestId: string, newStatus: KYCRequest['status'], notes?: string) => {
+  const updateDocumentStatus = async (clientId: string, documentId: string, status: 'approved' | 'rejected') => {
     try {
-      // Get admin session
-      const adminToken = localStorage.getItem('admin_token');
-      
-      if (!adminToken) {
-        setError("Sessione admin non valida");
-        return;
-      }
-
-      const response = await fetchJSONWithCSRF('/api/admin/kyc', {
+      const response = await fetch('/api/admin/kyc/update-status', {
         method: 'PUT',
         headers: {
-          'x-admin-session': adminToken
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          clientId: requestId,
-          status: newStatus,
-          notes
-        })
+          client_id: clientId,
+          document_id: documentId,
+          status: status
+        }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to update KYC status');
+      if (response.ok) {
+        // Update local state
+        setClients(prevClients => 
+          prevClients.map(client => {
+            if (client.id === clientId) {
+              return {
+                ...client,
+                kyc_documents: client.kyc_documents.map(doc => 
+                  doc.id === documentId ? { ...doc, status } : doc
+                )
+              };
+            }
+            return client;
+          })
+        );
+      } else {
+        console.error('Failed to update document status');
       }
-
-      // Update local state
-      setKycRequests(prev => prev.map(req => 
-        req.id === requestId 
-          ? { ...req, status: newStatus, updated_at: new Date().toISOString() }
-          : req
-      ));
-      
-      setShowModal(false);
-      setSelectedRequest(null);
     } catch (error) {
-      console.error('Error updating KYC status:', error);
-      setError("Failed to update KYC status");
+      console.error('Error updating document status:', error);
     }
   };
 
-  const filteredRequests = kycRequests.filter(request => {
-    const matchesStatus = statusFilter === 'all' || request.status === statusFilter;
-    const matchesSearch = request.user_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         request.user_email.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesStatus && matchesSearch;
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'approved':
+        return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case 'rejected':
+        return <XCircle className="w-4 h-4 text-red-500" />;
+      default:
+        return <Clock className="w-4 h-4 text-yellow-500" />;
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'approved':
+        return <Badge className="bg-green-100 text-green-800">Approved</Badge>;
+      case 'rejected':
+        return <Badge className="bg-red-100 text-red-800">Rejected</Badge>;
+      default:
+        return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>;
+    }
+  };
+
+  const getDocumentTypeLabel = (type: string) => {
+    const labels: { [key: string]: string } = {
+      'identity_document': 'Identity Document',
+      'proof_of_address': 'Proof of Address',
+      'bank_statement': 'Bank Statement',
+      'income_proof': 'Income Proof',
+      'tax_document': 'Tax Document',
+      'source_of_funds': 'Source of Funds',
+      'other': 'Other Document'
+    };
+    return labels[type] || type;
+  };
+
+  const filteredClients = clients.filter(client => {
+    if (filter === 'all') return true;
+    return client.kyc_documents.some(doc => doc.status === filter);
   });
 
-  const getStatusColor = (status: KYCRequest['status']) => {
-    switch (status) {
-      case 'pending': return '#f59e0b';
-      case 'approved': return '#10b981';
-      case 'rejected': return '#ef4444';
-      case 'under_review': return '#3b82f6';
-      default: return '#6b7280';
-    }
-  };
-
-  const getStatusText = (status: KYCRequest['status']) => {
-    switch (status) {
-      case 'pending': return 'In Attesa';
-      case 'approved': return 'Approvato';
-      case 'rejected': return 'Rifiutato';
-      case 'under_review': return 'In Revisione';
-      default: return status;
-    }
-  };
-
-  const formatCurrency = (amount: number | undefined) => {
-    if (!amount) return '-';
-    return new Intl.NumberFormat('it-IT', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount);
-  };
+  const clientsWithKYC = filteredClients.filter(client => 
+    client.kyc_documents && client.kyc_documents.length > 0
+  );
 
   if (loading) {
     return (
-      <AdminProtectedRoute>
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
-          <div style={{ animation: 'spin 1s linear infinite' }}>⏳</div>
-          <span style={{ marginLeft: '1rem' }}>Caricamento richieste KYC...</span>
+      <div className="container mx-auto p-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-lg">Loading KYC documents...</div>
         </div>
-      </AdminProtectedRoute>
+      </div>
     );
   }
 
   return (
-    <AdminProtectedRoute>
-      <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 4px 24px rgba(10,37,64,0.10)', padding: '2rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-          <div>
-            <h1 style={{ fontSize: 32, fontWeight: 900, marginBottom: 8, color: 'var(--primary)' }}>
-              Gestione KYC
-            </h1>
-            <p style={{ color: 'var(--foreground)', opacity: 0.8 }}>
-              Verifica e gestione delle richieste di identificazione clienti
+    <div className="container mx-auto p-6">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">KYC Document Management</h1>
+        <p className="text-gray-600">Review and manage client KYC documents</p>
+      </div>
+
+      {/* Filter Controls */}
+      <div className="mb-6 flex gap-2">
+        <Button
+          variant={filter === 'all' ? 'default' : 'outline'}
+          onClick={() => setFilter('all')}
+        >
+          All ({clients.filter(c => c.kyc_documents?.length > 0).length})
+        </Button>
+        <Button
+          variant={filter === 'pending' ? 'default' : 'outline'}
+          onClick={() => setFilter('pending')}
+        >
+          Pending ({clients.filter(c => c.kyc_documents?.some(d => d.status === 'pending')).length})
+        </Button>
+        <Button
+          variant={filter === 'approved' ? 'default' : 'outline'}
+          onClick={() => setFilter('approved')}
+        >
+          Approved ({clients.filter(c => c.kyc_documents?.some(d => d.status === 'approved')).length})
+        </Button>
+        <Button
+          variant={filter === 'rejected' ? 'default' : 'outline'}
+          onClick={() => setFilter('rejected')}
+        >
+          Rejected ({clients.filter(c => c.kyc_documents?.some(d => d.status === 'rejected')).length})
+        </Button>
+      </div>
+
+      {clientsWithKYC.length === 0 ? (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No KYC Documents Found</h3>
+            <p className="text-gray-600">
+              {filter === 'all' 
+                ? 'No clients have uploaded KYC documents yet.'
+                : `No documents with ${filter} status found.`
+              }
             </p>
-          </div>
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            <span style={{ fontWeight: 600, color: '#374151' }}>
-              Totale: {kycRequests.length}
-            </span>
-            <span style={{ fontWeight: 600, color: '#f59e0b' }}>
-              In attesa: {kycRequests.filter(r => r.status === 'pending').length}
-            </span>
-          </div>
-        </div>
-
-        {error && (
-          <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '12px', borderRadius: '6px', marginBottom: '20px' }}>
-            <div style={{ fontWeight: 600, marginBottom: '8px' }}>Errore nel caricamento KYC:</div>
-            <div style={{ marginBottom: '8px' }}>{error}</div>
-            {error.includes('Database table not found') && (
-              <div style={{ fontSize: '14px', marginTop: '8px' }}>
-                <strong>Soluzione:</strong> Esegui lo script SQL nel Supabase Dashboard:
-                <ol style={{ marginTop: '4px', marginLeft: '20px' }}>
-                  <li>Vai su <strong>Supabase Dashboard</strong> → <strong>SQL Editor</strong></li>
-                  <li>Copia e incolla il contenuto del file <code>create-clients-table-kyc.sql</code></li>
-                  <li>Esegui lo script</li>
-                  <li>Ricarica questa pagina</li>
-                </ol>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Filters */}
-        <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
-          <input
-            type="text"
-            placeholder="Cerca per nome o email..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{
-              padding: '8px 12px',
-              border: '1px solid #d1d5db',
-              borderRadius: '6px',
-              minWidth: '250px'
-            }}
-          />
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            style={{
-              padding: '8px 12px',
-              border: '1px solid #d1d5db',
-              borderRadius: '6px',
-              background: 'white'
-            }}
-          >
-            <option value="all">Tutti gli stati</option>
-            <option value="pending">In attesa</option>
-            <option value="under_review">In revisione</option>
-            <option value="approved">Approvato</option>
-            <option value="rejected">Rifiutato</option>
-          </select>
-        </div>
-
-        {/* KYC Requests Table */}
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ borderBottom: '2px solid #e0e3eb' }}>
-                <th style={{ textAlign: 'left', padding: '1rem', fontWeight: 600 }}>Cliente</th>
-                <th style={{ textAlign: 'left', padding: '1rem', fontWeight: 600 }}>Stato</th>
-                <th style={{ textAlign: 'left', padding: '1rem', fontWeight: 600 }}>Informazioni Bancarie</th>
-                <th style={{ textAlign: 'left', padding: '1rem', fontWeight: 600 }}>Informazioni Finanziarie</th>
-                <th style={{ textAlign: 'left', padding: '1rem', fontWeight: 600 }}>Data Registrazione</th>
-                <th style={{ textAlign: 'left', padding: '1rem', fontWeight: 600 }}>Azioni</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredRequests.map((request) => (
-                <tr key={request.id} style={{ borderBottom: '1px solid #e0e3eb' }}>
-                  <td style={{ padding: '1rem' }}>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-6">
+          {clientsWithKYC.map((client) => (
+            <Card key={client.id}>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <User className="w-5 h-5 text-gray-500" />
                     <div>
-                      <div style={{ fontWeight: 600 }}>{request.user_name}</div>
-                      <div style={{ fontSize: '14px', color: '#6b7280' }}>{request.user_email}</div>
-                      <div style={{ fontSize: '12px', color: '#9ca3af' }}>
-                        {request.personal_info.country || 'N/A'}
+                      <CardTitle className="text-lg">
+                        {client.first_name} {client.last_name}
+                      </CardTitle>
+                      <div className="flex items-center space-x-4 text-sm text-gray-600">
+                        <div className="flex items-center space-x-1">
+                          <Mail className="w-4 h-4" />
+                          <span>{client.email}</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <Calendar className="w-4 h-4" />
+                          <span>Joined: {new Date(client.created_at).toLocaleDateString()}</span>
+                        </div>
                       </div>
                     </div>
-                  </td>
-                  <td style={{ padding: '1rem' }}>
-                    <span style={{ 
-                      background: getStatusColor(request.status) + '20',
-                      color: getStatusColor(request.status),
-                      padding: '4px 8px',
-                      borderRadius: '4px',
-                      fontSize: '14px',
-                      fontWeight: 600
-                    }}>
-                      {getStatusText(request.status)}
-                    </span>
-                  </td>
-                  <td style={{ padding: '1rem' }}>
-                    <div style={{ fontSize: '14px' }}>
-                      <div><strong>IBAN:</strong> {request.banking_info.iban || 'N/A'}</div>
-                      <div><strong>Intestatario:</strong> {request.banking_info.account_holder || 'N/A'}</div>
-                      <div><strong>Wallet USDT:</strong> {request.banking_info.usdt_wallet ? 'Presente' : 'N/A'}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm text-gray-600">
+                      {client.kyc_documents.length} document{client.kyc_documents.length !== 1 ? 's' : ''}
                     </div>
-                  </td>
-                  <td style={{ padding: '1rem' }}>
-                    <div style={{ fontSize: '14px' }}>
-                      <div><strong>Reddito:</strong> {formatCurrency(request.financial_info.annual_income)}</div>
-                      <div><strong>Patrimonio:</strong> {formatCurrency(request.financial_info.net_worth)}</div>
-                      <div><strong>Esperienza:</strong> {request.financial_info.investment_experience || 'N/A'}</div>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {client.kyc_documents
+                    .filter(doc => filter === 'all' || doc.status === filter)
+                    .map((document) => (
+                    <div key={document.id} className="border rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center space-x-3">
+                          {getStatusIcon(document.status)}
+                          <div>
+                            <h4 className="font-medium text-gray-900">
+                              {getDocumentTypeLabel(document.type)}
+                            </h4>
+                            <p className="text-sm text-gray-600">{document.filename}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          {getStatusBadge(document.status)}
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm text-gray-600">
+                          Uploaded: {new Date(document.uploaded_at).toLocaleString()}
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => window.open(document.url, '_blank')}
+                          >
+                            <Eye className="w-4 h-4 mr-1" />
+                            View
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => window.open(document.url, '_blank')}
+                          >
+                            <Download className="w-4 h-4 mr-1" />
+                            Download
+                          </Button>
+                          
+                          {document.status === 'pending' && (
+                            <>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-green-600 border-green-600 hover:bg-green-50"
+                                onClick={() => updateDocumentStatus(client.id, document.id, 'approved')}
+                              >
+                                <CheckCircle className="w-4 h-4 mr-1" />
+                                Approve
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-red-600 border-red-600 hover:bg-red-50"
+                                onClick={() => updateDocumentStatus(client.id, document.id, 'rejected')}
+                              >
+                                <XCircle className="w-4 h-4 mr-1" />
+                                Reject
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </td>
-                  <td style={{ padding: '1rem' }}>
-                    {new Date(request.submitted_at).toLocaleDateString('it-IT')}
-                  </td>
-                  <td style={{ padding: '1rem' }}>
-                    <button
-                      onClick={() => {
-                        setSelectedRequest(request);
-                        setShowModal(true);
-                      }}
-                      style={{
-                        background: '#3b82f6',
-                        color: 'white',
-                        border: 'none',
-                        padding: '6px 12px',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '14px'
-                      }}
-                    >
-                      Gestisci
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
-
-        {filteredRequests.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '3rem', color: '#6b7280' }}>
-            Nessuna richiesta KYC trovata
-          </div>
-        )}
-
-        {/* KYC Review Modal */}
-        {showModal && selectedRequest && (
-          <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000
-          }}>
-            <div style={{
-              background: 'white',
-              padding: '2rem',
-              borderRadius: '12px',
-              maxWidth: '800px',
-              width: '90%',
-              maxHeight: '90vh',
-              overflow: 'auto'
-            }}>
-              <h2 style={{ fontSize: '24px', fontWeight: 700, marginBottom: '1rem' }}>
-                Revisione KYC - {selectedRequest.user_name}
-              </h2>
-              
-              {/* Personal Information */}
-              <div style={{ marginBottom: '2rem' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '1rem', color: '#374151' }}>
-                  Informazioni Personali
-                </h3>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', fontSize: '14px' }}>
-                  <div><strong>Nome:</strong> {selectedRequest.personal_info.first_name}</div>
-                  <div><strong>Cognome:</strong> {selectedRequest.personal_info.last_name}</div>
-                  <div><strong>Email:</strong> {selectedRequest.personal_info.email}</div>
-                  <div><strong>Telefono:</strong> {selectedRequest.personal_info.phone || 'N/A'}</div>
-                  <div><strong>Data di Nascita:</strong> {selectedRequest.personal_info.date_of_birth || 'N/A'}</div>
-                  <div><strong>Nazionalità:</strong> {selectedRequest.personal_info.nationality || 'N/A'}</div>
-                  <div><strong>Indirizzo:</strong> {selectedRequest.personal_info.address || 'N/A'}</div>
-                  <div><strong>Città:</strong> {selectedRequest.personal_info.city || 'N/A'}</div>
-                  <div><strong>Paese:</strong> {selectedRequest.personal_info.country || 'N/A'}</div>
-                  <div><strong>CAP:</strong> {selectedRequest.personal_info.postal_code || 'N/A'}</div>
-                </div>
-              </div>
-
-              {/* Banking Information */}
-              <div style={{ marginBottom: '2rem' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '1rem', color: '#059669' }}>
-                  Informazioni Bancarie
-                </h3>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', fontSize: '14px' }}>
-                  <div><strong>IBAN:</strong> {selectedRequest.banking_info.iban || 'N/A'}</div>
-                  <div><strong>BIC/SWIFT:</strong> {selectedRequest.banking_info.bic || 'N/A'}</div>
-                  <div><strong>Intestatario:</strong> {selectedRequest.banking_info.account_holder || 'N/A'}</div>
-                  <div><strong>Wallet USDT:</strong> {selectedRequest.banking_info.usdt_wallet || 'N/A'}</div>
-                </div>
-              </div>
-
-              {/* Financial Information */}
-              <div style={{ marginBottom: '2rem' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '1rem', color: '#dc2626' }}>
-                  Informazioni Finanziarie
-                </h3>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', fontSize: '14px' }}>
-                  <div><strong>Reddito Annuale:</strong> {formatCurrency(selectedRequest.financial_info.annual_income)}</div>
-                  <div><strong>Patrimonio Netto:</strong> {formatCurrency(selectedRequest.financial_info.net_worth)}</div>
-                  <div><strong>Budget Mensile Investimenti:</strong> {formatCurrency(selectedRequest.financial_info.monthly_investment_budget)}</div>
-                  <div><strong>Fondo di Emergenza:</strong> {formatCurrency(selectedRequest.financial_info.emergency_fund)}</div>
-                  <div><strong>Debito Totale:</strong> {formatCurrency(selectedRequest.financial_info.debt_amount)}</div>
-                  <div><strong>Credit Score:</strong> {selectedRequest.financial_info.credit_score || 'N/A'}</div>
-                  <div><strong>Stato Occupazionale:</strong> {selectedRequest.financial_info.employment_status || 'N/A'}</div>
-                  <div><strong>Datore di Lavoro:</strong> {selectedRequest.financial_info.employer_name || 'N/A'}</div>
-                  <div><strong>Posizione:</strong> {selectedRequest.financial_info.job_title || 'N/A'}</div>
-                  <div><strong>Anni di Impiego:</strong> {selectedRequest.financial_info.years_employed || 'N/A'}</div>
-                  <div><strong>Fonte dei Fondi:</strong> {selectedRequest.financial_info.source_of_funds || 'N/A'}</div>
-                  <div><strong>Residenza Fiscale:</strong> {selectedRequest.financial_info.tax_residency || 'N/A'}</div>
-                  <div><strong>Esperienza Investimenti:</strong> {selectedRequest.financial_info.investment_experience || 'N/A'}</div>
-                  <div><strong>Tolleranza al Rischio:</strong> {selectedRequest.financial_info.risk_tolerance || 'N/A'}</div>
-                </div>
-              </div>
-
-              {/* Investment Profile */}
-              <div style={{ marginBottom: '2rem' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '1rem', color: '#7c3aed' }}>
-                  Profilo di Investimento
-                </h3>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', fontSize: '14px' }}>
-                  <div><strong>Totale Investito:</strong> {formatCurrency(selectedRequest.investment_profile.total_invested)}</div>
-                  <div><strong>Profilo di Rischio:</strong> {selectedRequest.investment_profile.risk_profile || 'N/A'}</div>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
-                <button
-                  onClick={() => setShowModal(false)}
-                  style={{
-                    padding: '8px 16px',
-                    border: '1px solid #d1d5db',
-                    background: 'white',
-                    borderRadius: '4px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Chiudi
-                </button>
-                <button
-                  onClick={() => handleStatusUpdate(selectedRequest.id, 'rejected')}
-                  style={{
-                    padding: '8px 16px',
-                    background: '#ef4444',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Rifiuta
-                </button>
-                <button
-                  onClick={() => handleStatusUpdate(selectedRequest.id, 'approved')}
-                  style={{
-                    padding: '8px 16px',
-                    background: '#10b981',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Approva
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </AdminProtectedRoute>
+      )}
+    </div>
   );
 } 
