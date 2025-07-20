@@ -34,7 +34,21 @@ export default function AdminInvestmentsPage() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetchJSONWithCSRF("/api/admin/investments");
+      // Get admin session
+      const adminToken = localStorage.getItem('admin_token');
+      const adminUser = localStorage.getItem('admin_user');
+      
+      if (!adminToken || !adminUser) {
+        setError("Sessione admin non valida");
+        setLoading(false);
+        return;
+      }
+
+      const res = await fetchJSONWithCSRF("/api/admin/investments", {
+        headers: {
+          'x-admin-session': adminToken
+        }
+      });
       const data = await res.json();
       if (res.ok) {
         // Handle the new API response format
@@ -107,8 +121,20 @@ export default function AdminInvestmentsPage() {
     setError("");
     setSuccess("");
     try {
+      // Get admin session
+      const adminToken = localStorage.getItem('admin_token');
+      
+      if (!adminToken) {
+        setError("Sessione admin non valida");
+        setLoading(false);
+        return;
+      }
+
       const res = await fetchJSONWithCSRF("/api/admin/investments", {
         method: "PUT",
+        headers: {
+          'x-admin-session': adminToken
+        },
         body: JSON.stringify({ investment_id: invId, status: newStatus })
       });
       const data = await res.json();

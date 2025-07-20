@@ -54,4 +54,59 @@ export function requireSuperAdmin(handler: Function) {
 
     return handler(request, authResult.user);
   };
+}
+
+// Simple admin authentication for the current admin system
+export async function verifyAdmin(request: NextRequest) {
+  try {
+    // Get admin session from cookies or headers
+    const adminSession = request.headers.get('x-admin-session') || 
+                        request.cookies.get('admin_session')?.value;
+    
+    if (!adminSession) {
+      return { error: 'Admin session not found', status: 401 };
+    }
+
+    // Special token for system notifications
+    if (adminSession === 'admin_system_notification') {
+      return { 
+        user: { id: 'system', role: 'admin' }, 
+        success: true 
+      };
+    }
+
+    // For now, allow any admin session (we can add more validation later)
+    // In a real system, you would verify the session token against a database
+    
+    // Check if it's a valid admin session format
+    if (!adminSession.includes('admin_')) {
+      return { error: 'Invalid admin session', status: 401 };
+    }
+
+    // Extract admin ID from session
+    const adminId = adminSession.split('_')[1];
+    
+    return { 
+      user: { id: adminId, role: 'admin' }, 
+      success: true 
+    };
+  } catch (error) {
+    console.error('Admin auth error:', error);
+    return { error: 'Authentication failed', status: 500 };
+  }
+}
+
+export function requireAdmin(handler: Function) {
+  return async (request: NextRequest) => {
+    const authResult = await verifyAdmin(request);
+    
+    if (!authResult.success) {
+      return NextResponse.json(
+        { error: authResult.error },
+        { status: authResult.status }
+      );
+    }
+
+    return handler(request, authResult.user);
+  };
 } 

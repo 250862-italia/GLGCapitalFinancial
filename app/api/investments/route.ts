@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
       investment.id
     );
 
-    // Create notification record
+    // Create notification record for user
     await supabaseAdmin
       .from('notifications')
       .insert({
@@ -133,6 +133,37 @@ export async function POST(request: NextRequest) {
           amount: amount
         }
       });
+
+    // Send notification to admin if requested
+    if (body.notifyAdmin) {
+      try {
+        const adminNotificationResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3001'}/api/admin/notifications/investment`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-session': 'admin_system_notification' // Special token for system notifications
+          },
+          body: JSON.stringify({
+            userId: userId,
+            userName: client.first_name + ' ' + client.last_name,
+            userEmail: user.user.email!,
+            packageName: packageName,
+            amount: parseFloat(amount),
+            expectedReturn: 1.8, // Default daily return
+            duration: 30, // Default duration
+            investmentId: investment.id
+          })
+        });
+
+        if (adminNotificationResponse.ok) {
+          console.log('✅ Admin notification sent successfully');
+        } else {
+          console.warn('⚠️ Failed to send admin notification');
+        }
+      } catch (adminNotificationError) {
+        console.warn('⚠️ Error sending admin notification:', adminNotificationError);
+      }
+    }
 
     return NextResponse.json({
       success: true,

@@ -334,29 +334,26 @@ export default function ClientDashboard() {
         monthlyEarnings: 0
       };
 
-      // Send real-time notification to admin
+      // Send real-time notification to admin (via investment API)
       try {
-        const adminNotificationResponse = await fetchJSONWithCSRF('/api/admin/notifications/investment', {
+        const adminNotificationResponse = await fetchJSONWithCSRF('/api/investments', {
           method: 'POST',
           body: JSON.stringify({
             userId: user.id,
-            userName: user.name || user.profile?.first_name || user.email,
-            userEmail: user.email,
-            packageName: selectedPackage.name,
+            packageId: selectedPackage.id,
             amount: selectedPackage.minInvestment || selectedPackage.minAmount || 1000,
-            expectedReturn: selectedPackage.expectedReturn || selectedPackage.daily_return || 1.0,
-            duration: selectedPackage.duration || 30,
-            investmentId: newInvestment.id
+            packageName: selectedPackage.name,
+            notifyAdmin: true // Flag to trigger admin notification
           })
         });
 
         if (adminNotificationResponse.ok) {
-          console.log('✅ Real-time notification sent to admin');
+          console.log('✅ Investment created and admin notified');
         } else {
-          console.warn('⚠️ Failed to send real-time notification to admin');
+          console.warn('⚠️ Failed to create investment or notify admin');
         }
       } catch (notificationError) {
-        console.warn('⚠️ Error sending real-time notification:', notificationError);
+        console.warn('⚠️ Error creating investment:', notificationError);
         // Don't fail the investment if notification fails
       }
 
