@@ -500,24 +500,7 @@ export default function ProfilePage() {
               Manage your personal information
             </p>
           </div>
-        </div>
 
-
-                background: '#f59e0b',
-                color: 'white',
-                border: 'none',
-                borderRadius: 6,
-                padding: '0.5rem 1rem',
-                fontSize: 14,
-                fontWeight: 600,
-                cursor: 'pointer',
-                marginLeft: 'auto'
-              }}
-            >
-              Retry Connection
-            </button>
-          </div>
-        )}
 
         {/* Profile Card */}
         <div style={{ 
