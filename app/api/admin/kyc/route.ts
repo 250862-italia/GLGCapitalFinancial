@@ -66,12 +66,10 @@ export async function GET(request: NextRequest) {
         status,
         created_at,
         updated_at,
-        -- Banking Information
         iban,
         bic,
         account_holder,
         usdt_wallet,
-        -- Financial Information
         annual_income,
         net_worth,
         investment_experience,
@@ -89,7 +87,6 @@ export async function GET(request: NextRequest) {
         source_of_funds,
         tax_residency,
         tax_id,
-        -- Investment data
         total_invested,
         risk_profile
       `)
