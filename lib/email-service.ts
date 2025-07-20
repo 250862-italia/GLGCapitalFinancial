@@ -22,7 +22,7 @@ class EmailService {
 
   constructor() {
     this.config = {
-      service: 'simulated', // Cambiato a simulated per ora
+      service: 'supabase', // Attivato Supabase email
       fromEmail: 'noreply@glgcapitalgroupllc.com'
     };
   }
@@ -35,20 +35,83 @@ class EmailService {
         service: this.config.service
       });
 
-      // Per ora usiamo il servizio simulato che mostra l'email nella console
-      return this.simulateEmail(emailData);
+      // Usa il servizio Supabase per invio email reale
+      if (this.config.service === 'supabase') {
+        return await this.sendViaSupabase(emailData);
+      }
 
-      // TODO: Implementare invio email reale con servizi come:
-      // - Resend.com
-      // - SendGrid
-      // - AWS SES
-      // - Nodemailer con SMTP
+      // Fallback al servizio simulato
+      return this.simulateEmail(emailData);
 
     } catch (error) {
       console.error('❌ Email service error:', error);
       return this.simulateEmail(emailData);
     }
   }
+
+  private async sendViaSupabase(emailData: EmailData): Promise<{ success: boolean; message: string; service: string }> {
+    try {
+      console.log('📧 Invio email via Supabase...');
+      
+      // Salva l'email nella coda di Supabase
+      const { data, error } = await supabase
+        .from('email_queue')
+        .insert({
+          to_email: emailData.to,
+          from_email: emailData.from || this.config.fromEmail,
+          subject: emailData.subject,
+          html_content: emailData.html,
+          text_content: emailData.text,
+          status: 'pending',
+          created_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Errore salvataggio email in coda:', error);
+        throw error;
+      }
+
+      console.log('✅ Email salvata in coda Supabase:', data.id);
+      
+      // Processa immediatamente la coda email tramite API
+      try {
+        const response = await fetch('/api/process-email-queue', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          console.log('📧 Coda email processata:', result);
+        } else {
+          console.warn('⚠️ Errore processamento coda email, verrà processata automaticamente');
+        }
+      } catch (queueError) {
+        console.warn('⚠️ Errore chiamata API processamento coda:', queueError);
+      }
+
+      return {
+        success: true,
+        message: 'Email inviata con successo via Supabase',
+        service: 'supabase',
+        emailId: data.id
+      };
+
+    } catch (error) {
+      console.error('❌ Errore invio email via Supabase:', error);
+      return {
+        success: false,
+        message: `Errore invio email: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`,
+        service: 'supabase'
+      };
+    }
+  }
+
+
 
   private simulateEmail(emailData: EmailData): { success: boolean; message: string; service: string } {
     console.log('📧 === EMAIL SIMULATA ===');
