@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { UpdateNoteRequest } from '@/types/note';
 import { mockNotes } from '@/lib/fallback-data';
+import { validateCSRFToken } from '@/lib/csrf';
 
 // GET /api/notes/[id] - Get a specific note
 export async function GET(
@@ -49,6 +50,15 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
+    // Validazione CSRF
+    const csrfValidation = validateCSRFToken(request);
+    if (!csrfValidation.valid) {
+      return NextResponse.json({ 
+        error: 'CSRF validation failed',
+        details: csrfValidation.error 
+      }, { status: 403 });
+    }
+
     const id = parseInt(params.id);
     
     if (isNaN(id)) {
@@ -102,6 +112,15 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    // Validazione CSRF
+    const csrfValidation = validateCSRFToken(request);
+    if (!csrfValidation.valid) {
+      return NextResponse.json({ 
+        error: 'CSRF validation failed',
+        details: csrfValidation.error 
+      }, { status: 403 });
+    }
+
     const id = parseInt(params.id);
     
     if (isNaN(id)) {

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { emailService } from '@/lib/email-service';
-
+import { validateCSRFToken } from '@/lib/csrf';
 
 
 // Banking details for wire transfers
@@ -39,6 +39,15 @@ async function sendInvestmentNotificationEmails(
 
 export async function POST(request: NextRequest) {
   try {
+    // Validazione CSRF
+    const csrfValidation = validateCSRFToken(request);
+    if (!csrfValidation.valid) {
+      return NextResponse.json({ 
+        error: 'CSRF validation failed',
+        details: csrfValidation.error 
+      }, { status: 403 });
+    }
+
     const body = await request.json();
     const { userId, packageId, amount, packageName } = body;
 
