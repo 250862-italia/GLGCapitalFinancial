@@ -106,6 +106,22 @@ class CSRFClient {
 
     return this.fetch(url, enhancedOptions);
   }
+
+  // Helper for FormData requests (file uploads)
+  async fetchFormData(url: string, options: RequestInit = {}): Promise<Response> {
+    // Don't set Content-Type for FormData - let the browser set it with boundary
+    const enhancedOptions: RequestInit = {
+      ...options,
+      headers: {
+        ...options.headers,
+        // Remove Content-Type if it's set to application/json
+        ...(options.headers && typeof options.headers === 'object' && 'Content-Type' in options.headers && 
+            options.headers['Content-Type'] === 'application/json' ? {} : {})
+      },
+    };
+
+    return this.fetch(url, enhancedOptions);
+  }
 }
 
 // Create singleton instance
@@ -114,4 +130,5 @@ export const csrfClient = new CSRFClient();
 // Export convenience functions
 export const fetchWithCSRF = (url: string, options?: RequestInit) => csrfClient.fetch(url, options);
 export const fetchJSONWithCSRF = (url: string, options?: RequestInit) => csrfClient.fetchJSON(url, options);
+export const fetchFormDataWithCSRF = (url: string, options?: RequestInit) => csrfClient.fetchFormData(url, options);
 export const getCSRFToken = () => csrfClient.getToken(); 

@@ -24,7 +24,7 @@ import {
   Camera
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { fetchJSONWithCSRF } from '@/lib/csrf-client';
+import { fetchJSONWithCSRF, fetchFormDataWithCSRF } from '@/lib/csrf-client';
 import { useAuth } from '@/hooks/use-auth';
 
 interface ClientProfile {
@@ -348,7 +348,7 @@ export default function ProfilePage() {
       formData.append('photo', file);
       formData.append('user_id', user.id);
 
-      const response = await fetchJSONWithCSRF('/api/profile/upload-photo', {
+      const response = await fetchFormDataWithCSRF('/api/profile/upload-photo', {
         method: 'POST',
         body: formData
       });

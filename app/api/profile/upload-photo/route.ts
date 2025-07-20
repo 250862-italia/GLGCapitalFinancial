@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
         profile_photo: urlData.publicUrl,
         updated_at: new Date().toISOString()
       })
-      .eq('user_id', user.id);
+      .eq('user_id', user_id);
 
     if (updateError) {
       console.error('Profile update error:', updateError);
@@ -122,6 +122,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       photoUrl: urlData.publicUrl,
+      photo_url: urlData.publicUrl, // Keep both for compatibility
       message: 'Photo uploaded successfully'
     });
 
