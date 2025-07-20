@@ -1,8 +1,0 @@
-# Vercel Deploy Trigger
-# This file forces Vercel to redeploy with the latest changes
-# Build should now work with the fixed Card components and KYC API
-
-Deploy timestamp: $(date)
-Latest commit: a72c222
-Status: Ready for deployment
-Build should succeed with all fixes applied 
