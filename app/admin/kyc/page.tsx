@@ -80,23 +80,34 @@ export default function AdminKYCPage() {
 
   const fetchKYCRequests = async () => {
     setLoading(true);
+    setError("");
     try {
       const response = await fetchJSONWithCSRF('/api/admin/kyc');
       
       if (!response.ok) {
-        throw new Error('Failed to fetch KYC data');
+        const errorData = await response.json();
+        throw new Error(errorData.error || errorData.details || 'Failed to fetch KYC data');
       }
 
       const result = await response.json();
       
       if (result.success) {
         setKycRequests(result.data);
+        if (result.message) {
+          console.log('ℹ️ KYC API message:', result.message);
+        }
       } else {
-        throw new Error(result.error || 'Failed to fetch KYC data');
+        throw new Error(result.error || result.details || 'Failed to fetch KYC data');
       }
     } catch (error) {
       console.error('Error fetching KYC requests:', error);
-      setError("Failed to load KYC requests");
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load KYC requests';
+      setError(errorMessage);
+      
+      // If it's a database error, show helpful message
+      if (errorMessage.includes('relation') || errorMessage.includes('table')) {
+        setError("Database table not found. Please run the SQL migration script first.");
+      }
     } finally {
       setLoading(false);
     }
@@ -202,7 +213,19 @@ export default function AdminKYCPage() {
 
         {error && (
           <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '12px', borderRadius: '6px', marginBottom: '20px' }}>
-            {error}
+            <div style={{ fontWeight: 600, marginBottom: '8px' }}>Errore nel caricamento KYC:</div>
+            <div style={{ marginBottom: '8px' }}>{error}</div>
+            {error.includes('Database table not found') && (
+              <div style={{ fontSize: '14px', marginTop: '8px' }}>
+                <strong>Soluzione:</strong> Esegui lo script SQL nel Supabase Dashboard:
+                <ol style={{ marginTop: '4px', marginLeft: '20px' }}>
+                  <li>Vai su <strong>Supabase Dashboard</strong> → <strong>SQL Editor</strong></li>
+                  <li>Copia e incolla il contenuto del file <code>create-clients-table-kyc.sql</code></li>
+                  <li>Esegui lo script</li>
+                  <li>Ricarica questa pagina</li>
+                </ol>
+              </div>
+            )}
           </div>
         )}
 

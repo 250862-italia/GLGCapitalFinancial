@@ -11,10 +11,41 @@ export async function GET(request: NextRequest) {
     // Verify admin authentication
     const authResult = await verifyAdminAuth(request);
     if (!authResult.success) {
+      console.log('❌ Admin authentication failed');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     console.log('🔍 KYC API called by admin:', authResult.user.id);
+
+    // First, let's check if the clients table exists
+    console.log('🔍 Checking if clients table exists...');
+    
+    // Try to get table info first
+    const { data: tableInfo, error: tableError } = await supabase
+      .from('clients')
+      .select('id')
+      .limit(1);
+
+    if (tableError) {
+      console.error('❌ Error accessing clients table:', tableError);
+      
+      // If table doesn't exist, return empty data with a message
+      if (tableError.code === '42P01') { // relation does not exist
+        console.log('⚠️ Clients table does not exist, returning empty data');
+        return NextResponse.json({
+          success: true,
+          data: [],
+          message: 'No clients table found'
+        });
+      }
+      
+      return NextResponse.json({ 
+        error: 'Database error', 
+        details: tableError.message 
+      }, { status: 500 });
+    }
+
+    console.log('✅ Clients table exists, fetching data...');
 
     // Fetch clients with their banking and financial information
     const { data: clients, error } = await supabase
@@ -66,15 +97,20 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('❌ Error fetching KYC data:', error);
-      return NextResponse.json({ error: 'Failed to fetch KYC data' }, { status: 500 });
+      return NextResponse.json({ 
+        error: 'Failed to fetch KYC data',
+        details: error.message 
+      }, { status: 500 });
     }
+
+    console.log(`📊 Found ${clients?.length || 0} clients in database`);
 
     // Transform data to include KYC status and additional information
     const kycData = clients?.map(client => ({
       id: client.id,
       user_id: client.user_id,
       user_email: client.email,
-      user_name: `${client.first_name} ${client.last_name}`,
+      user_name: `${client.first_name || ''} ${client.last_name || ''}`.trim() || 'Unknown',
       status: client.status === 'active' ? 'approved' : 
               client.status === 'pending' ? 'pending' : 
               client.status === 'suspended' ? 'rejected' : 'under_review',
@@ -85,51 +121,51 @@ export async function GET(request: NextRequest) {
       
       // Personal Information
       personal_info: {
-        first_name: client.first_name,
-        last_name: client.last_name,
-        email: client.email,
-        phone: client.phone,
-        date_of_birth: client.date_of_birth,
-        nationality: client.nationality,
-        address: client.address,
-        city: client.city,
-        country: client.country,
-        postal_code: client.postal_code
+        first_name: client.first_name || '',
+        last_name: client.last_name || '',
+        email: client.email || '',
+        phone: client.phone || '',
+        date_of_birth: client.date_of_birth || '',
+        nationality: client.nationality || '',
+        address: client.address || '',
+        city: client.city || '',
+        country: client.country || '',
+        postal_code: client.postal_code || ''
       },
 
       // Banking Information
       banking_info: {
-        iban: client.iban,
-        bic: client.bic,
-        account_holder: client.account_holder,
-        usdt_wallet: client.usdt_wallet
+        iban: client.iban || '',
+        bic: client.bic || '',
+        account_holder: client.account_holder || '',
+        usdt_wallet: client.usdt_wallet || ''
       },
 
       // Financial Information
       financial_info: {
-        annual_income: client.annual_income,
-        net_worth: client.net_worth,
-        investment_experience: client.investment_experience,
-        risk_tolerance: client.risk_tolerance,
-        monthly_investment_budget: client.monthly_investment_budget,
-        emergency_fund: client.emergency_fund,
-        debt_amount: client.debt_amount,
-        credit_score: client.credit_score,
-        employment_status: client.employment_status,
-        employer_name: client.employer_name,
-        job_title: client.job_title,
-        years_employed: client.years_employed,
-        source_of_funds: client.source_of_funds,
-        tax_residency: client.tax_residency,
-        tax_id: client.tax_id
+        annual_income: client.annual_income || 0,
+        net_worth: client.net_worth || 0,
+        investment_experience: client.investment_experience || '',
+        risk_tolerance: client.risk_tolerance || '',
+        monthly_investment_budget: client.monthly_investment_budget || 0,
+        emergency_fund: client.emergency_fund || 0,
+        debt_amount: client.debt_amount || 0,
+        credit_score: client.credit_score || 0,
+        employment_status: client.employment_status || '',
+        employer_name: client.employer_name || '',
+        job_title: client.job_title || '',
+        years_employed: client.years_employed || 0,
+        source_of_funds: client.source_of_funds || '',
+        tax_residency: client.tax_residency || '',
+        tax_id: client.tax_id || ''
       },
 
       // Investment Profile
       investment_profile: {
-        total_invested: client.total_invested,
-        risk_profile: client.risk_profile,
-        investment_goals: client.investment_goals,
-        preferred_investment_types: client.preferred_investment_types
+        total_invested: client.total_invested || 0,
+        risk_profile: client.risk_profile || '',
+        investment_goals: client.investment_goals || '',
+        preferred_investment_types: client.preferred_investment_types || ''
       }
     })) || [];
 
@@ -142,7 +178,10 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('❌ KYC API error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
   }
 }
 
