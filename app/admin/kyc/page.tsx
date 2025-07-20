@@ -82,7 +82,20 @@ export default function AdminKYCPage() {
     setLoading(true);
     setError("");
     try {
-      const response = await fetchJSONWithCSRF('/api/admin/kyc');
+      // Get admin session
+      const adminToken = localStorage.getItem('admin_token');
+      
+      if (!adminToken) {
+        setError("Sessione admin non valida");
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetchJSONWithCSRF('/api/admin/kyc', {
+        headers: {
+          'x-admin-session': adminToken
+        }
+      });
       
       if (!response.ok) {
         const errorData = await response.json();
@@ -115,8 +128,19 @@ export default function AdminKYCPage() {
 
   const handleStatusUpdate = async (requestId: string, newStatus: KYCRequest['status'], notes?: string) => {
     try {
+      // Get admin session
+      const adminToken = localStorage.getItem('admin_token');
+      
+      if (!adminToken) {
+        setError("Sessione admin non valida");
+        return;
+      }
+
       const response = await fetchJSONWithCSRF('/api/admin/kyc', {
         method: 'PUT',
+        headers: {
+          'x-admin-session': adminToken
+        },
         body: JSON.stringify({
           clientId: requestId,
           status: newStatus,

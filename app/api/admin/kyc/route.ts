@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { verifyAdminAuth } from '@/lib/admin-auth';
+import { verifyAdmin } from '@/lib/admin-auth';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -9,7 +9,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 export async function GET(request: NextRequest) {
   try {
     // Verify admin authentication
-    const authResult = await verifyAdminAuth(request);
+    const authResult = await verifyAdmin(request);
     if (!authResult.success) {
       console.log('❌ Admin authentication failed');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -188,7 +188,7 @@ export async function GET(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     // Verify admin authentication
-    const authResult = await verifyAdminAuth(request);
+    const authResult = await verifyAdmin(request);
     if (!authResult.success) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -200,30 +200,30 @@ export async function PUT(request: NextRequest) {
     }
 
     // Update client status
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('clients')
       .update({ 
-        status: status === 'approved' ? 'active' : 
-                status === 'rejected' ? 'suspended' : 
-                status === 'pending' ? 'pending' : 'under_review',
+        status: status,
         updated_at: new Date().toISOString()
       })
-      .eq('id', clientId);
+      .eq('id', clientId)
+      .select();
 
     if (error) {
-      console.error('❌ Error updating KYC status:', error);
-      return NextResponse.json({ error: 'Failed to update KYC status' }, { status: 500 });
+      console.error('Error updating client status:', error);
+      return NextResponse.json({ error: 'Failed to update status' }, { status: 500 });
     }
-
-    console.log(`✅ KYC status updated for client ${clientId}: ${status}`);
 
     return NextResponse.json({
       success: true,
-      message: 'KYC status updated successfully'
+      data: data[0]
     });
 
   } catch (error) {
-    console.error('❌ KYC update error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('KYC update error:', error);
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
   }
 } 
