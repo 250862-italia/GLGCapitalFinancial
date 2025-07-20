@@ -288,8 +288,14 @@ export function middleware(request: NextRequest) {
     
     // Gestisci autenticazione per endpoint protetti
     if (pathname.startsWith('/api/admin/') && pathname !== '/api/admin/login') {
+      // Check for admin session header (our custom auth system)
+      const adminSession = request.headers.get('x-admin-session');
+      
+      // Also check for Bearer token (standard auth)
       const authHeader = request.headers.get('authorization');
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      
+      // Allow if either admin session or Bearer token is present
+      if (!adminSession && (!authHeader || !authHeader.startsWith('Bearer '))) {
         const response = NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         logRequest(request, response, startTime);
         return addSecurityHeaders(response);
