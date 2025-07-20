@@ -16,8 +16,9 @@ export async function GET(
       );
     }
 
-    // Use Supabase only
-    const { supabase } = await import('@/lib/supabase');
+    // Use Supabase admin client for better permissions
+    const { getSupabaseAdmin } = await import('@/lib/supabase');
+    const supabase = getSupabaseAdmin();
     
     // Test connection first
     const { data: connectionTest, error: connectionError } = await supabase
