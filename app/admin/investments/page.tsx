@@ -34,10 +34,18 @@ export default function AdminInvestmentsPage() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetchJSONWithCSRF("/api/investments");
+      const res = await fetchJSONWithCSRF("/api/admin/investments");
       const data = await res.json();
-      if (res.ok) setInvestments(data);
-      else setError(data.error || "Errore nel caricamento investimenti");
+      if (res.ok) {
+        // Handle the new API response format
+        if (data.success && data.data) {
+          setInvestments(data.data);
+        } else {
+          setInvestments(data);
+        }
+      } else {
+        setError(data.error || "Errore nel caricamento investimenti");
+      }
     } catch (e) {
       setError("Errore di rete");
     }
@@ -99,9 +107,9 @@ export default function AdminInvestmentsPage() {
     setError("");
     setSuccess("");
     try {
-      const res = await fetchJSONWithCSRF("/api/investments", {
+      const res = await fetchJSONWithCSRF("/api/admin/investments", {
         method: "PUT",
-        body: JSON.stringify({ id: invId, status: newStatus })
+        body: JSON.stringify({ investment_id: invId, status: newStatus })
       });
       const data = await res.json();
       if (res.ok) {
@@ -175,6 +183,7 @@ export default function AdminInvestmentsPage() {
         />
         <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{ flex: 1, padding: "0.75rem", border: "1px solid #d1d5db", borderRadius: 8, fontSize: 16 }}>
           <option value="">Tutti gli stati</option>
+          <option value="pending_payment">In Attesa Pagamento</option>
           <option value="active">Attivo</option>
           <option value="completed">Completato</option>
           <option value="cancelled">Cancellato</option>
@@ -213,15 +222,62 @@ export default function AdminInvestmentsPage() {
             <tbody>
               {filtered.map((inv) => (
                 <tr key={inv.id} style={{ borderBottom: "1px solid #e0e3eb" }}>
-                  <td style={{ padding: "1rem" }}>{inv.client?.name || ''}</td>
-                  <td style={{ padding: "1rem" }}>{inv.client?.email || ''}</td>
-                  <td style={{ padding: "1rem" }}>{inv.package?.name || ''}</td>
-                  <td style={{ padding: "1rem", textAlign: "right" }}>{inv.amount?.toLocaleString() || '-'}</td>
-                  <td style={{ padding: "1rem" }}>{inv.status || '-'}</td>
+                  <td style={{ padding: "1rem" }}>
+                    {inv.client ? `${inv.client.first_name || ''} ${inv.client.last_name || ''}`.trim() || 'N/A' : 'N/A'}
+                  </td>
+                  <td style={{ padding: "1rem" }}>{inv.user?.email || 'N/A'}</td>
+                  <td style={{ padding: "1rem" }}>{inv.investment_type || 'Package'}</td>
+                  <td style={{ padding: "1rem", textAlign: "right" }}>
+                    ${inv.amount?.toLocaleString() || '0'}
+                  </td>
+                  <td style={{ padding: "1rem" }}>
+                    <span style={{
+                      padding: '0.25rem 0.5rem',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      background: inv.status === 'active' ? '#dcfce7' : 
+                                 inv.status === 'pending_payment' ? '#fef3c7' : 
+                                 inv.status === 'completed' ? '#dbeafe' : '#fee2e2',
+                      color: inv.status === 'active' ? '#166534' : 
+                             inv.status === 'pending_payment' ? '#92400e' : 
+                             inv.status === 'completed' ? '#1e40af' : '#dc2626'
+                    }}>
+                      {inv.status === 'pending_payment' ? 'In Attesa Pagamento' :
+                       inv.status === 'active' ? 'Attivo' :
+                       inv.status === 'completed' ? 'Completato' :
+                       inv.status === 'cancelled' ? 'Cancellato' : inv.status}
+                    </span>
+                  </td>
                   <td style={{ padding: "1rem", textAlign: "center" }}>
                     <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center" }}>
-                      <button onClick={() => inv.id && handleChangeStatus(inv.id, 'active')} style={{ background: "#059669", color: "white", border: "none", padding: "0.5rem 1rem", borderRadius: 6, cursor: "pointer" }} title="Conferma">Conferma</button>
-                      <button onClick={() => inv.id && handleChangeStatus(inv.id, 'cancelled')} style={{ background: "#dc2626", color: "white", border: "none", padding: "0.5rem 1rem", borderRadius: 6, cursor: "pointer" }} title="Rifiuta">Rifiuta</button>
+                      {inv.status === 'pending_payment' && (
+                        <>
+                          <button 
+                            onClick={() => inv.id && handleChangeStatus(inv.id, 'active')} 
+                            style={{ background: "#059669", color: "white", border: "none", padding: "0.5rem 1rem", borderRadius: 6, cursor: "pointer", fontSize: "12px" }} 
+                            title="Conferma Pagamento"
+                          >
+                            Conferma
+                          </button>
+                          <button 
+                            onClick={() => inv.id && handleChangeStatus(inv.id, 'cancelled')} 
+                            style={{ background: "#dc2626", color: "white", border: "none", padding: "0.5rem 1rem", borderRadius: 6, cursor: "pointer", fontSize: "12px" }} 
+                            title="Rifiuta"
+                          >
+                            Rifiuta
+                          </button>
+                        </>
+                      )}
+                      {inv.status === 'active' && (
+                        <button 
+                          onClick={() => inv.id && handleChangeStatus(inv.id, 'completed')} 
+                          style={{ background: "#2563eb", color: "white", border: "none", padding: "0.5rem 1rem", borderRadius: 6, cursor: "pointer", fontSize: "12px" }} 
+                          title="Completa"
+                        >
+                          Completa
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

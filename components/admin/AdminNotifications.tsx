@@ -67,10 +67,30 @@ export default function AdminNotifications({ adminId }: AdminNotificationsProps)
       const sampleNotifications: AdminNotification[] = [
         {
           id: '1',
+          type: 'investment',
+          title: 'Nuova Richiesta di Investimento',
+          message: 'Francesco fra (info@washtw.it) ha richiesto di investire $5,000 nel pacchetto GLG Balanced Growth',
+          timestamp: new Date(Date.now() - 1000 * 60 * 2), // 2 minutes ago
+          read: false,
+          priority: 'high',
+          action: {
+            label: 'Revisiona Investimento',
+            url: '/admin/investments'
+          },
+          metadata: {
+            client_name: 'Francesco fra',
+            client_email: 'info@washtw.it',
+            package_name: 'GLG Balanced Growth',
+            amount: 5000,
+            investment_id: 'inv-001'
+          }
+        },
+        {
+          id: '2',
           type: 'user_registration',
           title: 'Nuovo Cliente Registrato',
-          message: 'Innocentigianni@icloud.com si è registrato come nuovo cliente',
-          timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
+          message: 'Francesco fra (info@washtw.it) si è registrato come nuovo cliente',
+          timestamp: new Date(Date.now() - 1000 * 60 * 5), // 5 minutes ago
           read: false,
           priority: 'medium',
           action: {
@@ -79,24 +99,11 @@ export default function AdminNotifications({ adminId }: AdminNotificationsProps)
           }
         },
         {
-          id: '2',
-          type: 'investment',
-          title: 'Nuova Richiesta di Investimento',
-          message: 'Richiesta di investimento di $10,000 nel pacchetto GLG Premium',
-          timestamp: new Date(Date.now() - 1000 * 60 * 15), // 15 minutes ago
-          read: false,
-          priority: 'high',
-          action: {
-            label: 'Revisiona Investimento',
-            url: '/admin/investments'
-          }
-        },
-        {
           id: '3',
           type: 'system_alert',
           title: 'Sistema Operativo',
           message: 'Tutte le funzionalità del sistema sono operative',
-          timestamp: new Date(Date.now() - 1000 * 60 * 5), // 5 minutes ago
+          timestamp: new Date(Date.now() - 1000 * 60 * 10), // 10 minutes ago
           read: false,
           priority: 'low'
         }

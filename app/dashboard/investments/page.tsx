@@ -24,7 +24,7 @@ interface Investment {
   user_id: string;
   package_id: string;
   amount: number;
-  status: 'pending' | 'active' | 'completed' | 'cancelled';
+  status: 'pending' | 'pending_payment' | 'active' | 'completed' | 'cancelled';
   created_at: string;
   updated_at: string;
   package?: {
@@ -100,6 +100,7 @@ export default function MyInvestmentsPage() {
   const calculateStats = (investments: Investment[]) => {
     const totalInvested = investments.reduce((sum, inv) => sum + inv.amount, 0);
     const activeInvestments = investments.filter(inv => inv.status === 'active').length;
+    const pendingInvestments = investments.filter(inv => inv.status === 'pending_payment').length;
     
     // Calculate earnings based on active investments
     const totalEarned = investments
@@ -147,6 +148,8 @@ export default function MyInvestmentsPage() {
     switch (status) {
       case 'active':
         return <CheckCircle size={20} color="#059669" />;
+      case 'pending_payment':
+        return <Clock size={20} color="#f59e0b" />;
       case 'pending':
         return <Clock size={20} color="#f59e0b" />;
       case 'completed':
@@ -162,6 +165,8 @@ export default function MyInvestmentsPage() {
     switch (status) {
       case 'active':
         return { background: '#dcfce7', color: '#166534' };
+      case 'pending_payment':
+        return { background: '#fef3c7', color: '#92400e' };
       case 'pending':
         return { background: '#fef3c7', color: '#92400e' };
       case 'completed':
@@ -437,7 +442,10 @@ export default function MyInvestmentsPage() {
                             gap: '0.5rem'
                           }}>
                             {getStatusIcon(investment.status)}
-                            {investment.status}
+                            {investment.status === 'pending_payment' ? 'In Attesa Pagamento' :
+                             investment.status === 'active' ? 'Attivo' :
+                             investment.status === 'completed' ? 'Completato' :
+                             investment.status === 'cancelled' ? 'Cancellato' : investment.status}
                           </span>
                         </div>
                         <p style={{ color: '#6b7280', fontSize: '14px', margin: '0.5rem 0' }}>
