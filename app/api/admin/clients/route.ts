@@ -4,8 +4,6 @@ import { offlineDataManager } from '@/lib/offline-data';
 
 export const dynamic = 'force-dynamic';
 
-
-
 export async function GET() {
   try {
     // Check if supabaseAdmin is available
@@ -63,10 +61,21 @@ export async function GET() {
       });
     }
 
-    // First get all clients without join to avoid RLS recursion
+    // Get all clients with profile information
     const { data: clients, error: clientsError } = await supabaseAdmin!
       .from('clients')
-      .select('*')
+      .select(`
+        *,
+        profiles!inner(
+          id,
+          email,
+          first_name,
+          last_name,
+          role,
+          created_at,
+          updated_at
+        )
+      `)
       .order('created_at', { ascending: false });
 
     if (clientsError) {
@@ -88,64 +97,45 @@ export async function GET() {
       });
     }
 
-    // Then get users separately
-    const { data: users, error: usersError } = await supabaseAdmin!
-      .from('users')
-      .select('id, email, first_name, last_name, role, is_active, last_login, created_at, updated_at')
-      .in('id', clients?.map(c => c.user_id) || []);
-
-    if (usersError) {
-      console.log('Supabase error, using offline data:', usersError.message);
-      
-      // Fallback to offline data
-      const offlineClients = offlineDataManager.getClients();
-      const offlineUsers = offlineDataManager.getUsers();
-      
-      const userMap = new Map(offlineUsers.map(u => [u.id, u]));
-      const data = offlineClients.map(client => ({
-        ...client,
-        user: userMap.get(client.user_id)
-      }));
-      
-      return NextResponse.json({
-        data,
-        warning: 'Database error'
-      });
-    }
-
-    // Combine the data
-    const userMap = new Map(users?.map(u => [u.id, u]) || []);
-    const data = clients?.map(client => ({
-      ...client,
-      user: userMap.get(client.user_id)
-    })) || [];
-
-    // Trasformo i dati per includere tutti i campi
-    const transformedData = data?.map(client => ({
-      // Campi da clients
+    // Transform the data to match expected format
+    const transformedData = clients?.map(client => ({
+      // Client fields
       id: client.id,
       user_id: client.user_id,
-      first_name: client.first_name,
-      last_name: client.last_name,
-      phone: client.phone,
+      first_name: client.first_name || client.profiles?.first_name || '',
+      last_name: client.last_name || client.profiles?.last_name || '',
+      email: client.email || client.profiles?.email || '',
+      phone: client.phone || '',
+      company: client.company || '',
+      position: client.position || '',
       date_of_birth: client.date_of_birth,
-      nationality: client.nationality,
-      address: client.address,
-      city: client.city,
-      country: client.country,
-      postal_code: client.postal_code,
-      profile_photo: client.profile_photo,
-      banking_details: client.banking_details,
+      nationality: client.nationality || '',
+      profile_photo: client.profile_photo || '',
+      address: client.address || '',
+      city: client.city || '',
+      country: client.country || '',
+      postal_code: client.postal_code || '',
+      iban: client.iban || '',
+      bic: client.bic || '',
+      account_holder: client.account_holder || '',
+      usdt_wallet: client.usdt_wallet || '',
+      client_code: client.client_code || '',
+      status: client.status || 'active',
+      risk_profile: client.risk_profile || 'moderate',
+      investment_preferences: client.investment_preferences || {},
+      total_invested: client.total_invested || 0,
       created_at: client.created_at,
       updated_at: client.updated_at,
-      status: client.status,
-      // Campi da users
-      email: client.user?.email,
-      user_role: client.user?.role,
-      is_active: client.user?.is_active,
-      last_login: client.user?.last_login,
-      user_created_at: client.user?.created_at,
-      user_updated_at: client.user?.updated_at
+      // Profile fields
+      user: {
+        id: client.profiles?.id,
+        email: client.profiles?.email,
+        first_name: client.profiles?.first_name,
+        last_name: client.profiles?.last_name,
+        role: client.profiles?.role,
+        created_at: client.profiles?.created_at,
+        updated_at: client.profiles?.updated_at
+      }
     })) || [];
 
     return NextResponse.json({
