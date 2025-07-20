@@ -108,10 +108,10 @@ export async function GET(request: NextRequest) {
     // Get user and client details for each investment
     const investmentsWithDetails = await Promise.all(
       investments.map(async (investment) => {
-        // Get user details
+        // Get user details from profiles
         const { data: user } = await supabaseAdmin
-          .from('users')
-          .select('id, email, first_name, last_name, phone')
+          .from('profiles')
+          .select('id, email, first_name, last_name, role')
           .eq('id', investment.user_id)
           .single();
 

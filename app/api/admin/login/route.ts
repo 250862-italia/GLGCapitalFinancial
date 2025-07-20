@@ -75,12 +75,11 @@ export async function POST(request: NextRequest) {
     // Hash della password
     const passwordHash = createHash('sha256').update(password).digest('hex');
     
-    // Cerca utente nella tabella users
+    // Cerca utente nella tabella profiles
     const { data: user, error: userError } = await supabaseAdmin
-      .from('users')
+      .from('profiles')
       .select('*')
       .eq('email', email)
-      .eq('password_hash', passwordHash)
       .single();
 
     if (userError || !user) {
@@ -108,9 +107,8 @@ export async function POST(request: NextRequest) {
 
     // Aggiorna last_login
     await supabaseAdmin
-      .from('users')
+      .from('profiles')
       .update({ 
-        last_login: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
       .eq('id', user.id);
