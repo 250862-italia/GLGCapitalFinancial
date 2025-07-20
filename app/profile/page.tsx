@@ -77,12 +77,13 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editingField, setEditingField] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
   const [editForm, setEditForm] = useState<Record<string, any>>({});
+  const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
   const [originalData, setOriginalData] = useState<Record<string, any>>({});
+  const [editingFields, setEditingFields] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (user) {
@@ -222,14 +223,33 @@ export default function ProfilePage() {
   };
 
   const startEditingField = (fieldName: string, currentValue: any) => {
-    setEditingField(fieldName);
+    setEditingFields(prev => new Set([...prev, fieldName]));
     setEditForm(prev => ({ ...prev, [fieldName]: currentValue }));
     setOriginalData(prev => ({ ...prev, [fieldName]: currentValue }));
   };
 
-  const cancelEditingField = () => {
-    setEditingField(null);
-    setEditForm({});
+  const cancelEditingField = (fieldName?: string) => {
+    if (fieldName) {
+      setEditingFields(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(fieldName);
+        return newSet;
+      });
+      setEditForm(prev => {
+        const newForm = { ...prev };
+        delete newForm[fieldName];
+        return newForm;
+      });
+      setOriginalData(prev => {
+        const newData = { ...prev };
+        delete newData[fieldName];
+        return newData;
+      });
+    } else {
+      setEditingFields(new Set());
+      setEditForm({});
+      setOriginalData({});
+    }
     setHasChanges(false);
   };
 
@@ -290,7 +310,7 @@ export default function ProfilePage() {
         setProfile(prev => prev ? { ...prev, ...changedFields } : null);
         
         // Reset editing state
-        setEditingField(null);
+        setEditingFields(new Set());
         setEditForm({});
         setOriginalData({});
         setHasChanges(false);
@@ -310,7 +330,7 @@ export default function ProfilePage() {
   };
 
   const cancelAllChanges = () => {
-    setEditingField(null);
+    setEditingFields(new Set());
     setEditForm({});
     setOriginalData({});
     setHasChanges(false);
@@ -555,38 +575,6 @@ export default function ProfilePage() {
               </button>
             </div>
           )}
-
-          {/* Always visible Save button for testing */}
-          <button
-            onClick={saveAllChanges}
-            disabled={saving}
-            style={{
-              background: '#3b82f6',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              padding: '0.75rem 1.5rem',
-              fontSize: '1rem',
-              fontWeight: 600,
-              cursor: saving ? 'not-allowed' : 'pointer',
-              opacity: saving ? 0.5 : 1,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}
-          >
-            {saving ? (
-              <>
-                <Loader2 size={16} className="animate-spin" />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save size={16} />
-                Save All (Test)
-              </>
-            )}
-          </button>
         </div>
 
         {/* Success Message */}
@@ -752,8 +740,14 @@ export default function ProfilePage() {
                   label="First Name"
                   value={profile.first_name}
                   fieldName="first_name"
-                  editing={editingField === 'first_name'}
-                  onStartEdit={() => startEditingField('first_name', profile.first_name)}
+                  editing={editingFields.has('first_name')}
+                  onStartEdit={() => {
+                    if (editingFields.has('first_name')) {
+                      cancelEditingField('first_name');
+                    } else {
+                      startEditingField('first_name', profile.first_name);
+                    }
+                  }}
                   onFieldChange={handleFieldChange}
                   icon={<User size={16} />}
                 />
@@ -761,7 +755,7 @@ export default function ProfilePage() {
                   label="Last Name"
                   value={profile.last_name}
                   fieldName="last_name"
-                  editing={editingField === 'last_name'}
+                  editing={editingFields.has('last_name')}
                   onStartEdit={() => startEditingField('last_name', profile.last_name)}
                   onFieldChange={handleFieldChange}
                   icon={<User size={16} />}
@@ -770,7 +764,7 @@ export default function ProfilePage() {
                   label="Email"
                   value={profile.email}
                   fieldName="email"
-                  editing={editingField === 'email'}
+                  editing={editingFields.has('email')}
                   onStartEdit={() => startEditingField('email', profile.email)}
                   onFieldChange={handleFieldChange}
                   icon={<Mail size={16} />}
@@ -780,7 +774,7 @@ export default function ProfilePage() {
                   label="Phone"
                   value={profile.phone}
                   fieldName="phone"
-                  editing={editingField === 'phone'}
+                  editing={editingFields.has('phone')}
                   onStartEdit={() => startEditingField('phone', profile.phone)}
                   onFieldChange={handleFieldChange}
                   icon={<Phone size={16} />}
@@ -789,7 +783,7 @@ export default function ProfilePage() {
                   label="Date of Birth"
                   value={formatDateForDisplay(profile.date_of_birth)}
                   fieldName="date_of_birth"
-                  editing={editingField === 'date_of_birth'}
+                  editing={editingFields.has('date_of_birth')}
                   onStartEdit={() => startEditingField('date_of_birth', formatDateForInput(profile.date_of_birth))}
                   onFieldChange={handleFieldChange}
                   icon={<Calendar size={16} />}
@@ -799,7 +793,7 @@ export default function ProfilePage() {
                   label="Nationality"
                   value={profile.nationality}
                   fieldName="nationality"
-                  editing={editingField === 'nationality'}
+                  editing={editingFields.has('nationality')}
                   onStartEdit={() => startEditingField('nationality', profile.nationality)}
                   onFieldChange={handleFieldChange}
                   icon={<Globe size={16} />}
@@ -821,7 +815,7 @@ export default function ProfilePage() {
                   label="Company"
                   value={profile.company}
                   fieldName="company"
-                  editing={editingField === 'company'}
+                  editing={editingFields.has('company')}
                   onStartEdit={() => startEditingField('company', profile.company)}
                   onFieldChange={handleFieldChange}
                   icon={<Building size={16} />}
@@ -830,7 +824,7 @@ export default function ProfilePage() {
                   label="Position"
                   value={profile.position}
                   fieldName="position"
-                  editing={editingField === 'position'}
+                  editing={editingFields.has('position')}
                   onStartEdit={() => startEditingField('position', profile.position)}
                   onFieldChange={handleFieldChange}
                   icon={<User size={16} />}
@@ -870,7 +864,7 @@ export default function ProfilePage() {
                   label="Address"
                   value={profile.address}
                   fieldName="address"
-                  editing={editingField === 'address'}
+                  editing={editingFields.has('address')}
                   onStartEdit={() => startEditingField('address', profile.address)}
                   onFieldChange={handleFieldChange}
                   icon={<MapPin size={16} />}
@@ -879,7 +873,7 @@ export default function ProfilePage() {
                   label="City"
                   value={profile.city}
                   fieldName="city"
-                  editing={editingField === 'city'}
+                  editing={editingFields.has('city')}
                   onStartEdit={() => startEditingField('city', profile.city)}
                   onFieldChange={handleFieldChange}
                   icon={<MapPin size={16} />}
@@ -888,7 +882,7 @@ export default function ProfilePage() {
                   label="Country"
                   value={profile.country}
                   fieldName="country"
-                  editing={editingField === 'country'}
+                  editing={editingFields.has('country')}
                   onStartEdit={() => startEditingField('country', profile.country)}
                   onFieldChange={handleFieldChange}
                   icon={<Globe size={16} />}
@@ -910,7 +904,7 @@ export default function ProfilePage() {
                   label="Postal Code"
                   value={profile.postal_code}
                   fieldName="postal_code"
-                  editing={editingField === 'postal_code'}
+                  editing={editingFields.has('postal_code')}
                   onStartEdit={() => startEditingField('postal_code', profile.postal_code)}
                   onFieldChange={handleFieldChange}
                   icon={<MapPin size={16} />}
@@ -950,7 +944,7 @@ export default function ProfilePage() {
                   label="IBAN"
                   value={profile.iban}
                   fieldName="iban"
-                  editing={editingField === 'iban'}
+                  editing={editingFields.has('iban')}
                   onStartEdit={() => startEditingField('iban', profile.iban)}
                   onFieldChange={handleFieldChange}
                   icon={<CreditCard size={16} />}
@@ -959,7 +953,7 @@ export default function ProfilePage() {
                   label="BIC/SWIFT"
                   value={profile.bic}
                   fieldName="bic"
-                  editing={editingField === 'bic'}
+                  editing={editingFields.has('bic')}
                   onStartEdit={() => startEditingField('bic', profile.bic)}
                   onFieldChange={handleFieldChange}
                   icon={<CreditCard size={16} />}
@@ -968,7 +962,7 @@ export default function ProfilePage() {
                   label="Account Holder"
                   value={profile.account_holder}
                   fieldName="account_holder"
-                  editing={editingField === 'account_holder'}
+                  editing={editingFields.has('account_holder')}
                   onStartEdit={() => startEditingField('account_holder', profile.account_holder)}
                   onFieldChange={handleFieldChange}
                   icon={<User size={16} />}
@@ -977,7 +971,7 @@ export default function ProfilePage() {
                   label="USDT Wallet"
                   value={profile.usdt_wallet}
                   fieldName="usdt_wallet"
-                  editing={editingField === 'usdt_wallet'}
+                  editing={editingFields.has('usdt_wallet')}
                   onStartEdit={() => startEditingField('usdt_wallet', profile.usdt_wallet)}
                   onFieldChange={handleFieldChange}
                   icon={<CreditCard size={16} />}
@@ -1017,7 +1011,7 @@ export default function ProfilePage() {
                   label="Annual Income (USD)"
                   value={formatCurrency(profile.annual_income)}
                   fieldName="annual_income"
-                  editing={editingField === 'annual_income'}
+                  editing={editingFields.has('annual_income')}
                   onStartEdit={() => startEditingField('annual_income', profile.annual_income)}
                   onFieldChange={handleFieldChange}
                   icon={<Banknote size={16} />}
@@ -1027,7 +1021,7 @@ export default function ProfilePage() {
                   label="Net Worth (USD)"
                   value={formatCurrency(profile.net_worth)}
                   fieldName="net_worth"
-                  editing={editingField === 'net_worth'}
+                  editing={editingFields.has('net_worth')}
                   onStartEdit={() => startEditingField('net_worth', profile.net_worth)}
                   onFieldChange={handleFieldChange}
                   icon={<Banknote size={16} />}
@@ -1037,7 +1031,7 @@ export default function ProfilePage() {
                   label="Monthly Investment Budget (USD)"
                   value={formatCurrency(profile.monthly_investment_budget)}
                   fieldName="monthly_investment_budget"
-                  editing={editingField === 'monthly_investment_budget'}
+                  editing={editingFields.has('monthly_investment_budget')}
                   onStartEdit={() => startEditingField('monthly_investment_budget', profile.monthly_investment_budget)}
                   onFieldChange={handleFieldChange}
                   icon={<Banknote size={16} />}
@@ -1047,7 +1041,7 @@ export default function ProfilePage() {
                   label="Emergency Fund (USD)"
                   value={formatCurrency(profile.emergency_fund)}
                   fieldName="emergency_fund"
-                  editing={editingField === 'emergency_fund'}
+                  editing={editingFields.has('emergency_fund')}
                   onStartEdit={() => startEditingField('emergency_fund', profile.emergency_fund)}
                   onFieldChange={handleFieldChange}
                   icon={<Banknote size={16} />}
@@ -1057,7 +1051,7 @@ export default function ProfilePage() {
                   label="Total Debt (USD)"
                   value={formatCurrency(profile.debt_amount)}
                   fieldName="debt_amount"
-                  editing={editingField === 'debt_amount'}
+                  editing={editingFields.has('debt_amount')}
                   onStartEdit={() => startEditingField('debt_amount', profile.debt_amount)}
                   onFieldChange={handleFieldChange}
                   icon={<Banknote size={16} />}
@@ -1067,7 +1061,7 @@ export default function ProfilePage() {
                   label="Credit Score"
                   value={formatNumber(profile.credit_score)}
                   fieldName="credit_score"
-                  editing={editingField === 'credit_score'}
+                  editing={editingFields.has('credit_score')}
                   onStartEdit={() => startEditingField('credit_score', profile.credit_score)}
                   onFieldChange={handleFieldChange}
                   icon={<Shield size={16} />}
@@ -1108,7 +1102,7 @@ export default function ProfilePage() {
                   label="Employment Status"
                   value={profile.employment_status}
                   fieldName="employment_status"
-                  editing={editingField === 'employment_status'}
+                  editing={editingFields.has('employment_status')}
                   onStartEdit={() => startEditingField('employment_status', profile.employment_status)}
                   onFieldChange={handleFieldChange}
                   icon={<Building size={16} />}
@@ -1125,7 +1119,7 @@ export default function ProfilePage() {
                   label="Employer Name"
                   value={profile.employer_name}
                   fieldName="employer_name"
-                  editing={editingField === 'employer_name'}
+                  editing={editingFields.has('employer_name')}
                   onStartEdit={() => startEditingField('employer_name', profile.employer_name)}
                   onFieldChange={handleFieldChange}
                   icon={<Building size={16} />}
@@ -1134,7 +1128,7 @@ export default function ProfilePage() {
                   label="Job Title"
                   value={profile.job_title}
                   fieldName="job_title"
-                  editing={editingField === 'job_title'}
+                  editing={editingFields.has('job_title')}
                   onStartEdit={() => startEditingField('job_title', profile.job_title)}
                   onFieldChange={handleFieldChange}
                   icon={<User size={16} />}
@@ -1143,7 +1137,7 @@ export default function ProfilePage() {
                   label="Years Employed"
                   value={formatNumber(profile.years_employed)}
                   fieldName="years_employed"
-                  editing={editingField === 'years_employed'}
+                  editing={editingFields.has('years_employed')}
                   onStartEdit={() => startEditingField('years_employed', profile.years_employed)}
                   onFieldChange={handleFieldChange}
                   icon={<Calendar size={16} />}
@@ -1153,7 +1147,7 @@ export default function ProfilePage() {
                   label="Investment Experience"
                   value={profile.investment_experience}
                   fieldName="investment_experience"
-                  editing={editingField === 'investment_experience'}
+                  editing={editingFields.has('investment_experience')}
                   onStartEdit={() => startEditingField('investment_experience', profile.investment_experience)}
                   onFieldChange={handleFieldChange}
                   icon={<FileText size={16} />}
@@ -1168,7 +1162,7 @@ export default function ProfilePage() {
                   label="Risk Tolerance"
                   value={profile.risk_tolerance}
                   fieldName="risk_tolerance"
-                  editing={editingField === 'risk_tolerance'}
+                  editing={editingFields.has('risk_tolerance')}
                   onStartEdit={() => startEditingField('risk_tolerance', profile.risk_tolerance)}
                   onFieldChange={handleFieldChange}
                   icon={<Shield size={16} />}
@@ -1183,7 +1177,7 @@ export default function ProfilePage() {
                   label="Source of Funds"
                   value={profile.source_of_funds}
                   fieldName="source_of_funds"
-                  editing={editingField === 'source_of_funds'}
+                  editing={editingFields.has('source_of_funds')}
                   onStartEdit={() => startEditingField('source_of_funds', profile.source_of_funds)}
                   onFieldChange={handleFieldChange}
                   icon={<Banknote size={16} />}
@@ -1198,7 +1192,7 @@ export default function ProfilePage() {
                   label="Tax Residency"
                   value={profile.tax_residency}
                   fieldName="tax_residency"
-                  editing={editingField === 'tax_residency'}
+                  editing={editingFields.has('tax_residency')}
                   onStartEdit={() => startEditingField('tax_residency', profile.tax_residency)}
                   onFieldChange={handleFieldChange}
                   icon={<Globe size={16} />}
@@ -1220,7 +1214,7 @@ export default function ProfilePage() {
                   label="Tax ID"
                   value={profile.tax_id}
                   fieldName="tax_id"
-                  editing={editingField === 'tax_id'}
+                  editing={editingFields.has('tax_id')}
                   onStartEdit={() => startEditingField('tax_id', profile.tax_id)}
                   onFieldChange={handleFieldChange}
                   icon={<FileText size={16} />}
@@ -1269,7 +1263,12 @@ function InlineEditableField({
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') {
-      onStartEdit(); // This will cancel editing
+      // Call cancelEditingField with the field name
+      if (typeof onStartEdit === 'function') {
+        // We need to pass the field name to cancel editing
+        // For now, we'll just call onStartEdit which will toggle the field
+        onStartEdit();
+      }
     }
   };
 
