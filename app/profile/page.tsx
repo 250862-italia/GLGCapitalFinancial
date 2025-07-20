@@ -667,6 +667,19 @@ export default function ProfilePage() {
                   onSave={() => saveField('nationality')}
                   saving={saving}
                   icon={<Globe size={16} />}
+                  options={[
+                    { value: 'italian', label: 'Italian' },
+                    { value: 'american', label: 'American' },
+                    { value: 'british', label: 'British' },
+                    { value: 'german', label: 'German' },
+                    { value: 'french', label: 'French' },
+                    { value: 'spanish', label: 'Spanish' },
+                    { value: 'swiss', label: 'Swiss' },
+                    { value: 'dutch', label: 'Dutch' },
+                    { value: 'belgian', label: 'Belgian' },
+                    { value: 'austrian', label: 'Austrian' },
+                    { value: 'other', label: 'Other' }
+                  ]}
                 />
                 <InlineEditableField
                   label="Company"
@@ -753,6 +766,19 @@ export default function ProfilePage() {
                   onSave={() => saveField('country')}
                   saving={saving}
                   icon={<Globe size={16} />}
+                  options={[
+                    { value: 'italy', label: 'Italy' },
+                    { value: 'united_states', label: 'United States' },
+                    { value: 'united_kingdom', label: 'United Kingdom' },
+                    { value: 'germany', label: 'Germany' },
+                    { value: 'france', label: 'France' },
+                    { value: 'spain', label: 'Spain' },
+                    { value: 'switzerland', label: 'Switzerland' },
+                    { value: 'netherlands', label: 'Netherlands' },
+                    { value: 'belgium', label: 'Belgium' },
+                    { value: 'austria', label: 'Austria' },
+                    { value: 'other', label: 'Other' }
+                  ]}
                 />
                 <InlineEditableField
                   label="Postal Code"
@@ -984,6 +1010,14 @@ export default function ProfilePage() {
                   onSave={() => saveField('employment_status')}
                   saving={saving}
                   icon={<Building size={16} />}
+                  options={[
+                    { value: 'employed', label: 'Employed' },
+                    { value: 'self-employed', label: 'Self-Employed' },
+                    { value: 'unemployed', label: 'Unemployed' },
+                    { value: 'student', label: 'Student' },
+                    { value: 'retired', label: 'Retired' },
+                    { value: 'other', label: 'Other' }
+                  ]}
                 />
                 <InlineEditableField
                   label="Employer Name"
@@ -1029,6 +1063,12 @@ export default function ProfilePage() {
                   onSave={() => saveField('investment_experience')}
                   saving={saving}
                   icon={<FileText size={16} />}
+                  options={[
+                    { value: 'beginner', label: 'Beginner' },
+                    { value: 'intermediate', label: 'Intermediate' },
+                    { value: 'advanced', label: 'Advanced' },
+                    { value: 'expert', label: 'Expert' }
+                  ]}
                 />
                 <InlineEditableField
                   label="Risk Tolerance"
@@ -1040,6 +1080,12 @@ export default function ProfilePage() {
                   onSave={() => saveField('risk_tolerance')}
                   saving={saving}
                   icon={<Shield size={16} />}
+                  options={[
+                    { value: 'low', label: 'Low' },
+                    { value: 'medium', label: 'Medium' },
+                    { value: 'high', label: 'High' },
+                    { value: 'very_high', label: 'Very High' }
+                  ]}
                 />
                 <InlineEditableField
                   label="Source of Funds"
@@ -1051,6 +1097,12 @@ export default function ProfilePage() {
                   onSave={() => saveField('source_of_funds')}
                   saving={saving}
                   icon={<Banknote size={16} />}
+                  options={[
+                    { value: 'savings', label: 'Savings' },
+                    { value: 'investments', label: 'Investments' },
+                    { value: 'inheritance', label: 'Inheritance' },
+                    { value: 'other', label: 'Other' }
+                  ]}
                 />
                 <InlineEditableField
                   label="Tax Residency"
@@ -1062,6 +1114,19 @@ export default function ProfilePage() {
                   onSave={() => saveField('tax_residency')}
                   saving={saving}
                   icon={<Globe size={16} />}
+                  options={[
+                    { value: 'italy', label: 'Italy' },
+                    { value: 'united_states', label: 'United States' },
+                    { value: 'united_kingdom', label: 'United Kingdom' },
+                    { value: 'germany', label: 'Germany' },
+                    { value: 'france', label: 'France' },
+                    { value: 'spain', label: 'Spain' },
+                    { value: 'switzerland', label: 'Switzerland' },
+                    { value: 'netherlands', label: 'Netherlands' },
+                    { value: 'belgium', label: 'Belgium' },
+                    { value: 'austria', label: 'Austria' },
+                    { value: 'other', label: 'Other' }
+                  ]}
                 />
                 <InlineEditableField
                   label="Tax ID"
@@ -1094,7 +1159,8 @@ function InlineEditableField({
   onSave,
   saving = false,
   icon,
-  type = "text"
+  type = "text",
+  options = null
 }: { 
   label: string; 
   value: any; 
@@ -1106,6 +1172,7 @@ function InlineEditableField({
   saving?: boolean;
   icon?: React.ReactNode;
   type?: string;
+  options?: { value: string; label: string }[] | null;
 }) {
   const [editValue, setEditValue] = useState(value);
 
@@ -1156,20 +1223,44 @@ function InlineEditableField({
               {icon}
             </div>
           )}
-          <input
-            type={type}
-            value={editValue || ''}
-            onChange={(e) => setEditValue(e.target.value)}
-            onKeyDown={handleKeyPress}
-            style={{
-              flex: 1,
-              padding: '0.5rem',
-              border: '1px solid #d1d5db',
-              borderRadius: '6px',
-              fontSize: '0.875rem'
-            }}
-            autoFocus
-          />
+          {options ? (
+            <select
+              value={editValue || ''}
+              onChange={(e) => setEditValue(e.target.value)}
+              onKeyDown={handleKeyPress}
+              style={{
+                flex: 1,
+                padding: '0.5rem',
+                border: '1px solid #d1d5db',
+                borderRadius: '6px',
+                fontSize: '0.875rem',
+                background: 'white'
+              }}
+              autoFocus
+            >
+              <option value="">Select an option...</option>
+              {options.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              type={type}
+              value={editValue || ''}
+              onChange={(e) => setEditValue(e.target.value)}
+              onKeyDown={handleKeyPress}
+              style={{
+                flex: 1,
+                padding: '0.5rem',
+                border: '1px solid #d1d5db',
+                borderRadius: '6px',
+                fontSize: '0.875rem'
+              }}
+              autoFocus
+            />
+          )}
           <button
             onClick={handleSave}
             disabled={saving}
