@@ -500,7 +500,7 @@ export default function ProfilePage() {
               Manage your personal information
             </p>
           </div>
-
+        </div>
 
         {/* Profile Card */}
         <div style={{ 
