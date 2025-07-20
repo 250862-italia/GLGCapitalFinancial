@@ -94,7 +94,9 @@ export async function POST(request: NextRequest) {
         payment_method: paymentMethod || 'bank_transfer',
         status: 'pending',
         expected_return: 1.8, // Default daily return
-        notes: `Investment request for ${packageName} package via ${paymentMethod || 'bank_transfer'}`
+        notes: `Investment request for ${packageName} package via ${paymentMethod || 'bank_transfer'}`,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       })
       .select()
       .single();
