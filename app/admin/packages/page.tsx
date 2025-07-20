@@ -54,7 +54,8 @@ export default function AdminPackagesPage() {
       const data = await response.json();
       setPackages(data.packages || []);
     } catch (err: any) {
-      setError(err.message || 'Failed to fetch packages');
+      const errorMessage = typeof err === 'string' ? err : err?.message || err?.error || 'Failed to fetch packages';
+      setError(errorMessage);
     }
     
     setLoading(false);
@@ -132,7 +133,8 @@ export default function AdminPackagesPage() {
 
       closeModal();
     } catch (err: any) {
-      setError(err.message || 'Failed to save package');
+      const errorMessage = typeof err === 'string' ? err : err?.message || err?.error || 'Failed to save package';
+      setError(errorMessage);
     }
     
     setSaving(false);
@@ -166,7 +168,8 @@ export default function AdminPackagesPage() {
 
       console.log('Package deleted successfully');
     } catch (err: any) {
-      setError(err.message || 'Failed to delete package');
+      const errorMessage = typeof err === 'string' ? err : err?.message || err?.error || 'Failed to delete package';
+      setError(errorMessage);
     }
     
     setSaving(false);
@@ -185,7 +188,10 @@ export default function AdminPackagesPage() {
   const modalContentStyle = { background: '#fff', padding: '24px', borderRadius: '8px', width: '90%', maxWidth: '600px', maxHeight: '90vh', overflow: 'auto' };
   const inputStyle = { width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '14px' };
 
-  if (error) return <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '24px', borderRadius: '8px', margin: '40px auto', maxWidth: 600, fontSize: 18 }}>{error}</div>;
+  if (error) {
+    const errorMessage = typeof error === 'string' ? error : JSON.stringify(error);
+    return <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '24px', borderRadius: '8px', margin: '40px auto', maxWidth: 600, fontSize: 18 }}>{errorMessage}</div>;
+  }
 
   return (
     <div style={containerStyle}>
@@ -194,7 +200,7 @@ export default function AdminPackagesPage() {
         <button onClick={openAdd} style={buttonStyle}>Aggiungi Pacchetto</button>
       </div>
 
-      {error && <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '12px', borderRadius: '6px', marginBottom: '20px' }}>{error}</div>}
+      {error && <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '12px', borderRadius: '6px', marginBottom: '20px' }}>{typeof error === 'string' ? error : JSON.stringify(error)}</div>}
 
       {loading ? (
         <div style={{ textAlign: 'center', padding: '40px' }}>Caricamento...</div>
