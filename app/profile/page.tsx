@@ -244,9 +244,10 @@ export default function ProfilePage() {
       setHasChanges(true);
     } else {
       // Check if any other fields have changes
-      const otherFieldsHaveChanges = Object.keys(editForm).some(key => {
+      const currentEditForm = { ...editForm, [fieldName]: value };
+      const otherFieldsHaveChanges = Object.keys(currentEditForm).some(key => {
         if (key === fieldName) return false;
-        return editForm[key] !== originalData[key];
+        return currentEditForm[key] !== originalData[key];
       });
       setHasChanges(otherFieldsHaveChanges);
     }
@@ -554,6 +555,28 @@ export default function ProfilePage() {
               </button>
             </div>
           )}
+
+          {/* Debug Button - Temporary */}
+          <button
+            onClick={() => {
+              console.log('Debug: hasChanges =', hasChanges);
+              console.log('Debug: editForm =', editForm);
+              console.log('Debug: originalData =', originalData);
+              setHasChanges(true);
+            }}
+            style={{
+              background: '#3b82f6',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              padding: '0.5rem 1rem',
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              cursor: 'pointer'
+            }}
+          >
+            Debug
+          </button>
         </div>
 
         {/* Success Message */}
