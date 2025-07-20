@@ -59,16 +59,22 @@ export function requireSuperAdmin(handler: Function) {
 // Simple admin authentication for the current admin system
 export async function verifyAdmin(request: NextRequest) {
   try {
+    console.log('🔍 Verifying admin authentication...');
+    
     // Get admin session from cookies or headers
     const adminSession = request.headers.get('x-admin-session') || 
                         request.cookies.get('admin_session')?.value;
     
+    console.log('🔍 Admin session from request:', adminSession);
+    
     if (!adminSession) {
+      console.log('❌ No admin session found');
       return { error: 'Admin session not found', status: 401 };
     }
 
     // Special token for system notifications
     if (adminSession === 'admin_system_notification') {
+      console.log('✅ System notification token accepted');
       return { 
         user: { id: 'system', role: 'admin' }, 
         success: true 
@@ -80,12 +86,15 @@ export async function verifyAdmin(request: NextRequest) {
     
     // Check if it's a valid admin session format
     if (!adminSession.includes('admin_')) {
+      console.log('❌ Invalid admin session format');
       return { error: 'Invalid admin session', status: 401 };
     }
 
     // Extract admin ID from session
     const adminId = adminSession.split('_')[1];
+    console.log('🔍 Extracted admin ID:', adminId);
     
+    console.log('✅ Admin session validated');
     return { 
       user: { id: adminId, role: 'admin' }, 
       success: true 
