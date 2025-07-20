@@ -6,15 +6,6 @@ import { fetchJSONWithCSRF } from '@/lib/csrf-client';
 import { useRouter } from 'next/navigation';
 import PaymentMethodModal, { PaymentMethod } from '@/components/investment-packages/PaymentMethodModal';
 
-const BANK_DETAILS = `
-Beneficiario: GLG capital group LLC
-Indirizzo del beneficiario: 1309 Coffeen Ave, Ste H, Sheridan, WY, 82801-5714, United States
-Numero di conto: 218086576410
-Numero di instradamento bancario: REVOUS31
-SWIFT/BIC: REVOUS31
-BIC banca intermediaria: CHASDEFX
-`;
-
 export default function InvestmentsPage() {
   const [packages, setPackages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,7 +15,7 @@ export default function InvestmentsPage() {
   const [amount, setAmount] = useState("");
   const [user, setUser] = useState<any>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod | null>(null);
+  const [purchaseLoading, setPurchaseLoading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -66,7 +57,7 @@ export default function InvestmentsPage() {
     }
   }, [user]);
 
-  const handleBuy = async (pkg: any) => {
+  const handleInvestNow = async (pkg: any) => {
     if (!user) {
       router.push('/login');
       return;
@@ -81,85 +72,37 @@ export default function InvestmentsPage() {
   const handlePaymentMethodSelected = async (paymentMethod: PaymentMethod) => {
     if (!selectedPackage || !amount || !user) return;
     
-    setSelectedPaymentMethod(paymentMethod);
+    setPurchaseLoading(true);
     setShowPaymentModal(false);
-    setLoading(true);
     setSuccessMsg("");
     setErrorMsg("");
     
     try {
-      // Calculate total amount including fees
-      let totalAmount = parseFloat(amount);
-      if (paymentMethod.id === 'credit_card') {
-        totalAmount = totalAmount * 1.025 + 0.30;
-      } else if (paymentMethod.id === 'crypto') {
-        totalAmount = totalAmount * 1.01;
-      }
-      
-      // Save investment with payment method
-      const { error: investError } = await supabase.from('investments').insert({
-        user_id: user.id,
-        package_id: selectedPackage.id,
-        amount: parseFloat(amount),
-        payment_method: paymentMethod.id,
-        status: 'pending',
-        created_at: new Date().toISOString()
-      });
-      
-      if (investError) {
-        console.error('Investment error:', investError);
-        throw new Error(investError.message);
-      }
-      
-      // Send email based on payment method
-      let emailSubject = '';
-      let emailHtml = '';
-      
-      switch (paymentMethod.id) {
-        case 'bank_transfer':
-          emailSubject = `Istruzioni Bonifico - Acquisto Pacchetto ${selectedPackage.name}`;
-          emailHtml = `<p>Gentile ${user.email},<br/>grazie per aver scelto il pacchetto <b>${selectedPackage.name}</b>.<br/><br/>Per completare l'acquisto, effettua un bonifico alle seguenti coordinate bancarie:</p><pre>${BANK_DETAILS}</pre><p><b>Causale:</b> Acquisto pacchetto ${selectedPackage.name} - ${user.email}<br/><b>Importo:</b> ${amount} EUR</p><p>Una volta effettuato il bonifico, invia la ricevuta a <a href='mailto:corefound@glgcapitalgroupllc.com'>corefound@glgcapitalgroupllc.com</a>.</p><p>Cordiali saluti,<br/>GLG Capital Group LLC</p>`;
-          break;
-          
-        case 'credit_card':
-          emailSubject = `Pagamento Carta - Acquisto Pacchetto ${selectedPackage.name}`;
-          emailHtml = `<p>Gentile ${user.email},<br/>grazie per aver scelto il pacchetto <b>${selectedPackage.name}</b>.<br/><br/>Il tuo pagamento con carta di credito è stato elaborato con successo.</p><p><b>Dettagli:</b><br/>- Pacchetto: ${selectedPackage.name}<br/>- Importo: ${amount} EUR<br/>- Commissioni: ${(totalAmount - parseFloat(amount)).toFixed(2)} EUR<br/>- Totale: ${totalAmount.toFixed(2)} EUR</p><p>Il tuo investimento sarà attivato entro 24 ore.</p><p>Cordiali saluti,<br/>GLG Capital Group LLC</p>`;
-          break;
-          
-        case 'crypto':
-          emailSubject = `Istruzioni Crypto - Acquisto Pacchetto ${selectedPackage.name}`;
-          emailHtml = `<p>Gentile ${user.email},<br/>grazie per aver scelto il pacchetto <b>${selectedPackage.name}</b>.<br/><br/>Per completare il pagamento in criptovalute, invia ${totalAmount.toFixed(2)} EUR equivalenti a uno dei seguenti indirizzi:</p><p><b>Bitcoin (BTC):</b> bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh<br/><b>Ethereum (ETH):</b> 0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b6<br/><b>USDT (TRC20):</b> TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t</p><p><b>Importo da inviare:</b> ${totalAmount.toFixed(2)} EUR equivalenti<br/><b>Commissioni:</b> ${(totalAmount - parseFloat(amount)).toFixed(2)} EUR</p><p>Una volta effettuato il pagamento, invia la ricevuta della transazione a <a href='mailto:corefound@glgcapitalgroupllc.com'>corefound@glgcapitalgroupllc.com</a>.</p><p>Cordiali saluti,<br/>GLG Capital Group LLC</p>`;
-          break;
-      }
-      
-      await fetchJSONWithCSRF("/api/send-email", {
+      // Use the proper API endpoint for investment creation
+      const response = await fetchJSONWithCSRF("/api/investments", {
         method: "POST",
         body: JSON.stringify({
-          to: user.email,
-          subject: emailSubject,
-          html: emailHtml
+          userId: user.id,
+          packageId: selectedPackage.id,
+          amount: parseFloat(amount),
+          packageName: selectedPackage.name,
+          paymentMethod: paymentMethod.id
         })
       });
       
-      // Send notification to admin
-      await fetchJSONWithCSRF("/api/send-email", {
-        method: "POST",
-        body: JSON.stringify({
-          to: 'corefound@glgcapitalgroupllc.com',
-          subject: `Nuovo Investimento - ${paymentMethod.name} - ${selectedPackage.name}`,
-          html: `<p>Nuovo investimento ricevuto:</p><p><b>Cliente:</b> ${user.email}<br/><b>Pacchetto:</b> ${selectedPackage.name}<br/><b>Importo:</b> ${amount} EUR<br/><b>Metodo di pagamento:</b> ${paymentMethod.name}<br/><b>Totale:</b> ${totalAmount.toFixed(2)} EUR</p>`
-        })
-      });
+      if (response.error) {
+        throw new Error(response.error);
+      }
       
-      setSuccessMsg(`Richiesta di acquisto inviata! Controlla la tua email per le istruzioni di pagamento con ${paymentMethod.name}.`);
+      setSuccessMsg(`✅ Investimento creato con successo! Controlla la tua email per le istruzioni di pagamento con ${paymentMethod.name}.`);
       setSelectedPackage(null);
       setAmount("");
-      setSelectedPaymentMethod(null);
+      
     } catch (err: any) {
       console.error('Purchase error:', err);
-      setErrorMsg("Errore durante l'acquisto: " + (err.message || err));
+      setErrorMsg("❌ Errore durante l'acquisto: " + (err.message || err));
     } finally {
-      setLoading(false);
+      setPurchaseLoading(false);
     }
   };
 
@@ -176,47 +119,132 @@ export default function InvestmentsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
-      <h1 className="text-3xl font-bold mb-8">Investimenti</h1>
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-semibold mb-4">Pacchetti disponibili</h2>
-        {successMsg && <div className="bg-green-100 text-green-800 rounded p-3 mb-4">{successMsg}</div>}
-        {errorMsg && <div className="bg-red-100 text-red-800 rounded p-3 mb-4">{errorMsg}</div>}
+      <div className="max-w-6xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Investimenti</h1>
+          <p className="text-gray-600">Scegli il pacchetto di investimento che preferisci e inizia subito</p>
+        </div>
+
+        {successMsg && (
+          <div className="bg-green-50 border border-green-200 text-green-800 rounded-lg p-4 mb-6">
+            <div className="flex items-center">
+              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              {successMsg}
+            </div>
+          </div>
+        )}
+
+        {errorMsg && (
+          <div className="bg-red-50 border border-red-200 text-red-800 rounded-lg p-4 mb-6">
+            <div className="flex items-center">
+              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+              {errorMsg}
+            </div>
+          </div>
+        )}
+
         {loading ? (
-          <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p>Caricamento pacchetti...</p>
+          <div className="bg-white rounded-lg shadow-lg p-8 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Caricamento pacchetti di investimento...</p>
           </div>
         ) : packages.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            <p>Nessun pacchetto di investimento disponibile al momento.</p>
+          <div className="bg-white rounded-lg shadow-lg p-8 text-center">
+            <div className="text-gray-500">
+              <svg className="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <p className="text-lg font-medium mb-2">Nessun pacchetto disponibile</p>
+              <p>Al momento non ci sono pacchetti di investimento disponibili. Riprova più tardi.</p>
+            </div>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {packages.map(pkg => (
-              <div key={pkg.id} className="border-b pb-4 flex items-center justify-between">
-                <div>
-                  <h3 className="font-medium">{pkg.name}</h3>
-                  <p className="text-gray-600">{pkg.description}</p>
-                  <p className="text-gray-600">Durata: {pkg.duration} giorni • Rendimento atteso: {pkg.expected_return}%</p>
-                  <p className="text-gray-600">Min: €{pkg.min_investment?.toLocaleString()} • Max: €{pkg.max_investment?.toLocaleString()}</p>
+              <div key={pkg.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-bold text-gray-900">{pkg.name}</h3>
+                    {pkg.is_featured && (
+                      <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                        Popolare
+                      </span>
+                    )}
+                  </div>
+                  
+                  <p className="text-gray-600 mb-4 line-clamp-3">{pkg.description}</p>
+                  
+                  <div className="space-y-2 mb-6">
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Rendimento atteso:</span>
+                      <span className="font-semibold text-green-600">{pkg.expected_return}%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Durata:</span>
+                      <span className="font-medium">{pkg.duration_months} mesi</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Rischio:</span>
+                      <span className={`font-medium ${
+                        pkg.risk_level === 'low' ? 'text-green-600' : 
+                        pkg.risk_level === 'medium' ? 'text-yellow-600' : 'text-red-600'
+                      }`}>
+                        {pkg.risk_level === 'low' ? 'Basso' : 
+                         pkg.risk_level === 'medium' ? 'Medio' : 'Alto'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Investimento min:</span>
+                      <span className="font-semibold">€{pkg.min_investment?.toLocaleString()}</span>
+                    </div>
+                    {pkg.max_investment && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Investimento max:</span>
+                        <span className="font-semibold">€{pkg.max_investment?.toLocaleString()}</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <button 
+                    onClick={() => handleInvestNow(pkg)}
+                    disabled={purchaseLoading}
+                    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                  >
+                    {purchaseLoading ? (
+                      <div className="flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                        Elaborazione...
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center">
+                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                        Invest Now
+                      </div>
+                    )}
+                  </button>
                 </div>
-                <button className="btn-primary" onClick={() => handleBuy(pkg)}>Acquista</button>
               </div>
             ))}
           </div>
         )}
+
         {/* Modale selezione metodo di pagamento */}
         <PaymentMethodModal
           isOpen={showPaymentModal}
           onClose={() => {
             setShowPaymentModal(false);
             setSelectedPackage(null);
-            setSelectedPaymentMethod(null);
           }}
           onConfirm={handlePaymentMethodSelected}
           packageName={selectedPackage?.name || ''}
           amount={parseFloat(amount) || 0}
-          loading={loading}
+          loading={purchaseLoading}
         />
       </div>
     </div>
