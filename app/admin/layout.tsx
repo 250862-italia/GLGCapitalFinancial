@@ -112,7 +112,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           borderBottom: '1px solid #374151',
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center'
+          alignItems: 'center',
+          position: 'sticky',
+          top: 0,
+          zIndex: 1001
         }}>
           <div style={{ color: 'white', fontSize: '1.25rem', fontWeight: '600' }}>
             GLG Capital Group - Admin Panel
@@ -136,8 +139,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               gap: '0.5rem',
               transition: 'background-color 0.2s',
               position: 'relative',
-              zIndex: 1000,
-              pointerEvents: 'auto'
+              zIndex: 1002,
+              pointerEvents: 'auto',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
             }}
             onMouseOver={(e) => e.currentTarget.style.background = '#047857'}
             onMouseOut={(e) => e.currentTarget.style.background = '#059669'}
@@ -151,7 +155,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         </div>
       )}
       
-      {children}
+      <div style={{ 
+        marginTop: pathname !== '/admin' && pathname !== '/admin/login' ? '0' : '0',
+        minHeight: 'calc(100vh - 80px)' // Account for header height
+      }}>
+        {children}
+      </div>
     </>
   );
 } 
