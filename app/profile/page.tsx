@@ -556,26 +556,36 @@ export default function ProfilePage() {
             </div>
           )}
 
-          {/* Debug Button - Temporary */}
+          {/* Always visible Save button for testing */}
           <button
-            onClick={() => {
-              console.log('Debug: hasChanges =', hasChanges);
-              console.log('Debug: editForm =', editForm);
-              console.log('Debug: originalData =', originalData);
-              setHasChanges(true);
-            }}
+            onClick={saveAllChanges}
+            disabled={saving}
             style={{
               background: '#3b82f6',
               color: 'white',
               border: 'none',
               borderRadius: '8px',
-              padding: '0.5rem 1rem',
-              fontSize: '0.875rem',
+              padding: '0.75rem 1.5rem',
+              fontSize: '1rem',
               fontWeight: 600,
-              cursor: 'pointer'
+              cursor: saving ? 'not-allowed' : 'pointer',
+              opacity: saving ? 0.5 : 1,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
             }}
           >
-            Debug
+            {saving ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save size={16} />
+                Save All (Test)
+              </>
+            )}
           </button>
         </div>
 
