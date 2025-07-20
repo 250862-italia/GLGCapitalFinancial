@@ -61,118 +61,50 @@ export default function AdminNotifications({ adminId }: AdminNotificationsProps)
     }
   }, [adminId]);
 
-  const loadNotifications = () => {
-    // Mock notifications - in real app this would come from API
-    const mockNotifications: AdminNotification[] = [
-      {
-        id: '1',
-        type: 'user_registration',
-        title: 'New User Registration',
-        message: 'John Doe (john.doe@example.com) has registered for an account.',
-        timestamp: new Date(Date.now() - 1000 * 60 * 5), // 5 minutes ago
-        read: false,
-        priority: 'medium',
-        action: {
-          label: 'Review User',
-          url: '/admin/users'
+  const loadNotifications = async () => {
+    try {
+      // For now, create sample notifications for testing
+      const sampleNotifications: AdminNotification[] = [
+        {
+          id: '1',
+          type: 'user_registration',
+          title: 'Nuovo Cliente Registrato',
+          message: 'Innocentigianni@icloud.com si è registrato come nuovo cliente',
+          timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
+          read: false,
+          priority: 'medium',
+          action: {
+            label: 'Visualizza Cliente',
+            url: '/admin/clients'
+          }
         },
-        metadata: {
-          userId: '123',
-          email: 'john.doe@example.com',
-          name: 'John Doe'
-        }
-      },
-      {
-        id: '2',
-        type: 'investment',
-        title: 'Large Investment Completed',
-        message: 'User Sarah Wilson has invested $50,000 in the Aggressive Growth package.',
-        timestamp: new Date(Date.now() - 1000 * 60 * 15), // 15 minutes ago
-        read: false,
-        priority: 'high',
-        action: {
-          label: 'View Transaction',
-          url: '/admin/transactions'
+        {
+          id: '2',
+          type: 'investment',
+          title: 'Nuova Richiesta di Investimento',
+          message: 'Richiesta di investimento di $10,000 nel pacchetto GLG Premium',
+          timestamp: new Date(Date.now() - 1000 * 60 * 15), // 15 minutes ago
+          read: false,
+          priority: 'high',
+          action: {
+            label: 'Revisiona Investimento',
+            url: '/admin/investments'
+          }
         },
-        metadata: {
-          userId: '456',
-          amount: 50000,
-          package: 'Aggressive Growth'
+        {
+          id: '3',
+          type: 'system_alert',
+          title: 'Sistema Operativo',
+          message: 'Tutte le funzionalità del sistema sono operative',
+          timestamp: new Date(Date.now() - 1000 * 60 * 5), // 5 minutes ago
+          read: false,
+          priority: 'low'
         }
-      },
-      {
-        id: '3',
-        type: 'security_alert',
-        title: 'Security Alert',
-        message: 'Multiple failed login attempts detected from IP 192.168.1.100.',
-        timestamp: new Date(Date.now() - 1000 * 60 * 45), // 45 minutes ago
-        read: false,
-        priority: 'critical',
-        action: {
-          label: 'View Security',
-          url: '/admin/security'
-        },
-        metadata: {
-          ipAddress: '192.168.1.100',
-          failedAttempts: 8
-        }
-      },
-      {
-        id: '4',
-        type: 'payment_processed',
-        title: 'Payment Processed',
-        message: 'Payment of $25,000 has been successfully processed for user Mike Johnson.',
-        timestamp: new Date(Date.now() - 1000 * 60 * 60), // 1 hour ago
-        read: true,
-        priority: 'low',
-        action: {
-          label: 'View Details',
-          url: '/admin/payments'
-        },
-        metadata: {
-          userId: '789',
-          amount: 25000,
-          status: 'completed'
-        }
-      }
-    ];
+      ];
 
-    setNotifications(mockNotifications);
-  };
-
-
-
-  const getNotificationTitle = (type: AdminNotification['type']): string => {
-    switch (type) {
-      case 'user_registration':
-        return 'New User Registration';
-      case 'investment':
-        return 'Investment Completed';
-      case 'security_alert':
-        return 'Security Alert';
-      case 'payment_processed':
-        return 'Payment Processed';
-      case 'system_alert':
-        return 'System Alert';
-      default:
-        return 'New Notification';
-    }
-  };
-
-  const getNotificationMessage = (type: AdminNotification['type']): string => {
-    switch (type) {
-      case 'user_registration':
-        return 'A new user has registered for an account.';
-      case 'investment':
-        return 'A user has completed an investment transaction.';
-      case 'security_alert':
-        return 'Suspicious activity has been detected.';
-      case 'payment_processed':
-        return 'A payment has been successfully processed.';
-      case 'system_alert':
-        return 'System maintenance or update notification.';
-      default:
-        return 'You have a new notification.';
+      setNotifications(sampleNotifications);
+    } catch (error) {
+      console.error('Error loading notifications:', error);
     }
   };
 
@@ -285,6 +217,40 @@ export default function AdminNotifications({ adminId }: AdminNotificationsProps)
     }
   };
 
+  const getNotificationTitle = (type: AdminNotification['type']) => {
+    switch (type) {
+      case 'user_registration':
+        return 'Nuovo Cliente Registrato';
+      case 'investment':
+        return 'Nuova Richiesta di Investimento';
+      case 'security_alert':
+        return 'Allerta Sicurezza';
+      case 'payment_processed':
+        return 'Pagamento Processato';
+      case 'system_alert':
+        return 'Avviso Sistema';
+      default:
+        return 'Notifica';
+    }
+  };
+
+  const getNotificationMessage = (type: AdminNotification['type']) => {
+    switch (type) {
+      case 'user_registration':
+        return 'Un nuovo cliente si è registrato';
+      case 'investment':
+        return 'Nuova richiesta di investimento ricevuta';
+      case 'security_alert':
+        return 'Evento di sicurezza rilevato';
+      case 'payment_processed':
+        return 'Pagamento completato con successo';
+      case 'system_alert':
+        return 'Aggiornamento del sistema';
+      default:
+        return 'Nuova notifica ricevuta';
+    }
+  };
+
   const filteredNotifications = notifications.filter(notification => {
     if (filter === 'unread') return !notification.read;
     if (filter === 'high_priority') return notification.priority === 'high' || notification.priority === 'critical';
@@ -297,39 +263,55 @@ export default function AdminNotifications({ adminId }: AdminNotificationsProps)
   ).length;
 
   return (
-    <div style={{ position: 'relative' }}>
+    <div style={{ 
+      position: 'fixed', 
+      top: '20px', 
+      right: '20px', 
+      zIndex: 1000 
+    }}>
       {/* Notification Bell */}
       <button
         onClick={() => setShowDropdown(!showDropdown)}
         style={{
           position: 'relative',
-          background: 'transparent',
-          border: 'none',
+          background: 'white',
+          border: '1px solid #e2e8f0',
           cursor: 'pointer',
-          padding: '0.5rem',
+          padding: '0.75rem',
           borderRadius: '50%',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: '#374151'
+          color: '#374151',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+          transition: 'all 0.2s'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = '#f8fafc';
+          e.currentTarget.style.transform = 'scale(1.05)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = 'white';
+          e.currentTarget.style.transform = 'scale(1)';
         }}
       >
         <Bell size={20} />
         {unreadCount > 0 && (
           <span style={{
             position: 'absolute',
-            top: 0,
-            right: 0,
+            top: '-2px',
+            right: '-2px',
             background: highPriorityCount > 0 ? '#dc2626' : '#3b82f6',
             color: 'white',
             borderRadius: '50%',
-            width: 18,
-            height: 18,
-            fontSize: 10,
+            width: 20,
+            height: 20,
+            fontSize: 11,
             fontWeight: 600,
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            border: '2px solid white'
           }}>
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
@@ -344,56 +326,64 @@ export default function AdminNotifications({ adminId }: AdminNotificationsProps)
           right: 0,
           width: 400,
           background: 'white',
-          borderRadius: 12,
-          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
-          border: '1px solid #e5e7eb',
-          zIndex: 1000,
-          maxHeight: 500,
-          overflow: 'hidden'
+          border: '1px solid #e2e8f0',
+          borderRadius: '12px',
+          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+          marginTop: '0.5rem',
+          zIndex: 1001
         }}>
           {/* Header */}
           <div style={{
             padding: '1rem',
-            borderBottom: '1px solid #e5e7eb',
+            borderBottom: '1px solid #f1f5f9',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center'
           }}>
-            <h3 style={{
-              fontSize: 16,
-              fontWeight: 600,
-              color: '#1f2937',
-              margin: 0
-            }}>
-              Notifications
-            </h3>
-            <div style={{
-              display: 'flex',
-              gap: '0.5rem'
-            }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Bell size={16} />
+              <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>Notifiche</span>
+              {unreadCount > 0 && (
+                <span style={{
+                  background: '#3b82f6',
+                  color: 'white',
+                  borderRadius: '12px',
+                  padding: '0.125rem 0.5rem',
+                  fontSize: '0.75rem',
+                  fontWeight: 600
+                }}>
+                  {unreadCount}
+                </span>
+              )}
+            </div>
+            
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
               <button
-                onClick={() => setShowSettings(!showSettings)}
+                onClick={markAllAsRead}
                 style={{
-                  padding: '0.25rem',
+                  background: 'none',
                   border: 'none',
-                  background: 'transparent',
                   cursor: 'pointer',
-                  color: '#6b7280'
+                  padding: '0.25rem',
+                  borderRadius: '4px',
+                  color: '#6b7280',
+                  fontSize: '0.75rem'
                 }}
               >
-                <Settings size={16} />
+                Segna tutte come lette
               </button>
               <button
                 onClick={() => setShowDropdown(false)}
                 style={{
-                  padding: '0.25rem',
+                  background: 'none',
                   border: 'none',
-                  background: 'transparent',
                   cursor: 'pointer',
+                  padding: '0.25rem',
+                  borderRadius: '4px',
                   color: '#6b7280'
                 }}
               >
-                <X size={16} />
+                <X size={14} />
               </button>
             </div>
           </div>
@@ -401,55 +391,29 @@ export default function AdminNotifications({ adminId }: AdminNotificationsProps)
           {/* Filters */}
           <div style={{
             padding: '0.75rem 1rem',
-            borderBottom: '1px solid #e5e7eb',
+            borderBottom: '1px solid #f1f5f9',
             display: 'flex',
             gap: '0.5rem'
           }}>
-            <button
-              onClick={() => setFilter('all')}
-              style={{
-                padding: '0.25rem 0.5rem',
-                border: 'none',
-                borderRadius: 4,
-                background: filter === 'all' ? '#3b82f6' : '#f3f4f6',
-                color: filter === 'all' ? 'white' : '#374151',
-                fontSize: 12,
-                fontWeight: 600,
-                cursor: 'pointer'
-              }}
-            >
-              All
-            </button>
-            <button
-              onClick={() => setFilter('unread')}
-              style={{
-                padding: '0.25rem 0.5rem',
-                border: 'none',
-                borderRadius: 4,
-                background: filter === 'unread' ? '#3b82f6' : '#f3f4f6',
-                color: filter === 'unread' ? 'white' : '#374151',
-                fontSize: 12,
-                fontWeight: 600,
-                cursor: 'pointer'
-              }}
-            >
-              Unread ({unreadCount})
-            </button>
-            <button
-              onClick={() => setFilter('high_priority')}
-              style={{
-                padding: '0.25rem 0.5rem',
-                border: 'none',
-                borderRadius: 4,
-                background: filter === 'high_priority' ? '#dc2626' : '#f3f4f6',
-                color: filter === 'high_priority' ? 'white' : '#374151',
-                fontSize: 12,
-                fontWeight: 600,
-                cursor: 'pointer'
-              }}
-            >
-              High Priority ({highPriorityCount})
-            </button>
+            {['all', 'unread', 'high_priority'].map((filterType) => (
+              <button
+                key={filterType}
+                onClick={() => setFilter(filterType as any)}
+                style={{
+                  background: filter === filterType ? '#3b82f6' : 'transparent',
+                  color: filter === filterType ? 'white' : '#6b7280',
+                  border: '1px solid #e2e8f0',
+                  padding: '0.25rem 0.75rem',
+                  borderRadius: '6px',
+                  fontSize: '0.75rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                {filterType === 'all' ? 'Tutte' : 
+                 filterType === 'unread' ? 'Non lette' : 'Alta priorità'}
+              </button>
+            ))}
           </div>
 
           {/* Notifications List */}
@@ -464,7 +428,7 @@ export default function AdminNotifications({ adminId }: AdminNotificationsProps)
                 color: '#6b7280'
               }}>
                 <Bell size={32} style={{ marginBottom: '0.5rem', opacity: 0.5 }} />
-                <p style={{ margin: 0, fontSize: 14 }}>No notifications</p>
+                <p style={{ margin: 0, fontSize: 14 }}>Nessuna notifica</p>
               </div>
             ) : (
               filteredNotifications.map((notification) => (
@@ -516,33 +480,15 @@ export default function AdminNotifications({ adminId }: AdminNotificationsProps)
                         }}>
                           {notification.title}
                         </h4>
-                        <div style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.5rem'
+                        <span style={{
+                          fontSize: 12,
+                          color: '#6b7280'
                         }}>
-                          <span style={{
-                            width: 8,
-                            height: 8,
-                            borderRadius: '50%',
-                            background: getPriorityColor(notification.priority)
-                          }} />
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              deleteNotification(notification.id);
-                            }}
-                            style={{
-                              padding: '0.25rem',
-                              border: 'none',
-                              background: 'transparent',
-                              cursor: 'pointer',
-                              color: '#9ca3af'
-                            }}
-                          >
-                            <X size={12} />
-                          </button>
-                        </div>
+                          {notification.timestamp.toLocaleTimeString('it-IT', { 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                          })}
+                        </span>
                       </div>
                       
                       <p style={{
@@ -556,97 +502,50 @@ export default function AdminNotifications({ adminId }: AdminNotificationsProps)
                           : JSON.stringify(notification.message)}
                       </p>
                       
-                      <div style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center'
-                      }}>
-                        <span style={{
-                          fontSize: 11,
-                          color: '#9ca3af',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 4
-                        }}>
-                          <Clock size={10} />
-                          {formatTimeAgo(notification.timestamp)}
-                        </span>
-                        
-                        {notification.action && (
-                          <span style={{
-                            fontSize: 11,
-                            color: '#3b82f6',
-                            fontWeight: 600
-                          }}>
-                            {notification.action.label}
-                          </span>
-                        )}
-                      </div>
+                      {notification.action && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            markAsRead(notification.id);
+                            window.location.href = notification.action!.url;
+                          }}
+                          style={{
+                            background: '#3b82f6',
+                            color: 'white',
+                            border: 'none',
+                            padding: '0.25rem 0.75rem',
+                            borderRadius: '4px',
+                            fontSize: '0.75rem',
+                            cursor: 'pointer',
+                            fontWeight: 500
+                          }}
+                        >
+                          {notification.action.label}
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
               ))
             )}
           </div>
-
-          {/* Footer */}
-          {filteredNotifications.length > 0 && (
-            <div style={{
-              padding: '0.75rem 1rem',
-              borderTop: '1px solid #e5e7eb',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center'
-            }}>
-              <button
-                onClick={markAllAsRead}
-                style={{
-                  padding: '0.5rem 1rem',
-                  border: '1px solid #d1d5db',
-                  borderRadius: 6,
-                  background: 'white',
-                  color: '#374151',
-                  fontSize: 12,
-                  fontWeight: 600,
-                  cursor: 'pointer'
-                }}
-              >
-                Mark all as read
-              </button>
-              
-              <button
-                onClick={() => window.location.href = '/admin/notifications'}
-                style={{
-                  padding: '0.5rem 1rem',
-                  border: 'none',
-                  borderRadius: 6,
-                  background: '#3b82f6',
-                  color: 'white',
-                  fontSize: 12,
-                  fontWeight: 600,
-                  cursor: 'pointer'
-                }}
-              >
-                View all
-              </button>
-            </div>
-          )}
         </div>
+      )}
+
+      {/* Click outside to close */}
+      {showDropdown && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 999
+          }}
+          onClick={() => setShowDropdown(false)}
+        />
       )}
     </div>
   );
-}
-
-function formatTimeAgo(date: Date): string {
-  const now = new Date();
-  const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-  
-  if (diffInMinutes < 1) return 'Just now';
-  if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-  
-  const diffInHours = Math.floor(diffInMinutes / 60);
-  if (diffInHours < 24) return `${diffInHours}h ago`;
-  
-  const diffInDays = Math.floor(diffInHours / 24);
-  return `${diffInDays}d ago`;
 } 
