@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       .limit(1);
 
     if (connectionError) {
-      console.log('Supabase unavailable, using offline mode');
+      console.log('Supabase unavailable, using fallback data');
       
       // Mock admin login for offline mode
       const mockAdmin = {

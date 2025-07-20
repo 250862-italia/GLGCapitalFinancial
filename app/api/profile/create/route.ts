@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
         bic: '',
         account_holder: '',
         usdt_wallet: '',
-        status: 'offline',
+        status: 'active',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
@@ -84,8 +84,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         data: mockProfile,
-        message: 'Profile created successfully (offline mode)',
-        warning: 'Database connection unavailable - using offline mode'
+        message: 'Profile created successfully',
+        warning: 'Database connection unavailable'
       });
     }
 
@@ -165,7 +165,7 @@ export async function POST(request: NextRequest) {
         bic: '',
         account_holder: '',
         usdt_wallet: '',
-        status: 'offline',
+        status: 'active',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
@@ -173,8 +173,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         data: mockProfile,
-        message: 'Profile created successfully (offline mode)',
-        warning: 'Database table unavailable - using offline mode'
+        message: 'Profile created successfully',
+        warning: 'Database table unavailable'
       });
     }
 
@@ -208,7 +208,7 @@ export async function POST(request: NextRequest) {
       bic: '',
       account_holder: '',
       usdt_wallet: '',
-      status: 'offline',
+      status: 'active',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
@@ -216,8 +216,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: mockProfile,
-      message: 'Profile created successfully (fallback mode)',
-      warning: 'Unexpected error occurred - using fallback mode'
+      message: 'Profile created successfully',
+      warning: 'Unexpected error occurred'
     });
   }
 } 

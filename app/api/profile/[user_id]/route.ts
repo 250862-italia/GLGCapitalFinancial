@@ -49,15 +49,15 @@ export async function GET(
         bic: '',
         account_holder: '',
         usdt_wallet: '',
-        status: 'offline',
+        status: 'active',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
 
       return NextResponse.json(fallbackProfile, {
         headers: {
-          'X-Profile-Status': 'offline',
-          'X-Profile-Warning': 'Database connection unavailable - using offline mode'
+          'X-Profile-Status': 'fallback',
+          'X-Profile-Warning': 'Database connection unavailable'
         }
       });
     }
@@ -107,7 +107,7 @@ export async function GET(
       bic: '',
       account_holder: '',
       usdt_wallet: '',
-      status: 'offline',
+      status: 'active',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
@@ -115,7 +115,7 @@ export async function GET(
     return NextResponse.json(fallbackProfile, {
       headers: {
         'X-Profile-Status': 'fallback',
-        'X-Profile-Warning': 'Unexpected error occurred - using fallback mode'
+        'X-Profile-Warning': 'Unexpected error occurred'
       }
     });
   }

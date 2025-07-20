@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         success: true,
         data: investmentsWithDetails,
-        warning: 'Database connection unavailable - using offline mode'
+        warning: 'Database connection unavailable'
       });
     }
 
@@ -108,7 +108,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         success: true,
         data: investmentsWithDetails,
-        warning: 'Database error - using offline mode'
+        warning: 'Database error'
       });
     }
 
@@ -179,7 +179,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: investmentsWithDetails,
-      warning: 'System error - using offline mode'
+              warning: 'System error'
     });
   }
 }

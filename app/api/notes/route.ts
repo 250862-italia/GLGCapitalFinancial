@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
         throw new Error(`Supabase connection test failed: ${testError.message}`);
       }
     } catch (connectionError) {
-      console.log('Supabase connection failed, using offline mode:', connectionError);
+      console.log('Supabase connection failed, using fallback data:', connectionError);
       
       const newNote = {
         id: Date.now(),

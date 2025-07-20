@@ -89,7 +89,7 @@ export async function PUT(
     return NextResponse.json(note);
   } catch (error) {
     console.log('Using offline data due to exception');
-    // In offline mode, return updated mock note
+    // In fallback mode, return updated mock note
     const id = parseInt(params.id);
     const body: UpdateNoteRequest = await request.json();
     const mockNote = mockNotes.find(note => note.id === id);
@@ -140,7 +140,7 @@ export async function DELETE(
     return NextResponse.json({ message: 'Note deleted successfully' });
   } catch (error) {
     console.log('Using offline data due to exception');
-    // In offline mode, simulate successful deletion
+    // In fallback mode, simulate successful deletion
     const id = parseInt(params.id);
     const mockNote = mockNotes.find(note => note.id === id);
     if (mockNote) {

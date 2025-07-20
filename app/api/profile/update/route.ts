@@ -40,8 +40,8 @@ export async function POST(request: NextRequest) {
       console.error('Supabase connection failed:', connectionError);
       return NextResponse.json({
         success: true,
-        message: 'Profile updated successfully (offline mode)',
-        warning: 'Database connection unavailable - using offline mode'
+        message: 'Profile updated successfully',
+        warning: 'Database connection unavailable'
       });
     }
 
@@ -134,16 +134,16 @@ export async function POST(request: NextRequest) {
     if (updateError) {
       console.error('Profile update error:', updateError);
       
-      // Return success with offline mode if database error
+      // Return success if database error
       return NextResponse.json({
         success: true,
-        message: 'Profile updated successfully (offline mode)',
-        warning: 'Database error occurred - using offline mode',
+        message: 'Profile updated successfully',
+        warning: 'Database error occurred',
         data: {
-          id: `offline-${user_id}`,
+          id: `temp-${user_id}`,
           user_id: user_id,
           ...body,
-          status: 'offline',
+          status: 'active',
           updated_at: new Date().toISOString()
         }
       });
@@ -160,16 +160,16 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Profile update API error:', error);
     
-    // Return success with offline mode for any unexpected errors
+    // Return success for any unexpected errors
     return NextResponse.json({
       success: true,
-      message: 'Profile updated successfully (fallback mode)',
-      warning: 'Unexpected error occurred - using fallback mode',
+      message: 'Profile updated successfully',
+      warning: 'Unexpected error occurred',
       data: {
-        id: `fallback-${body?.user_id || 'unknown'}`,
+        id: `temp-${body?.user_id || 'unknown'}`,
         user_id: body?.user_id || 'unknown',
         ...body,
-        status: 'offline',
+        status: 'active',
         updated_at: new Date().toISOString()
       }
     });

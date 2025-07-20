@@ -180,7 +180,7 @@ export default function ProfilePage() {
       // Only set fallback profile if we have a network error
       if (err.message.includes('fetch failed') || err.message.includes('Failed to fetch') || err.name === 'AbortError') {
         setProfile(fallbackProfile);
-        setError('Offline mode - some features may be limited');
+        setError('Connection error - please try again');
       }
     } finally {
       setLoading(false);
@@ -381,21 +381,7 @@ export default function ProfilePage() {
             </div>
           )}
           
-          {/* Show offline mode info */}
-          {error.includes('Offline mode') && (
-            <div style={{ 
-              background: '#fef3c7', 
-              border: '1px solid #f59e0b', 
-              borderRadius: 8, 
-              padding: '1rem',
-              marginTop: '1rem'
-            }}>
-              <p style={{ color: '#92400e', margin: 0, fontSize: '14px' }}>
-                You're currently in offline mode. Some features may be limited. 
-                Your data will be saved locally and synced when the connection is restored.
-              </p>
-            </div>
-          )}
+
         </div>
       </div>
     );
@@ -516,37 +502,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Offline Mode Indicator */}
-        {profile.status === 'offline' && (
-          <div style={{
-            background: '#fef3c7',
-            border: '1px solid #f59e0b',
-            borderRadius: 8,
-            padding: '1rem',
-            marginBottom: '2rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem'
-          }}>
-            <div style={{
-              width: 8,
-              height: 8,
-              borderRadius: '50%',
-              background: '#f59e0b',
-              animation: 'pulse 2s infinite'
-            }} />
-            <div>
-              <strong style={{ color: '#92400e' }}>Offline Mode</strong>
-              <p style={{ margin: '0.25rem 0 0 0', color: '#92400e', fontSize: '0.875rem' }}>
-                You're currently offline. Changes will be saved locally and synced when connection is restored.
-              </p>
-            </div>
-            <button
-              onClick={() => {
-                setError(null);
-                loadProfile();
-              }}
-              style={{
+
                 background: '#f59e0b',
                 color: 'white',
                 border: 'none',

@@ -51,7 +51,7 @@ export async function GET() {
       return NextResponse.json({
         overview: dashboardData.overview,
         analytics: offlineDataManager.getAnalytics(),
-        warning: 'Database connection unavailable - using offline mode'
+        warning: 'Database connection unavailable'
       });
     }
 
@@ -83,7 +83,7 @@ export async function GET() {
       return NextResponse.json({
         overview: dashboardData.overview,
         analytics: offlineDataManager.getAnalytics(),
-        warning: 'Database connection unavailable - using offline mode'
+        warning: 'Database connection unavailable'
       });
     }
 
@@ -98,7 +98,7 @@ export async function GET() {
       return NextResponse.json({
         overview: dashboardData.overview,
         analytics: offlineDataManager.getAnalytics(),
-        warning: 'Database error - using offline mode'
+        warning: 'Database error'
       });
     }
 
@@ -113,7 +113,7 @@ export async function GET() {
       return NextResponse.json({
         overview: dashboardData.overview,
         analytics: offlineDataManager.getAnalytics(),
-        warning: 'Database error - using offline mode'
+        warning: 'Database error'
       });
     }
 
@@ -128,7 +128,7 @@ export async function GET() {
       return NextResponse.json({
         overview: dashboardData.overview,
         analytics: offlineDataManager.getAnalytics(),
-        warning: 'Database error - using offline mode'
+        warning: 'Database error'
       });
     }
 
@@ -240,7 +240,7 @@ export async function GET() {
     return NextResponse.json({
       overview: dashboardData.overview,
       analytics: offlineDataManager.getAnalytics(),
-      warning: 'System error - using offline mode'
+      warning: 'System error'
     });
   }
 } 

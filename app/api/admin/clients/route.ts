@@ -20,7 +20,7 @@ export async function GET() {
       }));
       return NextResponse.json({
         data,
-        warning: 'Database connection unavailable - using offline mode'
+        warning: 'Database connection unavailable'
       });
     }
 
@@ -59,7 +59,7 @@ export async function GET() {
       
       return NextResponse.json({
         data,
-        warning: 'Database connection unavailable - using offline mode'
+        warning: 'Database connection unavailable'
       });
     }
 
@@ -84,7 +84,7 @@ export async function GET() {
       
       return NextResponse.json({
         data,
-        warning: 'Database error - using offline mode'
+        warning: 'Database error'
       });
     }
 
@@ -109,7 +109,7 @@ export async function GET() {
       
       return NextResponse.json({
         data,
-        warning: 'Database error - using offline mode'
+        warning: 'Database error'
       });
     }
 
@@ -167,7 +167,7 @@ export async function GET() {
     
     return NextResponse.json({
       data,
-      warning: 'System error - using offline mode'
+      warning: 'System error'
     });
   }
 }
