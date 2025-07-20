@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { validateCSRFToken } from '@/lib/csrf';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -12,6 +13,15 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 export async function POST(request: NextRequest) {
   try {
+    // Validazione CSRF
+    const csrfValidation = validateCSRFToken(request);
+    if (!csrfValidation.valid) {
+      return NextResponse.json({ 
+        error: 'CSRF validation failed',
+        details: csrfValidation.error 
+      }, { status: 403 });
+    }
+
     // Verifica content type
     const contentType = request.headers.get('content-type');
     if (!contentType || !contentType.startsWith('multipart/form-data')) {
@@ -21,30 +31,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Ottieni token di autenticazione
-    const token = request.cookies.get('sb-access-token')?.value || 
-                  request.headers.get('authorization')?.replace('Bearer ', '');
-
-    if (!token) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-
-    // Verifica utente
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'Invalid authentication' },
-        { status: 401 }
-      );
-    }
-
     // Parsing form data
     const formData = await request.formData();
+    const user_id = formData.get('user_id') as string;
     const file = formData.get('photo') as File;
+
+    if (!user_id) {
+      return NextResponse.json(
+        { error: 'User ID is required' },
+        { status: 400 }
+      );
+    }
+
+
 
     if (!file) {
       return NextResponse.json(
@@ -83,7 +82,7 @@ export async function POST(request: NextRequest) {
 
     // Genera nome file sicuro
     const fileExtension = file.name.split('.').pop();
-    const safeFileName = `${user.id}_${Date.now()}.${fileExtension}`;
+    const safeFileName = `${user_id}_${Date.now()}.${fileExtension}`;
 
     // Upload file a Supabase Storage
     const { data: uploadData, error: uploadError } = await supabase.storage
@@ -106,14 +105,14 @@ export async function POST(request: NextRequest) {
       .from('profile-photos')
       .getPublicUrl(safeFileName);
 
-    // Aggiorna profilo utente con URL foto
+    // Aggiorna profilo utente con URL foto nella tabella clients
     const { error: updateError } = await supabase
-      .from('profiles')
+      .from('clients')
       .update({
-        avatar_url: urlData.publicUrl,
+        profile_photo: urlData.publicUrl,
         updated_at: new Date().toISOString()
       })
-      .eq('id', user.id);
+      .eq('user_id', user.id);
 
     if (updateError) {
       console.error('Profile update error:', updateError);
