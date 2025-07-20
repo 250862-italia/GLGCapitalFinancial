@@ -1,54 +1,35 @@
 "use client";
 export const dynamic = "force-dynamic";
-import { useEffect, useState } from "react";
-import { supabase } from '@/lib/supabase';
-import { fetchJSONWithCSRF } from '@/lib/csrf-client';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import PaymentMethodModal, { PaymentMethod } from '@/components/investment-packages/PaymentMethodModal';
+import { useAuth } from '@/hooks/use-auth';
+import { fetchJSONWithCSRF } from '@/lib/csrf-client';
+import PaymentMethodModal from '@/components/investment-packages/PaymentMethodModal';
+
+interface PaymentMethod {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+}
 
 export default function InvestmentsPage() {
-  const [packages, setPackages] = useState<any[]>([]);
+  const { user } = useAuth();
+  const router = useRouter();
+  const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [successMsg, setSuccessMsg] = useState("");
-  const [errorMsg, setErrorMsg] = useState("");
-  const [selectedPackage, setSelectedPackage] = useState<any | null>(null);
+  const [selectedPackage, setSelectedPackage] = useState(null);
   const [amount, setAmount] = useState("");
-  const [user, setUser] = useState<any>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [purchaseLoading, setPurchaseLoading] = useState(false);
-  const router = useRouter();
+  const [successMsg, setSuccessMsg] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
-    // Check authentication
     const checkAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         router.push('/login');
         return;
-      }
-      setUser(user);
-    };
-    checkAuth();
-  }, [router]);
-
-  useEffect(() => {
-    const fetchPackages = async () => {
-      if (!user) return;
-      
-      setLoading(true);
-      try {
-        const { data, error } = await supabase.from('packages').select('*').eq('status', 'active');
-        if (error) {
-          console.error('Error fetching packages:', error);
-          setErrorMsg('Errore nel caricamento dei pacchetti');
-        } else if (data) {
-          setPackages(data);
-        }
-      } catch (err) {
-        console.error('Error fetching packages:', err);
-        setErrorMsg('Errore nel caricamento dei pacchetti');
-      } finally {
-        setLoading(false);
       }
     };
     
@@ -57,53 +38,25 @@ export default function InvestmentsPage() {
     }
   }, [user]);
 
-  const handleInvestNow = async (pkg: any) => {
-    if (!user) {
-      router.push('/login');
-      return;
+  const fetchPackages = async () => {
+    try {
+      const response = await fetchJSONWithCSRF('/api/investments');
+      if (response.ok) {
+        const data = await response.json();
+        setPackages(data.packages || []);
+      } else {
+        console.error('Failed to fetch packages');
+      }
+    } catch (error) {
+      console.error('Error fetching packages:', error);
+    } finally {
+      setLoading(false);
     }
-    setSelectedPackage(pkg);
-    setAmount(pkg.min_investment?.toString() || "1000");
-    setSuccessMsg("");
-    setErrorMsg("");
-    setShowPaymentModal(true);
   };
 
-  const handlePaymentMethodSelected = async (paymentMethod: PaymentMethod) => {
-    if (!selectedPackage || !amount || !user) return;
-    
-    setPurchaseLoading(true);
-    setShowPaymentModal(false);
-    setSuccessMsg("");
-    setErrorMsg("");
-    
-    try {
-      // Use the proper API endpoint for investment creation
-      const response = await fetchJSONWithCSRF("/api/investments", {
-        method: "POST",
-        body: JSON.stringify({
-          userId: user.id,
-          packageId: selectedPackage.id,
-          amount: parseFloat(amount),
-          packageName: selectedPackage.name,
-          paymentMethod: paymentMethod.id
-        })
-      });
-      
-      if (response.error) {
-        throw new Error(response.error);
-      }
-      
-      setSuccessMsg(`✅ Investimento creato con successo! Controlla la tua email per le istruzioni di pagamento con ${paymentMethod.name}.`);
-      setSelectedPackage(null);
-      setAmount("");
-      
-    } catch (err: any) {
-      console.error('Purchase error:', err);
-      setErrorMsg("❌ Errore durante l'acquisto: " + (err.message || err));
-    } finally {
-      setPurchaseLoading(false);
-    }
+  const handleRequestDocumentation = (pkg: any) => {
+    // Redirect to informational request page
+    router.push('/informational-request');
   };
 
   if (!user) {
@@ -122,7 +75,7 @@ export default function InvestmentsPage() {
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Investimenti</h1>
-          <p className="text-gray-600">Scegli il pacchetto di investimento che preferisci e inizia subito</p>
+          <p className="text-gray-600">Scegli il pacchetto di investimento che preferisci e richiedi la documentazione</p>
         </div>
 
         {successMsg && (
@@ -210,42 +163,21 @@ export default function InvestmentsPage() {
                   </div>
                   
                   <button 
-                    onClick={() => handleInvestNow(pkg)}
-                    disabled={purchaseLoading}
-                    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                    onClick={() => handleRequestDocumentation(pkg)}
+                    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105"
                   >
-                    {purchaseLoading ? (
-                      <div className="flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                        Elaborazione...
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-center">
-                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                        </svg>
-                        Invest Now
-                      </div>
-                    )}
+                    <div className="flex items-center justify-center">
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      Request Documentation
+                    </div>
                   </button>
                 </div>
               </div>
             ))}
           </div>
         )}
-
-        {/* Modale selezione metodo di pagamento */}
-        <PaymentMethodModal
-          isOpen={showPaymentModal}
-          onClose={() => {
-            setShowPaymentModal(false);
-            setSelectedPackage(null);
-          }}
-          onConfirm={handlePaymentMethodSelected}
-          packageName={selectedPackage?.name || ''}
-          amount={parseFloat(amount) || 0}
-          loading={purchaseLoading}
-        />
       </div>
     </div>
   );

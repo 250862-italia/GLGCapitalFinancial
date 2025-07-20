@@ -431,6 +431,11 @@ export default function ClientDashboard() {
     }
   };
 
+  const handleRequestDocumentation = (pkg: any) => {
+    // Redirect to informational request page
+    router.push('/informational-request');
+  };
+
   // Stats calculated only on purchased investments
   const stats = {
     totalInvested: myInvestments.reduce((sum, inv) => sum + (inv.amount ?? 0), 0),
@@ -676,7 +681,7 @@ export default function ClientDashboard() {
                   </div>
                   
                   <button
-                    onClick={() => handleBuy(pkg)}
+                    onClick={() => handleRequestDocumentation(pkg)}
                     style={{
                       width: '100%',
                       background: '#059669',
@@ -696,7 +701,7 @@ export default function ClientDashboard() {
                       e.currentTarget.style.background = '#059669';
                     }}
                   >
-                    Invest Now
+                    Request Documentation
                   </button>
                 </div>
               ))}
