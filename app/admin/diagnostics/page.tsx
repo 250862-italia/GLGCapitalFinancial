@@ -410,7 +410,9 @@ export default function AdminDiagnosticsPage() {
                   </div>
                   {log.details && (
                     <div style={{ fontSize: '14px', color: '#6b7280', fontStyle: 'italic' }}>
-                      {log.details}
+                      {typeof log.details === 'string' 
+                        ? log.details 
+                        : JSON.stringify(log.details)}
                     </div>
                   )}
                 </div>

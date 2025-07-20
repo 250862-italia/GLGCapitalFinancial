@@ -168,7 +168,9 @@ export default function EmailDebugPage() {
                     <div className="ml-8">
                       {testData.error && (
                         <div className="text-sm mb-2">
-                          <strong>Error:</strong> {testData.error}
+                          <strong>Error:</strong> {typeof testData.error === 'string' 
+                            ? testData.error 
+                            : JSON.stringify(testData.error)}
                         </div>
                       )}
                       
