@@ -249,7 +249,7 @@ export default function ProfilePage() {
         setProfile(prev => prev ? { ...prev, [fieldName]: editForm[fieldName] } : null);
         setEditingField(null);
         setEditForm({});
-        setSuccessMessage(`${fieldName.replace(/_/g, ' ')} aggiornato con successo!`);
+        setSuccessMessage(`${fieldName.replace(/_/g, ' ')} updated successfully!`);
         setTimeout(() => setSuccessMessage(null), 3000);
       } else {
         const errorData = await response.json().catch(() => ({}));
@@ -257,7 +257,7 @@ export default function ProfilePage() {
       }
     } catch (error) {
       console.error('Error updating field:', error);
-      setError(`Errore nell'aggiornamento: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`);
+      setError(`Update error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setSaving(false);
     }
@@ -283,7 +283,7 @@ export default function ProfilePage() {
       if (response.ok) {
         const result = await response.json();
         setProfile(prev => prev ? { ...prev, profile_photo: result.photo_url } : null);
-        setSuccessMessage('Foto profilo aggiornata con successo!');
+        setSuccessMessage('Profile photo updated successfully!');
         setTimeout(() => setSuccessMessage(null), 3000);
       } else {
         const errorData = await response.json().catch(() => ({}));
@@ -291,7 +291,7 @@ export default function ProfilePage() {
       }
     } catch (error) {
       console.error('Error uploading photo:', error);
-      setError(`Errore nel caricamento della foto: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`);
+      setError(`Photo upload error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setUploadingPhoto(false);
     }
@@ -308,26 +308,26 @@ export default function ProfilePage() {
   };
 
   const formatDateForDisplay = (dateString: string | null | undefined) => {
-    if (!dateString) return 'Non specificato';
+    if (!dateString) return 'Not specified';
     try {
       const date = new Date(dateString);
-      return date.toLocaleDateString('it-IT');
+      return date.toLocaleDateString('en-US');
     } catch {
-      return 'Data non valida';
+      return 'Invalid date';
     }
   };
 
   const formatCurrency = (value: number | null | undefined) => {
-    if (value === null || value === undefined) return 'Non specificato';
-    return new Intl.NumberFormat('it-IT', {
+    if (value === null || value === undefined) return 'Not specified';
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'EUR'
+      currency: 'USD'
     }).format(value);
   };
 
   const formatNumber = (value: number | null | undefined) => {
-    if (value === null || value === undefined) return 'Non specificato';
-    return new Intl.NumberFormat('it-IT').format(value);
+    if (value === null || value === undefined) return 'Not specified';
+    return new Intl.NumberFormat('en-US').format(value);
   };
 
   if (!user) {
@@ -341,7 +341,7 @@ export default function ProfilePage() {
       }}>
         <div style={{ textAlign: 'center' }}>
           <Loader2 size={48} className="animate-spin mx-auto mb-4" />
-          <p>Caricamento...</p>
+          <p>Loading...</p>
         </div>
       </div>
     );
@@ -358,7 +358,7 @@ export default function ProfilePage() {
       }}>
         <div style={{ textAlign: 'center' }}>
           <Loader2 size={48} className="animate-spin mx-auto mb-4" />
-          <p>Caricamento profilo...</p>
+          <p>Loading profile...</p>
         </div>
       </div>
     );
@@ -376,7 +376,7 @@ export default function ProfilePage() {
         <div style={{ textAlign: 'center' }}>
           <AlertCircle size={48} className="mx-auto mb-4 text-red-500" />
           <h2 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '1rem' }}>
-            Errore nel caricamento del profilo
+            Error loading profile
           </h2>
           {error && (
             <p style={{ color: '#6b7280', marginBottom: '1rem' }}>{error}</p>
@@ -394,7 +394,7 @@ export default function ProfilePage() {
               cursor: 'pointer'
             }}
           >
-            Riprova
+            Try Again
           </button>
         </div>
       </div>
@@ -437,7 +437,7 @@ export default function ProfilePage() {
             color: '#1f2937', 
             margin: 0 
           }}>
-            Profilo Utente
+            User Profile
           </h1>
         </div>
 
@@ -546,7 +546,7 @@ export default function ProfilePage() {
                   fontSize: '0.875rem'
                 }}>
                   <Loader2 size={16} className="animate-spin" />
-                  Caricamento...
+                  Uploading...
                 </div>
               )}
               <h2 style={{ 
@@ -592,7 +592,7 @@ export default function ProfilePage() {
                   color: '#1f2937', 
                   margin: 0 
                 }}>
-                  Informazioni Personali
+                  Personal Information
                 </h3>
               </div>
               <div style={{ 
@@ -601,7 +601,7 @@ export default function ProfilePage() {
                 gap: '1rem' 
               }}>
                 <InlineEditableField
-                  label="Nome"
+                  label="First Name"
                   value={profile.first_name}
                   fieldName="first_name"
                   editing={editingField === 'first_name'}
@@ -612,7 +612,7 @@ export default function ProfilePage() {
                   icon={<User size={16} />}
                 />
                 <InlineEditableField
-                  label="Cognome"
+                  label="Last Name"
                   value={profile.last_name}
                   fieldName="last_name"
                   editing={editingField === 'last_name'}
@@ -635,7 +635,7 @@ export default function ProfilePage() {
                   type="email"
                 />
                 <InlineEditableField
-                  label="Telefono"
+                  label="Phone"
                   value={profile.phone}
                   fieldName="phone"
                   editing={editingField === 'phone'}
@@ -646,7 +646,7 @@ export default function ProfilePage() {
                   icon={<Phone size={16} />}
                 />
                 <InlineEditableField
-                  label="Data di Nascita"
+                  label="Date of Birth"
                   value={formatDateForDisplay(profile.date_of_birth)}
                   fieldName="date_of_birth"
                   editing={editingField === 'date_of_birth'}
@@ -658,7 +658,7 @@ export default function ProfilePage() {
                   type="date"
                 />
                 <InlineEditableField
-                  label="Nazionalità"
+                  label="Nationality"
                   value={profile.nationality}
                   fieldName="nationality"
                   editing={editingField === 'nationality'}
@@ -669,7 +669,7 @@ export default function ProfilePage() {
                   icon={<Globe size={16} />}
                 />
                 <InlineEditableField
-                  label="Azienda"
+                  label="Company"
                   value={profile.company}
                   fieldName="company"
                   editing={editingField === 'company'}
@@ -680,7 +680,7 @@ export default function ProfilePage() {
                   icon={<Building size={16} />}
                 />
                 <InlineEditableField
-                  label="Posizione"
+                  label="Position"
                   value={profile.position}
                   fieldName="position"
                   editing={editingField === 'position'}
@@ -713,7 +713,7 @@ export default function ProfilePage() {
                   color: '#1f2937', 
                   margin: 0 
                 }}>
-                  Indirizzo
+                  Address
                 </h3>
               </div>
               <div style={{ 
@@ -722,7 +722,7 @@ export default function ProfilePage() {
                 gap: '1rem' 
               }}>
                 <InlineEditableField
-                  label="Indirizzo"
+                  label="Address"
                   value={profile.address}
                   fieldName="address"
                   editing={editingField === 'address'}
@@ -733,7 +733,7 @@ export default function ProfilePage() {
                   icon={<MapPin size={16} />}
                 />
                 <InlineEditableField
-                  label="Città"
+                  label="City"
                   value={profile.city}
                   fieldName="city"
                   editing={editingField === 'city'}
@@ -744,7 +744,7 @@ export default function ProfilePage() {
                   icon={<MapPin size={16} />}
                 />
                 <InlineEditableField
-                  label="Paese"
+                  label="Country"
                   value={profile.country}
                   fieldName="country"
                   editing={editingField === 'country'}
@@ -755,7 +755,7 @@ export default function ProfilePage() {
                   icon={<Globe size={16} />}
                 />
                 <InlineEditableField
-                  label="CAP"
+                  label="Postal Code"
                   value={profile.postal_code}
                   fieldName="postal_code"
                   editing={editingField === 'postal_code'}
@@ -788,7 +788,7 @@ export default function ProfilePage() {
                   color: '#1f2937', 
                   margin: 0 
                 }}>
-                  Informazioni Bancarie
+                  Banking Information
                 </h3>
               </div>
               <div style={{ 
@@ -819,7 +819,7 @@ export default function ProfilePage() {
                   icon={<CreditCard size={16} />}
                 />
                 <InlineEditableField
-                  label="Intestatario"
+                  label="Account Holder"
                   value={profile.account_holder}
                   fieldName="account_holder"
                   editing={editingField === 'account_holder'}
@@ -830,7 +830,7 @@ export default function ProfilePage() {
                   icon={<User size={16} />}
                 />
                 <InlineEditableField
-                  label="Wallet USDT"
+                  label="USDT Wallet"
                   value={profile.usdt_wallet}
                   fieldName="usdt_wallet"
                   editing={editingField === 'usdt_wallet'}
@@ -863,7 +863,7 @@ export default function ProfilePage() {
                   color: '#1f2937', 
                   margin: 0 
                 }}>
-                  Informazioni Finanziarie
+                  Financial Information
                 </h3>
               </div>
               <div style={{ 
@@ -872,7 +872,7 @@ export default function ProfilePage() {
                 gap: '1rem' 
               }}>
                 <InlineEditableField
-                  label="Reddito Annuale (EUR)"
+                  label="Annual Income (USD)"
                   value={formatCurrency(profile.annual_income)}
                   fieldName="annual_income"
                   editing={editingField === 'annual_income'}
@@ -884,7 +884,7 @@ export default function ProfilePage() {
                   type="number"
                 />
                 <InlineEditableField
-                  label="Patrimonio Netto (EUR)"
+                  label="Net Worth (USD)"
                   value={formatCurrency(profile.net_worth)}
                   fieldName="net_worth"
                   editing={editingField === 'net_worth'}
@@ -896,7 +896,7 @@ export default function ProfilePage() {
                   type="number"
                 />
                 <InlineEditableField
-                  label="Budget Mensile Investimenti (EUR)"
+                  label="Monthly Investment Budget (USD)"
                   value={formatCurrency(profile.monthly_investment_budget)}
                   fieldName="monthly_investment_budget"
                   editing={editingField === 'monthly_investment_budget'}
@@ -908,7 +908,7 @@ export default function ProfilePage() {
                   type="number"
                 />
                 <InlineEditableField
-                  label="Fondo Emergenza (EUR)"
+                  label="Emergency Fund (USD)"
                   value={formatCurrency(profile.emergency_fund)}
                   fieldName="emergency_fund"
                   editing={editingField === 'emergency_fund'}
@@ -920,7 +920,7 @@ export default function ProfilePage() {
                   type="number"
                 />
                 <InlineEditableField
-                  label="Debito Totale (EUR)"
+                  label="Total Debt (USD)"
                   value={formatCurrency(profile.debt_amount)}
                   fieldName="debt_amount"
                   editing={editingField === 'debt_amount'}
@@ -932,7 +932,7 @@ export default function ProfilePage() {
                   type="number"
                 />
                 <InlineEditableField
-                  label="Punteggio di Credito"
+                  label="Credit Score"
                   value={formatNumber(profile.credit_score)}
                   fieldName="credit_score"
                   editing={editingField === 'credit_score'}
@@ -966,7 +966,7 @@ export default function ProfilePage() {
                   color: '#1f2937', 
                   margin: 0 
                 }}>
-                  Lavoro e Profilo di Investimento
+                  Employment & Investment Profile
                 </h3>
               </div>
               <div style={{ 
@@ -975,7 +975,7 @@ export default function ProfilePage() {
                 gap: '1rem' 
               }}>
                 <InlineEditableField
-                  label="Stato Occupazionale"
+                  label="Employment Status"
                   value={profile.employment_status}
                   fieldName="employment_status"
                   editing={editingField === 'employment_status'}
@@ -986,7 +986,7 @@ export default function ProfilePage() {
                   icon={<Building size={16} />}
                 />
                 <InlineEditableField
-                  label="Nome Datore di Lavoro"
+                  label="Employer Name"
                   value={profile.employer_name}
                   fieldName="employer_name"
                   editing={editingField === 'employer_name'}
@@ -997,7 +997,7 @@ export default function ProfilePage() {
                   icon={<Building size={16} />}
                 />
                 <InlineEditableField
-                  label="Titolo di Lavoro"
+                  label="Job Title"
                   value={profile.job_title}
                   fieldName="job_title"
                   editing={editingField === 'job_title'}
@@ -1008,7 +1008,7 @@ export default function ProfilePage() {
                   icon={<User size={16} />}
                 />
                 <InlineEditableField
-                  label="Anni di Impiego"
+                  label="Years Employed"
                   value={formatNumber(profile.years_employed)}
                   fieldName="years_employed"
                   editing={editingField === 'years_employed'}
@@ -1020,7 +1020,7 @@ export default function ProfilePage() {
                   type="number"
                 />
                 <InlineEditableField
-                  label="Esperienza di Investimento"
+                  label="Investment Experience"
                   value={profile.investment_experience}
                   fieldName="investment_experience"
                   editing={editingField === 'investment_experience'}
@@ -1031,7 +1031,7 @@ export default function ProfilePage() {
                   icon={<FileText size={16} />}
                 />
                 <InlineEditableField
-                  label="Tolleranza al Rischio"
+                  label="Risk Tolerance"
                   value={profile.risk_tolerance}
                   fieldName="risk_tolerance"
                   editing={editingField === 'risk_tolerance'}
@@ -1042,7 +1042,7 @@ export default function ProfilePage() {
                   icon={<Shield size={16} />}
                 />
                 <InlineEditableField
-                  label="Fonte dei Fondi"
+                  label="Source of Funds"
                   value={profile.source_of_funds}
                   fieldName="source_of_funds"
                   editing={editingField === 'source_of_funds'}
@@ -1053,7 +1053,7 @@ export default function ProfilePage() {
                   icon={<Banknote size={16} />}
                 />
                 <InlineEditableField
-                  label="Residenza Fiscale"
+                  label="Tax Residency"
                   value={profile.tax_residency}
                   fieldName="tax_residency"
                   editing={editingField === 'tax_residency'}
@@ -1064,7 +1064,7 @@ export default function ProfilePage() {
                   icon={<Globe size={16} />}
                 />
                 <InlineEditableField
-                  label="Codice Fiscale"
+                  label="Tax ID"
                   value={profile.tax_id}
                   fieldName="tax_id"
                   editing={editingField === 'tax_id'}
@@ -1129,7 +1129,7 @@ function InlineEditableField({
     }
   };
 
-  const displayValue = value || 'Non specificato';
+  const displayValue = value || 'Not specified';
 
   return (
     <div style={{ 
