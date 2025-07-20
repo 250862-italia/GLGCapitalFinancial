@@ -4,7 +4,7 @@
 -- 1. Create packages table
 CREATE TABLE IF NOT EXISTS packages (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NOT NULL UNIQUE,
     description TEXT,
     type VARCHAR(100) NOT NULL,
     min_investment DECIMAL(15,2) NOT NULL,

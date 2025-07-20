@@ -1,68 +1,3 @@
-# 🔧 Guida per Risolvere i Problemi di Acquisto Investimenti
-
-## Problema Identificato
-
-Dai log dell'applicazione, sono stati rilevati i seguenti errori durante l'acquisto di investimenti:
-
-1. **Errore di constraint su `expected_return`**: `null value in column "expected_return" of relation "investments" violates not-null constraint`
-2. **Errore di constraint su `status`**: `new row for relation "investments" violates check constraint "investments_status_check"`
-
-## Soluzione
-
-### Passo 1: Eseguire lo Script SQL Completo in Supabase
-
-Vai al tuo **Supabase Dashboard** → **SQL Editor** e esegui questo script completo:
-
-#### 1.1 Script Completo per Risolvere Tutti i Problemi
-```sql
--- Copia e incolla il contenuto di fix-investment-purchase-complete.sql
-```
-
-**Questo script risolve automaticamente:**
-- ✅ Problemi di constraint su `expected_return`
-- ✅ Problemi di constraint su `status`
-- ✅ Creazione tabella `packages` con dati di esempio
-- ✅ Creazione tabella `clients` se mancante
-- ✅ Configurazione RLS policies
-- ✅ Creazione indici per performance
-- ✅ Aggiornamento record esistenti
-
-### Passo 2: Diagnostica Automatica (Opzionale)
-
-Se vuoi verificare lo stato del database prima o dopo l'esecuzione dello script:
-
-```bash
-# Esegui lo script di diagnostica
-node diagnose-investment-issues.js
-```
-
-Questo script verificherà:
-- ✅ Struttura della tabella `investments`
-- ✅ Constraint e policy esistenti
-- ✅ Presenza di dati nelle tabelle `packages` e `clients`
-- ✅ Test di inserimento investimento
-- ✅ Identificazione di problemi specifici
-
-### Passo 3: Verificare la Configurazione
-
-Dopo aver eseguito gli script SQL, verifica che:
-
-1. **Tabella `packages`** esista e contenga dati
-2. **Tabella `investments`** abbia i constraint corretti
-3. **Tabella `clients`** esista e contenga i profili utente
-
-### Passo 4: Testare l'Acquisto
-
-1. Vai su `http://localhost:3000/investments`
-2. Seleziona un pacchetto di investimento
-3. Clicca su "Invest Now"
-4. Seleziona il metodo di pagamento
-5. Conferma l'acquisto
-
-## Script SQL da Eseguire
-
-### Script 1: fix-investment-purchase-complete.sql
-```sql
 -- Complete fix for investment purchase issues
 -- Run this in Supabase SQL Editor
 
@@ -254,45 +189,36 @@ WHERE table_name = 'investments'
 AND table_schema = 'public';
 
 -- =====================================================
+-- 8. TEST DATA INSERTION
+-- =====================================================
+
+-- Test investment insertion (commented out - uncomment to test)
+/*
+INSERT INTO investments (
+    user_id, 
+    package_id, 
+    amount, 
+    status, 
+    expected_return, 
+    payment_method,
+    notes,
+    created_at,
+    updated_at
+) VALUES (
+    '3a35e71b-c7e7-4e5d-84a9-d6ce2fe4776f',
+    (SELECT id FROM packages WHERE name = 'GLG Balanced Growth' LIMIT 1),
+    5000.00,
+    'pending',
+    1.8,
+    'bank_transfer',
+    'Test investment after fix',
+    NOW(),
+    NOW()
+);
+*/
+
+-- =====================================================
 -- SUCCESS MESSAGE
 -- =====================================================
 
-SELECT '✅ Investment purchase system fixed successfully!' as status;
-```
-
-## Risoluzione Errori Specifici
-
-### Errore: "null value in column expected_return violates not-null constraint"
-- **Causa**: La colonna `expected_return` è definita come NOT NULL ma non viene fornito un valore
-- **Soluzione**: Lo script rende la colonna nullable e imposta un valore di default
-
-### Errore: "new row violates check constraint investments_status_check"
-- **Causa**: Il valore dello status non è tra quelli permessi dal constraint
-- **Soluzione**: Lo script aggiorna il constraint per includere tutti i valori necessari
-
-### Errore: "42P10: there is no unique or exclusion constraint matching the ON CONFLICT specification"
-- **Causa**: Si usa `ON CONFLICT` su una colonna senza constraint univoco
-- **Soluzione**: Lo script usa `WHERE NOT EXISTS` invece di `ON CONFLICT`
-
-### Errore: "RLS policy violation"
-- **Causa**: Le policy RLS non permettono l'operazione richiesta
-- **Soluzione**: Lo script crea le policy RLS corrette per tutte le tabelle
-
-## Verifica Finale
-
-Dopo aver eseguito lo script, verifica che:
-
-1. ✅ L'acquisto di investimenti funzioni senza errori
-2. ✅ I pacchetti di investimento siano visibili nella pagina `/investments`
-3. ✅ Le email di notifica vengano inviate correttamente
-4. ✅ Gli investimenti appaiano nel dashboard admin
-5. ✅ Gli investimenti appaiano nel dashboard cliente
-
-## Supporto
-
-Se continui ad avere problemi dopo aver eseguito lo script:
-
-1. Esegui `node diagnose-investment-issues.js` per una diagnostica dettagliata
-2. Controlla i log dell'applicazione per errori specifici
-3. Verifica che tutte le tabelle siano state create correttamente
-4. Controlla che le policy RLS siano attive 
+SELECT '✅ Investment purchase system fixed successfully!' as status; 
