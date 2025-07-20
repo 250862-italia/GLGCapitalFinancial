@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { verifyAdminAuth } from '@/lib/admin-auth';
+import { verifyAdmin } from '@/lib/admin-auth';
 
 export async function PUT(request: NextRequest) {
   try {
     // Verify admin authentication
-    const authResult = await verifyAdminAuth(request);
+    const authResult = await verifyAdmin(request);
     if (!authResult.success) {
       return NextResponse.json(
         { error: 'Unauthorized' },
