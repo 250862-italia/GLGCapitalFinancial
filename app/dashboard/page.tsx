@@ -79,38 +79,10 @@ export default function ClientDashboard() {
         return;
       }
 
-      // If real-time is not connected, use mock data
+      // If real-time is not connected, use empty investments array to allow new purchases
       if (!realtimeConnected) {
-        console.log('Using mock data due to Supabase connection issues');
-        const mockInvestments: Investment[] = [
-          {
-            id: 'mock-1',
-            packageName: 'Premium Investment Package',
-            amount: 5000,
-            dailyReturn: 1.2,
-            duration: 30,
-            startDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-            endDate: new Date(Date.now() + 23 * 24 * 60 * 60 * 1000).toISOString(),
-            status: 'active',
-            totalEarned: 420,
-            dailyEarnings: 60,
-            monthlyEarnings: 1800
-          },
-          {
-            id: 'mock-2',
-            packageName: 'Gold Investment Package',
-            amount: 10000,
-            dailyReturn: 1.5,
-            duration: 60,
-            startDate: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-            endDate: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString(),
-            status: 'active',
-            totalEarned: 2250,
-            dailyEarnings: 150,
-            monthlyEarnings: 4500
-          }
-        ];
-        setMyInvestments(mockInvestments);
+        console.log('Using empty investments array due to Supabase connection issues');
+        setMyInvestments([]);
         setIsLoading(false);
         return;
       }
@@ -705,21 +677,26 @@ export default function ClientDashboard() {
                   
                   <button
                     onClick={() => handleBuy(pkg)}
-                    disabled={myInvestments.some(inv => inv.packageName === pkg.name)}
                     style={{
                       width: '100%',
-                      background: myInvestments.some(inv => inv.packageName === pkg.name) ? '#d1d5db' : '#059669',
+                      background: '#059669',
                       color: 'white',
                       border: 'none',
                       borderRadius: '8px',
                       padding: '0.75rem',
                       fontSize: '1rem',
                       fontWeight: 600,
-                      cursor: myInvestments.some(inv => inv.packageName === pkg.name) ? 'not-allowed' : 'pointer',
+                      cursor: 'pointer',
                       transition: 'background 0.2s ease'
                     }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = '#047857';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = '#059669';
+                    }}
                   >
-                    {myInvestments.some(inv => inv.packageName === pkg.name) ? 'Already Invested' : 'Invest Now'}
+                    Invest Now
                   </button>
                 </div>
               ))}
