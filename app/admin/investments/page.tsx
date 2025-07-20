@@ -209,7 +209,7 @@ export default function AdminInvestmentsPage() {
         />
         <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{ flex: 1, padding: "0.75rem", border: "1px solid #d1d5db", borderRadius: 8, fontSize: 16 }}>
           <option value="">Tutti gli stati</option>
-          <option value="pending_payment">In Attesa Pagamento</option>
+          <option value="pending">In Attesa Pagamento</option>
           <option value="active">Attivo</option>
           <option value="completed">Completato</option>
           <option value="cancelled">Cancellato</option>
@@ -263,13 +263,13 @@ export default function AdminInvestmentsPage() {
                       fontSize: '12px',
                       fontWeight: '600',
                       background: inv.status === 'active' ? '#dcfce7' : 
-                                 inv.status === 'pending_payment' ? '#fef3c7' : 
+                                 inv.status === 'pending' ? '#fef3c7' : 
                                  inv.status === 'completed' ? '#dbeafe' : '#fee2e2',
                       color: inv.status === 'active' ? '#166534' : 
-                             inv.status === 'pending_payment' ? '#92400e' : 
+                             inv.status === 'pending' ? '#92400e' : 
                              inv.status === 'completed' ? '#1e40af' : '#dc2626'
                     }}>
-                      {inv.status === 'pending_payment' ? 'In Attesa Pagamento' :
+                      {inv.status === 'pending' ? 'In Attesa Pagamento' :
                        inv.status === 'active' ? 'Attivo' :
                        inv.status === 'completed' ? 'Completato' :
                        inv.status === 'cancelled' ? 'Cancellato' : inv.status}
@@ -277,7 +277,7 @@ export default function AdminInvestmentsPage() {
                   </td>
                   <td style={{ padding: "1rem", textAlign: "center" }}>
                     <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center" }}>
-                      {inv.status === 'pending_payment' && (
+                      {inv.status === 'pending' && (
                         <>
                           <button 
                             onClick={() => inv.id && handleChangeStatus(inv.id, 'active')} 

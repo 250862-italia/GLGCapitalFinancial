@@ -91,9 +91,8 @@ export async function POST(request: NextRequest) {
         user_id: userId,
         package_id: packageId,
         amount: parseFloat(amount),
-        status: 'pending_payment',
-        start_date: new Date().toISOString().split('T')[0],
-        payment_method: 'wire_transfer',
+        status: 'pending',
+        expected_return: 1.8, // Default daily return
         notes: `Investment request for ${packageName} package`
       })
       .select()
