@@ -75,15 +75,18 @@ export default function LoginPage() {
             router.push('/dashboard');
           }, 1000);
         } else {
-          setError(loginResult.error || 'Login failed');
+          const errorMessage = typeof loginResult.error === 'string' ? loginResult.error : JSON.stringify(loginResult.error) || 'Login failed';
+          setError(errorMessage);
         }
-      } else {
-        console.log('❌ Frontend: Login fallito, imposto errore:', data.error);
-        setError(data.error || 'Login failed');
-      }
+              } else {
+          console.log('❌ Frontend: Login fallito, imposto errore:', data.error);
+          const errorMessage = typeof data.error === 'string' ? data.error : JSON.stringify(data.error) || 'Login failed';
+          setError(errorMessage);
+        }
     } catch (err) {
       console.error('❌ Frontend: Errore durante il login:', err);
-      setError('Network error. Please try again.');
+      const errorMessage = typeof err === 'string' ? err : err?.message || err?.error || 'Network error. Please try again.';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -139,7 +142,7 @@ export default function LoginPage() {
             color: '#dc2626'
           }}>
             <AlertCircle size={20} />
-            {error}
+            {typeof error === 'string' ? error : JSON.stringify(error)}
           </div>
         )}
 

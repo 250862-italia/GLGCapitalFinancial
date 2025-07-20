@@ -37,11 +37,13 @@ export default function AdminLoginPage() {
         localStorage.setItem("admin_token", data.session.access_token);
         router.push("/admin");
       } else {
-        setError(data.error || "Login failed");
+        const errorMessage = typeof data.error === 'string' ? data.error : JSON.stringify(data.error) || "Login failed";
+        setError(errorMessage);
       }
     } catch (error) {
       console.error('Admin login error:', error);
-      setError("Network error. Please try again.");
+      const errorMessage = typeof error === 'string' ? error : error?.message || error?.error || "Network error. Please try again.";
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -51,7 +53,7 @@ export default function AdminLoginPage() {
     <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f9fafb" }}>
       <form onSubmit={handleLogin} style={{ background: "#fff", padding: 32, borderRadius: 12, boxShadow: "0 4px 24px rgba(10,37,64,0.10)", minWidth: 320 }}>
         <h1 style={{ fontSize: 24, fontWeight: 800, marginBottom: 24, textAlign: "center" }}>Admin Console Login</h1>
-        {error && <div style={{ color: "#dc2626", marginBottom: 16 }}>{error}</div>}
+        {error && <div style={{ color: "#dc2626", marginBottom: 16 }}>{typeof error === 'string' ? error : JSON.stringify(error)}</div>}
         <div style={{ marginBottom: 16 }}>
           <label style={{ display: "block", marginBottom: 4 }}>Email</label>
           <input 

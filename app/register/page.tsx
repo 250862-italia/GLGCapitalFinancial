@@ -110,11 +110,13 @@ export default function RegisterPage() {
         }, 3000);
       } else {
         console.log('❌ Frontend: Registrazione fallita, imposto errore:', data.error);
-        setError(data.error || 'Registration failed');
+        const errorMessage = typeof data.error === 'string' ? data.error : JSON.stringify(data.error) || 'Registration failed';
+        setError(errorMessage);
       }
     } catch (err) {
       console.error('❌ Frontend: Errore durante la registrazione:', err);
-      setError('Network error. Please try again.');
+      const errorMessage = typeof err === 'string' ? err : err?.message || err?.error || 'Network error. Please try again.';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -171,7 +173,7 @@ export default function RegisterPage() {
             color: '#dc2626'
           }}>
             <AlertCircle size={20} />
-            {error}
+            {typeof error === 'string' ? error : JSON.stringify(error)}
           </div>
         )}
 
