@@ -77,21 +77,38 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       console.error('❌ Errore autenticazione:', authError);
       performanceMonitor.end('login_user', startTime);
       
+      // Restituisci errori di autenticazione appropriati invece di lanciare eccezioni
       if (authError.message.includes('Invalid login credentials')) {
-        throw new Error('Credenziali non valide. Verifica email e password.');
+        return NextResponse.json({
+          success: false,
+          error: 'Credenziali non valide. Verifica email e password.',
+          code: 'INVALID_CREDENTIALS'
+        }, { status: 401 });
       }
       
       if (authError.message.includes('Email not confirmed')) {
-        throw new Error('Email non confermata. Controlla la tua casella email.');
+        return NextResponse.json({
+          success: false,
+          error: 'Email non confermata. Controlla la tua casella email.',
+          code: 'EMAIL_NOT_CONFIRMED'
+        }, { status: 403 });
       }
       
-      throw new Error('Errore durante l\'accesso. Riprova più tardi.');
+      return NextResponse.json({
+        success: false,
+        error: 'Errore durante l\'accesso. Riprova più tardi.',
+        code: 'AUTH_ERROR'
+      }, { status: 500 });
     }
 
     if (!authData?.user) {
       console.error('❌ Nessun utente autenticato');
       performanceMonitor.end('login_user', startTime);
-      throw new Error('Errore durante l\'autenticazione');
+      return NextResponse.json({
+        success: false,
+        error: 'Errore durante l\'autenticazione',
+        code: 'AUTHENTICATION_FAILED'
+      }, { status: 401 });
     }
 
     console.log('✅ Utente autenticato:', authData.user.id);
