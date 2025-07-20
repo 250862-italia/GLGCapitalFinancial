@@ -118,7 +118,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             GLG Capital Group - Admin Panel
           </div>
           <button
-            onClick={() => router.push('/admin')}
+            onClick={() => {
+              console.log('🔘 Return to Dashboard button clicked!');
+              router.push('/admin');
+            }}
             style={{
               background: '#059669',
               color: 'white',
@@ -131,7 +134,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem',
-              transition: 'background-color 0.2s'
+              transition: 'background-color 0.2s',
+              position: 'relative',
+              zIndex: 1000,
+              pointerEvents: 'auto'
             }}
             onMouseOver={(e) => e.currentTarget.style.background = '#047857'}
             onMouseOut={(e) => e.currentTarget.style.background = '#059669'}
