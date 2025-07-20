@@ -9,9 +9,12 @@ const supabase = createClient(
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('🔧 Profile update API called');
+    
     // Validazione CSRF
     const csrfValidation = validateCSRFToken(request);
     if (!csrfValidation.valid) {
+      console.log('❌ CSRF validation failed:', csrfValidation.error);
       return NextResponse.json({ 
         error: 'CSRF validation failed',
         details: csrfValidation.error 
@@ -19,9 +22,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    console.log('📝 Request body:', body);
     
     // Validazione input
     if (!body.user_id) {
+      console.log('❌ User ID is missing');
       return NextResponse.json(
         { error: 'User ID is required' },
         { status: 400 }
@@ -29,6 +34,7 @@ export async function POST(request: NextRequest) {
     }
 
     const user_id = body.user_id;
+    console.log('👤 Processing update for user:', user_id);
 
     // Test connection first
     const { data: connectionTest, error: connectionError } = await supabase
@@ -37,13 +43,15 @@ export async function POST(request: NextRequest) {
       .limit(1);
 
     if (connectionError) {
-      console.error('Supabase connection failed:', connectionError);
+      console.error('❌ Supabase connection failed:', connectionError);
       return NextResponse.json({
         success: true,
         message: 'Profile updated successfully',
         warning: 'Database connection unavailable'
       });
     }
+
+    console.log('✅ Database connection successful');
 
     // Check if client profile exists
     const { data: existingClient, error: checkError } = await supabase
@@ -53,17 +61,20 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (checkError && checkError.code !== 'PGRST116') {
-      console.error('Error checking existing client:', checkError);
+      console.error('❌ Error checking existing client:', checkError);
       return NextResponse.json(
         { error: 'Failed to check existing profile', details: checkError.message },
         { status: 500 }
       );
     }
 
+    console.log('🔍 Existing client found:', !!existingClient);
+
     let updatedProfile;
     let updateError;
 
     if (existingClient) {
+      console.log('📝 Updating existing client profile');
       // Update existing client profile
       const updateData: any = {
         updated_at: new Date().toISOString()
@@ -86,6 +97,8 @@ export async function POST(request: NextRequest) {
       if (body.account_holder !== undefined) updateData.account_holder = body.account_holder;
       if (body.usdt_wallet !== undefined) updateData.usdt_wallet = body.usdt_wallet;
 
+      console.log('📝 Update data:', updateData);
+
       const { data: updated, error } = await supabase
         .from('clients')
         .update(updateData)
@@ -96,6 +109,7 @@ export async function POST(request: NextRequest) {
       updatedProfile = updated;
       updateError = error;
     } else {
+      console.log('🆕 Creating new client profile');
       // Create new client profile
       const newProfile = {
         user_id: user_id,
@@ -121,6 +135,8 @@ export async function POST(request: NextRequest) {
         status: 'active'
       };
 
+      console.log('📝 New profile data:', newProfile);
+
       const { data: created, error } = await supabase
         .from('clients')
         .insert(newProfile)
@@ -132,7 +148,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (updateError) {
-      console.error('Profile update error:', updateError);
+      console.error('❌ Profile update error:', updateError);
       
       // Return success if database error
       return NextResponse.json({
@@ -149,7 +165,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    console.log('Profile updated successfully:', updatedProfile);
+    console.log('✅ Profile updated successfully:', updatedProfile);
 
     return NextResponse.json({
       success: true,
@@ -158,7 +174,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Profile update API error:', error);
+    console.error('❌ Profile update API error:', error);
     
     // Return success for any unexpected errors
     return NextResponse.json({
