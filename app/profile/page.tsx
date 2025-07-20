@@ -47,6 +47,24 @@ interface ClientProfile {
   bic?: string;
   account_holder?: string;
   usdt_wallet?: string;
+  // Financial Information fields
+  annual_income?: number;
+  net_worth?: number;
+  investment_experience?: string;
+  risk_tolerance?: string;
+  investment_goals?: any;
+  preferred_investment_types?: any;
+  monthly_investment_budget?: number;
+  emergency_fund?: number;
+  debt_amount?: number;
+  credit_score?: number;
+  employment_status?: string;
+  employer_name?: string;
+  job_title?: string;
+  years_employed?: number;
+  source_of_funds?: string;
+  tax_residency?: string;
+  tax_id?: string;
   status: string;
   created_at: string;
   updated_at: string;
@@ -172,6 +190,24 @@ export default function ProfilePage() {
         bic: '',
         account_holder: '',
         usdt_wallet: '',
+        // Financial Information fields
+        annual_income: 0,
+        net_worth: 0,
+        investment_experience: 'beginner',
+        risk_tolerance: 'medium',
+        investment_goals: {},
+        preferred_investment_types: [],
+        monthly_investment_budget: 0,
+        emergency_fund: 0,
+        debt_amount: 0,
+        credit_score: 0,
+        employment_status: 'employed',
+        employer_name: '',
+        job_title: '',
+        years_employed: 0,
+        source_of_funds: 'employment',
+        tax_residency: '',
+        tax_id: '',
         status: 'offline',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -815,6 +851,125 @@ export default function ProfilePage() {
                 </div>
               </div>
 
+              {/* Financial Information */}
+              <div style={{ 
+                background: '#f8fafc', 
+                borderRadius: 12, 
+                padding: '1.5rem',
+                border: '1px solid #e2e8f0'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                  <Banknote size={20} color="#dc2626" />
+                  <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#1f2937', margin: 0 }}>
+                    Financial Information
+                  </h3>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <ProfileField 
+                    label="Annual Income (USD)" 
+                    value={editing ? editForm.annual_income : profile.annual_income}
+                    editing={editing}
+                    onChange={(value) => setEditForm(prev => ({ ...prev, annual_income: parseFloat(value) || 0 }))}
+                  />
+                  <ProfileField 
+                    label="Net Worth (USD)" 
+                    value={editing ? editForm.net_worth : profile.net_worth}
+                    editing={editing}
+                    onChange={(value) => setEditForm(prev => ({ ...prev, net_worth: parseFloat(value) || 0 }))}
+                  />
+                  <ProfileField 
+                    label="Monthly Investment Budget (USD)" 
+                    value={editing ? editForm.monthly_investment_budget : profile.monthly_investment_budget}
+                    editing={editing}
+                    onChange={(value) => setEditForm(prev => ({ ...prev, monthly_investment_budget: parseFloat(value) || 0 }))}
+                  />
+                  <ProfileField 
+                    label="Emergency Fund (USD)" 
+                    value={editing ? editForm.emergency_fund : profile.emergency_fund}
+                    editing={editing}
+                    onChange={(value) => setEditForm(prev => ({ ...prev, emergency_fund: parseFloat(value) || 0 }))}
+                  />
+                  <ProfileField 
+                    label="Debt Amount (USD)" 
+                    value={editing ? editForm.debt_amount : profile.debt_amount}
+                    editing={editing}
+                    onChange={(value) => setEditForm(prev => ({ ...prev, debt_amount: parseFloat(value) || 0 }))}
+                  />
+                  <ProfileField 
+                    label="Credit Score" 
+                    value={editing ? editForm.credit_score : profile.credit_score}
+                    editing={editing}
+                    onChange={(value) => setEditForm(prev => ({ ...prev, credit_score: parseInt(value) || 0 }))}
+                  />
+                </div>
+                
+                {/* Employment Information */}
+                <div style={{ marginTop: '1.5rem' }}>
+                  <h4 style={{ fontSize: '16px', fontWeight: 600, color: '#374151', marginBottom: '1rem' }}>
+                    Employment Information
+                  </h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <ProfileField 
+                      label="Employment Status" 
+                      value={editing ? editForm.employment_status : profile.employment_status}
+                      editing={editing}
+                      onChange={(value) => setEditForm(prev => ({ ...prev, employment_status: value }))}
+                    />
+                    <ProfileField 
+                      label="Employer Name" 
+                      value={editing ? editForm.employer_name : profile.employer_name}
+                      editing={editing}
+                      onChange={(value) => setEditForm(prev => ({ ...prev, employer_name: value }))}
+                    />
+                    <ProfileField 
+                      label="Job Title" 
+                      value={editing ? editForm.job_title : profile.job_title}
+                      editing={editing}
+                      onChange={(value) => setEditForm(prev => ({ ...prev, job_title: value }))}
+                    />
+                    <ProfileField 
+                      label="Years Employed" 
+                      value={editing ? editForm.years_employed : profile.years_employed}
+                      editing={editing}
+                      onChange={(value) => setEditForm(prev => ({ ...prev, years_employed: parseInt(value) || 0 }))}
+                    />
+                  </div>
+                </div>
+
+                {/* Investment Profile */}
+                <div style={{ marginTop: '1.5rem' }}>
+                  <h4 style={{ fontSize: '16px', fontWeight: 600, color: '#374151', marginBottom: '1rem' }}>
+                    Investment Profile
+                  </h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <ProfileField 
+                      label="Investment Experience" 
+                      value={editing ? editForm.investment_experience : profile.investment_experience}
+                      editing={editing}
+                      onChange={(value) => setEditForm(prev => ({ ...prev, investment_experience: value }))}
+                    />
+                    <ProfileField 
+                      label="Risk Tolerance" 
+                      value={editing ? editForm.risk_tolerance : profile.risk_tolerance}
+                      editing={editing}
+                      onChange={(value) => setEditForm(prev => ({ ...prev, risk_tolerance: value }))}
+                    />
+                    <ProfileField 
+                      label="Source of Funds" 
+                      value={editing ? editForm.source_of_funds : profile.source_of_funds}
+                      editing={editing}
+                      onChange={(value) => setEditForm(prev => ({ ...prev, source_of_funds: value }))}
+                    />
+                    <ProfileField 
+                      label="Tax Residency" 
+                      value={editing ? editForm.tax_residency : profile.tax_residency}
+                      editing={editing}
+                      onChange={(value) => setEditForm(prev => ({ ...prev, tax_residency: value }))}
+                    />
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
         </div>
@@ -847,7 +1002,36 @@ function ProfileField({
     if (label.toLowerCase().includes('phone')) {
       return 'tel';
     }
+    if (label.toLowerCase().includes('credit score') || label.toLowerCase().includes('years')) {
+      return 'number';
+    }
+    if (label.toLowerCase().includes('usd') || label.toLowerCase().includes('income') || 
+        label.toLowerCase().includes('worth') || label.toLowerCase().includes('budget') || 
+        label.toLowerCase().includes('fund') || label.toLowerCase().includes('debt')) {
+      return 'number';
+    }
     return 'text';
+  };
+
+  // Format value for display
+  const formatValue = (val: any) => {
+    if (val === null || val === undefined || val === '') {
+      return <span style={{ color: '#d1d5db' }}>-</span>;
+    }
+    
+    // Format currency values
+    if (label.toLowerCase().includes('usd') || label.toLowerCase().includes('income') || 
+        label.toLowerCase().includes('worth') || label.toLowerCase().includes('budget') || 
+        label.toLowerCase().includes('fund') || label.toLowerCase().includes('debt')) {
+      return `$${Number(val).toLocaleString()}`;
+    }
+    
+    // Format credit score
+    if (label.toLowerCase().includes('credit score')) {
+      return val.toString();
+    }
+    
+    return val.toString();
   };
 
   const inputType = getInputType();
@@ -886,6 +1070,8 @@ function ProfileField({
             color: '#1f2937',
             background: 'white'
           }}
+          step={inputType === 'number' ? 'any' : undefined}
+          min={inputType === 'number' ? '0' : undefined}
         />
       ) : (
         <div style={{ 
@@ -893,7 +1079,7 @@ function ProfileField({
           fontSize: '14px', 
           fontWeight: 500 
         }}>
-          {value || <span style={{ color: '#d1d5db' }}>-</span>}
+          {formatValue(value)}
         </div>
       )}
     </div>
