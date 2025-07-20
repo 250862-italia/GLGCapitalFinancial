@@ -1,0 +1,7 @@
+# Vercel Deploy Trigger
+# This file forces Vercel to redeploy with the latest changes
+# Build should now work with the fixed Card components
+
+Deploy timestamp: $(date)
+Commit: 19f8a5a
+Status: Ready for deployment 
