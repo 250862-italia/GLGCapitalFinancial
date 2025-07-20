@@ -60,6 +60,7 @@ export default function ClientDashboard() {
   const [selectedPackage, setSelectedPackage] = useState<any>(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod | null>(null);
   const [bankDetails, setBankDetails] = useState<{iban: string, accountHolder: string, bankName: string, reason: string} | null>(null);
+  const [clientProfile, setClientProfile] = useState<any>(null);
   const router = useRouter();
 
   // Real-time functionality
@@ -130,12 +131,34 @@ export default function ClientDashboard() {
       }
     };
 
+    const loadClientProfile = async () => {
+      if (!user) {
+        setClientProfile(null);
+        return;
+      }
+
+      try {
+        const response = await fetchJSONWithCSRF(`/api/profile/${user.id}`);
+        if (response.ok) {
+          const profileData = await response.json();
+          setClientProfile(profileData);
+        } else {
+          console.error('Error loading client profile');
+          setClientProfile(null);
+        }
+      } catch (error) {
+        console.error('Error loading client profile:', error);
+        setClientProfile(null);
+      }
+    };
+
     const loadBankDetails = () => {
       const stored = localStorage.getItem('bankDetails');
       if (stored) setBankDetails(JSON.parse(stored));
     };
 
     loadMyInvestments();
+    loadClientProfile();
     loadBankDetails();
   }, [user, realtimeConnected]);
 
@@ -521,7 +544,7 @@ export default function ClientDashboard() {
         {/* Header */}
         <div style={{ marginBottom: '2rem' }}>
           <h1 style={{ fontSize: '2.5rem', fontWeight: 800, color: '#1f2937', marginBottom: '0.5rem' }}>
-            Welcome back, {user?.name || 'User'}!
+            Welcome back, {clientProfile?.first_name || user?.name || 'User'}!
           </h1>
           <p style={{ fontSize: '1.125rem', color: '#6b7280' }}>
             Here's your investment portfolio overview
