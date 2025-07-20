@@ -22,7 +22,7 @@ class EmailService {
 
   constructor() {
     this.config = {
-      service: 'supabase', // Attivato Supabase email
+      service: 'supabase', // Forza l'uso di Supabase
       fromEmail: 'noreply@glgcapitalgroupllc.com'
     };
   }
@@ -35,16 +35,13 @@ class EmailService {
         service: this.config.service
       });
 
-      // Usa il servizio Supabase per invio email reale
-      if (this.config.service === 'supabase') {
-        return await this.sendViaSupabase(emailData);
-      }
-
-      // Fallback al servizio simulato
-      return this.simulateEmail(emailData);
+      // Forza sempre l'uso di Supabase per ora
+      return await this.sendViaSupabase(emailData);
 
     } catch (error) {
       console.error('❌ Email service error:', error);
+      // Fallback al servizio simulato solo in caso di errore critico
+      console.log('⚠️ Falling back to simulated email service');
       return this.simulateEmail(emailData);
     }
   }

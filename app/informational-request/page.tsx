@@ -31,7 +31,7 @@ export default function InformationalRequestPage() {
     phone: '',
     country: '',
     city: '',
-    additionalNotes: ''
+    additional_notes: ''
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -65,7 +65,7 @@ export default function InformationalRequestPage() {
           phone: '',
           country: '',
           city: '',
-          additionalNotes: ''
+          additional_notes: ''
         });
       } else {
         throw new Error(result.error || 'Failed to send request');
@@ -131,7 +131,7 @@ Email: ${formData.email}
 Phone: ${formData.phone || 'Not provided'}
 Country: ${formData.country || 'Not provided'}
 City: ${formData.city || 'Not provided'}
-Additional Notes: ${formData.additionalNotes || 'None'}
+Additional Notes: ${formData.additional_notes || 'None'}
 
 Date: ${new Date().toLocaleDateString()}
 Time: ${new Date().toLocaleTimeString()}
@@ -441,8 +441,8 @@ Time: ${new Date().toLocaleTimeString()}
                   Additional Notes
                 </label>
                 <textarea
-                  value={formData.additionalNotes}
-                  onChange={(e) => handleInputChange('additionalNotes', e.target.value)}
+                                  value={formData.additional_notes}
+                onChange={(e) => handleInputChange('additional_notes', e.target.value)}
                   rows={4}
                   placeholder="Any additional information or specific questions..."
                   style={{

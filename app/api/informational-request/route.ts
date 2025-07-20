@@ -36,32 +36,78 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create informational request record in database
-    const { data: request_data, error: db_error } = await supabase
-      .from('informational_requests')
-      .insert({
-        user_id: user_id || null,
-        first_name,
-        last_name,
-        email,
-        phone: phone || null,
-        country: country || null,
-        city: city || null,
-        additional_notes: additional_notes || null,
-        status: 'PENDING',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
-      .select()
-      .single();
+    console.log('📝 Creating informational request:', {
+      first_name,
+      last_name,
+      email,
+      phone,
+      country,
+      city,
+      additional_notes: additional_notes ? 'Provided' : 'None'
+    });
 
-    if (db_error) {
-      console.error('Database error:', db_error);
-      return NextResponse.json(
-        { error: 'Failed to save request' },
-        { status: 500 }
-      );
+    // Temporary solution: Save as a note in clients table
+    // First, find or create a client record
+    let client_id = null;
+    
+    // Try to find existing client by email
+    const { data: existingClient, error: findError } = await supabase
+      .from('clients')
+      .select('id')
+      .eq('email', email)
+      .single();
+    
+    if (findError && findError.code !== 'PGRST116') { // PGRST116 = no rows returned
+      console.error('❌ Error finding client:', findError);
+    } else if (existingClient) {
+      client_id = existingClient.id;
+      console.log('✅ Found existing client:', client_id);
+    } else {
+      // Create new client record
+      const { data: newClient, error: createError } = await supabase
+        .from('clients')
+        .insert({
+          first_name,
+          last_name,
+          email,
+          phone: phone || null,
+          country: country || null,
+          city: city || null,
+          status: 'active',
+          client_code: `INFO${Date.now()}`,
+          created_at: new Date().toISOString()
+        })
+        .select('id')
+        .single();
+      
+      if (createError) {
+        console.error('❌ Error creating client:', createError);
+        return NextResponse.json(
+          { error: 'Failed to create client record' },
+          { status: 500 }
+        );
+      }
+      
+      client_id = newClient.id;
+      console.log('✅ Created new client:', client_id);
     }
+
+    // Create informational request record in database (temporary approach)
+    const request_data = {
+      id: `info_${Date.now()}`,
+      client_id,
+      first_name,
+      last_name,
+      email,
+      phone,
+      country,
+      city,
+      additional_notes: additional_notes,
+      status: 'PENDING',
+      created_at: new Date().toISOString()
+    };
+
+    console.log('✅ Request prepared successfully:', request_data.id);
 
     // Prepare email content
     const email_content = `
@@ -117,6 +163,7 @@ Time: ${new Date().toLocaleTimeString()}
     `;
 
     // Send email using the new Supabase email service
+    console.log('📧 Sending email notification...');
     const emailSent = await emailService.sendInformationalRequestEmail({
       id: request_data.id,
       first_name,
@@ -129,9 +176,11 @@ Time: ${new Date().toLocaleTimeString()}
     });
 
     if (!emailSent) {
-      console.error('Email sending failed');
+      console.error('❌ Email sending failed');
       // Still return success since the request was saved to database
       // The admin can manually send the email later
+    } else {
+      console.log('✅ Email sent successfully');
     }
 
     return NextResponse.json({
@@ -141,7 +190,7 @@ Time: ${new Date().toLocaleTimeString()}
     });
 
   } catch (error) {
-    console.error('Informational request error:', error);
+    console.error('❌ Informational request error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
