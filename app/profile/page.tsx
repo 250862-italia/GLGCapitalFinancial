@@ -26,6 +26,7 @@ import {
 import { supabase } from '@/lib/supabase';
 import { fetchJSONWithCSRF, fetchFormDataWithCSRF } from '@/lib/csrf-client';
 import { useAuth } from '@/hooks/use-auth';
+import KYCDocumentUpload from '@/components/kyc/KYCDocumentUpload';
 
 interface ClientProfile {
   id: string;
@@ -65,6 +66,7 @@ interface ClientProfile {
   source_of_funds?: string;
   tax_residency?: string;
   tax_id?: string;
+  kyc_documents?: any[];
   status: string;
   created_at: string;
   updated_at: string;
@@ -1221,6 +1223,22 @@ export default function ProfilePage() {
                 />
               </div>
             </div>
+          </div>
+
+          {/* KYC Documents Section */}
+          <div style={{ 
+            background: 'white', 
+            borderRadius: '12px', 
+            padding: '1.5rem', 
+            border: '1px solid #e5e7eb',
+            marginTop: '1.5rem'
+          }}>
+            <KYCDocumentUpload 
+              userId={user.id} 
+              onDocumentsUpdate={(documents) => {
+                setProfile(prev => prev ? { ...prev, kyc_documents: documents } : null);
+              }}
+            />
           </div>
         </div>
       </div>
