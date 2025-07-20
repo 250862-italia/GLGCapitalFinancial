@@ -235,8 +235,16 @@ export default function RealtimeEvents({
                   color: '#6b7280',
                   marginBottom: '4px'
                 }}>
-                  {JSON.stringify(event.data).substring(0, 100)}
-                  {JSON.stringify(event.data).length > 100 && '...'}
+                  {(() => {
+                    try {
+                      const dataString = typeof event.data === 'string' 
+                        ? event.data 
+                        : JSON.stringify(event.data);
+                      return dataString.substring(0, 100) + (dataString.length > 100 ? '...' : '');
+                    } catch (error) {
+                      return 'Data not available';
+                    }
+                  })()}
                 </div>
                 
                 <div style={{

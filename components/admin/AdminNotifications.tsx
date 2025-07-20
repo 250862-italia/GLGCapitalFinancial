@@ -551,7 +551,9 @@ export default function AdminNotifications({ adminId }: AdminNotificationsProps)
                         margin: '0 0 0.5rem 0',
                         lineHeight: 1.4
                       }}>
-                        {notification.message}
+                        {typeof notification.message === 'string' 
+                          ? notification.message 
+                          : JSON.stringify(notification.message)}
                       </p>
                       
                       <div style={{

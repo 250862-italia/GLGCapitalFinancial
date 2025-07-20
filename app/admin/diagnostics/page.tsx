@@ -404,7 +404,9 @@ export default function AdminDiagnosticsPage() {
                     </span>
                   </div>
                   <div style={{ fontWeight: 600, marginBottom: '0.5rem' }}>
-                    {log.message}
+                    {typeof log.message === 'string' 
+                      ? log.message 
+                      : JSON.stringify(log.message)}
                   </div>
                   {log.details && (
                     <div style={{ fontSize: '14px', color: '#6b7280', fontStyle: 'italic' }}>

@@ -535,7 +535,9 @@ export default function InformationalRequestsPage() {
                     fontSize: '14px',
                     lineHeight: '1.6'
                   }}>
-                    {selectedRequest.message}
+                    {typeof selectedRequest.message === 'string' 
+                      ? selectedRequest.message 
+                      : JSON.stringify(selectedRequest.message)}
                   </div>
                 </div>
 

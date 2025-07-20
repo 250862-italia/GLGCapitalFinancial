@@ -506,7 +506,9 @@ export default function SurveillancePage() {
                         {notification.title}
                       </h4>
                       <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: '0.25rem 0 0 0' }}>
-                        {notification.message}
+                        {typeof notification.message === 'string' 
+                          ? notification.message 
+                          : JSON.stringify(notification.message)}
                       </p>
                     </div>
                   </div>
@@ -595,7 +597,9 @@ export default function SurveillancePage() {
                   {selectedNotification.title}
                 </h3>
                 <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: 0 }}>
-                  {selectedNotification.message}
+                  {typeof selectedNotification.message === 'string' 
+                    ? selectedNotification.message 
+                    : JSON.stringify(selectedNotification.message)}
                 </p>
               </div>
 

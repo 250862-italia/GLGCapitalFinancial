@@ -555,7 +555,9 @@ export default function NotificationSystem({ userId, userRole = 'user' }: Notifi
                           {notification.title}
                         </h4>
                         <p style={{ fontSize: '13px', color: '#6b7280', margin: '4px 0 0 0' }}>
-                          {notification.message}
+                          {typeof notification.message === 'string' 
+                            ? notification.message 
+                            : JSON.stringify(notification.message)}
                         </p>
                       </div>
                     </div>
