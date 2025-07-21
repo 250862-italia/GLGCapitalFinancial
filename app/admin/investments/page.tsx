@@ -266,9 +266,15 @@ export default function AdminInvestmentsPage() {
               {filtered.map((inv) => (
                 <tr key={inv.id} style={{ borderBottom: "1px solid #e0e3eb" }}>
                   <td style={{ padding: "1rem" }}>
-                    {inv.client ? `${inv.client.first_name || ''} ${inv.client.last_name || ''}`.trim() || 'N/A' : 'N/A'}
+                    {inv.client && typeof inv.client === 'object' && Object.keys(inv.client).length > 0 
+                      ? `${inv.client.first_name || ''} ${inv.client.last_name || ''}`.trim() || 'N/A' 
+                      : 'N/A'}
                   </td>
-                  <td style={{ padding: "1rem" }}>{inv.user?.email || 'N/A'}</td>
+                  <td style={{ padding: "1rem" }}>
+                    {inv.user && typeof inv.user === 'object' && Object.keys(inv.user).length > 0 
+                      ? inv.user.email || 'N/A' 
+                      : 'N/A'}
+                  </td>
                   <td style={{ padding: "1rem" }}>{inv.investment_type || 'Package'}</td>
                   <td style={{ padding: "1rem", textAlign: "right" }}>
                     ${inv.amount?.toLocaleString() || '0'}

@@ -428,7 +428,9 @@ export default function MyInvestmentsPage() {
                       <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
                           <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#1f2937', margin: 0 }}>
-                            {investment.package?.name || 'Investment Package'}
+                            {investment.package && typeof investment.package === 'object' && Object.keys(investment.package).length > 0 
+                              ? investment.package.name || 'Investment Package'
+                              : 'Investment Package'}
                           </h3>
                           <span style={{
                             background: statusStyle.background,
@@ -449,7 +451,9 @@ export default function MyInvestmentsPage() {
                           </span>
                         </div>
                         <p style={{ color: '#6b7280', fontSize: '14px', margin: '0.5rem 0' }}>
-                          {investment.package?.description || 'Investment package'}
+                          {investment.package && typeof investment.package === 'object' && Object.keys(investment.package).length > 0 
+                            ? investment.package.description || 'Investment package'
+                            : 'Investment package'}
                         </p>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', marginTop: '1rem' }}>
                           <div>
@@ -461,13 +465,18 @@ export default function MyInvestmentsPage() {
                           <div>
                             <p style={{ fontSize: '12px', color: '#6b7280', margin: 0 }}>Expected Return</p>
                             <p style={{ fontSize: '16px', fontWeight: 600, color: '#059669', margin: 0 }}>
-                              €{calculateExpectedReturn(investment.amount, investment.package?.expectedReturn || 0).toLocaleString()}
+                              €{calculateExpectedReturn(investment.amount, 
+                                (investment.package && typeof investment.package === 'object' && Object.keys(investment.package).length > 0 
+                                  ? investment.package.expectedReturn 
+                                  : 0) || 0).toLocaleString()}
                             </p>
                           </div>
                           <div>
                             <p style={{ fontSize: '12px', color: '#6b7280', margin: 0 }}>Duration</p>
                             <p style={{ fontSize: '16px', fontWeight: 600, color: '#1f2937', margin: 0 }}>
-                              {investment.package?.duration || 0} months
+                              {investment.package && typeof investment.package === 'object' && Object.keys(investment.package).length > 0 
+                                ? investment.package.duration || 0
+                                : 0} months
                             </p>
                           </div>
                           <div>
