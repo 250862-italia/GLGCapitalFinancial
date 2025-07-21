@@ -1398,34 +1398,37 @@ function InlineEditableField({
   type?: string;
   options?: { value: string; label: string }[] | null;
 }) {
+  // Ensure value is not an empty object that could cause React rendering issues
+  const safeValue = (typeof value === 'object' && value !== null && Object.keys(value).length === 0) ? null : value;
+  
   const [editValue, setEditValue] = useState(() => {
     // Handle object/array values properly for the input field
-    if (value === null || value === undefined) return '';
-    if (typeof value === 'object') {
-      if (Array.isArray(value)) {
-        return value.length > 0 ? value.join(', ') : '';
+    if (safeValue === null || safeValue === undefined) return '';
+    if (typeof safeValue === 'object') {
+      if (Array.isArray(safeValue)) {
+        return safeValue.length > 0 ? safeValue.join(', ') : '';
       }
-      const keys = Object.keys(value);
+      const keys = Object.keys(safeValue);
       return keys.length > 0 ? keys.join(', ') : '';
     }
-    return String(value);
+    return String(safeValue);
   });
 
   useEffect(() => {
     // Handle object/array values properly for the input field
-    if (value === null || value === undefined) {
+    if (safeValue === null || safeValue === undefined) {
       setEditValue('');
-    } else if (typeof value === 'object') {
-      if (Array.isArray(value)) {
-        setEditValue(value.length > 0 ? value.join(', ') : '');
+    } else if (typeof safeValue === 'object') {
+      if (Array.isArray(safeValue)) {
+        setEditValue(safeValue.length > 0 ? safeValue.join(', ') : '');
       } else {
-        const keys = Object.keys(value);
+        const keys = Object.keys(safeValue);
         setEditValue(keys.length > 0 ? keys.join(', ') : '');
       }
     } else {
-      setEditValue(String(value));
+      setEditValue(String(safeValue));
     }
-  }, [value]);
+  }, [safeValue]);
 
   const handleChange = (newValue: any) => {
     setEditValue(newValue);
@@ -1462,6 +1465,8 @@ function InlineEditableField({
       }
       // Handle empty strings
       if (val === '') return 'Not specified';
+      // Handle any other falsy values
+      if (!val) return 'Not specified';
       return String(val);
     } catch (error) {
       console.error('Error formatting display value:', error, val);
@@ -1469,7 +1474,7 @@ function InlineEditableField({
     }
   };
 
-  const displayValue = formatDisplayValue(value);
+  const displayValue = formatDisplayValue(safeValue);
 
   return (
     <div style={{ 
