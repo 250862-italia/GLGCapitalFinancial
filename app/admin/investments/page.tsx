@@ -46,7 +46,7 @@ export default function AdminInvestmentsPage() {
 
       const res = await fetchJSONWithCSRF("/api/admin/investments", {
         headers: {
-          'x-admin-session': adminToken
+          'x-admin-token': adminToken
         }
       });
       const data = await res.json();
@@ -133,7 +133,7 @@ export default function AdminInvestmentsPage() {
       const res = await fetchJSONWithCSRF("/api/admin/investments", {
         method: "PUT",
         headers: {
-          'x-admin-session': adminToken
+          'x-admin-token': adminToken
         },
         body: JSON.stringify({ investment_id: invId, status: newStatus })
       });

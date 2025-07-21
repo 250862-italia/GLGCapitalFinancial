@@ -42,7 +42,7 @@ export default function AdminPackagesPage() {
 
       const response = await fetch('/api/admin/packages', {
         headers: {
-          'x-admin-session': adminToken
+          'x-admin-token': adminToken
         }
       });
 
@@ -107,7 +107,7 @@ export default function AdminPackagesPage() {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            'x-admin-session': adminToken
+            'x-admin-token': adminToken
           },
           body: JSON.stringify({
             id: form.id,
@@ -120,7 +120,7 @@ export default function AdminPackagesPage() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-admin-session': adminToken
+            'x-admin-token': adminToken
           },
           body: JSON.stringify(packageData)
         });
@@ -157,7 +157,7 @@ export default function AdminPackagesPage() {
       const response = await fetch(`/api/admin/packages?id=${id}`, {
         method: 'DELETE',
         headers: {
-          'x-admin-session': adminToken
+          'x-admin-token': adminToken
         }
       });
 
