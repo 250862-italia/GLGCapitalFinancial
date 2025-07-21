@@ -76,10 +76,27 @@ export default function AdminInvestmentsPage() {
     setSuccess("");
     setLoading(true);
     try {
-      const res = await fetchJSONWithCSRF("/api/investments", {
-        method: isEdit ? "PUT" : "POST",
-        body: JSON.stringify(formData)
-      });
+      const adminToken = localStorage.getItem('admin_token');
+      
+      let res;
+      if (isEdit) {
+        // Update existing investment
+        res = await fetchJSONWithCSRF("/api/investments", {
+          method: "PUT",
+          body: JSON.stringify(formData)
+        });
+      } else {
+        // Create new investment using admin API
+        res = await fetch("/api/admin/investments/create", {
+          method: "POST",
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-token': adminToken
+          },
+          body: JSON.stringify(formData)
+        });
+      }
+      
       const data = await res.json();
       if (res.ok) {
         setSuccess(isEdit ? "Investimento aggiornato!" : "Investimento creato!");
@@ -369,6 +386,43 @@ function InvestmentForm({
     notes: initialData?.notes || ''
   });
   const [error, setError] = useState<string>('');
+  const [clients, setClients] = useState<any[]>([]);
+  const [packages, setPackages] = useState<any[]>([]);
+  const [loadingData, setLoadingData] = useState(false);
+
+  // Carica clienti e pacchetti
+  const loadFormData = async () => {
+    setLoadingData(true);
+    try {
+      const adminToken = localStorage.getItem('admin_token');
+      
+      // Carica clienti
+      const clientsRes = await fetch('/api/admin/clients', {
+        headers: { 'x-admin-token': adminToken }
+      });
+      if (clientsRes.ok) {
+        const clientsData = await clientsRes.json();
+        setClients(clientsData.clients || clientsData || []);
+      }
+      
+      // Carica pacchetti
+      const packagesRes = await fetch('/api/admin/packages', {
+        headers: { 'x-admin-token': adminToken }
+      });
+      if (packagesRes.ok) {
+        const packagesData = await packagesRes.json();
+        setPackages(packagesData.packages || packagesData || []);
+      }
+    } catch (err) {
+      console.error('Errore caricamento dati:', err);
+    }
+    setLoadingData(false);
+  };
+
+  // Carica dati al mount del componente
+  useEffect(() => {
+    loadFormData();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -401,12 +455,26 @@ function InvestmentForm({
   return (
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <label>
-        ID Cliente*
-        <input name="client_id" value={form.client_id} onChange={handleChange} style={inputStyle} required />
+        Cliente*
+        <select name="client_id" value={form.client_id} onChange={handleChange} style={inputStyle} required disabled={loadingData}>
+          <option value="">Seleziona un cliente...</option>
+          {clients.map(client => (
+            <option key={client.id} value={client.user_id || client.id}>
+              {client.first_name} {client.last_name} ({client.email}) - {client.client_code}
+            </option>
+          ))}
+        </select>
       </label>
       <label>
-        ID Pacchetto*
-        <input name="package_id" value={form.package_id} onChange={handleChange} style={inputStyle} required />
+        Pacchetto Investimento*
+        <select name="package_id" value={form.package_id} onChange={handleChange} style={inputStyle} required disabled={loadingData}>
+          <option value="">Seleziona un pacchetto...</option>
+          {packages.map(pkg => (
+            <option key={pkg.id} value={pkg.id}>
+              {pkg.name} - €{pkg.min_investment?.toLocaleString()} - {pkg.expected_return}% rendimento
+            </option>
+          ))}
+        </select>
       </label>
       <label>
         Importo (€)*

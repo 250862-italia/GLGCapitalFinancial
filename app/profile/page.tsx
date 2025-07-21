@@ -87,10 +87,13 @@ export default function ProfilePage() {
   const [hasChanges, setHasChanges] = useState(false);
   const [originalData, setOriginalData] = useState<Record<string, any>>({});
   const [editingFields, setEditingFields] = useState<Set<string>>(new Set());
+  const [investments, setInvestments] = useState<any[]>([]);
+  const [loadingInvestments, setLoadingInvestments] = useState(false);
 
   useEffect(() => {
     if (user) {
       loadProfile();
+      loadInvestments();
     }
   }, [user]);
 
@@ -98,6 +101,25 @@ export default function ProfilePage() {
     if (!user) return;
     
     // If user is admin, don't try to load client profile
+  };
+
+  const loadInvestments = async () => {
+    if (!user) return;
+    
+    setLoadingInvestments(true);
+    try {
+      const response = await fetch(`/api/investments?userId=${user.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setInvestments(data.investments || data || []);
+      } else {
+        console.error('Failed to load investments');
+      }
+    } catch (error) {
+      console.error('Error loading investments:', error);
+    }
+    setLoadingInvestments(false);
+  };
     if (user.role === 'admin' || user.role === 'superadmin') {
       console.log('User is admin, skipping client profile load');
       setLoading(false);
@@ -1295,6 +1317,107 @@ export default function ProfilePage() {
                 />
               </div>
             </div>
+          </div>
+
+          {/* Investments Section */}
+          <div style={{ 
+            background: 'white', 
+            borderRadius: '12px', 
+            padding: '1.5rem', 
+            border: '1px solid #e5e7eb',
+            marginTop: '1.5rem'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+              <Banknote size={20} style={{ color: '#059669' }} />
+              <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#1f2937', margin: 0 }}>
+                I Miei Investimenti
+              </h3>
+            </div>
+            
+            {loadingInvestments ? (
+              <div style={{ textAlign: 'center', padding: '2rem' }}>
+                <Loader2 size={24} className="animate-spin" style={{ color: '#6b7280' }} />
+                <p style={{ marginTop: '0.5rem', color: '#6b7280' }}>Caricamento investimenti...</p>
+              </div>
+            ) : investments.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
+                <Banknote size={48} style={{ marginBottom: '1rem', opacity: 0.5 }} />
+                <p style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>Nessun investimento trovato</p>
+                <p style={{ fontSize: '0.9rem' }}>I tuoi investimenti appariranno qui una volta creati</p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {investments.map((investment) => (
+                  <div key={investment.id} style={{
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    padding: '1rem',
+                    background: '#f9fafb'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                      <div>
+                        <h4 style={{ fontSize: '1.1rem', fontWeight: '600', color: '#1f2937', margin: '0 0 0.25rem 0' }}>
+                          {investment.package_name || `Pacchetto ${investment.package_id}`}
+                        </h4>
+                        <p style={{ fontSize: '0.9rem', color: '#6b7280', margin: 0 }}>
+                          ID: {investment.id}
+                        </p>
+                      </div>
+                      <span style={{
+                        background: investment.status === 'active' ? '#bbf7d0' : 
+                                   investment.status === 'completed' ? '#dbeafe' : '#fee2e2',
+                        color: investment.status === 'active' ? '#16a34a' : 
+                               investment.status === 'completed' ? '#2563eb' : '#dc2626',
+                        borderRadius: '6px',
+                        padding: '0.25rem 0.75rem',
+                        fontSize: '0.8rem',
+                        fontWeight: '600',
+                        textTransform: 'uppercase'
+                      }}>
+                        {investment.status === 'active' ? 'Attivo' : 
+                         investment.status === 'completed' ? 'Completato' : 
+                         investment.status === 'cancelled' ? 'Cancellato' : investment.status}
+                      </span>
+                    </div>
+                    
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', marginTop: '1rem' }}>
+                      <div>
+                        <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: '0 0 0.25rem 0' }}>Importo Investito</p>
+                        <p style={{ fontSize: '1rem', fontWeight: '600', color: '#1f2937', margin: 0 }}>
+                          €{investment.amount?.toLocaleString() || '0'}
+                        </p>
+                      </div>
+                      <div>
+                        <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: '0 0 0.25rem 0' }}>Rendimento Totale</p>
+                        <p style={{ fontSize: '1rem', fontWeight: '600', color: '#059669', margin: 0 }}>
+                          €{investment.total_returns?.toLocaleString() || '0'}
+                        </p>
+                      </div>
+                      <div>
+                        <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: '0 0 0.25rem 0' }}>Rendimento Giornaliero</p>
+                        <p style={{ fontSize: '1rem', fontWeight: '600', color: '#059669', margin: 0 }}>
+                          €{investment.daily_returns?.toLocaleString() || '0'}
+                        </p>
+                      </div>
+                      <div>
+                        <p style={{ fontSize: '0.8rem', color: '#6b7280', margin: '0 0 0.25rem 0' }}>Data Inizio</p>
+                        <p style={{ fontSize: '1rem', fontWeight: '600', color: '#1f2937', margin: 0 }}>
+                          {investment.start_date ? new Date(investment.start_date).toLocaleDateString('it-IT') : 'N/A'}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {investment.notes && (
+                      <div style={{ marginTop: '1rem', padding: '0.75rem', background: '#f3f4f6', borderRadius: '6px' }}>
+                        <p style={{ fontSize: '0.9rem', color: '#374151', margin: 0 }}>
+                          <strong>Note:</strong> {investment.notes}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* KYC Documents Section */}
