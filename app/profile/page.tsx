@@ -499,17 +499,34 @@ export default function ProfilePage() {
             gap: '1rem' 
           }}>
             <button
-              onClick={() => router.back()}
+              onClick={() => router.push('/dashboard')}
               style={{
                 background: 'none',
                 border: 'none',
                 cursor: 'pointer',
                 padding: '0.5rem',
                 borderRadius: '6px',
-                color: '#6b7280'
+                color: '#6b7280',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                transition: 'all 0.2s ease',
+                ':hover': {
+                  backgroundColor: '#f3f4f6',
+                  color: '#374151'
+                }
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#f3f4f6';
+                e.currentTarget.style.color = '#374151';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.color = '#6b7280';
               }}
             >
               <ArrowLeft size={24} />
+              <span style={{ fontSize: '1rem', fontWeight: 500 }}>Back to Dashboard</span>
             </button>
             <h1 style={{ 
               fontSize: '2rem', 
