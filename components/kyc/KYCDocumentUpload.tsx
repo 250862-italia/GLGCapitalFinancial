@@ -146,11 +146,8 @@ export default function KYCDocumentUpload({ userId, onDocumentsUpdate }: KYCDocu
 
   const deleteDocument = async (documentId: string) => {
     try {
-      const response = await fetch(`/api/profile/delete-kyc-document`, {
+      const response = await fetchJSONWithCSRF(`/api/profile/delete-kyc-document`, {
         method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           document_id: documentId,
           user_id: userId

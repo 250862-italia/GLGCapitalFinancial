@@ -50,14 +50,8 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   if (!csrfValidation.valid) {
     performanceMonitor.end('login_user', startTime);
     return NextResponse.json({
-      success: false,
-      error: {
-        type: 'VALIDATION_ERROR',
-        message: 'CSRF token validation failed',
-        code: 'VALIDATION_ERROR'
-      },
-      timestamp: new Date().toISOString(),
-      requestId: request.headers.get('X-Request-ID') || 'unknown'
+      error: 'CSRF validation failed',
+      details: csrfValidation.error
     }, { status: 403 });
   }
 

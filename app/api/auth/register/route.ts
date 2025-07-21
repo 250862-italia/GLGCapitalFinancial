@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     if (!csrfValidation.valid) {
       performanceMonitor.end('register_user', startTime);
       return NextResponse.json(
-        { error: 'CSRF token validation failed' },
+        { error: 'CSRF validation failed', details: csrfValidation.error },
         { status: 403 }
       );
     }
