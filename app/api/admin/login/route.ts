@@ -13,15 +13,13 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
-    // Validazione CSRF (disabilitata in sviluppo)
-    if (process.env.NODE_ENV === 'production') {
-      const csrfValidation = validateCSRFToken(request);
-      if (!csrfValidation.valid) {
-        return NextResponse.json({ 
-          error: 'CSRF validation failed',
-          details: csrfValidation.error 
-        }, { status: 403 });
-      }
+    // Validazione CSRF
+    const csrfValidation = validateCSRFToken(request);
+    if (!csrfValidation.valid) {
+      return NextResponse.json({ 
+        error: 'CSRF validation failed',
+        details: csrfValidation.error 
+      }, { status: 403 });
     }
 
     const body = await request.json();

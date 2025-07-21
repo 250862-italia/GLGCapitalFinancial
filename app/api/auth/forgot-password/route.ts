@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseEmailService } from '@/lib/supabase-email-service';
 import { supabaseAdmin } from '@/lib/supabase';
+import { validateCSRFToken } from '@/lib/csrf';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,6 +12,15 @@ export async function POST(request: NextRequest) {
   console.log(`🔍 [${requestId}] Password reset request started`);
   
   try {
+    // Validazione CSRF
+    const csrfValidation = validateCSRFToken(request);
+    if (!csrfValidation.valid) {
+      return NextResponse.json({ 
+        error: 'CSRF validation failed',
+        details: csrfValidation.error 
+      }, { status: 403 });
+    }
+
     const body = await request.json();
     const { email } = body;
 

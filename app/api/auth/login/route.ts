@@ -49,7 +49,16 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   const csrfValidation = validateCSRFToken(request);
   if (!csrfValidation.valid) {
     performanceMonitor.end('login_user', startTime);
-    throw new Error('CSRF token validation failed');
+    return NextResponse.json({
+      success: false,
+      error: {
+        type: 'VALIDATION_ERROR',
+        message: 'CSRF token validation failed',
+        code: 'VALIDATION_ERROR'
+      },
+      timestamp: new Date().toISOString(),
+      requestId: request.headers.get('X-Request-ID') || 'unknown'
+    }, { status: 403 });
   }
 
   // Validazione input robusta

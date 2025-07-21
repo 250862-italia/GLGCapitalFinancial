@@ -76,11 +76,7 @@ export function validateCSRFToken(request: NextRequest): { valid: boolean; token
   
   if (!token) {
     console.log('[CSRF] No token provided');
-    // In development, allow some flexibility for missing tokens (but not invalid ones)
-    if (isDevelopment) {
-      console.log('[CSRF] Development mode: allowing request despite missing token');
-      return { valid: true, token: null };
-    }
+    // Always require CSRF tokens for security, even in development
     return { valid: false, token: null, error: 'No CSRF token provided' };
   }
   
@@ -126,11 +122,7 @@ export function validateCSRFToken(request: NextRequest): { valid: boolean; token
 export function validateCSRFTokenString(token: string): boolean {
   if (!token) {
     console.log('[CSRF] No token provided');
-    // In development, allow some flexibility for missing tokens (but not invalid ones)
-    if (isDevelopment) {
-      console.log('[CSRF] Development mode: allowing request despite missing token');
-      return true;
-    }
+    // Always require CSRF tokens for security, even in development
     return false;
   }
   
