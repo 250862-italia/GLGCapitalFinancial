@@ -1,6 +1,6 @@
 "use client";
 export const dynamic = "force-dynamic";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { 
   User, 
@@ -101,6 +101,67 @@ export default function ProfilePage() {
     if (!user) return;
     
     // If user is admin, don't try to load client profile
+    if (user.role === 'admin' || user.role === 'super_admin' || user.role === 'superadmin') {
+      return;
+    }
+    
+    setLoading(true);
+    setError('');
+    
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      
+      const response = await fetchJSONWithCSRF(`/api/profile/${user.id}`, {
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (response.ok) {
+        const clientData = await response.json();
+        setProfile(clientData);
+      } else if (response.status === 404) {
+        // Profile not found, create it automatically
+        console.log('No client profile found for user:', user.id, '- Creating profile automatically');
+        
+        try {
+          const createResponse = await fetchJSONWithCSRF('/api/profile/create', {
+            method: 'POST',
+            body: JSON.stringify({ user_id: user.id })
+          });
+
+          if (createResponse.ok) {
+            const result = await createResponse.json();
+            console.log('Profile created successfully:', result);
+            
+            // Fetch the newly created profile
+            const newResponse = await fetchJSONWithCSRF(`/api/profile/${user.id}`);
+            if (newResponse.ok) {
+              const newClientData = await newResponse.json();
+              setProfile(newClientData);
+            } else {
+              // If we can't fetch the created profile, use the result data
+              setProfile(result);
+            }
+          } else {
+            const errorData = await createResponse.json().catch(() => ({}));
+            throw new Error(errorData.error || 'Failed to create profile');
+          }
+        } catch (createError) {
+          console.error('Error creating profile:', createError);
+          setError(`Failed to create profile: ${createError instanceof Error ? createError.message : 'Unknown error'}`);
+        }
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP ${response.status}: Failed to load profile`);
+      }
+    } catch (error) {
+      console.error('Error loading profile:', error);
+      setError(error instanceof Error ? error.message : 'Failed to load profile');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const loadInvestments = async () => {
