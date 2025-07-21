@@ -4,18 +4,45 @@ import { verifyAdmin } from '@/lib/admin-auth';
 
 export async function GET(request: NextRequest) {
   try {
+    console.log('🔍 [KYC API] Starting KYC data fetch...');
+    
     // Verify admin authentication
     const authResult = await verifyAdmin(request);
     if (!authResult.success) {
+      console.log('❌ [KYC API] Admin authentication failed:', authResult.error);
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       );
     }
+    
+    console.log('✅ [KYC API] Admin authentication successful');
 
     const supabase = getSupabaseAdmin();
+    console.log('✅ [KYC API] Supabase admin client obtained');
 
-    // Fetch all clients with KYC documents and financial/banking information
+    // First, let's get all clients to see what data we have
+    console.log('📊 [KYC API] Fetching all clients...');
+    const { data: allClients, error: allClientsError } = await supabase
+      .from('clients')
+      .select('*')
+      .limit(5);
+
+    if (allClientsError) {
+      console.error('❌ [KYC API] Error fetching all clients:', allClientsError);
+      return NextResponse.json(
+        { error: 'Failed to fetch clients', details: allClientsError.message },
+        { status: 500 }
+      );
+    }
+
+    console.log('✅ [KYC API] All clients fetched:', allClients?.length || 0);
+    if (allClients && allClients.length > 0) {
+      console.log('📋 [KYC API] Available columns:', Object.keys(allClients[0]));
+    }
+
+    // Now fetch all clients with their data (without kyc_documents filter for now)
+    console.log('📊 [KYC API] Fetching clients with financial data...');
     const { data: clients, error: clientsError } = await supabase
       .from('clients')
       .select(`
@@ -32,15 +59,12 @@ export async function GET(request: NextRequest) {
         country,
         postal_code,
         status,
-        kyc_documents,
         created_at,
         updated_at,
-        -- Banking Information
         iban,
         bic,
         account_holder,
         usdt_wallet,
-        -- Financial Information
         annual_income,
         net_worth,
         investment_experience,
@@ -58,38 +82,36 @@ export async function GET(request: NextRequest) {
         source_of_funds,
         tax_residency,
         tax_id,
-        -- Investment Profile
         total_invested,
         risk_profile
-      `)
-      .not('kyc_documents', 'is', null)
-      .not('kyc_documents', 'eq', '[]');
+      `);
 
     if (clientsError) {
-      console.error('Error fetching clients with KYC documents:', clientsError);
+      console.error('❌ [KYC API] Error fetching clients with financial data:', clientsError);
       return NextResponse.json(
-        { error: 'Failed to fetch KYC documents' },
+        { error: 'Failed to fetch clients', details: clientsError.message },
         { status: 500 }
       );
     }
 
-    // Filter clients that actually have KYC documents
-    const clientsWithKYC = clients?.filter(client => 
-      client.kyc_documents && 
-      Array.isArray(client.kyc_documents) && 
-      client.kyc_documents.length > 0
-    ) || [];
+    console.log('✅ [KYC API] Clients with financial data fetched:', clients?.length || 0);
+
+    // For now, return all clients (we'll add KYC document filtering later)
+    const clientsWithData = clients || [];
+
+    console.log('✅ [KYC API] Returning clients with data:', clientsWithData.length);
 
     return NextResponse.json({
       success: true,
-      clients: clientsWithKYC,
-      total: clientsWithKYC.length
+      clients: clientsWithData,
+      total: clientsWithData.length,
+      note: 'KYC documents will be added when the column is available'
     });
 
   } catch (error) {
-    console.error('Error in admin KYC API:', error);
+    console.error('❌ [KYC API] Error in admin KYC API:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
