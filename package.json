@@ -76,6 +76,7 @@
     "@eslint/eslintrc": "^3",
     "@lhci/cli": "^0.12.0",
     "@playwright/test": "^1.53.2",
+    "@tailwindcss/postcss": "^4.1.11",
     "@types/jest": "^29.5.8",
     "@types/node": "^20",
     "@types/nodemailer": "^6.4.17",
