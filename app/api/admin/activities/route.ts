@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createSupabaseAdminClient } from '@/lib/supabase-admin';
+import { supabaseAdmin } from '@/lib/supabase';
 import { Activity, ActivityFilters } from '@/types/activity';
 
 export async function GET(request: NextRequest) {
@@ -10,7 +10,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Admin token required' }, { status: 401 });
     }
 
-    const supabaseAdmin = createSupabaseAdminClient();
+    if (!supabaseAdmin) {
+      return NextResponse.json({ error: 'Supabase admin client not available' }, { status: 500 });
+    }
     
     // Parse query parameters for filtering
     const { searchParams } = new URL(request.url);
@@ -63,7 +65,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Admin token required' }, { status: 401 });
     }
 
-    const supabaseAdmin = createSupabaseAdminClient();
+    if (!supabaseAdmin) {
+      return NextResponse.json({ error: 'Supabase admin client not available' }, { status: 500 });
+    }
     const body = await request.json();
     
     const { user_id, admin_id, action, type, details, ip_address, user_agent } = body;
