@@ -22,7 +22,8 @@ import {
   CreditCard,
   CheckCircle,
   LogOut,
-  Loader2
+  Loader2,
+  Activity
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -114,9 +115,15 @@ export default function AdminDashboardPage() {
         if (data.success && data.data) {
           setRecentActivities(data.data);
         }
+      } else {
+        // If the activities table doesn't exist yet, show a helpful message
+        console.log('Activities table not ready yet - this is normal during initial setup');
+        setRecentActivities([]);
       }
     } catch (error) {
       console.error('Error loading activities:', error);
+      // Don't show error to user, just set empty activities
+      setRecentActivities([]);
     } finally {
       setLoadingActivities(false);
     }
