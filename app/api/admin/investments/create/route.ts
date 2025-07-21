@@ -54,13 +54,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify package exists
-    const { data: package, error: packageError } = await supabaseAdmin
+    const { data: packageData, error: packageError } = await supabaseAdmin
       .from('packages')
       .select('*')
       .eq('id', package_id)
       .single();
 
-    if (packageError || !package) {
+    if (packageError || !packageData) {
       return NextResponse.json(
         { error: 'Package not found' },
         { status: 404 }

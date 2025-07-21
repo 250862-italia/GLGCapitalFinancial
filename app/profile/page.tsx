@@ -285,8 +285,9 @@ export default function ProfilePage() {
         net_worth: 0,
         investment_experience: 'beginner',
         risk_tolerance: 'medium',
-        investment_goals: {},
-        preferred_investment_types: [],
+        investment_goals: null,
+        preferred_investment_types: null,
+        investment_preferences: null,
         monthly_investment_budget: 0,
         emergency_fund: 0,
         debt_amount: 0,
@@ -1579,8 +1580,15 @@ function InlineEditableField({
         // For objects, check if it has any properties
         const keys = Object.keys(val);
         if (keys.length === 0) return 'None specified';
-        return keys.join(', ');
+        // If it's an object with properties, try to stringify it safely
+        try {
+          return JSON.stringify(val);
+        } catch {
+          return keys.join(', ');
+        }
       }
+      // Handle empty strings
+      if (val === '') return 'Not specified';
       return String(val);
     } catch (error) {
       console.error('Error formatting display value:', error, val);
