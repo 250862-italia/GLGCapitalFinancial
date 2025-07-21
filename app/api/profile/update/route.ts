@@ -96,6 +96,25 @@ export async function POST(request: NextRequest) {
       if (body.bic !== undefined) updateData.bic = body.bic;
       if (body.account_holder !== undefined) updateData.account_holder = body.account_holder;
       if (body.usdt_wallet !== undefined) updateData.usdt_wallet = body.usdt_wallet;
+      
+      // Financial Information fields
+      if (body.annual_income !== undefined) updateData.annual_income = parseFloat(body.annual_income) || 0;
+      if (body.net_worth !== undefined) updateData.net_worth = parseFloat(body.net_worth) || 0;
+      if (body.investment_experience !== undefined) updateData.investment_experience = body.investment_experience;
+      if (body.risk_tolerance !== undefined) updateData.risk_tolerance = body.risk_tolerance;
+      if (body.investment_goals !== undefined) updateData.investment_goals = body.investment_goals;
+      if (body.preferred_investment_types !== undefined) updateData.preferred_investment_types = body.preferred_investment_types;
+      if (body.monthly_investment_budget !== undefined) updateData.monthly_investment_budget = parseFloat(body.monthly_investment_budget) || 0;
+      if (body.emergency_fund !== undefined) updateData.emergency_fund = parseFloat(body.emergency_fund) || 0;
+      if (body.debt_amount !== undefined) updateData.debt_amount = parseFloat(body.debt_amount) || 0;
+      if (body.credit_score !== undefined) updateData.credit_score = parseInt(body.credit_score) || 0;
+      if (body.employment_status !== undefined) updateData.employment_status = body.employment_status;
+      if (body.employer_name !== undefined) updateData.employer_name = body.employer_name;
+      if (body.job_title !== undefined) updateData.job_title = body.job_title;
+      if (body.years_employed !== undefined) updateData.years_employed = parseInt(body.years_employed) || 0;
+      if (body.source_of_funds !== undefined) updateData.source_of_funds = body.source_of_funds;
+      if (body.tax_residency !== undefined) updateData.tax_residency = body.tax_residency;
+      if (body.tax_id !== undefined) updateData.tax_id = body.tax_id;
 
       console.log('📝 Update data:', updateData);
 
@@ -131,6 +150,24 @@ export async function POST(request: NextRequest) {
         bic: body.bic || '',
         account_holder: body.account_holder || '',
         usdt_wallet: body.usdt_wallet || '',
+        // Financial Information fields
+        annual_income: parseFloat(body.annual_income) || 0,
+        net_worth: parseFloat(body.net_worth) || 0,
+        investment_experience: body.investment_experience || 'beginner',
+        risk_tolerance: body.risk_tolerance || 'medium',
+        investment_goals: body.investment_goals || {},
+        preferred_investment_types: body.preferred_investment_types || [],
+        monthly_investment_budget: parseFloat(body.monthly_investment_budget) || 0,
+        emergency_fund: parseFloat(body.emergency_fund) || 0,
+        debt_amount: parseFloat(body.debt_amount) || 0,
+        credit_score: parseInt(body.credit_score) || 0,
+        employment_status: body.employment_status || '',
+        employer_name: body.employer_name || '',
+        job_title: body.job_title || '',
+        years_employed: parseInt(body.years_employed) || 0,
+        source_of_funds: body.source_of_funds || '',
+        tax_residency: body.tax_residency || '',
+        tax_id: body.tax_id || '',
         client_code: 'CLI-' + user_id.substring(0, 8) + '-' + Math.floor(Math.random() * 1000),
         status: 'active'
       };
