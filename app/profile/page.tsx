@@ -1123,6 +1123,24 @@ export default function ProfilePage() {
                     { value: 'other', label: 'Other' }
                   ]}
                 />
+                <InlineEditableField
+                  label="Investment Preferences"
+                  value={profile.investment_preferences}
+                  fieldName="investment_preferences"
+                  editing={editingFields.has('investment_preferences')}
+                  onStartEdit={() => startEditingField('investment_preferences', profile.investment_preferences)}
+                  onFieldChange={handleFieldChange}
+                  icon={<FileText size={16} />}
+                  options={[
+                    { value: 'conservative', label: 'Conservative' },
+                    { value: 'moderate', label: 'Moderate' },
+                    { value: 'aggressive', label: 'Aggressive' },
+                    { value: 'balanced', label: 'Balanced' },
+                    { value: 'growth', label: 'Growth' },
+                    { value: 'income', label: 'Income' },
+                    { value: 'other', label: 'Other' }
+                  ]}
+                />
               </div>
             </div>
 
