@@ -98,11 +98,31 @@ class CSRFClient {
           ...options.headers,
           'X-CSRF-Token': token,
         },
+        // Ensure credentials are included for CSRF to work properly
+        credentials: 'include',
       };
 
       console.log('[CSRF Client] Making request to:', url);
       const response = await fetch(url, enhancedOptions);
       console.log('[CSRF Client] Response status:', response.status);
+      
+      // Check if CSRF validation failed
+      if (response.status === 403 || response.status === 400) {
+        const contentType = response.headers.get('content-type');
+        if (contentType?.includes('application/json')) {
+          const errorData = await response.json().catch(() => ({}));
+          if (errorData.error?.includes('CSRF')) {
+            console.log('[CSRF Client] CSRF validation failed, clearing token and retrying...');
+            this.clearToken();
+            const newToken = await this.getToken();
+            enhancedOptions.headers = {
+              ...enhancedOptions.headers,
+              'X-CSRF-Token': newToken,
+            };
+            return fetch(url, enhancedOptions);
+          }
+        }
+      }
       
       return response;
     } catch (error) {
