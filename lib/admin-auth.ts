@@ -61,19 +61,19 @@ export async function verifyAdmin(request: NextRequest) {
   try {
     console.log('🔍 Verifying admin authentication...');
     
-    // Get admin session from cookies or headers
-    const adminSession = request.headers.get('x-admin-session') || 
-                        request.cookies.get('admin_session')?.value;
+    // Get admin token from headers (sent by frontend)
+    const adminToken = request.headers.get('x-admin-token') || 
+                      request.headers.get('authorization')?.replace('Bearer ', '');
     
-    console.log('🔍 Admin session from request:', adminSession);
+    console.log('🔍 Admin token from request:', adminToken ? 'present' : 'missing');
     
-    if (!adminSession) {
-      console.log('❌ No admin session found');
-      return { error: 'Admin session not found', status: 401 };
+    if (!adminToken) {
+      console.log('❌ No admin token found');
+      return { error: 'Admin token not found', status: 401 };
     }
 
     // Special token for system notifications
-    if (adminSession === 'admin_system_notification') {
+    if (adminToken === 'admin_system_notification') {
       console.log('✅ System notification token accepted');
       return { 
         user: { id: 'system', role: 'admin' }, 
@@ -81,22 +81,18 @@ export async function verifyAdmin(request: NextRequest) {
       };
     }
 
-    // For now, allow any admin session (we can add more validation later)
-    // In a real system, you would verify the session token against a database
+    // For now, allow any admin token (we can add more validation later)
+    // In a real system, you would verify the token against a database
     
-    // Check if it's a valid admin session format
-    if (!adminSession.includes('admin_')) {
-      console.log('❌ Invalid admin session format');
-      return { error: 'Invalid admin session', status: 401 };
+    // Check if it's a valid admin token format
+    if (adminToken.length < 10) {
+      console.log('❌ Invalid admin token format');
+      return { error: 'Invalid admin token', status: 401 };
     }
 
-    // Extract admin ID from session
-    const adminId = adminSession.split('_')[1];
-    console.log('🔍 Extracted admin ID:', adminId);
-    
-    console.log('✅ Admin session validated');
+    console.log('✅ Admin token validated');
     return { 
-      user: { id: adminId, role: 'admin' }, 
+      user: { id: 'admin', role: 'admin' }, 
       success: true 
     };
   } catch (error) {

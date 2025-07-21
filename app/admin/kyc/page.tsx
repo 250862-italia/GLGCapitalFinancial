@@ -90,12 +90,21 @@ export default function AdminKYCPage() {
 
   const fetchKYCDocuments = async () => {
     try {
-      const response = await fetch('/api/admin/kyc');
+      // Get admin token from localStorage
+      const adminToken = localStorage.getItem('admin_token');
+      
+      const response = await fetch('/api/admin/kyc', {
+        headers: {
+          'x-admin-token': adminToken || '',
+          'Content-Type': 'application/json'
+        }
+      });
+      
       if (response.ok) {
         const data = await response.json();
         setClients(data.clients || []);
       } else {
-        console.error('Failed to fetch KYC documents');
+        console.error('Failed to fetch KYC documents:', response.status, response.statusText);
       }
     } catch (error) {
       console.error('Error fetching KYC documents:', error);
@@ -106,10 +115,14 @@ export default function AdminKYCPage() {
 
   const updateDocumentStatus = async (clientId: string, documentId: string, status: 'approved' | 'rejected') => {
     try {
+      // Get admin token from localStorage
+      const adminToken = localStorage.getItem('admin_token');
+      
       const response = await fetch('/api/admin/kyc/update-status', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'x-admin-token': adminToken || ''
         },
         body: JSON.stringify({
           client_id: clientId,
