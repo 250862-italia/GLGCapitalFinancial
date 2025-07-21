@@ -48,7 +48,7 @@ interface Client {
   country?: string;
   postal_code?: string;
   status?: string;
-  kyc_documents: KYCDocument[];
+  kyc_documents?: KYCDocument[]; // Make optional since it doesn't exist yet
   created_at: string;
   updated_at?: string;
   // Banking Information
@@ -206,14 +206,14 @@ export default function AdminKYCPage() {
     });
   };
 
+  // Since kyc_documents column doesn't exist yet, show all clients
   const filteredClients = clients.filter(client => {
     if (filter === 'all') return true;
-    return client.kyc_documents.some(doc => doc.status === filter);
+    // For now, return all clients since KYC documents are not implemented
+    return true;
   });
 
-  const clientsWithKYC = filteredClients.filter(client => 
-    client.kyc_documents && client.kyc_documents.length > 0
-  );
+  const clientsWithKYC = filteredClients; // Show all clients for now
 
   if (loading) {
     return (
@@ -230,6 +230,13 @@ export default function AdminKYCPage() {
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">KYC Document Management</h1>
         <p className="text-gray-600">Review and manage client KYC documents</p>
+        <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-blue-800">
+            <strong>Note:</strong> KYC documents feature is not yet fully implemented. 
+            The database column for KYC documents needs to be created. 
+            Currently showing client financial and banking information.
+          </p>
+        </div>
       </div>
 
       {/* Filter Controls */}
@@ -299,7 +306,7 @@ export default function AdminKYCPage() {
                   </div>
                   <div className="text-right">
                     <div className="text-sm text-gray-600">
-                      {client.kyc_documents.length} document{client.kyc_documents.length !== 1 ? 's' : ''}
+                      {client.kyc_documents?.length || 0} document{client.kyc_documents?.length !== 1 ? 's' : ''}
                     </div>
                   </div>
                 </div>
@@ -497,73 +504,81 @@ export default function AdminKYCPage() {
                     KYC Documents
                   </h3>
                   <div className="space-y-4">
-                    {client.kyc_documents
-                      .filter(doc => filter === 'all' || doc.status === filter)
-                      .map((document) => (
-                      <div key={document.id} className="border rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center space-x-3">
-                            {getStatusIcon(document.status)}
-                            <div>
-                              <h4 className="font-medium text-gray-900">
-                                {getDocumentTypeLabel(document.type)}
-                              </h4>
-                              <p className="text-sm text-gray-600">{document.filename}</p>
+                    {client.kyc_documents && client.kyc_documents.length > 0 ? (
+                      client.kyc_documents
+                        .filter(doc => filter === 'all' || doc.status === filter)
+                        .map((document) => (
+                        <div key={document.id} className="border rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center space-x-3">
+                              {getStatusIcon(document.status)}
+                              <div>
+                                <h4 className="font-medium text-gray-900">
+                                  {getDocumentTypeLabel(document.type)}
+                                </h4>
+                                <p className="text-sm text-gray-600">{document.filename}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              {getStatusBadge(document.status)}
                             </div>
                           </div>
-                          <div className="flex items-center space-x-2">
-                            {getStatusBadge(document.status)}
+                          
+                          <div className="flex items-center justify-between">
+                            <div className="text-sm text-gray-600">
+                              Uploaded: {new Date(document.uploaded_at).toLocaleString()}
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => window.open(document.url, '_blank')}
+                              >
+                                <Eye className="w-4 h-4 mr-1" />
+                                View
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => window.open(document.url, '_blank')}
+                              >
+                                <Download className="w-4 h-4 mr-1" />
+                                Download
+                              </Button>
+                              
+                              {document.status === 'pending' && (
+                                <>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-green-600 border-green-600 hover:bg-green-50"
+                                    onClick={() => updateDocumentStatus(client.id, document.id, 'approved')}
+                                  >
+                                    <CheckCircle className="w-4 h-4 mr-1" />
+                                    Approve
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-red-600 border-red-600 hover:bg-red-50"
+                                    onClick={() => updateDocumentStatus(client.id, document.id, 'rejected')}
+                                  >
+                                    <XCircle className="w-4 h-4 mr-1" />
+                                    Reject
+                                  </Button>
+                                </>
+                              )}
+                            </div>
                           </div>
                         </div>
-                        
-                        <div className="flex items-center justify-between">
-                          <div className="text-sm text-gray-600">
-                            Uploaded: {new Date(document.uploaded_at).toLocaleString()}
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => window.open(document.url, '_blank')}
-                            >
-                              <Eye className="w-4 h-4 mr-1" />
-                              View
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => window.open(document.url, '_blank')}
-                            >
-                              <Download className="w-4 h-4 mr-1" />
-                              Download
-                            </Button>
-                            
-                            {document.status === 'pending' && (
-                              <>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="text-green-600 border-green-600 hover:bg-green-50"
-                                  onClick={() => updateDocumentStatus(client.id, document.id, 'approved')}
-                                >
-                                  <CheckCircle className="w-4 h-4 mr-1" />
-                                  Approve
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="text-red-600 border-red-600 hover:bg-red-50"
-                                  onClick={() => updateDocumentStatus(client.id, document.id, 'rejected')}
-                                >
-                                  <XCircle className="w-4 h-4 mr-1" />
-                                  Reject
-                                </Button>
-                              </>
-                            )}
-                          </div>
-                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        <FileText className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                        <p>No KYC documents uploaded yet</p>
+                        <p className="text-sm">KYC document upload feature will be available soon</p>
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
               </CardContent>

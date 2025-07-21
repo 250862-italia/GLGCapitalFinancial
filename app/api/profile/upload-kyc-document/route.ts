@@ -70,10 +70,10 @@ export async function POST(request: NextRequest) {
       status: 'pending'
     };
 
-    // Get current client profile
+    // Verify client exists (without accessing kyc_documents column)
     const { data: clientData, error: clientError } = await supabase
       .from('clients')
-      .select('kyc_documents')
+      .select('id, user_id, first_name, last_name')
       .eq('user_id', userId)
       .single();
 
@@ -85,31 +85,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update or create kyc_documents field
-    const currentDocuments = clientData?.kyc_documents || [];
-    const updatedDocuments = [...currentDocuments, documentRecord];
-
-    const { error: updateError } = await supabase
-      .from('clients')
-      .update({
-        kyc_documents: updatedDocuments,
-        updated_at: new Date().toISOString()
-      })
-      .eq('user_id', userId);
-
-    if (updateError) {
-      console.error('Error updating client KYC documents:', updateError);
+    if (!clientData) {
       return NextResponse.json(
-        { error: 'Failed to update client profile' },
-        { status: 500 }
+        { error: 'Client not found' },
+        { status: 404 }
       );
     }
+
+    // For now, just return success without updating the clients table
+    // since the kyc_documents column doesn't exist
+    // TODO: Create a separate kyc_documents table or add the column to clients table
 
     return NextResponse.json({
       success: true,
       document_id: documentId,
       document_url: urlData.publicUrl,
-      message: 'Document uploaded successfully'
+      message: 'Document uploaded successfully to storage. KYC documents table will be implemented soon.',
+      note: 'Document stored in storage but not yet linked to client profile (kyc_documents column missing)'
     });
 
   } catch (error) {

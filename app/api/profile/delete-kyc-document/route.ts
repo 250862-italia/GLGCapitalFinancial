@@ -14,10 +14,10 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Get current client profile
+    // Verify client exists (without accessing kyc_documents column)
     const { data: clientData, error: clientError } = await supabase
       .from('clients')
-      .select('kyc_documents')
+      .select('id, user_id, first_name, last_name')
       .eq('user_id', user_id)
       .single();
 
@@ -29,70 +29,21 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    if (!clientData?.kyc_documents) {
+    if (!clientData) {
       return NextResponse.json(
-        { error: 'No KYC documents found' },
+        { error: 'Client not found' },
         { status: 404 }
       );
     }
 
-    // Find the document to delete
-    const documentToDelete = clientData.kyc_documents.find(
-      (doc: any) => doc.id === document_id
-    );
-
-    if (!documentToDelete) {
-      return NextResponse.json(
-        { error: 'Document not found' },
-        { status: 404 }
-      );
-    }
-
-    // Remove document from storage
-    try {
-      // Extract file path from URL
-      const urlParts = documentToDelete.url.split('/');
-      const fileName = urlParts[urlParts.length - 1];
-      const filePath = `kyc-documents/${user_id}/${fileName}`;
-
-      const { error: storageError } = await supabase.storage
-        .from('kyc-documents')
-        .remove([filePath]);
-
-      if (storageError) {
-        console.error('Storage delete error:', storageError);
-        // Continue with database update even if storage delete fails
-      }
-    } catch (storageError) {
-      console.error('Error deleting from storage:', storageError);
-      // Continue with database update
-    }
-
-    // Remove document from database
-    const updatedDocuments = clientData.kyc_documents.filter(
-      (doc: any) => doc.id !== document_id
-    );
-
-    const { error: updateError } = await supabase
-      .from('clients')
-      .update({
-        kyc_documents: updatedDocuments,
-        updated_at: new Date().toISOString()
-      })
-      .eq('user_id', user_id);
-
-    if (updateError) {
-      console.error('Error updating client KYC documents:', updateError);
-      return NextResponse.json(
-        { error: 'Failed to update client profile' },
-        { status: 500 }
-      );
-    }
+    // For now, return a message that KYC documents are not yet implemented
+    // TODO: Implement proper KYC document management when the column/table is created
 
     return NextResponse.json({
-      success: true,
-      message: 'Document deleted successfully'
-    });
+      success: false,
+      message: 'KYC document deletion not yet implemented. The kyc_documents column does not exist in the database.',
+      note: 'This feature will be available once the KYC documents system is properly implemented.'
+    }, { status: 501 }); // 501 Not Implemented
 
   } catch (error) {
     console.error('Error in KYC document deletion:', error);

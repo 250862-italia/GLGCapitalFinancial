@@ -66,7 +66,7 @@ interface ClientProfile {
   source_of_funds?: string;
   tax_residency?: string;
   tax_id?: string;
-  kyc_documents?: any[];
+  kyc_documents?: any[]; // Optional since it doesn't exist in database yet
   status: string;
   created_at: string;
   updated_at: string;

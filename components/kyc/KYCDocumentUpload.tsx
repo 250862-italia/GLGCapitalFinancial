@@ -57,9 +57,10 @@ export default function KYCDocumentUpload({ userId, onDocumentsUpdate }: KYCDocu
       const response = await fetch(`/api/profile/${userId}`);
       if (response.ok) {
         const data = await response.json();
-        if (data.kyc_documents) {
-          setDocuments(data.kyc_documents);
-        }
+        // KYC documents are not yet implemented in the database
+        // For now, we'll show an empty state
+        setDocuments([]);
+        console.log('KYC documents feature not yet implemented in database');
       }
     } catch (error) {
       console.error('Error loading KYC documents:', error);
