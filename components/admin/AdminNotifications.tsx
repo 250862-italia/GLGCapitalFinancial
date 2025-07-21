@@ -271,34 +271,30 @@ export default function AdminNotifications({ adminId }: AdminNotificationsProps)
 
   return (
     <div style={{ 
-      position: 'fixed', 
-      top: '20px', 
-      right: '20px', 
-      zIndex: 1000 
+      position: 'relative'
     }}>
       {/* Notification Bell */}
       <button
         onClick={() => setShowDropdown(!showDropdown)}
         style={{
           position: 'relative',
-          background: 'white',
-          border: '1px solid #e2e8f0',
+          background: 'rgba(255, 255, 255, 0.1)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
           cursor: 'pointer',
           padding: '0.75rem',
           borderRadius: '50%',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: '#374151',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+          color: 'white',
           transition: 'all 0.2s'
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.background = '#f8fafc';
+          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
           e.currentTarget.style.transform = 'scale(1.05)';
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.background = 'white';
+          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
           e.currentTarget.style.transform = 'scale(1)';
         }}
       >

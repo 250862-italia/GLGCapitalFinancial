@@ -101,9 +101,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   return (
     <>
-      {/* Real-time notifications for admin */}
-      <AdminNotifications adminId={getAdminId()} />
-      
       {/* Admin Header with Return to Dashboard button */}
       {pathname !== '/admin' && pathname !== '/admin/login' && (
         <div style={{
@@ -120,38 +117,42 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           <div style={{ color: 'white', fontSize: '1.25rem', fontWeight: '600' }}>
             GLG Capital Group - Admin Panel
           </div>
-          <button
-            onClick={() => {
-              console.log('🔘 Return to Dashboard button clicked!');
-              router.push('/admin');
-            }}
-            style={{
-              background: '#059669',
-              color: 'white',
-              border: 'none',
-              padding: '0.75rem 1.5rem',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              transition: 'background-color 0.2s',
-              position: 'relative',
-              zIndex: 1002,
-              pointerEvents: 'auto',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-            }}
-            onMouseOver={(e) => e.currentTarget.style.background = '#047857'}
-            onMouseOut={(e) => e.currentTarget.style.background = '#059669'}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-              <polyline points="9,22 9,12 15,12 15,22"/>
-            </svg>
-            Return to Dashboard
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            {/* Real-time notifications for admin */}
+            <AdminNotifications adminId={getAdminId()} />
+            <button
+              onClick={() => {
+                console.log('🔘 Return to Dashboard button clicked!');
+                router.push('/admin');
+              }}
+              style={{
+                background: '#059669',
+                color: 'white',
+                border: 'none',
+                padding: '0.75rem 1.5rem',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '500',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                transition: 'background-color 0.2s',
+                position: 'relative',
+                zIndex: 1002,
+                pointerEvents: 'auto',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+              }}
+              onMouseOver={(e) => e.currentTarget.style.background = '#047857'}
+              onMouseOut={(e) => e.currentTarget.style.background = '#059669'}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+              </svg>
+              Return to Dashboard
+            </button>
+          </div>
         </div>
       )}
       

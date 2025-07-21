@@ -27,6 +27,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import AdminConsole from '@/components/admin/AdminConsole';
+import AdminNotifications from '@/components/admin/AdminNotifications';
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -230,6 +231,8 @@ export default function AdminDashboardPage() {
         </div>
         
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          {/* Real-time notifications for admin */}
+          <AdminNotifications adminId={adminUser?.id || 'admin'} />
           <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>
             Welcome, {adminUser.name}
           </span>
