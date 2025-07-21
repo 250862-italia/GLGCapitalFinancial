@@ -19,6 +19,13 @@
   --success-emerald: 16, 185, 129;
   --warning-amber: 245, 158, 11;
   --error-rose: 244, 63, 94;
+  
+  /* Additional CSS custom properties for consistency */
+  --primary: #2563eb;
+  --secondary: #ffffff;
+  --accent: #1d4ed8;
+  --background: #ffffff;
+  --foreground: #111827;
 }
 
 html {
