@@ -41,8 +41,24 @@ export default function AdminNotifications({ adminId }: AdminNotificationsProps)
   const [showSettings, setShowSettings] = useState(false);
   const [filter, setFilter] = useState<'all' | 'unread' | 'high_priority'>('all');
 
+  console.log('🔔 AdminNotifications rendered:', { adminId, showDropdown, notificationsCount: notifications.length });
+
   useEffect(() => {
     loadNotifications();
+    
+    // Add a test notification for debugging
+    setTimeout(() => {
+      const testNotification: AdminNotification = {
+        id: 'test-' + Date.now(),
+        type: 'system_alert',
+        title: 'Test Notification',
+        message: 'This is a test notification to verify the bell is working',
+        timestamp: new Date(),
+        read: false,
+        priority: 'medium'
+      };
+      addNotification(testNotification);
+    }, 2000);
     
     // Setup real-time notifications using the realtime manager
     if (typeof window !== 'undefined') {
@@ -275,7 +291,12 @@ export default function AdminNotifications({ adminId }: AdminNotificationsProps)
     }}>
       {/* Notification Bell */}
       <button
-        onClick={() => setShowDropdown(!showDropdown)}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log('🔔 Notification bell clicked!');
+          setShowDropdown(!showDropdown);
+        }}
         style={{
           position: 'relative',
           background: 'rgba(255, 255, 255, 0.1)',
@@ -287,7 +308,9 @@ export default function AdminNotifications({ adminId }: AdminNotificationsProps)
           alignItems: 'center',
           justifyContent: 'center',
           color: 'white',
-          transition: 'all 0.2s'
+          transition: 'all 0.2s',
+          zIndex: 1003,
+          pointerEvents: 'auto'
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
@@ -535,7 +558,7 @@ export default function AdminNotifications({ adminId }: AdminNotificationsProps)
         </div>
       )}
 
-      {/* Click outside to close */}
+      {/* Click outside to close - only when dropdown is open */}
       {showDropdown && (
         <div
           style={{
@@ -546,7 +569,10 @@ export default function AdminNotifications({ adminId }: AdminNotificationsProps)
             bottom: 0,
             zIndex: 999
           }}
-          onClick={() => setShowDropdown(false)}
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowDropdown(false);
+          }}
         />
       )}
     </div>
