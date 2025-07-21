@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const { data: newPackage, error } = await supabaseAdmin
+    const { data: newPackageData, error } = await supabaseAdmin
       .from('packages')
       .insert([{
         name,
@@ -127,8 +127,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    console.log('✅ Package created successfully:', newPackage.id);
-    return NextResponse.json({ package: newPackage });
+    console.log('✅ Package created successfully:', newPackageData.id);
+    return NextResponse.json({ package: newPackageData });
   } catch (error) {
     console.error('❌ Unexpected error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -152,7 +152,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Package ID required' }, { status: 400 });
     }
 
-    const { data: updatedPackage, error } = await supabaseAdmin
+    const { data: updatedPackageData, error } = await supabaseAdmin
       .from('packages')
       .update({
         name,
@@ -174,8 +174,8 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    console.log('✅ Package updated successfully:', updatedPackage.id);
-    return NextResponse.json({ package: updatedPackage });
+    console.log('✅ Package updated successfully:', updatedPackageData.id);
+    return NextResponse.json({ package: updatedPackageData });
   } catch (error) {
     console.error('❌ Unexpected error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
