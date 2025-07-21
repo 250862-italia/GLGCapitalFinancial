@@ -189,7 +189,7 @@ export default function AdminPackagesPage() {
   const inputStyle = { width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '14px' };
 
   if (error) {
-    const errorMessage = typeof error === 'string' ? error : JSON.stringify(error);
+    const errorMessage = typeof error === 'string' ? error : (error && typeof error === 'object' ? JSON.stringify(error) : String(error));
     return <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '24px', borderRadius: '8px', margin: '40px auto', maxWidth: 600, fontSize: 18 }}>{errorMessage}</div>;
   }
 
@@ -200,7 +200,7 @@ export default function AdminPackagesPage() {
         <button onClick={openAdd} style={buttonStyle}>Aggiungi Pacchetto</button>
       </div>
 
-      {error && <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '12px', borderRadius: '6px', marginBottom: '20px' }}>{typeof error === 'string' ? error : JSON.stringify(error)}</div>}
+      {error && <div style={{ background: '#fee2e2', color: '#b91c1c', padding: '12px', borderRadius: '6px', marginBottom: '20px' }}>{typeof error === 'string' ? error : (error && typeof error === 'object' ? JSON.stringify(error) : String(error))}</div>}
 
       {loading ? (
         <div style={{ textAlign: 'center', padding: '40px' }}>Caricamento...</div>
@@ -221,12 +221,12 @@ export default function AdminPackagesPage() {
           <tbody>
             {packages.map(pkg => (
               <tr key={pkg.id} style={{ background: pkg.status === 'active' ? '#f0fdf4' : '#fff', borderBottom: '1px solid #e5e7eb', transition: 'background 0.2s' }}>
-                <td style={tdStyle}>{pkg.name}</td>
-                <td style={{ ...tdStyle, maxWidth: 220, whiteSpace: 'pre-line', overflow: 'hidden', textOverflow: 'ellipsis' }}>{pkg.description}</td>
-                <td style={tdStyle}>€{pkg.min_investment?.toLocaleString()}</td>
-                <td style={tdStyle}>€{pkg.max_investment?.toLocaleString()}</td>
-                <td style={tdStyle}>{pkg.duration_months} mesi</td>
-                <td style={tdStyle}>{pkg.expected_return}%</td>
+                <td style={tdStyle}>{pkg.name || ''}</td>
+                <td style={{ ...tdStyle, maxWidth: 220, whiteSpace: 'pre-line', overflow: 'hidden', textOverflow: 'ellipsis' }}>{pkg.description || ''}</td>
+                <td style={tdStyle}>€{pkg.min_investment ? pkg.min_investment.toLocaleString() : '0'}</td>
+                <td style={tdStyle}>€{pkg.max_investment ? pkg.max_investment.toLocaleString() : '0'}</td>
+                <td style={tdStyle}>{pkg.duration_months || 0} mesi</td>
+                <td style={tdStyle}>{pkg.expected_return || 0}%</td>
                 <td style={tdStyle}>
                   <span style={{ 
                     background: pkg.status === 'active' ? '#bbf7d0' : pkg.status === 'inactive' ? '#fee2e2' : '#fef3c7', 
