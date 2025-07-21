@@ -55,6 +55,7 @@ interface ClientProfile {
   risk_tolerance?: string;
   investment_goals?: any;
   preferred_investment_types?: any;
+  investment_preferences?: any; // Added missing field
   monthly_investment_budget?: number;
   emergency_fund?: number;
   debt_amount?: number;
@@ -1321,10 +1322,33 @@ function InlineEditableField({
   type?: string;
   options?: { value: string; label: string }[] | null;
 }) {
-  const [editValue, setEditValue] = useState(value);
+  const [editValue, setEditValue] = useState(() => {
+    // Handle object/array values properly for the input field
+    if (value === null || value === undefined) return '';
+    if (typeof value === 'object') {
+      if (Array.isArray(value)) {
+        return value.length > 0 ? value.join(', ') : '';
+      }
+      const keys = Object.keys(value);
+      return keys.length > 0 ? keys.join(', ') : '';
+    }
+    return String(value);
+  });
 
   useEffect(() => {
-    setEditValue(value);
+    // Handle object/array values properly for the input field
+    if (value === null || value === undefined) {
+      setEditValue('');
+    } else if (typeof value === 'object') {
+      if (Array.isArray(value)) {
+        setEditValue(value.length > 0 ? value.join(', ') : '');
+      } else {
+        const keys = Object.keys(value);
+        setEditValue(keys.length > 0 ? keys.join(', ') : '');
+      }
+    } else {
+      setEditValue(String(value));
+    }
   }, [value]);
 
   const handleChange = (newValue: any) => {
@@ -1344,17 +1368,22 @@ function InlineEditableField({
   };
 
   const formatDisplayValue = (val: any) => {
-    if (val === null || val === undefined) return 'Not specified';
-    if (typeof val === 'object') {
-      if (Array.isArray(val)) {
-        return val.length > 0 ? val.join(', ') : 'None specified';
+    try {
+      if (val === null || val === undefined) return 'Not specified';
+      if (typeof val === 'object') {
+        if (Array.isArray(val)) {
+          return val.length > 0 ? val.join(', ') : 'None specified';
+        }
+        // For objects, check if it has any properties
+        const keys = Object.keys(val);
+        if (keys.length === 0) return 'None specified';
+        return keys.join(', ');
       }
-      // For objects, check if it has any properties
-      const keys = Object.keys(val);
-      if (keys.length === 0) return 'None specified';
-      return keys.join(', ');
+      return String(val);
+    } catch (error) {
+      console.error('Error formatting display value:', error, val);
+      return 'Error displaying value';
     }
-    return String(val);
   };
 
   const displayValue = formatDisplayValue(value);
