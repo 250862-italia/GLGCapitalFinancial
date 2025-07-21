@@ -1086,6 +1086,42 @@ export default function ProfilePage() {
                   icon={<Shield size={16} />}
                   type="number"
                 />
+                <InlineEditableField
+                  label="Investment Goals"
+                  value={profile.investment_goals}
+                  fieldName="investment_goals"
+                  editing={editingFields.has('investment_goals')}
+                  onStartEdit={() => startEditingField('investment_goals', profile.investment_goals)}
+                  onFieldChange={handleFieldChange}
+                  icon={<FileText size={16} />}
+                  options={[
+                    { value: 'retirement', label: 'Retirement' },
+                    { value: 'wealth_building', label: 'Wealth Building' },
+                    { value: 'income_generation', label: 'Income Generation' },
+                    { value: 'tax_optimization', label: 'Tax Optimization' },
+                    { value: 'diversification', label: 'Diversification' },
+                    { value: 'other', label: 'Other' }
+                  ]}
+                />
+                <InlineEditableField
+                  label="Preferred Investment Types"
+                  value={profile.preferred_investment_types}
+                  fieldName="preferred_investment_types"
+                  editing={editingFields.has('preferred_investment_types')}
+                  onStartEdit={() => startEditingField('preferred_investment_types', profile.preferred_investment_types)}
+                  onFieldChange={handleFieldChange}
+                  icon={<FileText size={16} />}
+                  options={[
+                    { value: 'stocks', label: 'Stocks' },
+                    { value: 'bonds', label: 'Bonds' },
+                    { value: 'real_estate', label: 'Real Estate' },
+                    { value: 'commodities', label: 'Commodities' },
+                    { value: 'cryptocurrency', label: 'Cryptocurrency' },
+                    { value: 'mutual_funds', label: 'Mutual Funds' },
+                    { value: 'etfs', label: 'ETFs' },
+                    { value: 'other', label: 'Other' }
+                  ]}
+                />
               </div>
             </div>
 
@@ -1307,7 +1343,21 @@ function InlineEditableField({
     }
   };
 
-  const displayValue = value || 'Not specified';
+  const formatDisplayValue = (val: any) => {
+    if (val === null || val === undefined) return 'Not specified';
+    if (typeof val === 'object') {
+      if (Array.isArray(val)) {
+        return val.length > 0 ? val.join(', ') : 'None specified';
+      }
+      // For objects, check if it has any properties
+      const keys = Object.keys(val);
+      if (keys.length === 0) return 'None specified';
+      return keys.join(', ');
+    }
+    return String(val);
+  };
+
+  const displayValue = formatDisplayValue(value);
 
   return (
     <div style={{ 
