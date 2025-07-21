@@ -21,13 +21,15 @@ import {
   Package,
   CreditCard,
   CheckCircle,
-  LogOut
+  LogOut,
+  Loader2
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import AdminConsole from '@/components/admin/AdminConsole';
 import AdminNotifications from '@/components/admin/AdminNotifications';
+import { fetchJSONWithCSRF } from '@/lib/csrf-client';
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -95,6 +97,38 @@ export default function AdminDashboardPage() {
     }
   };
 
+  // Load recent activities
+  const loadRecentActivities = async () => {
+    try {
+      const adminToken = localStorage.getItem('admin_token');
+      if (!adminToken) return;
+
+      const response = await fetchJSONWithCSRF('/api/admin/activities?limit=10', {
+        headers: {
+          'x-admin-token': adminToken
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data) {
+          setRecentActivities(data.data);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading activities:', error);
+    } finally {
+      setLoadingActivities(false);
+    }
+  };
+
+  // Load activities on mount
+  useEffect(() => {
+    if (adminUser) {
+      loadRecentActivities();
+    }
+  }, [adminUser]);
+
   // Listener globale per log (window.dispatchEvent(new CustomEvent('admin-log', { detail: 'messaggio' })))
   useEffect(() => {
     const handler = (e: any) => {
@@ -135,13 +169,8 @@ export default function AdminDashboardPage() {
     },
   ];
 
-  const recentActivities = [
-    { action: "New client registration", time: "2 minutes ago", type: "user" },
-    { action: "Position update - GLG Equity A", time: "15 minutes ago", type: "position" },
-    { action: "News article published", time: "1 hour ago", type: "content" },
-    { action: "Market data updated", time: "2 hours ago", type: "data" },
-    { action: "Team member profile updated", time: "3 hours ago", type: "team" },
-  ];
+  const [recentActivities, setRecentActivities] = useState<any[]>([]);
+  const [loadingActivities, setLoadingActivities] = useState(true);
 
   const quickActions = [
     { name: "Manage Packages", icon: Package, color: "#3b82f6", href: "/admin/packages" },
@@ -156,6 +185,24 @@ export default function AdminDashboardPage() {
     { name: 'Fee', value: 6 },
     { name: 'Net', value: 94 },
   ];
+
+  // Helper function to format time
+  const formatTimeAgo = (dateString: string) => {
+    const now = new Date();
+    const date = new Date(dateString);
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+    
+    if (diffInMinutes < 1) return 'Just now';
+    if (diffInMinutes < 60) return `${diffInMinutes} minutes ago`;
+    
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours} hours ago`;
+    
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 7) return `${diffInDays} days ago`;
+    
+    return date.toLocaleDateString();
+  };
 
   function BarChartComponent() {
     return (
@@ -592,33 +639,47 @@ export default function AdminDashboardPage() {
                   boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
                   border: '1px solid #e5e7eb'
                 }}>
-                  {recentActivities.map((activity, index) => (
-                    <div key={index} style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      padding: '0.75rem 0',
-                      borderBottom: index < recentActivities.length - 1 ? '1px solid #f3f4f6' : 'none'
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <div style={{
-                          width: 8,
-                          height: 8,
-                          borderRadius: '50%',
-                          background: activity.type === 'user' ? '#3b82f6' : 
-                                     activity.type === 'position' ? '#10b981' :
-                                     activity.type === 'content' ? '#8b5cf6' :
-                                     activity.type === 'data' ? '#f59e0b' : '#6b7280'
-                        }} />
-                        <span style={{ color: '#374151', fontSize: '0.875rem' }}>
-                          {activity.action}
+                  {loadingActivities ? (
+                    <div style={{ textAlign: 'center', padding: '2rem' }}>
+                      <Loader2 size={24} className="animate-spin mx-auto mb-2" />
+                      <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>Loading activities...</p>
+                    </div>
+                  ) : recentActivities.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '2rem' }}>
+                      <Activity size={24} className="mx-auto mb-2 text-gray-400" />
+                      <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>No recent activities</p>
+                    </div>
+                  ) : (
+                    recentActivities.map((activity, index) => (
+                      <div key={activity.id || index} style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '0.75rem 0',
+                        borderBottom: index < recentActivities.length - 1 ? '1px solid #f3f4f6' : 'none'
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          <div style={{
+                            width: 8,
+                            height: 8,
+                            borderRadius: '50%',
+                            background: activity.type === 'user' ? '#3b82f6' : 
+                                       activity.type === 'investment' ? '#10b981' :
+                                       activity.type === 'content' ? '#8b5cf6' :
+                                       activity.type === 'kyc' ? '#f59e0b' :
+                                       activity.type === 'payment' ? '#8b5cf6' :
+                                       activity.type === 'system' ? '#6b7280' : '#6b7280'
+                          }} />
+                          <span style={{ color: '#374151', fontSize: '0.875rem' }}>
+                            {activity.action}
+                          </span>
+                        </div>
+                        <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>
+                          {formatTimeAgo(activity.created_at)}
                         </span>
                       </div>
-                      <span style={{ color: '#6b7280', fontSize: '0.75rem' }}>
-                        {activity.time}
-                      </span>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </div>
 
