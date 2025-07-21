@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
 
     const supabase = getSupabaseAdmin();
 
-    // Fetch all clients with KYC documents
+    // Fetch all clients with KYC documents and financial/banking information
     const { data: clients, error: clientsError } = await supabase
       .from('clients')
       .select(`
@@ -24,8 +24,43 @@ export async function GET(request: NextRequest) {
         first_name,
         last_name,
         email,
+        phone,
+        date_of_birth,
+        nationality,
+        address,
+        city,
+        country,
+        postal_code,
+        status,
         kyc_documents,
-        created_at
+        created_at,
+        updated_at,
+        -- Banking Information
+        iban,
+        bic,
+        account_holder,
+        usdt_wallet,
+        -- Financial Information
+        annual_income,
+        net_worth,
+        investment_experience,
+        risk_tolerance,
+        investment_goals,
+        preferred_investment_types,
+        monthly_investment_budget,
+        emergency_fund,
+        debt_amount,
+        credit_score,
+        employment_status,
+        employer_name,
+        job_title,
+        years_employed,
+        source_of_funds,
+        tax_residency,
+        tax_id,
+        -- Investment Profile
+        total_invested,
+        risk_profile
       `)
       .not('kyc_documents', 'is', null)
       .not('kyc_documents', 'eq', '[]');

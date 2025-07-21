@@ -13,7 +13,16 @@ import {
   FileText,
   User,
   Mail,
-  Calendar
+  Calendar,
+  Phone,
+  MapPin,
+  Building,
+  DollarSign,
+  CreditCard,
+  Briefcase,
+  Target,
+  Shield,
+  TrendingUp
 } from 'lucide-react';
 
 interface KYCDocument {
@@ -31,8 +40,43 @@ interface Client {
   first_name: string;
   last_name: string;
   email: string;
+  phone?: string;
+  date_of_birth?: string;
+  nationality?: string;
+  address?: string;
+  city?: string;
+  country?: string;
+  postal_code?: string;
+  status?: string;
   kyc_documents: KYCDocument[];
   created_at: string;
+  updated_at?: string;
+  // Banking Information
+  iban?: string;
+  bic?: string;
+  account_holder?: string;
+  usdt_wallet?: string;
+  // Financial Information
+  annual_income?: number;
+  net_worth?: number;
+  investment_experience?: string;
+  risk_tolerance?: string;
+  investment_goals?: string;
+  preferred_investment_types?: string;
+  monthly_investment_budget?: number;
+  emergency_fund?: number;
+  debt_amount?: number;
+  credit_score?: number;
+  employment_status?: string;
+  employer_name?: string;
+  job_title?: string;
+  years_employed?: number;
+  source_of_funds?: string;
+  tax_residency?: string;
+  tax_id?: string;
+  // Investment Profile
+  total_invested?: number;
+  risk_profile?: string;
 }
 
 export default function AdminKYCPage() {
@@ -130,6 +174,23 @@ export default function AdminKYCPage() {
       'other': 'Other Document'
     };
     return labels[type] || type;
+  };
+
+  const formatCurrency = (amount: number | undefined) => {
+    if (!amount) return '$0.00';
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount);
+  };
+
+  const formatDate = (dateString: string | undefined) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
   };
 
   const filteredClients = clients.filter(client => {
@@ -231,74 +292,266 @@ export default function AdminKYCPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {client.kyc_documents
-                    .filter(doc => filter === 'all' || doc.status === filter)
-                    .map((document) => (
-                    <div key={document.id} className="border rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center space-x-3">
-                          {getStatusIcon(document.status)}
-                          <div>
-                            <h4 className="font-medium text-gray-900">
-                              {getDocumentTypeLabel(document.type)}
-                            </h4>
-                            <p className="text-sm text-gray-600">{document.filename}</p>
+                {/* Personal Information Section */}
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                    <User className="w-5 h-5 mr-2" />
+                    Personal Information
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="flex items-center space-x-2">
+                      <Phone className="w-4 h-4 text-gray-500" />
+                      <span className="text-sm text-gray-600">Phone:</span>
+                      <span className="text-sm font-medium">{client.phone || 'N/A'}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Calendar className="w-4 h-4 text-gray-500" />
+                      <span className="text-sm text-gray-600">DOB:</span>
+                      <span className="text-sm font-medium">{formatDate(client.date_of_birth)}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <MapPin className="w-4 h-4 text-gray-500" />
+                      <span className="text-sm text-gray-600">Nationality:</span>
+                      <span className="text-sm font-medium">{client.nationality || 'N/A'}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <MapPin className="w-4 h-4 text-gray-500" />
+                      <span className="text-sm text-gray-600">Country:</span>
+                      <span className="text-sm font-medium">{client.country || 'N/A'}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Shield className="w-4 h-4 text-gray-500" />
+                      <span className="text-sm text-gray-600">Status:</span>
+                      <Badge className={`${
+                        client.status === 'active' ? 'bg-green-100 text-green-800' :
+                        client.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                        client.status === 'suspended' ? 'bg-red-100 text-red-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {client.status || 'pending'}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Banking Information Section */}
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                    <CreditCard className="w-5 h-5 mr-2" />
+                    Banking Information
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-600">IBAN:</span>
+                      <span className="text-sm font-medium font-mono">{client.iban || 'N/A'}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-600">BIC:</span>
+                      <span className="text-sm font-medium font-mono">{client.bic || 'N/A'}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-600">Account Holder:</span>
+                      <span className="text-sm font-medium">{client.account_holder || 'N/A'}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-600">USDT Wallet:</span>
+                      <span className="text-sm font-medium font-mono">{client.usdt_wallet || 'N/A'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Financial Information Section */}
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                    <DollarSign className="w-5 h-5 mr-2" />
+                    Financial Information
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-600">Annual Income:</span>
+                      <span className="text-sm font-medium">{formatCurrency(client.annual_income)}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-600">Net Worth:</span>
+                      <span className="text-sm font-medium">{formatCurrency(client.net_worth)}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-600">Monthly Budget:</span>
+                      <span className="text-sm font-medium">{formatCurrency(client.monthly_investment_budget)}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-600">Emergency Fund:</span>
+                      <span className="text-sm font-medium">{formatCurrency(client.emergency_fund)}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-600">Debt Amount:</span>
+                      <span className="text-sm font-medium">{formatCurrency(client.debt_amount)}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-600">Credit Score:</span>
+                      <span className="text-sm font-medium">{client.credit_score || 'N/A'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Employment Information Section */}
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                    <Briefcase className="w-5 h-5 mr-2" />
+                    Employment Information
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-600">Status:</span>
+                      <span className="text-sm font-medium">{client.employment_status || 'N/A'}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Building className="w-4 h-4 text-gray-500" />
+                      <span className="text-sm text-gray-600">Employer:</span>
+                      <span className="text-sm font-medium">{client.employer_name || 'N/A'}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-600">Job Title:</span>
+                      <span className="text-sm font-medium">{client.job_title || 'N/A'}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-600">Years Employed:</span>
+                      <span className="text-sm font-medium">{client.years_employed || 'N/A'}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-600">Source of Funds:</span>
+                      <span className="text-sm font-medium">{client.source_of_funds || 'N/A'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Investment Profile Section */}
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                    <TrendingUp className="w-5 h-5 mr-2" />
+                    Investment Profile
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-600">Experience:</span>
+                      <span className="text-sm font-medium">{client.investment_experience || 'N/A'}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-600">Risk Tolerance:</span>
+                      <span className="text-sm font-medium">{client.risk_tolerance || 'N/A'}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-600">Risk Profile:</span>
+                      <span className="text-sm font-medium">{client.risk_profile || 'N/A'}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-600">Total Invested:</span>
+                      <span className="text-sm font-medium">{formatCurrency(client.total_invested)}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-600">Investment Goals:</span>
+                      <span className="text-sm font-medium">{client.investment_goals || 'N/A'}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-600">Preferred Types:</span>
+                      <span className="text-sm font-medium">{client.preferred_investment_types || 'N/A'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tax Information Section */}
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                    <Target className="w-5 h-5 mr-2" />
+                    Tax Information
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-600">Tax Residency:</span>
+                      <span className="text-sm font-medium">{client.tax_residency || 'N/A'}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-gray-600">Tax ID:</span>
+                      <span className="text-sm font-medium font-mono">{client.tax_id || 'N/A'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* KYC Documents Section */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                    <FileText className="w-5 h-5 mr-2" />
+                    KYC Documents
+                  </h3>
+                  <div className="space-y-4">
+                    {client.kyc_documents
+                      .filter(doc => filter === 'all' || doc.status === filter)
+                      .map((document) => (
+                      <div key={document.id} className="border rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center space-x-3">
+                            {getStatusIcon(document.status)}
+                            <div>
+                              <h4 className="font-medium text-gray-900">
+                                {getDocumentTypeLabel(document.type)}
+                              </h4>
+                              <p className="text-sm text-gray-600">{document.filename}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            {getStatusBadge(document.status)}
                           </div>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          {getStatusBadge(document.status)}
+                        
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm text-gray-600">
+                            Uploaded: {new Date(document.uploaded_at).toLocaleString()}
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => window.open(document.url, '_blank')}
+                            >
+                              <Eye className="w-4 h-4 mr-1" />
+                              View
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => window.open(document.url, '_blank')}
+                            >
+                              <Download className="w-4 h-4 mr-1" />
+                              Download
+                            </Button>
+                            
+                            {document.status === 'pending' && (
+                              <>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-green-600 border-green-600 hover:bg-green-50"
+                                  onClick={() => updateDocumentStatus(client.id, document.id, 'approved')}
+                                >
+                                  <CheckCircle className="w-4 h-4 mr-1" />
+                                  Approve
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-red-600 border-red-600 hover:bg-red-50"
+                                  onClick={() => updateDocumentStatus(client.id, document.id, 'rejected')}
+                                >
+                                  <XCircle className="w-4 h-4 mr-1" />
+                                  Reject
+                                </Button>
+                              </>
+                            )}
+                          </div>
                         </div>
                       </div>
-                      
-                      <div className="flex items-center justify-between">
-                        <div className="text-sm text-gray-600">
-                          Uploaded: {new Date(document.uploaded_at).toLocaleString()}
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => window.open(document.url, '_blank')}
-                          >
-                            <Eye className="w-4 h-4 mr-1" />
-                            View
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => window.open(document.url, '_blank')}
-                          >
-                            <Download className="w-4 h-4 mr-1" />
-                            Download
-                          </Button>
-                          
-                          {document.status === 'pending' && (
-                            <>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="text-green-600 border-green-600 hover:bg-green-50"
-                                onClick={() => updateDocumentStatus(client.id, document.id, 'approved')}
-                              >
-                                <CheckCircle className="w-4 h-4 mr-1" />
-                                Approve
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="text-red-600 border-red-600 hover:bg-red-50"
-                                onClick={() => updateDocumentStatus(client.id, document.id, 'rejected')}
-                              >
-                                <XCircle className="w-4 h-4 mr-1" />
-                                Reject
-                              </Button>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </CardContent>
             </Card>
