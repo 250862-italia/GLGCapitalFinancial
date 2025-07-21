@@ -206,6 +206,17 @@ export default function AdminKYCPage() {
     });
   };
 
+  // Helper function to safely render any field value
+  const safeRender = (value: any): string => {
+    if (value === null || value === undefined) return 'N/A';
+    if (typeof value === 'string') return value;
+    if (typeof value === 'number') return value.toString();
+    if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+    if (Array.isArray(value)) return value.join(', ');
+    if (typeof value === 'object') return JSON.stringify(value);
+    return 'N/A';
+  };
+
   // Since kyc_documents column doesn't exist yet, show all clients
   const filteredClients = clients.filter(client => {
     if (filter === 'all') return true;
@@ -322,7 +333,7 @@ export default function AdminKYCPage() {
                     <div className="flex items-center space-x-2">
                       <Phone className="w-4 h-4 text-gray-500" />
                       <span className="text-sm text-gray-600">Phone:</span>
-                      <span className="text-sm font-medium">{client.phone || 'N/A'}</span>
+                      <span className="text-sm font-medium">{safeRender(client.phone)}</span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Calendar className="w-4 h-4 text-gray-500" />
@@ -332,12 +343,12 @@ export default function AdminKYCPage() {
                     <div className="flex items-center space-x-2">
                       <MapPin className="w-4 h-4 text-gray-500" />
                       <span className="text-sm text-gray-600">Nationality:</span>
-                      <span className="text-sm font-medium">{client.nationality || 'N/A'}</span>
+                      <span className="text-sm font-medium">{safeRender(client.nationality)}</span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <MapPin className="w-4 h-4 text-gray-500" />
                       <span className="text-sm text-gray-600">Country:</span>
-                      <span className="text-sm font-medium">{client.country || 'N/A'}</span>
+                      <span className="text-sm font-medium">{safeRender(client.country)}</span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Shield className="w-4 h-4 text-gray-500" />
@@ -348,7 +359,7 @@ export default function AdminKYCPage() {
                         client.status === 'suspended' ? 'bg-red-100 text-red-800' :
                         'bg-gray-100 text-gray-800'
                       }`}>
-                        {client.status || 'pending'}
+                        {safeRender(client.status) || 'pending'}
                       </Badge>
                     </div>
                   </div>
@@ -363,19 +374,19 @@ export default function AdminKYCPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div className="flex items-center space-x-2">
                       <span className="text-sm text-gray-600">IBAN:</span>
-                      <span className="text-sm font-medium font-mono">{client.iban || 'N/A'}</span>
+                      <span className="text-sm font-medium font-mono">{safeRender(client.iban)}</span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <span className="text-sm text-gray-600">BIC:</span>
-                      <span className="text-sm font-medium font-mono">{client.bic || 'N/A'}</span>
+                      <span className="text-sm font-medium font-mono">{safeRender(client.bic)}</span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <span className="text-sm text-gray-600">Account Holder:</span>
-                      <span className="text-sm font-medium">{client.account_holder || 'N/A'}</span>
+                      <span className="text-sm font-medium">{safeRender(client.account_holder)}</span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <span className="text-sm text-gray-600">USDT Wallet:</span>
-                      <span className="text-sm font-medium font-mono">{client.usdt_wallet || 'N/A'}</span>
+                      <span className="text-sm font-medium font-mono">{safeRender(client.usdt_wallet)}</span>
                     </div>
                   </div>
                 </div>
@@ -409,7 +420,7 @@ export default function AdminKYCPage() {
                     </div>
                     <div className="flex items-center space-x-2">
                       <span className="text-sm text-gray-600">Credit Score:</span>
-                      <span className="text-sm font-medium">{client.credit_score || 'N/A'}</span>
+                      <span className="text-sm font-medium">{safeRender(client.credit_score)}</span>
                     </div>
                   </div>
                 </div>
@@ -423,24 +434,24 @@ export default function AdminKYCPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div className="flex items-center space-x-2">
                       <span className="text-sm text-gray-600">Status:</span>
-                      <span className="text-sm font-medium">{client.employment_status || 'N/A'}</span>
+                      <span className="text-sm font-medium">{safeRender(client.employment_status)}</span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Building className="w-4 h-4 text-gray-500" />
                       <span className="text-sm text-gray-600">Employer:</span>
-                      <span className="text-sm font-medium">{client.employer_name || 'N/A'}</span>
+                      <span className="text-sm font-medium">{safeRender(client.employer_name)}</span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <span className="text-sm text-gray-600">Job Title:</span>
-                      <span className="text-sm font-medium">{client.job_title || 'N/A'}</span>
+                      <span className="text-sm font-medium">{safeRender(client.job_title)}</span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <span className="text-sm text-gray-600">Years Employed:</span>
-                      <span className="text-sm font-medium">{client.years_employed || 'N/A'}</span>
+                      <span className="text-sm font-medium">{safeRender(client.years_employed)}</span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <span className="text-sm text-gray-600">Source of Funds:</span>
-                      <span className="text-sm font-medium">{client.source_of_funds || 'N/A'}</span>
+                      <span className="text-sm font-medium">{safeRender(client.source_of_funds)}</span>
                     </div>
                   </div>
                 </div>
@@ -454,15 +465,15 @@ export default function AdminKYCPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div className="flex items-center space-x-2">
                       <span className="text-sm text-gray-600">Experience:</span>
-                      <span className="text-sm font-medium">{client.investment_experience || 'N/A'}</span>
+                      <span className="text-sm font-medium">{safeRender(client.investment_experience)}</span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <span className="text-sm text-gray-600">Risk Tolerance:</span>
-                      <span className="text-sm font-medium">{client.risk_tolerance || 'N/A'}</span>
+                      <span className="text-sm font-medium">{safeRender(client.risk_tolerance)}</span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <span className="text-sm text-gray-600">Risk Profile:</span>
-                      <span className="text-sm font-medium">{client.risk_profile || 'N/A'}</span>
+                      <span className="text-sm font-medium">{safeRender(client.risk_profile)}</span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <span className="text-sm text-gray-600">Total Invested:</span>
@@ -470,11 +481,11 @@ export default function AdminKYCPage() {
                     </div>
                     <div className="flex items-center space-x-2">
                       <span className="text-sm text-gray-600">Investment Goals:</span>
-                      <span className="text-sm font-medium">{client.investment_goals || 'N/A'}</span>
+                      <span className="text-sm font-medium">{safeRender(client.investment_goals)}</span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <span className="text-sm text-gray-600">Preferred Types:</span>
-                      <span className="text-sm font-medium">{client.preferred_investment_types || 'N/A'}</span>
+                      <span className="text-sm font-medium">{safeRender(client.preferred_investment_types)}</span>
                     </div>
                   </div>
                 </div>
@@ -488,11 +499,11 @@ export default function AdminKYCPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div className="flex items-center space-x-2">
                       <span className="text-sm text-gray-600">Tax Residency:</span>
-                      <span className="text-sm font-medium">{client.tax_residency || 'N/A'}</span>
+                      <span className="text-sm font-medium">{safeRender(client.tax_residency)}</span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <span className="text-sm text-gray-600">Tax ID:</span>
-                      <span className="text-sm font-medium font-mono">{client.tax_id || 'N/A'}</span>
+                      <span className="text-sm font-medium font-mono">{safeRender(client.tax_id)}</span>
                     </div>
                   </div>
                 </div>
