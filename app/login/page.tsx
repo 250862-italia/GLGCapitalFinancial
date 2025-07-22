@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { AlertCircle, CheckCircle, Eye, EyeOff, Mail, Lock } from 'lucide-react';
-import { useAuth } from '@/hooks/use-auth';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -17,7 +16,6 @@ interface LoginData {
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -46,13 +44,36 @@ export default function LoginPage() {
       console.log('🔄 Frontend: Invio richiesta di login...');
       console.log('📤 Frontend: Dati inviati:', { email: formData.email });
 
-      // Use the auth hook login method
-      const loginResult = await login(formData.email, formData.password);
+      // Get CSRF token first
+      const csrfResponse = await fetch('/api/csrf', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+
+      if (!csrfResponse.ok) {
+        throw new Error('Failed to get CSRF token');
+      }
+
+      const csrfData = await csrfResponse.json();
+
+      // Login with CSRF token
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrfData.token
+        },
+        credentials: 'include',
+        body: JSON.stringify({ email: formData.email, password: formData.password })
+      });
+
+      const data = await response.json();
       
       console.log('📥 Frontend: Risposta ricevuta');
-      console.log('📥 Frontend: Login result:', loginResult);
+      console.log('📥 Frontend: Login result:', data);
 
-      if (loginResult.success) {
+      if (response.ok && data.success) {
         console.log('✅ Frontend: Login riuscito, reindirizzamento...');
         setSuccess('Login successful! Redirecting...');
         
@@ -60,8 +81,8 @@ export default function LoginPage() {
           router.push('/dashboard');
         }, 1000);
       } else {
-        console.log('❌ Frontend: Login fallito, imposto errore:', loginResult.error);
-        const errorMessage = typeof loginResult.error === 'string' ? loginResult.error : JSON.stringify(loginResult.error) || 'Login failed';
+        console.log('❌ Frontend: Login fallito, imposto errore:', data.error);
+        const errorMessage = typeof data.error === 'string' ? data.error : JSON.stringify(data.error) || 'Login failed';
         setError(errorMessage);
       }
     } catch (err) {
