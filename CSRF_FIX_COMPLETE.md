@@ -8,6 +8,7 @@ Customers were complaining that they couldn't register due to "CSRF validation f
 2. **Development Mode Leniency**: CSRF validation was being bypassed in development mode
 3. **Missing Frontend Integration**: Some frontend components were using regular `fetch()` instead of CSRF-enabled wrappers
 4. **Incomplete API Protection**: Not all API endpoints were protected with CSRF validation
+5. **CSRF Client Fallback**: The client-side CSRF client had development fallbacks that bypassed CSRF token requirements
 
 ## Solution Implemented
 
@@ -79,11 +80,26 @@ export async function GET(request: NextRequest) {
 ```
 
 ### 4. Enhanced CSRF Client (`lib/csrf-client.ts`)
-The existing CSRF client was already well-implemented with:
-- Automatic token fetching and caching
-- Retry logic for failed requests
-- Development fallbacks
-- Proper error handling
+**Changes Made:**
+- Removed development fallbacks that bypassed CSRF token requirements
+- Now always requires real CSRF tokens for security
+- Maintains automatic token fetching and caching
+- Keeps retry logic for failed requests
+
+**Before:**
+```typescript
+// In development, try without CSRF token as fallback
+if (process.env.NODE_ENV === 'development') {
+  console.log('[CSRF Client] Development fallback: trying without CSRF token');
+  return fetch(url, options);
+}
+```
+
+**After:**
+```typescript
+// Don't fallback to requests without CSRF token - always require it for security
+throw error;
+```
 
 ## Test Results
 
