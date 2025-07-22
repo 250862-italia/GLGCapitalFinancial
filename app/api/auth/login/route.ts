@@ -122,15 +122,25 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
   console.log('✅ Login: User authenticated successfully:', authData.user.id);
 
-  // Recupera profilo utente (TEMPORANEAMENTE DISABILITATO per risolvere ricorsione)
-  console.log('⚠️ Login: Profile retrieval temporarily disabled to resolve infinite recursion');
-  
-  // TODO: Riabilitare il recupero del profilo una volta risolta la ricorsione
-  // const { data: profile, error: profileError } = await supabase
-  //   .from('profiles')
-  //   .select('*')
-  //   .eq('id', authData.user.id)
-  //   .single();
+  // Recupera profilo utente
+  console.log('🔍 Login: Fetching user profile...');
+  let profileData = null;
+  try {
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', authData.user.id)
+      .single();
+
+    if (profileError) {
+      console.log('⚠️ Login: Profile not found:', profileError.message);
+    } else {
+      console.log('✅ Login: Profile retrieved successfully');
+      profileData = profile;
+    }
+  } catch (error) {
+    console.log('⚠️ Login: Profile retrieval error:', error.message);
+  }
 
   // Recupera dati cliente se disponibili (semplificato)
   let clientData = null;
@@ -168,7 +178,12 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       email: authData.user.email,
       name: userName,
       role: userRole,
-      profile: null, // Temporaneamente disabilitato
+      profile: profileData ? {
+        first_name: profileData.first_name,
+        last_name: profileData.last_name,
+        country: profileData.country,
+        kyc_status: profileData.kyc_status
+      } : null,
       client: clientData ? {
         client_code: clientData.client_code,
         status: clientData.status,
