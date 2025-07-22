@@ -32,11 +32,15 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('🔄 Button clicked! Form data:', formData);
+    
     if (!formData.email.trim() || !formData.password.trim()) {
+      console.log('❌ Form validation failed - empty fields');
       setError('Please fill in all fields');
       return;
     }
 
+    console.log('✅ Form validation passed, starting login...');
     setIsLoading(true);
     setError('');
 
@@ -271,22 +275,50 @@ export default function LoginPage() {
         {/* Submit Button */}
         <button
           onClick={handleSubmit}
-          disabled={!formData.email.trim() || !formData.password.trim() || isLoading}
+          disabled={isLoading}
           style={{
             width: '100%',
-            background: !formData.email.trim() || !formData.password.trim() || isLoading ? '#e5e7eb' : '#059669',
+            background: isLoading ? '#e5e7eb' : '#059669',
             color: 'white',
             border: 'none',
             padding: '0.75rem',
             borderRadius: 8,
-            cursor: !formData.email.trim() || !formData.password.trim() || isLoading ? 'not-allowed' : 'pointer',
+            cursor: isLoading ? 'not-allowed' : 'pointer',
             fontSize: 16,
             fontWeight: 600,
-            marginBottom: '1.5rem'
+            marginBottom: '1.5rem',
+            transition: 'background 0.2s ease'
+          }}
+          onMouseEnter={(e) => {
+            if (!isLoading) {
+              e.currentTarget.style.background = '#047857';
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!isLoading) {
+              e.currentTarget.style.background = '#059669';
+            }
           }}
         >
           {isLoading ? 'Signing In...' : 'Sign In'}
         </button>
+
+        {/* Debug Info (only in development) */}
+        {process.env.NODE_ENV === 'development' && (
+          <div style={{
+            background: '#f3f4f6',
+            padding: '0.5rem',
+            borderRadius: '4px',
+            fontSize: '12px',
+            color: '#6b7280',
+            marginBottom: '1rem'
+          }}>
+            <div>Email: {formData.email ? '✓' : '✗'}</div>
+            <div>Password: {formData.password ? '✓' : '✗'}</div>
+            <div>Loading: {isLoading ? '✓' : '✗'}</div>
+            <div>Button disabled: {isLoading ? '✓' : '✗'}</div>
+          </div>
+        )}
 
         {/* Register Link */}
         <div style={{ textAlign: 'center' }}>
