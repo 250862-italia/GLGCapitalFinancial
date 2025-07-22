@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSRF Frontend Test</title>
+</head>
+<body>
+    <h1>CSRF Frontend Test</h1>
+    <button onclick="testCSRF()">Test CSRF Registration</button>
+    <div id="result"></div>
+
+    <script>
+        async function testCSRF() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<p>Testing CSRF...</p>';
+            
+            try {
+                // Step 1: Get CSRF token
+                console.log('Getting CSRF token...');
+                const csrfResponse = await fetch('/api/csrf', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include'
+                });
+                
+                console.log('CSRF Response status:', csrfResponse.status);
+                console.log('CSRF Response headers:', Object.fromEntries(csrfResponse.headers.entries()));
+                
+                if (csrfResponse.ok) {
+                    const csrfData = await csrfResponse.json();
+                    console.log('CSRF Token:', csrfData.token.substring(0, 10) + '...');
+                    resultDiv.innerHTML += `<p>✅ CSRF Token: ${csrfData.token.substring(0, 10)}...</p>`;
+                    
+                    // Step 2: Test registration with CSRF token
+                    console.log('Testing registration with CSRF token...');
+                    const registerData = {
+                        email: `test_frontend_${Date.now()}@example.com`,
+                        password: 'testpass123',
+                        firstName: 'Test',
+                        lastName: 'User',
+                        country: 'Italy'
+                    };
+                    
+                    const registerResponse = await fetch('/api/auth/register', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-Token': csrfData.token
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify(registerData)
+                    });
+                    
+                    console.log('Registration response status:', registerResponse.status);
+                    console.log('Registration response headers:', Object.fromEntries(registerResponse.headers.entries()));
+                    
+                    const registerResult = await registerResponse.json();
+                    console.log('Registration result:', registerResult);
+                    
+                    if (registerResponse.ok) {
+                        resultDiv.innerHTML += `<p>✅ Registration SUCCESS</p>`;
+                    } else {
+                        resultDiv.innerHTML += `<p>❌ Registration FAILED: ${registerResult.error}</p>`;
+                    }
+                    
+                } else {
+                    console.log('Failed to get CSRF token');
+                    resultDiv.innerHTML += `<p>❌ Failed to get CSRF token</p>`;
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML += `<p>❌ Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html> 

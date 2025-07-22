@@ -82,17 +82,72 @@ export default function RegisterPage() {
         country: formData.country
       });
 
+      // Debug: Test CSRF token fetching first
+      console.log('🔍 Frontend: Testing CSRF token fetch...');
+      try {
+        const csrfResponse = await fetch('/api/csrf', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
+        });
+        console.log('🔍 Frontend: CSRF Response status:', csrfResponse.status);
+        if (csrfResponse.ok) {
+          const csrfData = await csrfResponse.json();
+          console.log('🔍 Frontend: CSRF Token received:', csrfData.token.substring(0, 10) + '...');
+        } else {
+          console.log('🔍 Frontend: CSRF token fetch failed');
+        }
+      } catch (csrfError) {
+        console.error('🔍 Frontend: CSRF token fetch error:', csrfError);
+      }
+
       // Use the new CSRF-enabled fetch
-      const response = await fetchJSONWithCSRF('/api/auth/register', {
-        method: 'POST',
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          country: formData.country
-        }),
-      });
+      console.log('🔍 Frontend: Using fetchJSONWithCSRF...');
+      let response;
+      try {
+        response = await fetchJSONWithCSRF('/api/auth/register', {
+          method: 'POST',
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            country: formData.country
+          }),
+        });
+      } catch (csrfError) {
+        console.error('🔍 Frontend: CSRF client failed, trying direct fetch...', csrfError);
+        
+        // Fallback: Try direct fetch with manual CSRF token
+        const csrfResponse = await fetch('/api/csrf', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
+        });
+        
+        if (csrfResponse.ok) {
+          const csrfData = await csrfResponse.json();
+          console.log('🔍 Frontend: Using fallback CSRF token:', csrfData.token.substring(0, 10) + '...');
+          
+          response = await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-Token': csrfData.token
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+              email: formData.email,
+              password: formData.password,
+              firstName: formData.firstName,
+              lastName: formData.lastName,
+              country: formData.country
+            })
+          });
+        } else {
+          throw new Error('Failed to get CSRF token for fallback');
+        }
+      }
 
       console.log('📥 Frontend: Risposta ricevuta');
       console.log('📥 Frontend: Status:', response.status);
