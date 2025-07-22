@@ -18,7 +18,7 @@ import {
   Server,
   Monitor
 } from 'lucide-react';
-import { fetchJSONWithCSRF } from '@/lib/csrf-client';
+import { fetchJSONWithCSRF, fetchWithCSRF } from '@/lib/csrf-client';
 
 interface SystemSettings {
   general: {
@@ -66,7 +66,7 @@ export default function AdminSettingsPage() {
     setIsLoading(true);
     
     try {
-      const response = await fetch('/api/admin/settings');
+      const response = await fetchWithCSRF('/api/admin/settings');
       if (response.ok) {
         const data = await response.json();
         // Convert date strings back to Date objects for backup dates

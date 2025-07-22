@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from 'react';
+import { fetchWithCSRF } from '@/lib/csrf-client';
 
 export const dynamic = "force-dynamic";
 import { DollarSign, CreditCard, Building2, CheckCircle, XCircle, Clock, TrendingUp, Download, Eye, AlertCircle, Calendar, Edit, Plus, Trash2, Search, Users } from 'lucide-react';
@@ -27,7 +28,7 @@ export default function PaymentsManagementPage() {
   useEffect(() => {
     const loadPackages = async () => {
       try {
-        const response = await fetch('/api/admin/packages');
+        const response = await fetchWithCSRF('/api/admin/packages');
         if (response.ok) {
           const data = await response.json();
           setPackages(data);

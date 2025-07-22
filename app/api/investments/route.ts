@@ -184,6 +184,15 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
+    // Validazione CSRF
+    const csrfValidation = validateCSRFToken(request);
+    if (!csrfValidation.valid) {
+      return NextResponse.json({ 
+        error: 'CSRF validation failed',
+        details: csrfValidation.error 
+      }, { status: 403 });
+    }
+
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import type { CSSProperties } from 'react';
+import { fetchWithCSRF, fetchJSONWithCSRF } from '@/lib/csrf-client';
 
 export default function AdminPackagesPage() {
   const [packages, setPackages] = useState<any[]>([]);
@@ -40,7 +41,7 @@ export default function AdminPackagesPage() {
         return;
       }
 
-      const response = await fetch('/api/admin/packages', {
+      const response = await fetchWithCSRF('/api/admin/packages', {
         headers: {
           'x-admin-token': adminToken
         }
@@ -103,10 +104,9 @@ export default function AdminPackagesPage() {
       let response;
       if (isEdit && form.id) {
         // Update existing package
-        response = await fetch('/api/admin/packages', {
+        response = await fetchJSONWithCSRF('/api/admin/packages', {
           method: 'PUT',
           headers: {
-            'Content-Type': 'application/json',
             'x-admin-token': adminToken
           },
           body: JSON.stringify({
@@ -116,10 +116,9 @@ export default function AdminPackagesPage() {
         });
       } else {
         // Create new package
-        response = await fetch('/api/admin/packages', {
+        response = await fetchJSONWithCSRF('/api/admin/packages', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
             'x-admin-token': adminToken
           },
           body: JSON.stringify(packageData)
@@ -154,7 +153,7 @@ export default function AdminPackagesPage() {
         return;
       }
 
-      const response = await fetch(`/api/admin/packages?id=${id}`, {
+      const response = await fetchWithCSRF(`/api/admin/packages?id=${id}`, {
         method: 'DELETE',
         headers: {
           'x-admin-token': adminToken

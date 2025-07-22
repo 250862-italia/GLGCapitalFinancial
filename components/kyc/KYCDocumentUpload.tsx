@@ -11,7 +11,7 @@ import {
   Eye,
   Download
 } from 'lucide-react';
-import { fetchFormDataWithCSRF } from '@/lib/csrf-client';
+import { fetchFormDataWithCSRF, fetchWithCSRF } from '@/lib/csrf-client';
 
 interface KYCDocument {
   id: string;
@@ -54,7 +54,7 @@ export default function KYCDocumentUpload({ userId, onDocumentsUpdate }: KYCDocu
 
   const loadExistingDocuments = async () => {
     try {
-      const response = await fetch(`/api/profile/${userId}`);
+      const response = await fetchWithCSRF(`/api/profile/${userId}`);
       if (response.ok) {
         const data = await response.json();
         // KYC documents are not yet implemented in the database

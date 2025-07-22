@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { validateCSRFToken } from '@/lib/csrf';
 
 export const dynamic = 'force-dynamic';
 
@@ -7,6 +8,15 @@ export async function GET(
   { params }: { params: { user_id: string } }
 ) {
   try {
+    // Validazione CSRF
+    const csrfValidation = validateCSRFToken(request);
+    if (!csrfValidation.valid) {
+      return NextResponse.json({ 
+        error: 'CSRF validation failed',
+        details: csrfValidation.error 
+      }, { status: 403 });
+    }
+
     const { user_id } = params;
 
     if (!user_id) {

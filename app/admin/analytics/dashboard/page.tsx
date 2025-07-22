@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { fetchWithCSRF } from '@/lib/csrf-client';
 import { 
   Users, 
   DollarSign, 
@@ -69,7 +70,7 @@ export default function AdminAnalyticsDashboard() {
     setIsLoading(true);
     
     try {
-      const response = await fetch('/api/admin/analytics/dashboard');
+      const response = await fetchWithCSRF('/api/admin/analytics/dashboard');
       if (response.ok) {
         const data = await response.json();
         setAnalyticsData(data);

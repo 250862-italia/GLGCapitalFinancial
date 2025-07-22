@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { fetchWithCSRF, fetchJSONWithCSRF } from '@/lib/csrf-client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/button';
@@ -93,10 +94,9 @@ export default function AdminKYCPage() {
       // Get admin token from localStorage
       const adminToken = localStorage.getItem('admin_token');
       
-      const response = await fetch('/api/admin/kyc', {
+      const response = await fetchWithCSRF('/api/admin/kyc', {
         headers: {
-          'x-admin-token': adminToken || '',
-          'Content-Type': 'application/json'
+          'x-admin-token': adminToken || ''
         }
       });
       
@@ -118,10 +118,9 @@ export default function AdminKYCPage() {
       // Get admin token from localStorage
       const adminToken = localStorage.getItem('admin_token');
       
-      const response = await fetch('/api/admin/kyc/update-status', {
+      const response = await fetchJSONWithCSRF('/api/admin/kyc/update-status', {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json',
           'x-admin-token': adminToken || ''
         },
         body: JSON.stringify({

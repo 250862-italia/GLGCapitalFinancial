@@ -32,7 +32,7 @@ import {
 } from 'lucide-react';
 import Modal from '@/components/ui/Modal';
 import { useRouter } from 'next/navigation';
-import { fetchJSONWithCSRF } from '@/lib/csrf-client';
+import { fetchJSONWithCSRF, fetchWithCSRF } from '@/lib/csrf-client';
 
 interface User {
   id: string;
@@ -100,7 +100,7 @@ export default function AdminUsersPage() {
 
   const loadUsers = async () => {
     try {
-      const response = await fetch('/api/admin/users');
+      const response = await fetchWithCSRF('/api/admin/users');
       if (response.ok) {
         const data = await response.json();
         setUsers(data.users);

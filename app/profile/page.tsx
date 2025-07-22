@@ -169,7 +169,7 @@ export default function ProfilePage() {
     
     setLoadingInvestments(true);
     try {
-      const response = await fetch(`/api/investments?userId=${user.id}`);
+      const response = await fetchWithCSRF(`/api/investments?userId=${user.id}`);
       if (response.ok) {
         const data = await response.json();
         setInvestments(data.investments || data || []);

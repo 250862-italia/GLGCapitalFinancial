@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { validateCSRFToken } from '@/lib/csrf';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -10,6 +11,15 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
+    // Validazione CSRF
+    const csrfValidation = validateCSRFToken(request);
+    if (!csrfValidation.valid) {
+      return NextResponse.json({ 
+        error: 'CSRF validation failed',
+        details: csrfValidation.error 
+      }, { status: 403 });
+    }
+
     // Verifica autenticazione
     const token = request.cookies.get('sb-access-token')?.value || 
                   request.headers.get('authorization')?.replace('Bearer ', '');

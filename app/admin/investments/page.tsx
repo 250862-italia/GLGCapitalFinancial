@@ -5,7 +5,7 @@ import { Plus, Edit, Trash2, Eye, User, Loader2, AlertCircle, CheckCircle } from
 import Modal from "@/components/ui/Modal";
 import { useRouter } from "next/navigation";
 import { InvestmentFormData } from "@/types/investment";
-import { fetchJSONWithCSRF } from "@/lib/csrf-client";
+import { fetchJSONWithCSRF, fetchWithCSRF } from "@/lib/csrf-client";
 import InvestmentNotifications from "@/components/admin/InvestmentNotifications";
 
 // Tipo per investimenti con join
@@ -87,10 +87,9 @@ export default function AdminInvestmentsPage() {
         });
       } else {
         // Create new investment using admin API
-        res = await fetch("/api/admin/investments/create", {
+        res = await fetchJSONWithCSRF("/api/admin/investments/create", {
           method: "POST",
           headers: {
-            'Content-Type': 'application/json',
             'x-admin-token': adminToken
           },
           body: JSON.stringify(formData)
@@ -403,7 +402,7 @@ function InvestmentForm({
       const adminToken = localStorage.getItem('admin_token');
       
       // Carica clienti
-      const clientsRes = await fetch('/api/admin/clients', {
+      const clientsRes = await fetchWithCSRF('/api/admin/clients', {
         headers: { 'x-admin-token': adminToken }
       });
       if (clientsRes.ok) {
@@ -412,7 +411,7 @@ function InvestmentForm({
       }
       
       // Carica pacchetti
-      const packagesRes = await fetch('/api/admin/packages', {
+      const packagesRes = await fetchWithCSRF('/api/admin/packages', {
         headers: { 'x-admin-token': adminToken }
       });
       if (packagesRes.ok) {
