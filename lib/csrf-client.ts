@@ -42,15 +42,23 @@ class CSRFClient {
   private async fetchNewToken(): Promise<string> {
     try {
       console.log('[CSRF Client] Making request to /api/csrf...');
-      const response = await fetch('/api/csrf', {
+      
+      // Use absolute URL to ensure proper routing
+      const csrfUrl = typeof window !== 'undefined' 
+        ? `${window.location.origin}/api/csrf`
+        : '/api/csrf';
+        
+      const response = await fetch(csrfUrl, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
         cache: 'no-cache', // Ensure we don't get cached responses
+        credentials: 'include', // Include cookies for session
       });
 
       console.log('[CSRF Client] Response status:', response.status);
+      console.log('[CSRF Client] Response headers:', Object.fromEntries(response.headers.entries()));
       
       if (!response.ok) {
         throw new Error(`Failed to fetch CSRF token: ${response.status} ${response.statusText}`);
@@ -80,11 +88,16 @@ class CSRFClient {
     this.tokenExpiry = 0;
   }
 
-  // Enhanced fetch with automatic CSRF token
+    // Enhanced fetch with automatic CSRF token
   async fetch(url: string, options: RequestInit = {}): Promise<Response> {
     try {
       const token = await this.getToken();
       console.log('[CSRF Client] Adding CSRF token to request:', token.substring(0, 10) + '...');
+      
+      // Use absolute URL for browser compatibility
+      const requestUrl = typeof window !== 'undefined' 
+        ? `${window.location.origin}${url}`
+        : url;
       
       const enhancedOptions: RequestInit = {
         ...options,
@@ -96,15 +109,19 @@ class CSRFClient {
         credentials: 'include',
       };
 
-      console.log('[CSRF Client] Making request to:', url);
-      const response = await fetch(url, enhancedOptions);
+      console.log('[CSRF Client] Making request to:', requestUrl);
+      console.log('[CSRF Client] Request headers:', enhancedOptions.headers);
+      
+      const response = await fetch(requestUrl, enhancedOptions);
       console.log('[CSRF Client] Response status:', response.status);
+      console.log('[CSRF Client] Response headers:', Object.fromEntries(response.headers.entries()));
       
       // Check if CSRF validation failed
       if (response.status === 403 || response.status === 400) {
         const contentType = response.headers.get('content-type');
         if (contentType?.includes('application/json')) {
           const errorData = await response.json().catch(() => ({}));
+          console.log('[CSRF Client] Error response data:', errorData);
           if (errorData.error?.includes('CSRF')) {
             console.log('[CSRF Client] CSRF validation failed, clearing token and retrying...');
             this.clearToken();
@@ -113,18 +130,18 @@ class CSRFClient {
               ...enhancedOptions.headers,
               'X-CSRF-Token': newToken,
             };
-            return fetch(url, enhancedOptions);
+            return fetch(requestUrl, enhancedOptions);
           }
         }
       }
       
       return response;
-      } catch (error) {
-    console.error('[CSRF Client] Error in enhanced fetch:', error);
-    
-    // Don't fallback to requests without CSRF token - always require it for security
-    throw error;
-  }
+    } catch (error) {
+      console.error('[CSRF Client] Error in enhanced fetch:', error);
+      
+      // Don't fallback to requests without CSRF token - always require it for security
+      throw error;
+    }
   }
 
   // Helper for JSON requests
