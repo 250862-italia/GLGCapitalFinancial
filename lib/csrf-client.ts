@@ -1,184 +1,179 @@
-// Client-side CSRF token management
-// Automatically handles CSRF tokens for all API requests
+// CSRF Client Utilities
+interface CSRFToken {
+  token: string;
+  expiresIn: number;
+  createdAt: number;
+}
 
-class CSRFClient {
-  private token: string | null = null;
-  private tokenExpiry: number = 0;
-  private isFetching: boolean = false;
-  private fetchPromise: Promise<string> | null = null;
+class CSRFManager {
+  private static instance: CSRFManager;
+  private tokenCache: Map<string, CSRFToken> = new Map();
+  private readonly STORAGE_KEY = 'csrf_token';
+  private readonly TOKEN_EXPIRY_BUFFER = 5 * 60 * 1000; // 5 minutes buffer
 
-  // Get CSRF token, fetching if necessary
-  async getToken(): Promise<string> {
-    const now = Date.now();
-    
-    // If we have a valid token, return it
-    if (this.token && now < this.tokenExpiry) {
-      console.log('[CSRF Client] Using cached token:', this.token.substring(0, 10) + '...');
-      return this.token;
+  private constructor() {}
+
+  static getInstance(): CSRFManager {
+    if (!CSRFManager.instance) {
+      CSRFManager.instance = new CSRFManager();
     }
-
-    // If we're already fetching, wait for that promise
-    if (this.isFetching && this.fetchPromise) {
-      console.log('[CSRF Client] Waiting for existing token fetch...');
-      return this.fetchPromise;
-    }
-
-    // Fetch new token
-    console.log('[CSRF Client] Fetching new CSRF token...');
-    this.isFetching = true;
-    this.fetchPromise = this.fetchNewToken();
-    
-    try {
-      this.token = await this.fetchPromise;
-      this.tokenExpiry = now + (55 * 60 * 1000); // 55 minutes (5 min buffer)
-      console.log('[CSRF Client] Token fetched and cached:', this.token.substring(0, 10) + '...');
-      return this.token;
-    } finally {
-      this.isFetching = false;
-      this.fetchPromise = null;
-    }
+    return CSRFManager.instance;
   }
 
-  private async fetchNewToken(): Promise<string> {
+  // Generate a new CSRF token
+  async generateToken(): Promise<string> {
     try {
-      console.log('[CSRF Client] Making request to /api/csrf...');
-      
-      // Use absolute URL to ensure proper routing
-      const csrfUrl = typeof window !== 'undefined' 
-        ? `${window.location.origin}/api/csrf`
-        : '/api/csrf';
-        
-      const response = await fetch(csrfUrl, {
+      const response = await fetch('/api/csrf', {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        cache: 'no-cache', // Ensure we don't get cached responses
-        credentials: 'include', // Include cookies for session
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
       });
 
-      console.log('[CSRF Client] Response status:', response.status);
-      console.log('[CSRF Client] Response headers:', Object.fromEntries(response.headers.entries()));
-      
       if (!response.ok) {
-        throw new Error(`Failed to fetch CSRF token: ${response.status} ${response.statusText}`);
+        throw new Error(`Failed to get CSRF token: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log('[CSRF Client] Response data:', data);
-      
-      if (!data.token) {
-        throw new Error('No CSRF token in response');
-      }
-
-      console.log('[CSRF Client] Token fetched successfully:', data.token.substring(0, 10) + '...');
-      return data.token;
-    } catch (error) {
-      console.error('[CSRF Client] Error fetching token:', error);
-      
-      // Don't use fallback tokens - always require real CSRF tokens for security
-      throw error;
-    }
-  }
-
-  // Clear current token (force refresh on next request)
-  clearToken(): void {
-    console.log('[CSRF Client] Clearing cached token');
-    this.token = null;
-    this.tokenExpiry = 0;
-  }
-
-    // Enhanced fetch with automatic CSRF token
-  async fetch(url: string, options: RequestInit = {}): Promise<Response> {
-    try {
-      const token = await this.getToken();
-      console.log('[CSRF Client] Adding CSRF token to request:', token.substring(0, 10) + '...');
-      
-      // Use absolute URL for browser compatibility
-      const requestUrl = typeof window !== 'undefined' 
-        ? `${window.location.origin}${url}`
-        : url;
-      
-      const enhancedOptions: RequestInit = {
-        ...options,
-        headers: {
-          ...options.headers,
-          'X-CSRF-Token': token,
-        },
-        // Ensure credentials are included for CSRF to work properly
-        credentials: 'include',
+      const tokenData: CSRFToken = {
+        token: data.token,
+        expiresIn: data.expiresIn * 1000, // Convert to milliseconds
+        createdAt: Date.now()
       };
 
-      console.log('[CSRF Client] Making request to:', requestUrl);
-      console.log('[CSRF Client] Request headers:', enhancedOptions.headers);
+      // Store in memory cache
+      this.tokenCache.set(tokenData.token, tokenData);
       
-      const response = await fetch(requestUrl, enhancedOptions);
-      console.log('[CSRF Client] Response status:', response.status);
-      console.log('[CSRF Client] Response headers:', Object.fromEntries(response.headers.entries()));
-      
-      // Check if CSRF validation failed
-      if (response.status === 403 || response.status === 400) {
-        const contentType = response.headers.get('content-type');
-        if (contentType?.includes('application/json')) {
-          const errorData = await response.json().catch(() => ({}));
-          console.log('[CSRF Client] Error response data:', errorData);
-          if (errorData.error?.includes('CSRF')) {
-            console.log('[CSRF Client] CSRF validation failed, clearing token and retrying...');
-            this.clearToken();
-            const newToken = await this.getToken();
-            enhancedOptions.headers = {
-              ...enhancedOptions.headers,
-              'X-CSRF-Token': newToken,
-            };
-            return fetch(requestUrl, enhancedOptions);
-          }
-        }
-      }
-      
-      return response;
+      // Store in localStorage
+      this.storeToken(tokenData);
+
+      return tokenData.token;
     } catch (error) {
-      console.error('[CSRF Client] Error in enhanced fetch:', error);
-      
-      // Don't fallback to requests without CSRF token - always require it for security
+      console.error('Error generating CSRF token:', error);
       throw error;
     }
   }
 
-  // Helper for JSON requests
-  async fetchJSON(url: string, options: RequestInit = {}): Promise<Response> {
-    const enhancedOptions: RequestInit = {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-    };
+  // Get existing token or generate new one
+  async getToken(): Promise<string> {
+    // Check localStorage first
+    const storedToken = this.getStoredToken();
+    if (storedToken && this.isTokenValid(storedToken)) {
+      return storedToken.token;
+    }
 
-    return this.fetch(url, enhancedOptions);
+    // Check memory cache
+    for (const [token, tokenData] of this.tokenCache.entries()) {
+      if (this.isTokenValid(tokenData)) {
+        return token;
+      }
+    }
+
+    // Generate new token if none valid
+    return this.generateToken();
   }
 
-  // Helper for FormData requests (file uploads)
-  async fetchFormData(url: string, options: RequestInit = {}): Promise<Response> {
-    // Don't set Content-Type for FormData - let the browser set it with boundary
-    const enhancedOptions: RequestInit = {
-      ...options,
-      headers: {
-        ...options.headers,
-        // Remove Content-Type if it's set to application/json
-        ...(options.headers && typeof options.headers === 'object' && 'Content-Type' in options.headers && 
-            options.headers['Content-Type'] === 'application/json' ? {} : {})
-      },
-    };
+  // Store token in localStorage
+  private storeToken(tokenData: CSRFToken): void {
+    try {
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(tokenData));
+    } catch (error) {
+      console.warn('Failed to store CSRF token in localStorage:', error);
+    }
+  }
 
-    return this.fetch(url, enhancedOptions);
+  // Get token from localStorage
+  private getStoredToken(): CSRFToken | null {
+    try {
+      const stored = localStorage.getItem(this.STORAGE_KEY);
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch (error) {
+      console.warn('Failed to retrieve CSRF token from localStorage:', error);
+    }
+    return null;
+  }
+
+  // Check if token is still valid
+  private isTokenValid(tokenData: CSRFToken): boolean {
+    const now = Date.now();
+    const expiryTime = tokenData.createdAt + tokenData.expiresIn - this.TOKEN_EXPIRY_BUFFER;
+    return now < expiryTime;
+  }
+
+  // Remove token from storage
+  removeToken(): void {
+    try {
+      localStorage.removeItem(this.STORAGE_KEY);
+      this.tokenCache.clear();
+    } catch (error) {
+      console.warn('Failed to remove CSRF token from localStorage:', error);
+    }
+  }
+
+  // Clear all tokens (useful for logout)
+  clearAllTokens(): void {
+    this.removeToken();
+    this.tokenCache.clear();
   }
 }
 
-// Create singleton instance
-export const csrfClient = new CSRFClient();
+// Export singleton instance
+export const csrfManager = CSRFManager.getInstance();
 
-// Export convenience functions
-export const fetchWithCSRF = (url: string, options?: RequestInit) => csrfClient.fetch(url, options);
-export const fetchJSONWithCSRF = (url: string, options?: RequestInit) => csrfClient.fetchJSON(url, options);
-export const fetchFormDataWithCSRF = (url: string, options?: RequestInit) => csrfClient.fetchFormData(url, options);
-export const getCSRFToken = () => csrfClient.getToken(); 
+// Enhanced fetch functions with CSRF
+export async function fetchWithCSRF(
+  url: string, 
+  options: RequestInit = {}
+): Promise<Response> {
+  const token = await csrfManager.getToken();
+  
+  const enhancedOptions: RequestInit = {
+    ...options,
+    headers: {
+      ...options.headers,
+      'X-CSRF-Token': token,
+      'Content-Type': 'application/json'
+    },
+    credentials: 'include'
+  };
+
+  return fetch(url, enhancedOptions);
+}
+
+export async function fetchJSONWithCSRF<T = any>(
+  url: string, 
+  options: RequestInit = {}
+): Promise<T> {
+  const response = await fetchWithCSRF(url, options);
+  
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  
+  return response.json();
+}
+
+// Profile management with CSRF
+export async function fetchProfile(): Promise<any> {
+  try {
+    const response = await fetchJSONWithCSRF('/api/auth/profile');
+    return response;
+  } catch (error) {
+    console.error('Error fetching profile:', error);
+    throw error;
+  }
+}
+
+// Session management
+export function checkSession(): boolean {
+  // Check if we have a valid session
+  // This could be enhanced to actually verify with the server
+  const storedToken = csrfManager.getStoredToken();
+  return storedToken !== null;
+}
+
+// Cleanup on logout
+export function cleanupOnLogout(): void {
+  csrfManager.clearAllTokens();
+} 

@@ -1,128 +1,120 @@
-import { useState, useEffect } from 'react';
-import { useAuth } from './use-auth';
-import { supabase } from '@/lib/supabase';
-import { fetchJSONWithCSRF } from '@/lib/csrf-client';
+import { useState, useEffect, useCallback } from 'react';
+import { csrfManager, fetchProfile, checkSession, cleanupOnLogout } from '@/lib/csrf-client';
 
-interface ClientProfile {
+interface Profile {
   id: string;
-  user_id: string;
-  first_name: string;
-  last_name: string;
-  address: string | null;
-  city: string | null;
-  country: string | null;
-  postal_code: string | null;
-  created_at: string;
-  updated_at: string;
+  email: string;
+  name: string;
+  role: string;
+  client?: any;
 }
 
-export function useProfile() {
-  const { user } = useAuth();
-  const [profile, setProfile] = useState<ClientProfile | null>(null);
+interface UseProfileReturn {
+  profile: Profile | null;
+  loading: boolean;
+  error: string | null;
+  refreshProfile: () => Promise<void>;
+  logout: () => Promise<void>;
+}
+
+export function useProfile(): UseProfileReturn {
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const createProfile = async (user_id: string): Promise<ClientProfile | null> => {
+  const fetchProfileData = useCallback(async () => {
     try {
-      const response = await fetchJSONWithCSRF('/api/profile/create', {
-        method: 'POST',
-        body: JSON.stringify({ user_id }),
-      });
+      setLoading(true);
+      setError(null);
 
-      if (!response.ok) {
-        throw new Error('Failed to create profile');
-      }
-
-      const result = await response.json();
-      return result.data;
-    } catch (error) {
-      console.error('Error creating profile:', error);
-      return null;
-    }
-  };
-
-  const loadProfile = async () => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      let { data: clientData, error: clientError } = await supabase
-        .from('clients')
-        .select('*')
-        .eq('"user_id"', user.id)
-        .single();
-      if (clientError && clientError.code === 'PGRST116') {
-        // Profile not found, create it automatically
-        const newProfile = await createProfile(user.id);
-        if (newProfile) {
-          clientData = newProfile;
-        } else {
-          setError('Failed to create profile');
-          return;
-        }
-      } else if (clientError) {
-        setError('Failed to load profile data');
+      // Check if we have a valid session first
+      if (!checkSession()) {
+        setProfile(null);
+        setLoading(false);
         return;
       }
-      if (!clientData) {
-        setError('No profile found');
-        return;
-      }
-      setProfile(clientData);
-    } catch (error) {
-      setError('Failed to load profile data');
+
+      const profileData = await fetchProfile();
+      setProfile(profileData);
+    } catch (err) {
+      console.error('Error fetching profile:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch profile');
+      setProfile(null);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const updateProfile = async (updates: Partial<ClientProfile>): Promise<boolean> => {
-    if (!user || !profile) return false;
+  const refreshProfile = useCallback(async () => {
+    await fetchProfileData();
+  }, [fetchProfileData]);
 
+  const logout = useCallback(async () => {
     try {
-      const response = await fetchJSONWithCSRF('/api/profile/update', {
-        method: 'PUT',
-        body: JSON.stringify({
-          userId: user.id,
-          updates
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update profile');
-      }
-
-      const result = await response.json();
+      // Clear CSRF tokens
+      cleanupOnLogout();
       
-      if (result.success) {
-        // Reload profile data
-        await loadProfile();
-        return true;
-      } else {
-        throw new Error(result.error || 'Failed to update profile');
-      }
-    } catch (error) {
-      console.error('Profile update error:', error);
-      setError('Failed to update profile');
-      return false;
+      // Clear profile
+      setProfile(null);
+      setError(null);
+      
+      // You can add additional logout logic here
+      // For example, calling a logout API endpoint
+      
+    } catch (err) {
+      console.error('Error during logout:', err);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    if (user) {
-      loadProfile();
-    }
-  }, [user]);
+    fetchProfileData();
+  }, [fetchProfileData]);
 
   return {
     profile,
     loading,
     error,
-    loadProfile,
-    updateProfile,
-    createProfile
+    refreshProfile,
+    logout
   };
+}
+
+// Utility function to check if user is authenticated
+export function useAuthStatus(): { isAuthenticated: boolean; loading: boolean } {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        setLoading(true);
+        
+        // Check if we have a valid session
+        const hasSession = checkSession();
+        
+        if (hasSession) {
+          // Optionally verify with server
+          try {
+            await fetchProfile();
+            setIsAuthenticated(true);
+          } catch (err) {
+            // Profile fetch failed, user not authenticated
+            setIsAuthenticated(false);
+            cleanupOnLogout();
+          }
+        } else {
+          setIsAuthenticated(false);
+        }
+      } catch (err) {
+        console.error('Error checking auth status:', err);
+        setIsAuthenticated(false);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, []);
+
+  return { isAuthenticated, loading };
 } 
