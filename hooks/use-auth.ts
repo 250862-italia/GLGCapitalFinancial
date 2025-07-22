@@ -8,6 +8,12 @@ interface User {
   email: string;
   name: string;
   role: string;
+  client?: {
+    client_code: string;
+    status: string;
+    risk_profile: string;
+    total_invested: number;
+  };
 }
 
 interface AuthState {
@@ -43,8 +49,8 @@ export function useAuth() {
 
       const csrfData = await csrfResponse.json();
 
-      // Check auth with CSRF token
-      const response = await fetch('/api/auth/login', {
+      // Check auth with CSRF token using the new endpoint
+      const response = await fetch('/api/auth/check', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -55,11 +61,19 @@ export function useAuth() {
 
       if (response.ok) {
         const data = await response.json();
-        setAuthState({
-          user: data.user,
-          loading: false,
-          error: null
-        });
+        if (data.authenticated && data.user) {
+          setAuthState({
+            user: data.user,
+            loading: false,
+            error: null
+          });
+        } else {
+          setAuthState({
+            user: null,
+            loading: false,
+            error: null
+          });
+        }
       } else {
         setAuthState({
           user: null,
@@ -106,7 +120,7 @@ export function useAuth() {
 
       const data = await response.json();
 
-      if (response.ok) {
+      if (response.ok && data.success) {
         setAuthState({
           user: data.user,
           loading: false,
@@ -168,7 +182,7 @@ export function useAuth() {
 
       const data = await response.json();
 
-      if (response.ok) {
+      if (response.ok && data.success) {
         setAuthState({
           user: data.user,
           loading: false,
