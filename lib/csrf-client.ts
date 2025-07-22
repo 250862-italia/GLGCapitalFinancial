@@ -68,13 +68,7 @@ class CSRFClient {
     } catch (error) {
       console.error('[CSRF Client] Error fetching token:', error);
       
-      // In development, return a fallback token
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[CSRF Client] Using fallback token for development');
-        const fallbackToken = `dev_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        console.log('[CSRF Client] Fallback token:', fallbackToken);
-        return fallbackToken;
-      }
+      // Don't use fallback tokens - always require real CSRF tokens for security
       throw error;
     }
   }
@@ -125,17 +119,12 @@ class CSRFClient {
       }
       
       return response;
-    } catch (error) {
-      console.error('[CSRF Client] Error in enhanced fetch:', error);
-      
-      // In development, try without CSRF token as fallback
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[CSRF Client] Development fallback: trying without CSRF token');
-        return fetch(url, options);
-      }
-      
-      throw error;
-    }
+      } catch (error) {
+    console.error('[CSRF Client] Error in enhanced fetch:', error);
+    
+    // Don't fallback to requests without CSRF token - always require it for security
+    throw error;
+  }
   }
 
   // Helper for JSON requests
