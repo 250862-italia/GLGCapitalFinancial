@@ -25,8 +25,29 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   }
 
   try {
+    // Ottieni i cookie dalla richiesta
+    const cookieHeader = request.headers.get('cookie') || '';
+    
+    // Crea un client Supabase con i cookie della sessione
+    const supabaseWithAuth = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+          detectSessionInUrl: false
+        },
+        global: {
+          headers: {
+            Cookie: cookieHeader
+          }
+        }
+      }
+    );
+
     // Ottieni la sessione corrente
-    const { data: { session }, error } = await supabase.auth.getSession();
+    const { data: { session }, error } = await supabaseWithAuth.auth.getSession();
 
     if (error) {
       console.error('❌ Errore recupero sessione:', error);
@@ -60,7 +81,9 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
     }
 
     // Prepara risposta
-    const userName = session.user.user_metadata?.name || 'Utente';
+    const userName = session.user.user_metadata?.name || 
+                    `${session.user.user_metadata?.first_name || ''} ${session.user.user_metadata?.last_name || ''}`.trim() || 
+                    'Utente';
     const userRole = 'user';
     
     return NextResponse.json({
