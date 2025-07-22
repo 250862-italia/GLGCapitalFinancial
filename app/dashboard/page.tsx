@@ -33,6 +33,7 @@ import PaymentMethodModal, { PaymentMethod } from '@/components/investment-packa
 import { Investment } from "@/types/investment";
 import { Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import UserProfile from "../../components/UserProfile";
+import ClientLogoutButton from "../../components/ClientLogoutButton";
 import { usePackages } from "../../lib/package-context";
 import Toast from "../../components/ui/Toast";
 
@@ -611,7 +612,10 @@ export default function ClientDashboard() {
         {/* User Profile */}
         <div style={{ marginBottom: '2rem' }}>
           {user ? (
-            <UserProfile />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <UserProfile />
+              <ClientLogoutButton />
+            </div>
           ) : (
             <div style={{ 
               color: '#dc2626', 

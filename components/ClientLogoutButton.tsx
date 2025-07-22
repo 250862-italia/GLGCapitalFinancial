@@ -1,48 +1,100 @@
 "use client";
-import { useSafeRouter } from '@/lib/safe-router';
 
-export default function ClientLogoutButton({ onLogout }: { onLogout?: () => void }) {
-  const router = useSafeRouter();
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { LogOut } from 'lucide-react';
 
-  const handleLogout = () => {
+export default function ClientLogoutButton() {
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    if (isLoading) return;
+    
+    setIsLoading(true);
+    
     try {
-      // Clear all user data
-      localStorage.removeItem('user');
-      localStorage.removeItem('token');
-      localStorage.removeItem('admin_user');
-      localStorage.removeItem('admin_token');
+      console.log('🔄 Frontend: Starting logout process...');
       
-      // Clear any cookies
-      document.cookie = 'auth-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-      document.cookie = 'admin-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-      
-      if (onLogout) onLogout();
-      
-      // Force redirect to home
-      window.location.href = '/';
+      // Get CSRF token first
+      const csrfResponse = await fetch('/api/csrf', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+
+      if (!csrfResponse.ok) {
+        throw new Error('Failed to get CSRF token');
+      }
+
+      const csrfData = await csrfResponse.json();
+
+      // Logout with CSRF token
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrfData.token
+        },
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        console.log('✅ Frontend: Logout successful');
+        
+        // Clear any local storage data
+        localStorage.removeItem('user');
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('csrf_token');
+        
+        // Redirect to login page
+        router.push('/login');
+      } else {
+        console.error('❌ Frontend: Logout failed');
+        // Even if logout fails, redirect to login
+        router.push('/login');
+      }
     } catch (error) {
-      console.error('Logout error:', error);
-      // Fallback redirect
-      window.location.href = '/';
+      console.error('❌ Frontend: Logout error:', error);
+      // Even if there's an error, redirect to login
+      router.push('/login');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <button
       onClick={handleLogout}
+      disabled={isLoading}
       style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
         background: '#dc2626',
-        color: '#fff',
-        padding: '0.5rem 1.25rem',
-        borderRadius: 6,
-        fontWeight: 700,
+        color: 'white',
         border: 'none',
-        marginLeft: '1rem',
-        cursor: 'pointer',
-        boxShadow: '0 2px 8px rgba(34,40,49,0.07)'
+        borderRadius: '8px',
+        padding: '0.75rem 1rem',
+        cursor: isLoading ? 'not-allowed' : 'pointer',
+        fontSize: '0.875rem',
+        fontWeight: 600,
+        transition: 'background 0.2s ease',
+        opacity: isLoading ? 0.7 : 1
+      }}
+      onMouseEnter={(e) => {
+        if (!isLoading) {
+          e.currentTarget.style.background = '#b91c1c';
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!isLoading) {
+          e.currentTarget.style.background = '#dc2626';
+        }
       }}
     >
-      Logout
+      <LogOut size={16} />
+      {isLoading ? 'Logging out...' : 'Logout'}
     </button>
   );
 } 

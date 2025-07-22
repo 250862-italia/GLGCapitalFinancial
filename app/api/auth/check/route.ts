@@ -15,82 +15,92 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   // Aggiungi request ID se non presente
   addRequestId(request);
   
+  console.log('🔍 Auth Check: Starting authentication check...');
+  
   // Validazione CSRF
   const csrfValidation = validateCSRFToken(request);
   if (!csrfValidation.valid) {
+    console.log('❌ Auth Check: CSRF validation failed');
     return NextResponse.json({
       error: 'CSRF validation failed',
       details: csrfValidation.error
     }, { status: 403 });
   }
 
+  console.log('✅ Auth Check: CSRF validation passed');
+
   try {
     // Ottieni i cookie dalla richiesta
     const cookieHeader = request.headers.get('cookie') || '';
+    console.log('🍪 Auth Check: Cookie header present:', cookieHeader ? 'Yes' : 'No');
     
-    // Crea un client Supabase con i cookie della sessione
-    const supabaseWithAuth = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        auth: {
-          persistSession: false,
-          autoRefreshToken: false,
-          detectSessionInUrl: false
-        },
-        global: {
-          headers: {
-            Cookie: cookieHeader
-          }
-        }
-      }
-    );
-
-    // Ottieni la sessione corrente
-    const { data: { session }, error } = await supabaseWithAuth.auth.getSession();
-
-    if (error) {
-      console.error('❌ Errore recupero sessione:', error);
-      return NextResponse.json({
-        authenticated: false,
-        error: 'Errore durante il controllo della sessione'
-      }, { status: 401 });
-    }
-
-    if (!session?.user) {
+    // Estrai il token di accesso dai cookie
+    const accessTokenMatch = cookieHeader.match(/sb-access-token=([^;]+)/);
+    const accessToken = accessTokenMatch ? accessTokenMatch[1] : null;
+    
+    console.log('🔑 Auth Check: Access token found:', accessToken ? 'Yes' : 'No');
+    
+    if (!accessToken) {
+      console.log('❌ Auth Check: No access token found in cookies');
       return NextResponse.json({
         authenticated: false,
         user: null
       }, { status: 200 });
     }
 
+    // Verifica il token usando il service role
+    console.log('🔍 Auth Check: Verifying token with service role...');
+    const { data: { user }, error } = await supabase.auth.getUser(accessToken);
+
+    if (error) {
+      console.error('❌ Auth Check: Error verifying token:', error);
+      return NextResponse.json({
+        authenticated: false,
+        error: 'Errore durante il controllo della sessione'
+      }, { status: 401 });
+    }
+
+    if (!user) {
+      console.log('❌ Auth Check: No user found for token');
+      return NextResponse.json({
+        authenticated: false,
+        user: null
+      }, { status: 200 });
+    }
+
+    console.log('✅ Auth Check: User verified:', user.email);
+
     // Recupera dati cliente se disponibili
     let clientData = null;
     try {
+      console.log('🔍 Auth Check: Fetching client data...');
       const { data: client, error: clientError } = await supabase
         .from('clients')
         .select('*')
-        .eq('user_id', session.user.id)
+        .eq('user_id', user.id)
         .single();
 
-      if (!clientError && client) {
+      if (clientError) {
+        console.log('⚠️ Auth Check: Client data not found:', clientError.message);
+      } else {
+        console.log('✅ Auth Check: Client data retrieved successfully');
         clientData = client;
       }
     } catch (error) {
-      console.error('❌ Errore recupero cliente:', error);
+      console.error('❌ Auth Check: Error retrieving client data:', error);
     }
 
     // Prepara risposta
-    const userName = session.user.user_metadata?.name || 
-                    `${session.user.user_metadata?.first_name || ''} ${session.user.user_metadata?.last_name || ''}`.trim() || 
+    const userName = user.user_metadata?.name || 
+                    `${user.user_metadata?.first_name || ''} ${user.user_metadata?.last_name || ''}`.trim() || 
                     'Utente';
     const userRole = 'user';
     
-    return NextResponse.json({
+    const responseData = {
       authenticated: true,
       user: {
-        id: session.user.id,
-        email: session.user.email,
+        id: user.id,
+        email: user.email,
         name: userName,
         role: userRole,
         client: clientData ? {
@@ -100,10 +110,13 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
           total_invested: clientData.total_invested
         } : null
       }
-    }, { status: 200 });
+    };
+
+    console.log('✅ Auth Check: Authentication successful, returning user data');
+    return NextResponse.json(responseData, { status: 200 });
 
   } catch (error) {
-    console.error('❌ Errore generale check auth:', error);
+    console.error('❌ Auth Check: General error during authentication check:', error);
     return NextResponse.json({
       authenticated: false,
       error: 'Errore durante il controllo dell\'autenticazione'
