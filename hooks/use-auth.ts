@@ -1,31 +1,27 @@
 "use client";
-import React, { createContext, useContext, useState, useEffect } from 'react';
+
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { fetchJSONWithCSRF } from '@/lib/csrf-client';
 
 interface User {
   id: string;
   email: string;
-  name?: string;
-  role?: string;
-  profile?: any;
-  client?: any;
+  name: string;
+  role: string;
 }
 
-interface AuthContextType {
+interface AuthState {
   user: User | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  loginDirect: (userData: User) => Promise<{ success: boolean; error?: string }>;
-  logout: () => void;
-  register: (userData: any) => Promise<{ success: boolean; error?: string }>;
+  error: string | null;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+export function useAuth() {
+  const [authState, setAuthState] = useState<AuthState>({
+    user: null,
+    loading: true,
+    error: null
+  });
   const router = useRouter();
 
   useEffect(() => {
@@ -34,98 +30,211 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const checkAuth = async () => {
     try {
-      const userData = localStorage.getItem('user');
-      const token = localStorage.getItem('token');
-      
-      if (userData && token) {
-        setUser(JSON.parse(userData));
+      // Get CSRF token first
+      const csrfResponse = await fetch('/api/csrf', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+
+      if (!csrfResponse.ok) {
+        throw new Error('Failed to get CSRF token');
+      }
+
+      const csrfData = await csrfResponse.json();
+
+      // Check auth with CSRF token
+      const response = await fetch('/api/auth/login', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrfData.token
+        },
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setAuthState({
+          user: data.user,
+          loading: false,
+          error: null
+        });
+      } else {
+        setAuthState({
+          user: null,
+          loading: false,
+          error: null
+        });
       }
     } catch (error) {
-      console.error('Auth check error:', error);
-    } finally {
-      setLoading(false);
+      setAuthState({
+        user: null,
+        loading: false,
+        error: error instanceof Error ? error.message : 'Authentication error'
+      });
     }
   };
 
   const login = async (email: string, password: string) => {
     try {
-      // Use the new CSRF-enabled fetch
-      const response = await fetchJSONWithCSRF('/api/auth/login', {
-        method: 'POST',
-        body: JSON.stringify({ email, password }),
+      setAuthState(prev => ({ ...prev, loading: true, error: null }));
+
+      // Get CSRF token first
+      const csrfResponse = await fetch('/api/csrf', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        // Handle both data.user and data.session.user structures
-        const userData = data.user || data.session?.user;
-        const token = data.access_token || data.session?.access_token || data.token;
-        
-        if (userData) {
-          setUser(userData);
-          localStorage.setItem('user', JSON.stringify(userData));
-          localStorage.setItem('token', token);
-          return { success: true };
-        } else {
-          return { success: false, error: 'Invalid response format' };
-        }
-      } else {
-        return { success: false, error: data.error };
+      if (!csrfResponse.ok) {
+        throw new Error('Failed to get CSRF token');
       }
-    } catch (error) {
-      return { success: false, error: 'Network error' };
-    }
-  };
 
-  const loginDirect = async (userData: User) => {
-    try {
-      setUser(userData);
-      localStorage.setItem('user', JSON.stringify(userData));
-      localStorage.setItem('token', 'direct-login-' + Date.now());
-      return { success: true };
-    } catch (error) {
-      return { success: false, error: 'Login direct failed' };
-    }
-  };
+      const csrfData = await csrfResponse.json();
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
-    document.cookie = 'auth-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-    router.push('/');
-  };
-
-  const register = async (userData: any) => {
-    try {
-      // Use the new CSRF-enabled fetch
-      const response = await fetchJSONWithCSRF('/api/auth/register', {
+      // Login with CSRF token
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
-        body: JSON.stringify(userData),
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrfData.token
+        },
+        credentials: 'include',
+        body: JSON.stringify({ email, password })
       });
 
       const data = await response.json();
 
       if (response.ok) {
+        setAuthState({
+          user: data.user,
+          loading: false,
+          error: null
+        });
+        router.push('/dashboard');
         return { success: true };
       } else {
+        setAuthState(prev => ({
+          ...prev,
+          loading: false,
+          error: data.error || 'Login failed'
+        }));
         return { success: false, error: data.error };
       }
     } catch (error) {
-      return { success: false, error: 'Network error' };
+      setAuthState(prev => ({
+        ...prev,
+        loading: false,
+        error: error instanceof Error ? error.message : 'Login error'
+      }));
+      return { success: false, error: error instanceof Error ? error.message : 'Login error' };
     }
   };
 
-  return React.createElement(AuthContext.Provider, {
-    value: { user, loading, login, loginDirect, logout, register }
-  }, children);
-}
+  const register = async (userData: {
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    country: string;
+  }) => {
+    try {
+      setAuthState(prev => ({ ...prev, loading: true, error: null }));
 
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+      // Get CSRF token first
+      const csrfResponse = await fetch('/api/csrf', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+
+      if (!csrfResponse.ok) {
+        throw new Error('Failed to get CSRF token');
+      }
+
+      const csrfData = await csrfResponse.json();
+
+      // Register with CSRF token
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrfData.token
+        },
+        credentials: 'include',
+        body: JSON.stringify(userData)
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setAuthState({
+          user: data.user,
+          loading: false,
+          error: null
+        });
+        router.push('/login?message=registration-success');
+        return { success: true };
+      } else {
+        setAuthState(prev => ({
+          ...prev,
+          loading: false,
+          error: data.error || 'Registration failed'
+        }));
+        return { success: false, error: data.error };
+      }
+    } catch (error) {
+      setAuthState(prev => ({
+        ...prev,
+        loading: false,
+        error: error instanceof Error ? error.message : 'Registration error'
+      }));
+      return { success: false, error: error instanceof Error ? error.message : 'Registration error' };
+    }
+  };
+
+  const logout = async () => {
+    try {
+      // Get CSRF token first
+      const csrfResponse = await fetch('/api/csrf', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+
+      if (csrfResponse.ok) {
+        const csrfData = await csrfResponse.json();
+
+        // Logout with CSRF token
+        await fetch('/api/auth/logout', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': csrfData.token
+          },
+          credentials: 'include'
+        });
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setAuthState({
+        user: null,
+        loading: false,
+        error: null
+      });
+      router.push('/login');
+    }
+  };
+
+  return {
+    user: authState.user,
+    loading: authState.loading,
+    error: authState.error,
+    login,
+    register,
+    logout,
+    checkAuth
+  };
 } 

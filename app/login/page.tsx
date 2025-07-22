@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { AlertCircle, CheckCircle, Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
-import { fetchJSONWithCSRF } from '@/lib/csrf-client';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -47,42 +46,24 @@ export default function LoginPage() {
       console.log('🔄 Frontend: Invio richiesta di login...');
       console.log('📤 Frontend: Dati inviati:', { email: formData.email });
 
-      // Use the new CSRF-enabled fetch
-      const response = await fetchJSONWithCSRF('/api/auth/login', {
-        method: 'POST',
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password
-        }),
-      });
-
+      // Use the auth hook login method
+      const loginResult = await login(formData.email, formData.password);
+      
       console.log('📥 Frontend: Risposta ricevuta');
-      console.log('📥 Frontend: Status:', response.status);
-      console.log('📥 Frontend: Status Text:', response.statusText);
+      console.log('📥 Frontend: Login result:', loginResult);
 
-      const data = await response.json();
-      console.log('📥 Frontend: Dati parsati:', data);
-
-      if (response.ok && data.success) {
+      if (loginResult.success) {
         console.log('✅ Frontend: Login riuscito, reindirizzamento...');
         setSuccess('Login successful! Redirecting...');
         
-        // Use the auth context login method
-        const loginResult = await login(formData.email, formData.password);
-        
-        if (loginResult.success) {
-          setTimeout(() => {
-            router.push('/dashboard');
-          }, 1000);
-        } else {
-          const errorMessage = typeof loginResult.error === 'string' ? loginResult.error : JSON.stringify(loginResult.error) || 'Login failed';
-          setError(errorMessage);
-        }
-              } else {
-          console.log('❌ Frontend: Login fallito, imposto errore:', data.error);
-          const errorMessage = typeof data.error === 'string' ? data.error : JSON.stringify(data.error) || 'Login failed';
-          setError(errorMessage);
-        }
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 1000);
+      } else {
+        console.log('❌ Frontend: Login fallito, imposto errore:', loginResult.error);
+        const errorMessage = typeof loginResult.error === 'string' ? loginResult.error : JSON.stringify(loginResult.error) || 'Login failed';
+        setError(errorMessage);
+      }
     } catch (err) {
       console.error('❌ Frontend: Errore durante il login:', err);
       const errorMessage = typeof err === 'string' ? err : err?.message || err?.error || 'Network error. Please try again.';

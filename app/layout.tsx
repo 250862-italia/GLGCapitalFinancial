@@ -1,6 +1,5 @@
 import { Inter } from 'next/font/google';
 import './globals.css';
-import { AuthProvider } from '@/hooks/use-auth';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
 
@@ -25,19 +24,17 @@ export default function RootLayout({
         flexDirection: 'column', 
         minHeight: '100vh' 
       }}>
-        <AuthProvider>
-          <div style={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            flex: 1 
-          }}>
-            <Navigation />
-            <main style={{ flex: 1 }}>
-              {children}
-            </main>
-            <Footer />
-          </div>
-        </AuthProvider>
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          flex: 1 
+        }}>
+          <Navigation />
+          <main style={{ flex: 1 }}>
+            {children}
+          </main>
+          <Footer />
+        </div>
       </body>
     </html>
   );
