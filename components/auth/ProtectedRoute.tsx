@@ -1,24 +1,70 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "../../hooks/use-auth";
 
 export default function ProtectedRoute({ 
   children 
 }: { 
   children: React.ReactNode 
 }) {
-  const { user, loading } = useAuth();
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !user) {
+    const checkAuth = async () => {
+      try {
+        // Get CSRF token first
+        const csrfResponse = await fetch('/api/csrf', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
+        });
+
+        if (!csrfResponse.ok) {
+          setIsAuthenticated(false);
+          setIsLoading(false);
+          return;
+        }
+
+        const csrfData = await csrfResponse.json();
+
+        // Check auth with CSRF token
+        const response = await fetch('/api/auth/check', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': csrfData.token
+          },
+          credentials: 'include'
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setIsAuthenticated(data.authenticated);
+        } else {
+          setIsAuthenticated(false);
+        }
+      } catch (error) {
+        console.error('Auth check error:', error);
+        setIsAuthenticated(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // Controlla l'auth solo una volta al mount
+    checkAuth();
+  }, []); // Dipendenze vuote per eseguire solo al mount
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
       router.push('/login');
     }
-  }, [user, loading, router]);
+  }, [isAuthenticated, isLoading, router]);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div style={{
         minHeight: "100vh", 
@@ -55,7 +101,7 @@ export default function ProtectedRoute({
     );
   }
 
-  if (!user) {
+  if (!isAuthenticated) {
     return null; // Will redirect to login
   }
 

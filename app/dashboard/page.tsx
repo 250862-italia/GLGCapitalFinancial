@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/lib/supabase';
 import { fetchJSONWithCSRF } from '@/lib/csrf-client';
 import { useRealtime } from '@/hooks/use-realtime';
@@ -49,8 +48,22 @@ interface PortfolioStats {
   monthlyEarnings: number;
 }
 
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  client?: {
+    client_code: string;
+    status: string;
+    risk_profile: string;
+    total_invested: number;
+  };
+}
+
 export default function ClientDashboard() {
-  const { user } = useAuth();
+  const [user, setUser] = useState<User | null>(null);
+  const [userLoading, setUserLoading] = useState(true);
   const { packages: availablePackages, loading: packagesLoading, error: packagesError, lastUpdated } = usePackages();
   const [myInvestments, setMyInvestments] = useState<Investment[]>([]);
   const [selectedTimeframe, setSelectedTimeframe] = useState<'1d' | '7d' | '30d' | '90d'>('30d');
@@ -62,6 +75,50 @@ export default function ClientDashboard() {
   const [bankDetails, setBankDetails] = useState<{iban: string, accountHolder: string, bankName: string, reason: string} | null>(null);
   const [clientProfile, setClientProfile] = useState<any>(null);
   const router = useRouter();
+
+  // Load user data on mount
+  useEffect(() => {
+    const loadUser = async () => {
+      try {
+        // Get CSRF token first
+        const csrfResponse = await fetch('/api/csrf', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
+        });
+
+        if (!csrfResponse.ok) {
+          setUserLoading(false);
+          return;
+        }
+
+        const csrfData = await csrfResponse.json();
+
+        // Check auth with CSRF token
+        const response = await fetch('/api/auth/check', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': csrfData.token
+          },
+          credentials: 'include'
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.authenticated && data.user) {
+            setUser(data.user);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading user:', error);
+      } finally {
+        setUserLoading(false);
+      }
+    };
+
+    loadUser();
+  }, []);
 
   // Real-time functionality
   const { isConnected: realtimeConnected, events: realtimeEvents } = useRealtime({
@@ -510,7 +567,7 @@ export default function ClientDashboard() {
   ];
   const riskColors = ['#10b981', '#f59e0b', '#ef4444'];
 
-  if (isLoading || packagesLoading) {
+  if (userLoading || isLoading || packagesLoading) {
     return (
       <div style={{ 
         minHeight: '100vh', 
