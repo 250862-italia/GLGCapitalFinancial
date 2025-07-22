@@ -1,12 +1,9 @@
 "use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { AlertCircle, CheckCircle, Eye, EyeOff, Mail, Lock } from 'lucide-react';
-
-// Force dynamic rendering
-export const dynamic = 'force-dynamic';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 
 interface LoginData {
   email: string;
@@ -32,22 +29,19 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('🔄 Button clicked! Form data:', formData);
+    console.log('🔄 Form submitted!', formData);
     
     if (!formData.email.trim() || !formData.password.trim()) {
-      console.log('❌ Form validation failed - empty fields');
       setError('Please fill in all fields');
       return;
     }
 
-    console.log('✅ Form validation passed, starting login...');
     setIsLoading(true);
     setError('');
 
     try {
-      console.log('🔄 Frontend: Invio richiesta di login...');
-      console.log('📤 Frontend: Dati inviati:', { email: formData.email });
-
+      console.log('🔄 Getting CSRF token...');
+      
       // Get CSRF token first
       const csrfResponse = await fetch('/api/csrf', {
         method: 'GET',
@@ -60,8 +54,10 @@ export default function LoginPage() {
       }
 
       const csrfData = await csrfResponse.json();
+      console.log('✅ CSRF token received:', csrfData.token);
 
       // Login with CSRF token
+      console.log('🔄 Sending login request...');
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
@@ -74,23 +70,22 @@ export default function LoginPage() {
 
       const data = await response.json();
       
-      console.log('📥 Frontend: Risposta ricevuta');
-      console.log('📥 Frontend: Login result:', data);
+      console.log('📥 Login response:', data);
 
       if (response.ok && data.success) {
-        console.log('✅ Frontend: Login riuscito, reindirizzamento...');
+        console.log('✅ Login successful!');
         setSuccess('Login successful! Redirecting...');
         
         setTimeout(() => {
           router.push('/dashboard');
         }, 1000);
       } else {
-        console.log('❌ Frontend: Login fallito, imposto errore:', data.error);
+        console.log('❌ Login failed:', data.error);
         const errorMessage = typeof data.error === 'string' ? data.error : JSON.stringify(data.error) || 'Login failed';
         setError(errorMessage);
       }
     } catch (err) {
-      console.error('❌ Frontend: Errore durante il login:', err);
+      console.error('❌ Login error:', err);
       const errorMessage = typeof err === 'string' ? err : err?.message || err?.error || 'Network error. Please try again.';
       setError(errorMessage);
     } finally {
@@ -139,16 +134,13 @@ export default function LoginPage() {
           <div style={{
             background: '#fef2f2',
             border: '1px solid #fecaca',
+            color: '#dc2626',
+            padding: '0.75rem',
             borderRadius: 8,
-            padding: '1rem',
             marginBottom: '1.5rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            color: '#dc2626'
+            fontSize: 14
           }}>
-            <AlertCircle size={20} />
-            {typeof error === 'string' ? error : JSON.stringify(error)}
+            {error}
           </div>
         )}
 
@@ -156,21 +148,18 @@ export default function LoginPage() {
           <div style={{
             background: '#f0fdf4',
             border: '1px solid #bbf7d0',
+            color: '#16a34a',
+            padding: '0.75rem',
             borderRadius: 8,
-            padding: '1rem',
             marginBottom: '1.5rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            color: '#16a34a'
+            fontSize: 14
           }}>
-            <CheckCircle size={20} />
             {success}
           </div>
         )}
 
-        {/* Form Fields */}
-        <form onSubmit={handleSubmit} style={{ marginBottom: '2rem' }}>
+        {/* Form */}
+        <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '1.5rem' }}>
             <label style={{
               display: 'block',
@@ -201,6 +190,7 @@ export default function LoginPage() {
                   boxSizing: 'border-box'
                 }}
                 placeholder="Enter your email address"
+                required
               />
             </div>
           </div>
@@ -235,6 +225,7 @@ export default function LoginPage() {
                   boxSizing: 'border-box'
                 }}
                 placeholder="Enter your password"
+                required
               />
               <button
                 type="button"
@@ -265,8 +256,8 @@ export default function LoginPage() {
             <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: 14, color: '#374151' }}>
               <input
                 type="checkbox"
-                checked={false} // This state is no longer managed here
-                onChange={(e) => {}} // This handler is no longer needed
+                checked={false}
+                onChange={(e) => {}}
               />
               Remember me
             </label>
@@ -278,38 +269,28 @@ export default function LoginPage() {
               Forgot password?
             </Link>
           </div>
-        </form>
 
-        {/* Submit Button */}
-        <button
-          type="submit"
-          disabled={isLoading}
-          style={{
-            width: '100%',
-            background: isLoading ? '#e5e7eb' : '#059669',
-            color: 'white',
-            border: 'none',
-            padding: '0.75rem',
-            borderRadius: 8,
-            cursor: isLoading ? 'not-allowed' : 'pointer',
-            fontSize: 16,
-            fontWeight: 600,
-            marginBottom: '1.5rem',
-            transition: 'background 0.2s ease'
-          }}
-          onMouseEnter={(e) => {
-            if (!isLoading) {
-              e.currentTarget.style.background = '#047857';
-            }
-          }}
-          onMouseLeave={(e) => {
-            if (!isLoading) {
-              e.currentTarget.style.background = '#059669';
-            }
-          }}
-        >
-          {isLoading ? 'Signing In...' : 'Sign In'}
-        </button>
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={isLoading}
+            style={{
+              width: '100%',
+              background: isLoading ? '#e5e7eb' : '#059669',
+              color: 'white',
+              border: 'none',
+              padding: '0.75rem',
+              borderRadius: 8,
+              cursor: isLoading ? 'not-allowed' : 'pointer',
+              fontSize: 16,
+              fontWeight: 600,
+              marginBottom: '1.5rem',
+              transition: 'background 0.2s ease'
+            }}
+          >
+            {isLoading ? 'Signing In...' : 'Sign In'}
+          </button>
+        </form>
 
         {/* Debug Info (only in development) */}
         {process.env.NODE_ENV === 'development' && (
