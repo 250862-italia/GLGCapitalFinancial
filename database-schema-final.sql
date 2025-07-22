@@ -557,13 +557,16 @@ CREATE POLICY "Admins can manage email queue" ON email_queue
 -- =====================================================
 
 -- Function to update updated_at timestamp
+-- Fixed for security: added SECURITY DEFINER and explicit search_path
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at = NOW();
     RETURN NEW;
 END;
-$$ language 'plpgsql';
+$$ LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public;
 
 -- Create triggers for all tables with updated_at
 CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON profiles FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
