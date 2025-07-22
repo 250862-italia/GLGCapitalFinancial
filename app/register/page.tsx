@@ -138,18 +138,9 @@ export default function RegisterPage() {
       const responseHeaders = Object.fromEntries(registerResponse.headers.entries());
       debugLog += `📥 Response Headers: ${JSON.stringify(responseHeaders, null, 2)}\n`;
 
-      // Try to get response text first
-      const responseText = await registerResponse.text();
-      debugLog += `📥 Response Text: ${responseText}\n`;
-
-      let responseData;
-      try {
-        responseData = JSON.parse(responseText);
-        debugLog += `📥 Response Data: ${JSON.stringify(responseData, null, 2)}\n`;
-      } catch (parseError) {
-        debugLog += `❌ JSON Parse Error: ${parseError}\n`;
-        throw new Error(`Invalid JSON response: ${responseText}`);
-      }
+      // Read response body only once
+      const responseData = await registerResponse.json();
+      debugLog += `📥 Response Data: ${JSON.stringify(responseData, null, 2)}\n`;
 
       if (registerResponse.ok) {
         debugLog += '✅ Registrazione completata con successo!\n';
