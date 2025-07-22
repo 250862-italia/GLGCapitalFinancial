@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
@@ -22,7 +22,14 @@ export default function LoginPage() {
     password: ''
   });
 
+  // Test React functionality
+  useEffect(() => {
+    console.log('✅ React component loaded!');
+    console.log('✅ Form data state:', formData);
+  }, [formData]);
+
   const handleInputChange = (field: string, value: string) => {
+    console.log('🔄 Input change:', field, value);
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -274,6 +281,10 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isLoading}
+            onClick={(e) => {
+              console.log('🔄 Button clicked directly!');
+              // Don't prevent default here, let the form handle it
+            }}
             style={{
               width: '100%',
               background: isLoading ? '#e5e7eb' : '#059669',
@@ -307,28 +318,50 @@ export default function LoginPage() {
             <div>Loading: {isLoading ? '✓' : '✗'}</div>
             <div>Button disabled: {isLoading ? '✓' : '✗'}</div>
             
-            {/* Test Button */}
-            <button
-              onClick={() => {
-                console.log('🧪 Test button clicked!');
-                setFormData({
-                  email: 'test_button@example.com',
-                  password: 'test123'
-                });
-              }}
-              style={{
-                background: '#3b82f6',
-                color: 'white',
-                border: 'none',
-                padding: '0.25rem 0.5rem',
-                borderRadius: '4px',
-                fontSize: '10px',
-                cursor: 'pointer',
-                marginTop: '0.5rem'
-              }}
-            >
-              Fill Test Data
-            </button>
+            {/* Test Buttons */}
+            <div style={{ marginTop: '0.5rem', display: 'flex', gap: '0.5rem' }}>
+              <button
+                onClick={() => {
+                  console.log('🧪 Fill test data clicked!');
+                  setFormData({
+                    email: 'test_button@example.com',
+                    password: 'test123'
+                  });
+                }}
+                style={{
+                  background: '#3b82f6',
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.25rem 0.5rem',
+                  borderRadius: '4px',
+                  fontSize: '10px',
+                  cursor: 'pointer'
+                }}
+              >
+                Fill Test Data
+              </button>
+              
+              <button
+                onClick={() => {
+                  console.log('🧪 Test form submission clicked!');
+                  const form = document.querySelector('form');
+                  if (form) {
+                    form.dispatchEvent(new Event('submit', { bubbles: true }));
+                  }
+                }}
+                style={{
+                  background: '#10b981',
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.25rem 0.5rem',
+                  borderRadius: '4px',
+                  fontSize: '10px',
+                  cursor: 'pointer'
+                }}
+              >
+                Test Submit
+              </button>
+            </div>
           </div>
         )}
 
