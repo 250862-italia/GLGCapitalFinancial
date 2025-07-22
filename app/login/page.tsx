@@ -169,11 +169,15 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* Form */}
-        <div style={{ marginBottom: '2rem' }}>
-          {/* Email */}
+        {/* Form Fields */}
+        <form onSubmit={handleSubmit} style={{ marginBottom: '2rem' }}>
           <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>
+            <label style={{
+              display: 'block',
+              marginBottom: '0.5rem',
+              fontWeight: 600,
+              color: '#374151'
+            }}>
               Email Address <span style={{ color: '#ef4444' }}>*</span>
             </label>
             <div style={{ position: 'relative' }}>
@@ -201,9 +205,13 @@ export default function LoginPage() {
             </div>
           </div>
 
-          {/* Password */}
           <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>
+            <label style={{
+              display: 'block',
+              marginBottom: '0.5rem',
+              fontWeight: 600,
+              color: '#374151'
+            }}>
               Password <span style={{ color: '#ef4444' }}>*</span>
             </label>
             <div style={{ position: 'relative' }}>
@@ -270,11 +278,11 @@ export default function LoginPage() {
               Forgot password?
             </Link>
           </div>
-        </div>
+        </form>
 
         {/* Submit Button */}
         <button
-          onClick={handleSubmit}
+          type="submit"
           disabled={isLoading}
           style={{
             width: '100%',
@@ -317,6 +325,29 @@ export default function LoginPage() {
             <div>Password: {formData.password ? '✓' : '✗'}</div>
             <div>Loading: {isLoading ? '✓' : '✗'}</div>
             <div>Button disabled: {isLoading ? '✓' : '✗'}</div>
+            
+            {/* Test Button */}
+            <button
+              onClick={() => {
+                console.log('🧪 Test button clicked!');
+                setFormData({
+                  email: 'test_button@example.com',
+                  password: 'test123'
+                });
+              }}
+              style={{
+                background: '#3b82f6',
+                color: 'white',
+                border: 'none',
+                padding: '0.25rem 0.5rem',
+                borderRadius: '4px',
+                fontSize: '10px',
+                cursor: 'pointer',
+                marginTop: '0.5rem'
+              }}
+            >
+              Fill Test Data
+            </button>
           </div>
         )}
 
