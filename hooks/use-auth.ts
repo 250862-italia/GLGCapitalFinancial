@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface User {
@@ -29,12 +29,22 @@ export function useAuth() {
     error: null
   });
   const router = useRouter();
+  const isCheckingAuth = useRef(false);
+  const hasCheckedAuth = useRef(false);
 
-  useEffect(() => {
-    checkAuth();
-  }, []);
+  const checkAuth = useCallback(async () => {
+    // Prevenire chiamate multiple simultanee
+    if (isCheckingAuth.current) {
+      return;
+    }
 
-  const checkAuth = async () => {
+    // Se abbiamo già controllato l'auth e non stiamo caricando, non ricontrollare
+    if (hasCheckedAuth.current && !authState.loading) {
+      return;
+    }
+
+    isCheckingAuth.current = true;
+
     try {
       // Get CSRF token first
       const csrfResponse = await fetch('/api/csrf', {
@@ -87,8 +97,18 @@ export function useAuth() {
         loading: false,
         error: error instanceof Error ? error.message : 'Authentication error'
       });
+    } finally {
+      isCheckingAuth.current = false;
+      hasCheckedAuth.current = true;
     }
-  };
+  }, [authState.loading]);
+
+  useEffect(() => {
+    // Controlla l'auth solo una volta al mount
+    if (!hasCheckedAuth.current) {
+      checkAuth();
+    }
+  }, []); // Dipendenze vuote per eseguire solo al mount
 
   const login = async (email: string, password: string) => {
     try {
@@ -126,6 +146,7 @@ export function useAuth() {
           loading: false,
           error: null
         });
+        hasCheckedAuth.current = true; // Marca come controllato
         router.push('/dashboard');
         return { success: true };
       } else {
@@ -188,6 +209,7 @@ export function useAuth() {
           loading: false,
           error: null
         });
+        hasCheckedAuth.current = true; // Marca come controllato
         router.push('/login?message=registration-success');
         return { success: true };
       } else {
@@ -238,6 +260,7 @@ export function useAuth() {
         loading: false,
         error: null
       });
+      hasCheckedAuth.current = false; // Reset per permettere nuovo controllo
       router.push('/login');
     }
   };
