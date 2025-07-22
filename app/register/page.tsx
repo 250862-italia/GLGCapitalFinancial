@@ -4,693 +4,371 @@ export const dynamic = "force-dynamic";
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Eye, EyeOff, Lock, Mail, User, Building, Globe, AlertCircle, CheckCircle } from 'lucide-react';
-import { fetchJSONWithCSRF } from '@/lib/csrf-client';
 
-interface RegisterData {
+interface FormData {
   email: string;
   password: string;
   confirmPassword: string;
   firstName: string;
   lastName: string;
   country: string;
+  acceptTerms: boolean;
 }
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [formData, setFormData] = useState<RegisterData>({
+  const [formData, setFormData] = useState<FormData>({
     email: '',
     password: '',
     confirmPassword: '',
     firstName: '',
     lastName: '',
-    country: ''
+    country: '',
+    acceptTerms: false
   });
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [errors, setErrors] = useState<Partial<FormData>>({});
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [submitError, setSubmitError] = useState<string>('');
 
-  const handleInputChange = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    setError('');
+  const validateForm = (): boolean => {
+    const newErrors: Partial<FormData> = {};
+
+    if (!formData.email) {
+      newErrors.email = 'Email è obbligatoria';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Email non valida';
+    }
+
+    if (!formData.password) {
+      newErrors.password = 'Password è obbligatoria';
+    } else if (formData.password.length < 8) {
+      newErrors.password = 'Password deve essere di almeno 8 caratteri';
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Le password non coincidono';
+    }
+
+    if (!formData.firstName) {
+      newErrors.firstName = 'Nome è obbligatorio';
+    }
+
+    if (!formData.lastName) {
+      newErrors.lastName = 'Cognome è obbligatorio';
+    }
+
+    if (!formData.country) {
+      newErrors.country = 'Paese è obbligatorio';
+    }
+
+    if (!formData.acceptTerms) {
+      newErrors.acceptTerms = 'Devi accettare i termini e condizioni';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  const validateForm = () => {
-    return formData.email && 
-           formData.password && 
-           formData.confirmPassword && 
-           formData.firstName && 
-           formData.lastName && 
-           formData.country &&
-           formData.password === formData.confirmPassword &&
-           formData.password.length >= 6;
-  };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitError('');
 
-  const handleSubmit = async () => {
     if (!validateForm()) {
-      if (!formData.firstName.trim() || !formData.lastName.trim()) {
-        setError('Please enter your first and last name');
-        return;
-      }
-      if (!formData.country.trim()) {
-        setError('Please select your country');
-        return;
-      }
-      if (formData.password !== formData.confirmPassword) {
-        setError('Passwords do not match');
-        return;
-      }
-      if (formData.password.length < 6) {
-        setError('Password must be at least 6 characters long');
-        return;
-      }
-      setError('Please fill in all required fields');
       return;
     }
 
     setIsLoading(true);
-    setError('');
 
     try {
-      console.log('🔄 Frontend: Invio richiesta di registrazione...');
-      console.log('📤 Frontend: Dati inviati:', {
-        email: formData.email,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        country: formData.country
+      console.log('🔄 Frontend: Inizio registrazione...');
+      
+      // Step 1: Get CSRF token
+      console.log('🔍 Frontend: Ottenendo CSRF token...');
+      const csrfResponse = await fetch('/api/csrf', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include'
       });
 
-      // Debug: Test CSRF token fetching first
-      console.log('🔍 Frontend: Testing CSRF token fetch...');
-      try {
-        const csrfResponse = await fetch('/api/csrf', {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include'
-        });
-        console.log('🔍 Frontend: CSRF Response status:', csrfResponse.status);
-        if (csrfResponse.ok) {
-          const csrfData = await csrfResponse.json();
-          console.log('🔍 Frontend: CSRF Token received:', csrfData.token.substring(0, 10) + '...');
-        } else {
-          console.log('🔍 Frontend: CSRF token fetch failed');
-        }
-      } catch (csrfError) {
-        console.error('🔍 Frontend: CSRF token fetch error:', csrfError);
+      if (!csrfResponse.ok) {
+        throw new Error(`Failed to get CSRF token: ${csrfResponse.status}`);
       }
 
-      // Use the new CSRF-enabled fetch
-      console.log('🔍 Frontend: Using fetchJSONWithCSRF...');
-      let response;
-      try {
-        response = await fetchJSONWithCSRF('/api/auth/register', {
-          method: 'POST',
-          body: JSON.stringify({
-            email: formData.email,
-            password: formData.password,
-            firstName: formData.firstName,
-            lastName: formData.lastName,
-            country: formData.country
-          }),
-        });
-      } catch (csrfError) {
-        console.error('🔍 Frontend: CSRF client failed, trying direct fetch...', csrfError);
-        
-        // Fallback: Try direct fetch with manual CSRF token
-        const csrfResponse = await fetch('/api/csrf', {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include'
-        });
-        
-        if (csrfResponse.ok) {
-          const csrfData = await csrfResponse.json();
-          console.log('🔍 Frontend: Using fallback CSRF token:', csrfData.token.substring(0, 10) + '...');
-          
-          response = await fetch('/api/auth/register', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-CSRF-Token': csrfData.token
-            },
-            credentials: 'include',
-            body: JSON.stringify({
-              email: formData.email,
-              password: formData.password,
-              firstName: formData.firstName,
-              lastName: formData.lastName,
-              country: formData.country
-            })
-          });
-        } else {
-          throw new Error('Failed to get CSRF token for fallback');
-        }
-      }
+      const csrfData = await csrfResponse.json();
+      console.log('🔍 Frontend: CSRF Token ottenuto:', csrfData.token.substring(0, 10) + '...');
+
+      // Step 2: Register user with CSRF token
+      console.log('🔍 Frontend: Invio richiesta di registrazione...');
+      const registerResponse = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrfData.token
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          country: formData.country
+        })
+      });
 
       console.log('📥 Frontend: Risposta ricevuta');
-      console.log('📥 Frontend: Status:', response.status);
-      console.log('📥 Frontend: Status Text:', response.statusText);
-      console.log('📥 Frontend: Headers:', Object.fromEntries(response.headers.entries()));
+      console.log('📥 Frontend: Status:', registerResponse.status);
+      console.log('📥 Frontend: Status Text:', registerResponse.statusText);
 
-      const data = await response.json();
-      console.log('📥 Frontend: Dati parsati:', data);
+      const responseData = await registerResponse.json();
+      console.log('📥 Frontend: Dati risposta:', responseData);
 
-      if (response.ok) {
-        console.log('✅ Frontend: Registrazione riuscita, imposto successo');
-        setSuccess('Registration successful! Your account has been automatically confirmed. You can now log in.');
-        setTimeout(() => {
-          router.push('/login');
-        }, 3000);
+      if (registerResponse.ok) {
+        console.log('✅ Frontend: Registrazione completata con successo');
+        router.push('/login?message=registration-success');
       } else {
-        console.log('❌ Frontend: Registrazione fallita, imposto errore:', data.error);
-        const errorMessage = typeof data.error === 'string' ? data.error : JSON.stringify(data.error) || 'Registration failed';
-        setError(errorMessage);
+        console.log('❌ Frontend: Registrazione fallita');
+        setSubmitError(responseData.error || 'Errore durante la registrazione');
       }
-    } catch (err) {
-      console.error('❌ Frontend: Errore durante la registrazione:', err);
-      const errorMessage = typeof err === 'string' ? err : err?.message || err?.error || 'Network error. Please try again.';
-      setError(errorMessage);
+
+    } catch (error) {
+      console.error('❌ Frontend: Errore durante la registrazione:', error);
+      setSubmitError(error instanceof Error ? error.message : 'Errore durante la registrazione');
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target;
+    const checked = type === 'checkbox' ? (e.target as HTMLInputElement).checked : undefined;
+    
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+
+    // Clear error when user starts typing
+    if (errors[name as keyof FormData]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: undefined
+      }));
+    }
+  };
+
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      padding: '2rem',
-      paddingTop: '6rem' // Add top padding to account for fixed navigation
-    }}>
-      <div style={{
-        background: 'white',
-        borderRadius: 16,
-        padding: '3rem',
-        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-        width: '100%',
-        maxWidth: 500
-      }}>
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <h1 style={{
-            fontSize: 32,
-            fontWeight: 700,
-            color: '#1f2937',
-            marginBottom: '0.5rem'
-          }}>
-            Create Account
-          </h1>
-          <p style={{
-            fontSize: 16,
-            color: '#6b7280',
-            margin: 0
-          }}>
-            Join GLG Capital Financial to start investing
-          </p>
-        </div>
-
-        {/* Error/Success Messages */}
-        {error && (
-          <div style={{
-            background: '#fef2f2',
-            border: '1px solid #fecaca',
-            borderRadius: 8,
-            padding: '1rem',
-            marginBottom: '1.5rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            color: '#dc2626'
-          }}>
-            <AlertCircle size={20} />
-            {typeof error === 'string' ? error : JSON.stringify(error)}
-          </div>
-        )}
-
-        {success && (
-          <div style={{
-            background: '#f0fdf4',
-            border: '1px solid #bbf7d0',
-            borderRadius: 8,
-            padding: '1rem',
-            marginBottom: '1.5rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            color: '#16a34a'
-          }}>
-            <CheckCircle size={20} />
-            {success}
-          </div>
-        )}
-
-        {/* Form */}
-        <div style={{ marginBottom: '2rem' }}>
-          {/* Email */}
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>
-              Email Address <span style={{ color: '#ef4444' }}>*</span>
-            </label>
-            <div style={{ position: 'relative' }}>
-              <Mail size={20} style={{
-                position: 'absolute',
-                left: '0.75rem',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                color: '#9ca3af'
-              }} />
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem 0.75rem 0.75rem 2.5rem',
-                  border: '1px solid #d1d5db',
-                  borderRadius: 8,
-                  fontSize: 16,
-                  boxSizing: 'border-box'
-                }}
-                placeholder="Enter your email address"
-              />
-            </div>
-          </div>
-
-          {/* First Name */}
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>
-              First Name <span style={{ color: '#ef4444' }}>*</span>
-            </label>
-            <div style={{ position: 'relative' }}>
-              <User size={20} style={{
-                position: 'absolute',
-                left: '0.75rem',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                color: '#9ca3af'
-              }} />
-              <input
-                type="text"
-                value={formData.firstName}
-                onChange={(e) => handleInputChange('firstName', e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem 0.75rem 0.75rem 2.5rem',
-                  border: '1px solid #d1d5db',
-                  borderRadius: 8,
-                  fontSize: 16,
-                  boxSizing: 'border-box'
-                }}
-                placeholder="Enter your first name"
-              />
-            </div>
-          </div>
-
-          {/* Last Name */}
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>
-              Last Name <span style={{ color: '#ef4444' }}>*</span>
-            </label>
-            <div style={{ position: 'relative' }}>
-              <User size={20} style={{
-                position: 'absolute',
-                left: '0.75rem',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                color: '#9ca3af'
-              }} />
-              <input
-                type="text"
-                value={formData.lastName}
-                onChange={(e) => handleInputChange('lastName', e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem 0.75rem 0.75rem 2.5rem',
-                  border: '1px solid #d1d5db',
-                  borderRadius: 8,
-                  fontSize: 16,
-                  boxSizing: 'border-box'
-                }}
-                placeholder="Enter your last name"
-              />
-            </div>
-          </div>
-
-          {/* Country */}
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>
-              Country <span style={{ color: '#ef4444' }}>*</span>
-            </label>
-            <div style={{ position: 'relative' }}>
-              <Globe size={20} style={{
-                position: 'absolute',
-                left: '0.75rem',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                color: '#9ca3af',
-                zIndex: 10
-              }} />
-              <select
-                value={formData.country}
-                onChange={(e) => handleInputChange('country', e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem 0.75rem 0.75rem 2.5rem',
-                  border: '1px solid #d1d5db',
-                  borderRadius: 8,
-                  fontSize: 16,
-                  boxSizing: 'border-box',
-                  backgroundColor: 'white',
-                  appearance: 'none',
-                  cursor: 'pointer'
-                }}
-              >
-                <option value="">Select your country</option>
-                <option value="Afghanistan">Afghanistan</option>
-                <option value="Albania">Albania</option>
-                <option value="Algeria">Algeria</option>
-                <option value="Andorra">Andorra</option>
-                <option value="Angola">Angola</option>
-                <option value="Antigua and Barbuda">Antigua and Barbuda</option>
-                <option value="Argentina">Argentina</option>
-                <option value="Armenia">Armenia</option>
-                <option value="Australia">Australia</option>
-                <option value="Austria">Austria</option>
-                <option value="Azerbaijan">Azerbaijan</option>
-                <option value="Bahamas">Bahamas</option>
-                <option value="Bahrain">Bahrain</option>
-                <option value="Bangladesh">Bangladesh</option>
-                <option value="Barbados">Barbados</option>
-                <option value="Belarus">Belarus</option>
-                <option value="Belgium">Belgium</option>
-                <option value="Belize">Belize</option>
-                <option value="Benin">Benin</option>
-                <option value="Bhutan">Bhutan</option>
-                <option value="Bolivia">Bolivia</option>
-                <option value="Bosnia and Herzegovina">Bosnia and Herzegovina</option>
-                <option value="Botswana">Botswana</option>
-                <option value="Brazil">Brazil</option>
-                <option value="Brunei">Brunei</option>
-                <option value="Bulgaria">Bulgaria</option>
-                <option value="Burkina Faso">Burkina Faso</option>
-                <option value="Burundi">Burundi</option>
-                <option value="Cabo Verde">Cabo Verde</option>
-                <option value="Cambodia">Cambodia</option>
-                <option value="Cameroon">Cameroon</option>
-                <option value="Canada">Canada</option>
-                <option value="Central African Republic">Central African Republic</option>
-                <option value="Chad">Chad</option>
-                <option value="Chile">Chile</option>
-                <option value="China">China</option>
-                <option value="Colombia">Colombia</option>
-                <option value="Comoros">Comoros</option>
-                <option value="Congo">Congo</option>
-                <option value="Costa Rica">Costa Rica</option>
-                <option value="Croatia">Croatia</option>
-                <option value="Cuba">Cuba</option>
-                <option value="Cyprus">Cyprus</option>
-                <option value="Czech Republic">Czech Republic</option>
-                <option value="Democratic Republic of the Congo">Democratic Republic of the Congo</option>
-                <option value="Denmark">Denmark</option>
-                <option value="Djibouti">Djibouti</option>
-                <option value="Dominica">Dominica</option>
-                <option value="Dominican Republic">Dominican Republic</option>
-                <option value="East Timor">East Timor</option>
-                <option value="Ecuador">Ecuador</option>
-                <option value="Egypt">Egypt</option>
-                <option value="El Salvador">El Salvador</option>
-                <option value="Equatorial Guinea">Equatorial Guinea</option>
-                <option value="Eritrea">Eritrea</option>
-                <option value="Estonia">Estonia</option>
-                <option value="Eswatini">Eswatini</option>
-                <option value="Ethiopia">Ethiopia</option>
-                <option value="Fiji">Fiji</option>
-                <option value="Finland">Finland</option>
-                <option value="France">France</option>
-                <option value="Gabon">Gabon</option>
-                <option value="Gambia">Gambia</option>
-                <option value="Georgia">Georgia</option>
-                <option value="Germany">Germany</option>
-                <option value="Ghana">Ghana</option>
-                <option value="Greece">Greece</option>
-                <option value="Grenada">Grenada</option>
-                <option value="Guatemala">Guatemala</option>
-                <option value="Guinea">Guinea</option>
-                <option value="Guinea-Bissau">Guinea-Bissau</option>
-                <option value="Guyana">Guyana</option>
-                <option value="Haiti">Haiti</option>
-                <option value="Honduras">Honduras</option>
-                <option value="Hungary">Hungary</option>
-                <option value="Iceland">Iceland</option>
-                <option value="India">India</option>
-                <option value="Indonesia">Indonesia</option>
-                <option value="Iran">Iran</option>
-                <option value="Iraq">Iraq</option>
-                <option value="Ireland">Ireland</option>
-                <option value="Israel">Israel</option>
-                <option value="Italy">Italy</option>
-                <option value="Jamaica">Jamaica</option>
-                <option value="Japan">Japan</option>
-                <option value="Jordan">Jordan</option>
-                <option value="Kazakhstan">Kazakhstan</option>
-                <option value="Kenya">Kenya</option>
-                <option value="Kiribati">Kiribati</option>
-                <option value="Kuwait">Kuwait</option>
-                <option value="Kyrgyzstan">Kyrgyzstan</option>
-                <option value="Laos">Laos</option>
-                <option value="Latvia">Latvia</option>
-                <option value="Lebanon">Lebanon</option>
-                <option value="Lesotho">Lesotho</option>
-                <option value="Liberia">Liberia</option>
-                <option value="Libya">Libya</option>
-                <option value="Liechtenstein">Liechtenstein</option>
-                <option value="Lithuania">Lithuania</option>
-                <option value="Luxembourg">Luxembourg</option>
-                <option value="Madagascar">Madagascar</option>
-                <option value="Malawi">Malawi</option>
-                <option value="Malaysia">Malaysia</option>
-                <option value="Maldives">Maldives</option>
-                <option value="Mali">Mali</option>
-                <option value="Malta">Malta</option>
-                <option value="Marshall Islands">Marshall Islands</option>
-                <option value="Mauritania">Mauritania</option>
-                <option value="Mauritius">Mauritius</option>
-                <option value="Mexico">Mexico</option>
-                <option value="Micronesia">Micronesia</option>
-                <option value="Moldova">Moldova</option>
-                <option value="Monaco">Monaco</option>
-                <option value="Mongolia">Mongolia</option>
-                <option value="Montenegro">Montenegro</option>
-                <option value="Morocco">Morocco</option>
-                <option value="Mozambique">Mozambique</option>
-                <option value="Myanmar">Myanmar</option>
-                <option value="Namibia">Namibia</option>
-                <option value="Nauru">Nauru</option>
-                <option value="Nepal">Nepal</option>
-                <option value="Netherlands">Netherlands</option>
-                <option value="New Zealand">New Zealand</option>
-                <option value="Nicaragua">Nicaragua</option>
-                <option value="Niger">Niger</option>
-                <option value="Nigeria">Nigeria</option>
-                <option value="North Korea">North Korea</option>
-                <option value="North Macedonia">North Macedonia</option>
-                <option value="Norway">Norway</option>
-                <option value="Oman">Oman</option>
-                <option value="Pakistan">Pakistan</option>
-                <option value="Palau">Palau</option>
-                <option value="Panama">Panama</option>
-                <option value="Papua New Guinea">Papua New Guinea</option>
-                <option value="Paraguay">Paraguay</option>
-                <option value="Peru">Peru</option>
-                <option value="Philippines">Philippines</option>
-                <option value="Poland">Poland</option>
-                <option value="Portugal">Portugal</option>
-                <option value="Qatar">Qatar</option>
-                <option value="Romania">Romania</option>
-                <option value="Russia">Russia</option>
-                <option value="Rwanda">Rwanda</option>
-                <option value="Saint Kitts and Nevis">Saint Kitts and Nevis</option>
-                <option value="Saint Lucia">Saint Lucia</option>
-                <option value="Saint Vincent and the Grenadines">Saint Vincent and the Grenadines</option>
-                <option value="Samoa">Samoa</option>
-                <option value="San Marino">San Marino</option>
-                <option value="Sao Tome and Principe">Sao Tome and Principe</option>
-                <option value="Saudi Arabia">Saudi Arabia</option>
-                <option value="Senegal">Senegal</option>
-                <option value="Serbia">Serbia</option>
-                <option value="Seychelles">Seychelles</option>
-                <option value="Sierra Leone">Sierra Leone</option>
-                <option value="Singapore">Singapore</option>
-                <option value="Slovakia">Slovakia</option>
-                <option value="Slovenia">Slovenia</option>
-                <option value="Solomon Islands">Solomon Islands</option>
-                <option value="Somalia">Somalia</option>
-                <option value="South Africa">South Africa</option>
-                <option value="South Korea">South Korea</option>
-                <option value="South Sudan">South Sudan</option>
-                <option value="Spain">Spain</option>
-                <option value="Sri Lanka">Sri Lanka</option>
-                <option value="Sudan">Sudan</option>
-                <option value="Suriname">Suriname</option>
-                <option value="Sweden">Sweden</option>
-                <option value="Switzerland">Switzerland</option>
-                <option value="Syria">Syria</option>
-                <option value="Taiwan">Taiwan</option>
-                <option value="Tajikistan">Tajikistan</option>
-                <option value="Tanzania">Tanzania</option>
-                <option value="Thailand">Thailand</option>
-                <option value="Togo">Togo</option>
-                <option value="Tonga">Tonga</option>
-                <option value="Trinidad and Tobago">Trinidad and Tobago</option>
-                <option value="Tunisia">Tunisia</option>
-                <option value="Turkey">Turkey</option>
-                <option value="Turkmenistan">Turkmenistan</option>
-                <option value="Tuvalu">Tuvalu</option>
-                <option value="Uganda">Uganda</option>
-                <option value="Ukraine">Ukraine</option>
-                <option value="United Arab Emirates">United Arab Emirates</option>
-                <option value="United Kingdom">United Kingdom</option>
-                <option value="United States">United States</option>
-                <option value="Uruguay">Uruguay</option>
-                <option value="Uzbekistan">Uzbekistan</option>
-                <option value="Vanuatu">Vanuatu</option>
-                <option value="Vatican City">Vatican City</option>
-                <option value="Venezuela">Venezuela</option>
-                <option value="Vietnam">Vietnam</option>
-                <option value="Yemen">Yemen</option>
-                <option value="Zambia">Zambia</option>
-                <option value="Zimbabwe">Zimbabwe</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Password */}
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>
-              Password <span style={{ color: '#ef4444' }}>*</span>
-            </label>
-            <div style={{ position: 'relative' }}>
-              <Lock size={20} style={{
-                position: 'absolute',
-                left: '0.75rem',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                color: '#9ca3af'
-              }} />
-              <input
-                type={showPassword ? 'text' : 'password'}
-                value={formData.password}
-                onChange={(e) => handleInputChange('password', e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem 2.5rem 0.75rem 2.5rem',
-                  border: '1px solid #d1d5db',
-                  borderRadius: 8,
-                  fontSize: 16,
-                  boxSizing: 'border-box'
-                }}
-                placeholder="Enter your password (min 6 characters)"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                style={{
-                  position: 'absolute',
-                  right: '0.75rem',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: '#9ca3af'
-                }}
-              >
-                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-              </button>
-            </div>
-          </div>
-
-          {/* Confirm Password */}
-          <div style={{ marginBottom: '2rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: '#374151' }}>
-              Confirm Password <span style={{ color: '#ef4444' }}>*</span>
-            </label>
-            <div style={{ position: 'relative' }}>
-              <Lock size={20} style={{
-                position: 'absolute',
-                left: '0.75rem',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                color: '#9ca3af'
-              }} />
-              <input
-                type={showConfirmPassword ? 'text' : 'password'}
-                value={formData.confirmPassword}
-                onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem 2.5rem 0.75rem 2.5rem',
-                  border: '1px solid #d1d5db',
-                  borderRadius: 8,
-                  fontSize: 16,
-                  boxSizing: 'border-box'
-                }}
-                placeholder="Confirm your password"
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                style={{
-                  position: 'absolute',
-                  right: '0.75rem',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: '#9ca3af'
-                }}
-              >
-                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Submit Button */}
-        <button
-          onClick={handleSubmit}
-          disabled={!validateForm() || isLoading}
-          style={{
-            width: '100%',
-            background: !validateForm() || isLoading ? '#e5e7eb' : '#059669',
-            color: 'white',
-            border: 'none',
-            padding: '0.75rem',
-            borderRadius: 8,
-            cursor: !validateForm() || isLoading ? 'not-allowed' : 'pointer',
-            fontSize: 16,
-            fontWeight: 600,
-            marginBottom: '1.5rem'
-          }}
-        >
-          {isLoading ? 'Creating Account...' : 'Create Account'}
-        </button>
-
-        {/* Login Link */}
-        <div style={{ textAlign: 'center' }}>
-          <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>
-            Already have an account?{' '}
-            <Link href="/login" style={{ color: '#059669', textDecoration: 'underline', fontWeight: 600 }}>
-              Sign in here
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Crea il tuo account
+          </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            O{' '}
+            <Link href="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
+              accedi al tuo account esistente
             </Link>
           </p>
         </div>
+
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <div className="rounded-md shadow-sm -space-y-px">
+            <div>
+              <label htmlFor="email" className="sr-only">
+                Email
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${
+                  errors.email ? 'border-red-300' : 'border-gray-300'
+                } placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
+                placeholder="Email"
+                value={formData.email}
+                onChange={handleInputChange}
+              />
+              {errors.email && (
+                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="firstName" className="sr-only">
+                Nome
+              </label>
+              <input
+                id="firstName"
+                name="firstName"
+                type="text"
+                autoComplete="given-name"
+                required
+                className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${
+                  errors.firstName ? 'border-red-300' : 'border-gray-300'
+                } placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
+                placeholder="Nome"
+                value={formData.firstName}
+                onChange={handleInputChange}
+              />
+              {errors.firstName && (
+                <p className="mt-1 text-sm text-red-600">{errors.firstName}</p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="lastName" className="sr-only">
+                Cognome
+              </label>
+              <input
+                id="lastName"
+                name="lastName"
+                type="text"
+                autoComplete="family-name"
+                required
+                className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${
+                  errors.lastName ? 'border-red-300' : 'border-gray-300'
+                } placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
+                placeholder="Cognome"
+                value={formData.lastName}
+                onChange={handleInputChange}
+              />
+              {errors.lastName && (
+                <p className="mt-1 text-sm text-red-600">{errors.lastName}</p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="country" className="sr-only">
+                Paese
+              </label>
+              <select
+                id="country"
+                name="country"
+                required
+                className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${
+                  errors.country ? 'border-red-300' : 'border-gray-300'
+                } placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
+                value={formData.country}
+                onChange={handleInputChange}
+              >
+                <option value="">Seleziona il tuo paese</option>
+                <option value="Italy">Italia</option>
+                <option value="United States">Stati Uniti</option>
+                <option value="United Kingdom">Regno Unito</option>
+                <option value="Germany">Germania</option>
+                <option value="France">Francia</option>
+                <option value="Spain">Spagna</option>
+                <option value="Other">Altro</option>
+              </select>
+              {errors.country && (
+                <p className="mt-1 text-sm text-red-600">{errors.country}</p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="password" className="sr-only">
+                Password
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="new-password"
+                required
+                className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${
+                  errors.password ? 'border-red-300' : 'border-gray-300'
+                } placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
+                placeholder="Password"
+                value={formData.password}
+                onChange={handleInputChange}
+              />
+              {errors.password && (
+                <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="confirmPassword" className="sr-only">
+                Conferma Password
+              </label>
+              <input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                autoComplete="new-password"
+                required
+                className={`appearance-none rounded-none relative block w-full px-3 py-2 border ${
+                  errors.confirmPassword ? 'border-red-300' : 'border-gray-300'
+                } placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
+                placeholder="Conferma Password"
+                value={formData.confirmPassword}
+                onChange={handleInputChange}
+              />
+              {errors.confirmPassword && (
+                <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center">
+            <input
+              id="acceptTerms"
+              name="acceptTerms"
+              type="checkbox"
+              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+              checked={formData.acceptTerms}
+              onChange={handleInputChange}
+            />
+            <label htmlFor="acceptTerms" className="ml-2 block text-sm text-gray-900">
+              Accetto i{' '}
+              <Link href="/terms" className="text-indigo-600 hover:text-indigo-500">
+                termini e condizioni
+              </Link>
+            </label>
+          </div>
+          {errors.acceptTerms && (
+            <p className="text-sm text-red-600">{errors.acceptTerms}</p>
+          )}
+
+          {submitError && (
+            <div className="rounded-md bg-red-50 p-4">
+              <div className="flex">
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-red-800">
+                    Errore durante la registrazione
+                  </h3>
+                  <div className="mt-2 text-sm text-red-700">
+                    <p>{submitError}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading ? (
+                <div className="flex items-center">
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Registrazione in corso...
+                </div>
+              ) : (
+                'Registrati'
+              )}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
