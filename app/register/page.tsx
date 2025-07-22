@@ -29,6 +29,7 @@ export default function RegisterPage() {
   const [errors, setErrors] = useState<Partial<FormData>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [submitError, setSubmitError] = useState<string>('');
+  const [debugInfo, setDebugInfo] = useState<string>('');
 
   const validateForm = (): boolean => {
     const newErrors: Partial<FormData> = {};
@@ -72,18 +73,20 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitError('');
+    setDebugInfo('');
 
     if (!validateForm()) {
       return;
     }
 
     setIsLoading(true);
+    let debugLog = '';
 
     try {
-      console.log('🔄 Frontend: Inizio registrazione...');
+      debugLog += '🔄 Inizio registrazione...\n';
       
       // Step 1: Get CSRF token
-      console.log('🔍 Frontend: Ottenendo CSRF token...');
+      debugLog += '🔍 Ottenendo CSRF token...\n';
       const csrfResponse = await fetch('/api/csrf', {
         method: 'GET',
         headers: {
@@ -92,15 +95,31 @@ export default function RegisterPage() {
         credentials: 'include'
       });
 
+      debugLog += `📡 CSRF Response Status: ${csrfResponse.status}\n`;
+      debugLog += `📡 CSRF Response OK: ${csrfResponse.ok}\n`;
+
       if (!csrfResponse.ok) {
-        throw new Error(`Failed to get CSRF token: ${csrfResponse.status}`);
+        const errorText = await csrfResponse.text();
+        debugLog += `❌ CSRF Error: ${errorText}\n`;
+        throw new Error(`Failed to get CSRF token: ${csrfResponse.status} - ${errorText}`);
       }
 
       const csrfData = await csrfResponse.json();
-      console.log('🔍 Frontend: CSRF Token ottenuto:', csrfData.token.substring(0, 10) + '...');
+      debugLog += `✅ CSRF Token ottenuto: ${csrfData.token.substring(0, 10)}...\n`;
 
       // Step 2: Register user with CSRF token
-      console.log('🔍 Frontend: Invio richiesta di registrazione...');
+      debugLog += '🔍 Invio richiesta di registrazione...\n';
+      
+      const registerData = {
+        email: formData.email,
+        password: formData.password,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        country: formData.country
+      };
+
+      debugLog += `📤 Dati inviati: ${JSON.stringify(registerData, null, 2)}\n`;
+
       const registerResponse = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
@@ -108,32 +127,48 @@ export default function RegisterPage() {
           'X-CSRF-Token': csrfData.token
         },
         credentials: 'include',
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          country: formData.country
-        })
+        body: JSON.stringify(registerData)
       });
 
-      console.log('📥 Frontend: Risposta ricevuta');
-      console.log('📥 Frontend: Status:', registerResponse.status);
-      console.log('📥 Frontend: Status Text:', registerResponse.statusText);
+      debugLog += `📥 Register Response Status: ${registerResponse.status}\n`;
+      debugLog += `📥 Register Response OK: ${registerResponse.ok}\n`;
+      debugLog += `📥 Register Response Status Text: ${registerResponse.statusText}\n`;
 
-      const responseData = await registerResponse.json();
-      console.log('📥 Frontend: Dati risposta:', responseData);
+      // Get response headers
+      const responseHeaders = Object.fromEntries(registerResponse.headers.entries());
+      debugLog += `📥 Response Headers: ${JSON.stringify(responseHeaders, null, 2)}\n`;
+
+      // Try to get response text first
+      const responseText = await registerResponse.text();
+      debugLog += `📥 Response Text: ${responseText}\n`;
+
+      let responseData;
+      try {
+        responseData = JSON.parse(responseText);
+        debugLog += `📥 Response Data: ${JSON.stringify(responseData, null, 2)}\n`;
+      } catch (parseError) {
+        debugLog += `❌ JSON Parse Error: ${parseError}\n`;
+        throw new Error(`Invalid JSON response: ${responseText}`);
+      }
 
       if (registerResponse.ok) {
-        console.log('✅ Frontend: Registrazione completata con successo');
-        router.push('/login?message=registration-success');
+        debugLog += '✅ Registrazione completata con successo!\n';
+        setDebugInfo(debugLog);
+        
+        // Show success message briefly before redirect
+        setSubmitError(''); // Clear any previous errors
+        setTimeout(() => {
+          router.push('/login?message=registration-success');
+        }, 2000);
       } else {
-        console.log('❌ Frontend: Registrazione fallita');
+        debugLog += `❌ Registrazione fallita: ${responseData.error || 'Errore sconosciuto'}\n`;
+        setDebugInfo(debugLog);
         setSubmitError(responseData.error || 'Errore durante la registrazione');
       }
 
     } catch (error) {
-      console.error('❌ Frontend: Errore durante la registrazione:', error);
+      debugLog += `❌ Errore durante la registrazione: ${error}\n`;
+      setDebugInfo(debugLog);
       setSubmitError(error instanceof Error ? error.message : 'Errore durante la registrazione');
     } finally {
       setIsLoading(false);
@@ -343,6 +378,22 @@ export default function RegisterPage() {
                   </h3>
                   <div className="mt-2 text-sm text-red-700">
                     <p>{submitError}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Debug Information */}
+          {debugInfo && (
+            <div className="rounded-md bg-gray-50 p-4">
+              <div className="flex">
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-gray-800">
+                    Debug Information
+                  </h3>
+                  <div className="mt-2 text-sm text-gray-700">
+                    <pre className="whitespace-pre-wrap text-xs">{debugInfo}</pre>
                   </div>
                 </div>
               </div>
