@@ -63,6 +63,7 @@ export async function verifyAdmin(request: NextRequest) {
     
     // Get admin token from headers (sent by frontend)
     const adminToken = request.headers.get('x-admin-token') || 
+                      request.headers.get('X-Admin-Token') ||
                       request.headers.get('authorization')?.replace('Bearer ', '');
     
     console.log('🔍 Admin token from request:', adminToken ? 'present' : 'missing');
