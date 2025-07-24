@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import AdminNotifications from '@/components/admin/AdminNotifications';
+import '@/app/globals.css';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
