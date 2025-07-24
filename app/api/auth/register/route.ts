@@ -128,6 +128,7 @@ export async function POST(request: NextRequest) {
           profile_id: authData.user.id,
           first_name: firstName,
           last_name: lastName,
+          email: email,
           client_code: clientCode,
           status: 'active',
           risk_profile: 'moderate',

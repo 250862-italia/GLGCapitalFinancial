@@ -1,107 +1,84 @@
+require('dotenv').config({ path: '.env.local' });
+
 const BASE_URL = 'http://localhost:3000';
 
-async function testRegistrationFix() {
-  console.log('🔧 Testing Registration Fix - User Scenario');
-  console.log('===========================================');
+async function makeRequest(url, options = {}) {
+  const response = await fetch(url, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers
+    },
+    ...options
+  });
+  
+  const data = await response.json();
+  return { response, data };
+}
+
+async function testRegistration() {
+  console.log('🧪 Testing registration with client creation fix...\n');
   
   try {
-    // Simulate the exact user scenario
-    console.log('\n1️⃣ Getting CSRF token...');
-    const csrfResponse = await fetch('http://localhost:3000/api/csrf', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include'
-    });
-
-    console.log('CSRF Response Status:', csrfResponse.status);
-    console.log('CSRF Response OK:', csrfResponse.ok);
-
-    if (!csrfResponse.ok) {
-      const errorText = await csrfResponse.text();
-      console.log('❌ CSRF Error:', errorText);
-      throw new Error(`Failed to get CSRF token: ${csrfResponse.status} - ${errorText}`);
-    }
-
-    const csrfData = await csrfResponse.json();
-    console.log('✅ CSRF Token obtained:', csrfData.token.substring(0, 10) + '...');
-
-    // Test registration with the exact data from user's error
-    console.log('\n2️⃣ Testing registration with user data...');
+    // Step 1: Get CSRF token
+    console.log('1️⃣ Getting CSRF token...');
+    const { response: csrfResponse, data: csrfData } = await makeRequest(`${BASE_URL}/api/csrf`);
     
+    if (!csrfResponse.ok) {
+      console.error('❌ Failed to get CSRF token:', csrfData);
+      return;
+    }
+    
+    console.log('✅ CSRF token obtained');
+    
+    // Step 2: Test registration
+    console.log('\n2️⃣ Testing user registration...');
+    const testEmail = `test_fix_${Date.now()}@example.com`;
     const userData = {
-      email: "g.innocenti@magnificusdominus.com",
-      password: "Nncgnn62*",
-      firstName: "gianni",
-      lastName: "info@washtw.com",
-      country: "Italy"
+      email: testEmail,
+      password: 'TestPassword123!',
+      firstName: 'Test',
+      lastName: 'User',
+      country: 'Italy'
     };
-
-    console.log('📤 Data to send:', JSON.stringify(userData, null, 2));
-
-    const registerResponse = await fetch('http://localhost:3000/api/auth/register', {
+    
+    const { response: registerResponse, data: registerResult } = await makeRequest(`${BASE_URL}/api/auth/register`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
         'X-CSRF-Token': csrfData.token
       },
-      credentials: 'include',
       body: JSON.stringify(userData)
     });
-
-    console.log('📥 Register Response Status:', registerResponse.status);
-    console.log('📥 Register Response OK:', registerResponse.ok);
-    console.log('📥 Register Response Status Text:', registerResponse.statusText);
-
-    // Get response headers
-    const responseHeaders = Object.fromEntries(registerResponse.headers.entries());
-    console.log('📥 Response Headers:', JSON.stringify(responseHeaders, null, 2));
-
-    // Read response body
-    const responseData = await registerResponse.json();
-    console.log('📥 Response Data:', JSON.stringify(responseData, null, 2));
-
-    if (registerResponse.ok) {
-      console.log('✅ Registration completed successfully!');
-    } else {
-      console.log('❌ Registration failed:', responseData.error);
-    }
-
-    // Test with a different email to avoid conflicts
-    console.log('\n3️⃣ Testing registration with new email...');
     
-    const newUserData = {
-      email: "test_" + Date.now() + "@example.com",
-      password: "TestPassword123!",
-      firstName: "Test",
-      lastName: "User",
-      country: "Italy"
-    };
-
-    const registerResponse2 = await fetch('http://localhost:3000/api/auth/register', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-Token': csrfData.token
-      },
-      credentials: 'include',
-      body: JSON.stringify(newUserData)
+    console.log('📊 Registration Response:', {
+      status: registerResponse.status,
+      success: registerResult.success,
+      message: registerResult.message,
+      profileCreated: registerResult.profileCreated,
+      clientCreated: registerResult.clientCreated
     });
-
-    const responseData2 = await registerResponse2.json();
-    console.log('📥 Second Registration Status:', registerResponse2.status);
-    console.log('📥 Second Registration Data:', responseData2.error || 'Success');
-
-    if (registerResponse2.ok) {
-      console.log('✅ Second registration completed successfully!');
+    
+    if (registerResponse.ok && registerResult.success) {
+      console.log('✅ Registration successful!');
+      
+      if (registerResult.clientCreated) {
+        console.log('✅ Client record created successfully!');
+      } else {
+        console.log('⚠️ Client record creation failed');
+      }
+      
+      if (registerResult.profileCreated) {
+        console.log('✅ Profile record created successfully!');
+      } else {
+        console.log('⚠️ Profile record creation failed');
+      }
     } else {
-      console.log('❌ Second registration failed:', responseData2.error);
+      console.log('❌ Registration failed:', registerResult);
     }
-
+    
   } catch (error) {
-    console.log('❌ Error during test:', error.message);
+    console.error('❌ Test failed:', error);
   }
 }
 
-testRegistrationFix(); 
+// Run the test
+testRegistration(); 
