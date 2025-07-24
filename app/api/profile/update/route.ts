@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { validateCSRFToken } from '@/lib/csrf';
+import { MemoryOptimizer } from '@/lib/memory-optimizer';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -8,8 +9,13 @@ const supabase = createClient(
 );
 
 export async function POST(request: NextRequest) {
+  const memoryOptimizer = MemoryOptimizer.getInstance();
+  
   try {
     console.log('🔧 Profile update API called');
+    
+    // Start operation protection
+    memoryOptimizer.startOperation();
     
     // Validazione CSRF
     const csrfValidation = validateCSRFToken(request);
@@ -226,6 +232,9 @@ export async function POST(request: NextRequest) {
         updated_at: new Date().toISOString()
       }
     });
+  } finally {
+    // End operation protection
+    memoryOptimizer.endOperation();
   }
 }
 

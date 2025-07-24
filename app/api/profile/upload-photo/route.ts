@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { validateCSRFToken } from '@/lib/csrf';
+import { MemoryOptimizer } from '@/lib/memory-optimizer';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -12,7 +13,12 @@ const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 export async function POST(request: NextRequest) {
+  const memoryOptimizer = MemoryOptimizer.getInstance();
+  
   try {
+    // Start operation protection
+    memoryOptimizer.startOperation();
+    
     // Validazione CSRF
     const csrfValidation = validateCSRFToken(request);
     if (!csrfValidation.valid) {
@@ -42,8 +48,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
-
 
     if (!file) {
       return NextResponse.json(
@@ -132,5 +136,8 @@ export async function POST(request: NextRequest) {
       { error: 'Internal server error' },
       { status: 500 }
     );
+  } finally {
+    // End operation protection
+    memoryOptimizer.endOperation();
   }
 } 

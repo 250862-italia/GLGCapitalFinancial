@@ -4,7 +4,8 @@ export class MemoryOptimizer {
   private memoryThreshold = 0.8; // 80%
   private cleanupInterval: NodeJS.Timeout | null = null;
   private lastCleanup = 0;
-  private cleanupCooldown = 60000; // 1 minute
+  private cleanupCooldown = 300000; // 5 minutes (increased from 1 minute)
+  private isProcessingOperation = false; // Flag to prevent cleanup during operations
 
   static getInstance(): MemoryOptimizer {
     if (!MemoryOptimizer.instance) {
@@ -36,6 +37,16 @@ export class MemoryOptimizer {
     return usage.percentage > (this.memoryThreshold * 100);
   }
 
+  // Start operation - prevents cleanup during critical operations
+  startOperation(): void {
+    this.isProcessingOperation = true;
+  }
+
+  // End operation - allows cleanup again
+  endOperation(): void {
+    this.isProcessingOperation = false;
+  }
+
   // Force garbage collection if available
   forceGarbageCollection(): void {
     if (typeof global.gc === 'function') {
@@ -50,6 +61,12 @@ export class MemoryOptimizer {
 
   // Clean up memory
   async cleanup(): Promise<void> {
+    // Don't cleanup if operation is in progress
+    if (this.isProcessingOperation) {
+      console.log('[MEMORY] Skipping cleanup - operation in progress');
+      return;
+    }
+
     const now = Date.now();
     if (now - this.lastCleanup < this.cleanupCooldown) {
       return; // Too soon for another cleanup
@@ -61,7 +78,7 @@ export class MemoryOptimizer {
     // Force garbage collection
     this.forceGarbageCollection();
 
-    // Clear any cached data
+    // Clear any cached data (but not during operations)
     this.clearCaches();
 
     // Log memory usage after cleanup
@@ -71,31 +88,55 @@ export class MemoryOptimizer {
 
   // Clear various caches
   private clearCaches(): void {
-    // Clear module cache if in development
+    // Clear module cache if in development (but be more selective)
     if (process.env.NODE_ENV === 'development' && typeof require !== 'undefined') {
       try {
         const cache = require.cache;
+        // Only clear non-critical modules
         Object.keys(cache).forEach(key => {
-          delete cache[key];
+          // Don't clear critical modules
+          if (!key.includes('supabase') && 
+              !key.includes('csrf') && 
+              !key.includes('profile') &&
+              !key.includes('auth')) {
+            delete cache[key];
+          }
         });
-        console.log('[MEMORY] Cleared module cache');
+        console.log('[MEMORY] Cleared non-critical module cache');
       } catch (error) {
         console.warn('[MEMORY] Failed to clear module cache:', error);
       }
     }
 
-    // Clear any global caches
+    // Clear any global caches (but preserve CSRF tokens)
     if (typeof global !== 'undefined') {
-      // Clear CSRF tokens cache
-      if (global.csrfTokens && global.csrfTokens.clear) {
-        global.csrfTokens.clear();
-        console.log('[MEMORY] Cleared CSRF tokens cache');
+      // Don't clear CSRF tokens during operations
+      if (!this.isProcessingOperation) {
+        // Only clear old tokens, keep recent ones
+        if (global.csrfTokens && global.csrfTokens.clear) {
+          // Keep only tokens from last 5 minutes
+          const fiveMinutesAgo = Date.now() - 300000;
+          const tokensToKeep = new Map();
+          
+          for (const [token, data] of global.csrfTokens.entries()) {
+            if (data.createdAt > fiveMinutesAgo) {
+              tokensToKeep.set(token, data);
+            }
+          }
+          
+          global.csrfTokens.clear();
+          for (const [token, data] of tokensToKeep.entries()) {
+            global.csrfTokens.set(token, data);
+          }
+          
+          console.log('[MEMORY] Cleaned old CSRF tokens');
+        }
       }
     }
   }
 
   // Start automatic memory monitoring
-  startMonitoring(intervalMs: number = 30000): void {
+  startMonitoring(intervalMs: number = 60000): void { // Increased from 30s to 60s
     if (this.cleanupInterval) {
       clearInterval(this.cleanupInterval);
     }
@@ -103,14 +144,15 @@ export class MemoryOptimizer {
     this.cleanupInterval = setInterval(() => {
       const usage = this.getMemoryUsage();
       
-      if (usage.percentage > 90) {
+      if (usage.percentage > 95) {
         console.warn(`[MEMORY] CRITICAL: ${usage.percentage.toFixed(1)}% usage`);
         this.cleanup();
-      } else if (usage.percentage > 80) {
+      } else if (usage.percentage > 85) {
         console.warn(`[MEMORY] HIGH: ${usage.percentage.toFixed(1)}% usage`);
         this.cleanup();
-      } else if (usage.percentage > 70) {
+      } else if (usage.percentage > 75) {
         console.info(`[MEMORY] MODERATE: ${usage.percentage.toFixed(1)}% usage`);
+        // Don't cleanup for moderate usage
       }
     }, intervalMs);
 
@@ -135,7 +177,7 @@ export class MemoryOptimizer {
       this.forceGarbageCollection();
     }
     
-    // Clear all caches
+    // Clear all caches (even during operations)
     this.clearCaches();
     
     // Log final memory usage
