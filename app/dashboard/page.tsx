@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { fetchJSONWithCSRF } from '@/lib/csrf-client';
+import { fetchJSONWithCSRF, fetchWithCSRF } from '@/lib/csrf-client';
 import { useRealtime } from '@/hooks/use-realtime';
 import RealtimeEvents from '@/components/ui/RealtimeEvents';
 import ConnectionStatus from '@/components/ui/ConnectionStatus';
@@ -196,7 +196,7 @@ export default function ClientDashboard() {
       }
 
       try {
-        const response = await fetchJSONWithCSRF(`/api/profile/${user.id}`);
+        const response = await fetchWithCSRF(`/api/profile/${user.id}`);
         if (response.ok) {
           const profileData = await response.json();
           setClientProfile(profileData);

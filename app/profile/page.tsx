@@ -112,7 +112,8 @@ export default function ProfilePage() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
       
-      const response = await fetchJSONWithCSRF(`/api/profile/${user.id}`, {
+      // Use fetchWithCSRF instead of fetchJSONWithCSRF to get the Response object
+      const response = await fetchWithCSRF(`/api/profile/${user.id}`, {
         signal: controller.signal
       });
       
@@ -126,7 +127,7 @@ export default function ProfilePage() {
         console.log('No client profile found for user:', user.id, '- Creating profile automatically');
         
         try {
-          const createResponse = await fetchJSONWithCSRF('/api/profile/create', {
+          const createResponse = await fetchWithCSRF('/api/profile/create', {
             method: 'POST',
             body: JSON.stringify({ user_id: user.id })
           });
@@ -136,7 +137,7 @@ export default function ProfilePage() {
             console.log('Profile created successfully:', result);
             
             // Fetch the newly created profile
-            const newResponse = await fetchJSONWithCSRF(`/api/profile/${user.id}`);
+            const newResponse = await fetchWithCSRF(`/api/profile/${user.id}`);
             if (newResponse.ok) {
               const newClientData = await newResponse.json();
               setProfile(newClientData);
@@ -255,7 +256,7 @@ export default function ProfilePage() {
         return;
       }
 
-      const response = await fetchJSONWithCSRF(`/api/profile/update`, {
+      const response = await fetchWithCSRF(`/api/profile/update`, {
         method: 'POST',
         body: JSON.stringify({
           user_id: user.id,
