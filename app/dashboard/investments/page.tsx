@@ -17,7 +17,7 @@ import {
   ArrowUpRight,
   ArrowDownRight
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useSafeRouter } from '@/lib/safe-router';
 
 interface Investment {
   id: string;
@@ -48,7 +48,7 @@ interface PortfolioStats {
 
 export default function MyInvestmentsPage() {
   const { user } = useAuth();
-  const router = useRouter();
+  const router = useSafeRouter();
   const [investments, setInvestments] = useState<Investment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -227,7 +227,16 @@ export default function MyInvestmentsPage() {
           marginBottom: '2rem'
         }}>
           <button
-            onClick={() => router.push('/dashboard')}
+            onClick={() => {
+              console.log('🔘 Back to Dashboard button clicked (investments)!');
+              try {
+                router.push('/dashboard');
+              } catch (error) {
+                console.error('Router error:', error);
+                // Fallback to window.location
+                window.location.href = '/dashboard';
+              }
+            }}
             style={{
               background: 'white',
               border: '1px solid #e5e7eb',

@@ -1,6 +1,6 @@
 "use client";
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useSafeRouter } from '@/lib/safe-router';
 import { 
   FileText, 
   Mail, 
@@ -19,7 +19,7 @@ import { fetchWithCSRF } from '@/lib/csrf-client';
 
 export default function InformationalRequestPage() {
   const { user } = useAuth();
-  const router = useRouter();
+  const router = useSafeRouter();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -176,8 +176,15 @@ Time: ${new Date().toLocaleTimeString()}
           </p>
           <button
             onClick={() => {
+              console.log('🔘 Return to Dashboard button clicked (informational)!');
               setSuccess(false);
-              router.push('/dashboard');
+              try {
+                router.push('/dashboard');
+              } catch (error) {
+                console.error('Router error:', error);
+                // Fallback to window.location
+                window.location.href = '/dashboard';
+              }
             }}
             style={{
               background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -488,7 +495,16 @@ Time: ${new Date().toLocaleTimeString()}
               <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
                 <button
                   type="button"
-                  onClick={() => router.push('/dashboard')}
+                  onClick={() => {
+                    console.log('🔘 Cancel button clicked (informational)!');
+                    try {
+                      router.push('/dashboard');
+                    } catch (error) {
+                      console.error('Router error:', error);
+                      // Fallback to window.location
+                      window.location.href = '/dashboard';
+                    }
+                  }}
                   style={{
                     background: 'white',
                     color: '#374151',

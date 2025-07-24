@@ -1,7 +1,7 @@
 "use client";
 export const dynamic = "force-dynamic";
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useSafeRouter } from "@/lib/safe-router";
 import { 
   User, 
   Banknote, 
@@ -75,7 +75,7 @@ interface ClientProfile {
 
 export default function ProfilePage() {
   const { user } = useAuth();
-  const router = useRouter();
+  const router = useSafeRouter();
   const [profile, setProfile] = useState<ClientProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -453,7 +453,16 @@ export default function ProfilePage() {
             gap: '1rem' 
           }}>
             <button
-              onClick={() => router.push('/dashboard')}
+              onClick={() => {
+                console.log('🔘 Back to Dashboard button clicked!');
+                try {
+                  router.push('/dashboard');
+                } catch (error) {
+                  console.error('Router error:', error);
+                  // Fallback to window.location
+                  window.location.href = '/dashboard';
+                }
+              }}
               style={{
                 background: 'none',
                 border: 'none',
