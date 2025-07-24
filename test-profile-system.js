@@ -85,7 +85,11 @@ async function testProfileSystem() {
       
       // 3. Test Caricamento Profilo
       console.log('\n3️⃣ Test Caricamento Profilo...');
-      const profileResponse = await makeRequest(`${BASE_URL}/api/profile/${testUserId}`);
+      const profileResponse = await makeRequest(`${BASE_URL}/api/profile/${testUserId}`, {
+        headers: {
+          'x-csrf-token': csrfToken
+        }
+      });
       if (profileResponse.status === 200) {
         console.log('✅ Profilo caricato correttamente');
         console.log('   - Nome:', profileResponse.data.first_name, profileResponse.data.last_name);
@@ -127,7 +131,11 @@ async function testProfileSystem() {
 
       // 5. Test Verifica Aggiornamento
       console.log('\n5️⃣ Test Verifica Aggiornamento...');
-      const verifyResponse = await makeRequest(`${BASE_URL}/api/profile/${testUserId}`);
+      const verifyResponse = await makeRequest(`${BASE_URL}/api/profile/${testUserId}`, {
+        headers: {
+          'x-csrf-token': csrfToken
+        }
+      });
       if (verifyResponse.status === 200) {
         const profile = verifyResponse.data;
         if (profile.first_name === 'Francesco' && profile.last_name === 'Test Update') {

@@ -143,7 +143,6 @@ export async function fetchWithCSRF(
 
 export async function fetchFormDataWithCSRF(
   url: string, 
-  formData: FormData,
   options: RequestInit = {}
 ): Promise<Response> {
   const token = await csrfManager.getToken();
@@ -156,7 +155,6 @@ export async function fetchFormDataWithCSRF(
       'X-CSRF-Token': token,
       // Don't set Content-Type for FormData, let the browser set it with boundary
     },
-    body: formData,
     credentials: 'include'
   };
 
