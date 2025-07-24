@@ -2,7 +2,7 @@
 export const dynamic = "force-dynamic";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { fetchJSONWithCSRF } from '@/lib/csrf-client';
+import { fetchWithCSRF } from '@/lib/csrf-client';
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
@@ -18,7 +18,7 @@ export default function AdminLoginPage() {
 
     try {
       // Login tramite API custom
-      const response = await fetchJSONWithCSRF('/api/admin/login', {
+      const response = await fetchWithCSRF('/api/admin/login', {
         method: 'POST',
         body: JSON.stringify({ email, password }),
       });

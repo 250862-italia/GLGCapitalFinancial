@@ -26,20 +26,28 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       const adminUser = localStorage.getItem('admin_user');
       const adminToken = localStorage.getItem('admin_token');
       
+      console.log('🔍 Admin Auth Check:', { adminUser, adminToken, pathname });
+      
       if (!adminUser || !adminToken) {
+        console.log('❌ Admin Auth: Missing user or token');
         router.push('/admin/login');
         return;
       }
 
       try {
         const adminData = JSON.parse(adminUser);
-        if (adminData.role !== 'super_admin' && adminData.role !== 'superadmin') {
+        console.log('🔍 Admin Data:', adminData);
+        
+        if (adminData.role !== 'admin' && adminData.role !== 'super_admin' && adminData.role !== 'superadmin') {
+          console.log('❌ Admin Auth: Invalid role:', adminData.role);
           router.push('/admin/login');
           return;
         }
         
+        console.log('✅ Admin Auth: Authorized');
         setIsAuthorized(true);
       } catch (e) {
+        console.log('❌ Admin Auth: Error parsing user data:', e);
         router.push('/admin/login');
         return;
       }
