@@ -100,11 +100,6 @@ export default function ProfilePage() {
   const loadProfile = async () => {
     if (!user) return;
     
-    // If user is admin, don't try to load client profile
-    if (user.role === 'admin' || user.role === 'super_admin' || user.role === 'superadmin') {
-      return;
-    }
-    
     setLoading(true);
     setError('');
     
