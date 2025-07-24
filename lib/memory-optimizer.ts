@@ -1,13 +1,14 @@
 // Memory optimization utilities
 export class MemoryOptimizer {
   private static instance: MemoryOptimizer;
-  private memoryThreshold = 0.9; // 90% (increased threshold)
+  private memoryThreshold = 0.95; // 95% (very high threshold)
   private cleanupInterval: NodeJS.Timeout | null = null;
   private lastCleanup = 0;
-  private cleanupCooldown = 120000; // 2 minutes (increased cooldown)
+  private cleanupCooldown = 300000; // 5 minutes (very long cooldown)
   private isProcessingOperation = false; // Flag to prevent cleanup during operations
   private emergencyMode = false; // Emergency mode for critical memory usage
   private operationTimeout: NodeJS.Timeout | null = null; // Timeout for operation protection
+  private operationCount = 0; // Track active operations
 
   static getInstance(): MemoryOptimizer {
     if (!MemoryOptimizer.instance) {
@@ -46,24 +47,26 @@ export class MemoryOptimizer {
 
   // Start operation - prevents cleanup during critical operations
   startOperation(): void {
+    this.operationCount++;
     this.isProcessingOperation = true;
     
-    // Set a timeout to automatically end operation protection after 30 seconds
+    // Set a timeout to automatically end operation protection after 60 seconds
     if (this.operationTimeout) {
       clearTimeout(this.operationTimeout);
     }
     
     this.operationTimeout = setTimeout(() => {
-      this.isProcessingOperation = false;
+      this.endOperation();
       console.log('[MEMORY] Operation protection timeout - cleanup allowed again');
-    }, 30000); // 30 seconds timeout
+    }, 60000); // 60 seconds timeout (increased)
   }
 
   // End operation - allows cleanup again
   endOperation(): void {
-    this.isProcessingOperation = false;
+    this.operationCount = Math.max(0, this.operationCount - 1);
+    this.isProcessingOperation = this.operationCount > 0;
     
-    if (this.operationTimeout) {
+    if (this.operationCount === 0 && this.operationTimeout) {
       clearTimeout(this.operationTimeout);
       this.operationTimeout = null;
     }
@@ -81,26 +84,26 @@ export class MemoryOptimizer {
     }
   }
 
-  // Conservative memory cleanup
-  async conservativeCleanup(): Promise<void> {
-    console.log('[MEMORY] Starting conservative cleanup...');
+  // Ultra-conservative memory cleanup
+  async ultraConservativeCleanup(): Promise<void> {
+    console.log('[MEMORY] Starting ultra-conservative cleanup...');
     
     // Only force garbage collection
     this.forceGarbageCollection();
     
-    // Don't clear any caches during operations
+    // Don't clear ANY caches during operations
     if (!this.isProcessingOperation) {
-      this.clearOldTokens();
+      this.clearVeryOldTokens();
     }
     
     // Log memory usage after cleanup
     const usage = this.getMemoryUsage();
-    console.log(`[MEMORY] Conservative cleanup completed. Usage: ${usage.percentage.toFixed(1)}%`);
+    console.log(`[MEMORY] Ultra-conservative cleanup completed. Usage: ${usage.percentage.toFixed(1)}%`);
   }
 
   // Clean up memory
   async cleanup(): Promise<void> {
-    // Don't cleanup if operation is in progress
+    // NEVER cleanup if operation is in progress
     if (this.isProcessingOperation) {
       console.log('[MEMORY] Skipping cleanup - operation in progress');
       return;
@@ -113,23 +116,23 @@ export class MemoryOptimizer {
 
     const usage = this.getMemoryUsage();
     
-    // Use conservative cleanup for all cases
-    console.log(`[MEMORY] Memory usage: ${usage.percentage.toFixed(1)}% - using conservative cleanup`);
+    // Use ultra-conservative cleanup for all cases
+    console.log(`[MEMORY] Memory usage: ${usage.percentage.toFixed(1)}% - using ultra-conservative cleanup`);
     this.lastCleanup = now;
     
-    await this.conservativeCleanup();
+    await this.ultraConservativeCleanup();
   }
 
-  // Clear only old CSRF tokens
-  private clearOldTokens(): void {
+  // Clear only very old CSRF tokens (5 minutes)
+  private clearVeryOldTokens(): void {
     if (typeof global !== 'undefined') {
       if (global.csrfTokens && global.csrfTokens.clear) {
-        // Keep only tokens from last 1 minute (very conservative)
-        const oneMinuteAgo = Date.now() - 60000;
+        // Keep only tokens from last 5 minutes (very conservative)
+        const fiveMinutesAgo = Date.now() - 300000;
         const tokensToKeep = new Map();
         
         for (const [token, data] of global.csrfTokens.entries()) {
-          if (data.createdAt > oneMinuteAgo) {
+          if (data.createdAt > fiveMinutesAgo) {
             tokensToKeep.set(token, data);
           }
         }
@@ -142,14 +145,14 @@ export class MemoryOptimizer {
         
         const newSize = global.csrfTokens.size;
         if (originalSize !== newSize) {
-          console.log(`[MEMORY] Cleaned old CSRF tokens: ${originalSize} -> ${newSize}`);
+          console.log(`[MEMORY] Cleaned very old CSRF tokens: ${originalSize} -> ${newSize}`);
         }
       }
     }
   }
 
   // Start automatic memory monitoring
-  startMonitoring(intervalMs: number = 60000): void { // Increased to 60s
+  startMonitoring(intervalMs: number = 120000): void { // Increased to 2 minutes
     if (this.cleanupInterval) {
       clearInterval(this.cleanupInterval);
     }
@@ -157,17 +160,18 @@ export class MemoryOptimizer {
     this.cleanupInterval = setInterval(() => {
       const usage = this.getMemoryUsage();
       
+      // Only cleanup if memory usage is extremely critical (>98%)
       if (usage.percentage > 98) {
-        console.warn(`[MEMORY] CRITICAL: ${usage.percentage.toFixed(1)}% usage - EMERGENCY MODE`);
+        console.warn(`[MEMORY] EXTREMELY CRITICAL: ${usage.percentage.toFixed(1)}% usage - EMERGENCY MODE`);
         this.emergencyMode = true;
-        this.cleanup(); // This will use conservative cleanup
+        this.cleanup(); // This will use ultra-conservative cleanup
         this.emergencyMode = false;
       } else if (usage.percentage > 95) {
-        console.warn(`[MEMORY] HIGH: ${usage.percentage.toFixed(1)}% usage`);
-        this.cleanup();
-      } else if (usage.percentage > 90) {
-        console.info(`[MEMORY] MODERATE: ${usage.percentage.toFixed(1)}% usage`);
-        // Don't cleanup for moderate usage
+        console.info(`[MEMORY] HIGH: ${usage.percentage.toFixed(1)}% usage - monitoring only`);
+        // Don't cleanup for high usage, just monitor
+      } else {
+        console.info(`[MEMORY] NORMAL: ${usage.percentage.toFixed(1)}% usage`);
+        // Don't cleanup for normal usage
       }
     }, intervalMs);
 
@@ -201,13 +205,14 @@ export class MemoryOptimizer {
   }
 
   // Get memory status
-  getStatus(): { usage: number; critical: boolean; emergencyMode: boolean; processingOperation: boolean } {
+  getStatus(): { usage: number; critical: boolean; emergencyMode: boolean; processingOperation: boolean; operationCount: number } {
     const usage = this.getMemoryUsage();
     return {
       usage: usage.percentage,
       critical: this.isMemoryCritical(),
       emergencyMode: this.emergencyMode,
-      processingOperation: this.isProcessingOperation
+      processingOperation: this.isProcessingOperation,
+      operationCount: this.operationCount
     };
   }
 }

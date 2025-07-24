@@ -54,15 +54,15 @@ let smartClientPromise: Promise<any> | null = null;
 
 // New checkpoint-based client with fallback and memory optimization
 export async function getSupabase() {
-  // Only check memory if it's extremely critical (>98%)
+  // Only check memory if it's extremely critical (>99%)
   if (typeof window === 'undefined') {
     const optimizer = MemoryOptimizer.getInstance();
     const status = optimizer.getStatus();
     
-    // Only perform cleanup if memory usage is extremely critical
-    if (status.usage > 98 && !status.processingOperation) {
+    // Only perform cleanup if memory usage is extremely critical and no operations are running
+    if (status.usage > 99 && !status.processingOperation) {
       console.warn('[SUPABASE] Extremely critical memory usage, performing minimal cleanup');
-      await optimizer.conservativeCleanup();
+      await optimizer.ultraConservativeCleanup();
     }
   }
 
