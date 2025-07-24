@@ -31,23 +31,18 @@ export function useAuth() {
   const router = useRouter();
   const hasCheckedAuth = useRef(false);
 
-  // Controlla l'auth solo una volta al mount
+  // Check auth on mount
   useEffect(() => {
     if (!hasCheckedAuth.current) {
-      // Per ora, non facciamo controlli automatici
-      // L'utente dovrà fare login manualmente
-      setAuthState({
-        user: null,
-        loading: false,
-        error: null
-      });
+      checkAuth();
       hasCheckedAuth.current = true;
     }
   }, []);
 
   const checkAuth = useCallback(async () => {
-    // Questa funzione ora è opzionale e non viene chiamata automaticamente
     try {
+      setAuthState(prev => ({ ...prev, loading: true, error: null }));
+
       // Get CSRF token first
       const csrfResponse = await fetch('/api/csrf', {
         method: 'GET',
@@ -94,6 +89,7 @@ export function useAuth() {
         });
       }
     } catch (error) {
+      console.error('Auth check error:', error);
       setAuthState({
         user: null,
         loading: false,

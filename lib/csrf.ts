@@ -1,9 +1,9 @@
 // CSRF token management - Edge Runtime compatible
-// Use a more persistent storage approach for development
+// Use in-memory storage with better error handling
 
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-// Global storage for CSRF tokens (persists across requests in development)
+// In-memory storage for CSRF tokens
 declare global {
   var __csrfTokens: Map<string, { createdAt: number; used: boolean; useCount: number }> | undefined;
   var __csrfTokenCount: number | undefined;
@@ -50,6 +50,13 @@ function extractCSRFToken(request: NextRequest): string | null {
   if (headerToken) {
     console.log('[CSRF] Token found in header:', headerToken.substring(0, 10) + '...');
     return headerToken;
+  }
+  
+  // Prova dai cookie
+  const cookieToken = request.cookies.get('csrf-token')?.value;
+  if (cookieToken) {
+    console.log('[CSRF] Token found in cookie:', cookieToken.substring(0, 10) + '...');
+    return cookieToken;
   }
   
   // Prova dal body se è una richiesta POST/PUT
@@ -109,7 +116,7 @@ export function validateCSRFToken(request: NextRequest): { valid: boolean; token
     return { valid: false, token, error: 'CSRF token expired' };
   }
   
-  // In development, allow multiple uses
+  // In development, allow multiple uses but still validate the token
   if (isDevelopment) {
     tokenData.useCount++;
     console.log(`[CSRF] Token used ${tokenData.useCount} times:`, token.substring(0, 10) + '...');

@@ -59,7 +59,7 @@
     "lucide-react": "^0.523.0",
     "next": "14.2.30",
     "next-i18next": "^15.4.2",
-    "node-fetch": "^3.3.2",
+    "node-fetch": "^2.7.0",
     "nodemailer": "^7.0.5",
     "puppeteer": "^24.14.0",
     "rate-limiter-flexible": "^4.0.1",

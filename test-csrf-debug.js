@@ -1,86 +1,58 @@
-// Test script to debug CSRF token issues
-const fetch = require('node-fetch');
+const BASE_URL = 'http://localhost:3000';
 
 async function testCSRF() {
-  console.log('🔍 Testing CSRF token functionality...\n');
-
+  console.log('🔧 Testing CSRF Token Flow');
+  console.log('==========================');
+  
   try {
-    // Step 1: Get a CSRF token
-    console.log('1️⃣ Fetching CSRF token...');
-    const tokenResponse = await fetch('http://localhost:3000/api/csrf', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!tokenResponse.ok) {
-      throw new Error(`Failed to get CSRF token: ${tokenResponse.status} ${tokenResponse.statusText}`);
+    // 1. Get CSRF token
+    console.log('\n1️⃣ Getting CSRF token...');
+    const csrfResponse = await fetch('http://localhost:3000/api/csrf');
+    const csrfData = await csrfResponse.json();
+    
+    console.log('CSRF Response Status:', csrfResponse.status);
+    console.log('CSRF Response OK:', csrfResponse.ok);
+    console.log('CSRF Token:', csrfData.token ? csrfData.token.substring(0, 10) + '...' : 'No token');
+    
+    if (!csrfResponse.ok || !csrfData.token) {
+      console.log('❌ Failed to get CSRF token');
+      return;
     }
-
-    const tokenData = await tokenResponse.json();
-    console.log('✅ CSRF token received:', tokenData.token.substring(0, 10) + '...');
-    console.log('   Expires in:', tokenData.expiresIn, 'seconds\n');
-
-    // Step 2: Test using the token in a request
-    console.log('2️⃣ Testing CSRF token in a request...');
-    const testResponse = await fetch('http://localhost:3000/api/auth/login', {
+    
+    // 2. Test registration with CSRF token
+    console.log('\n2️⃣ Testing registration with CSRF token...');
+    const testEmail = 'test_' + Date.now() + '@example.com';
+    
+    const registerResponse = await fetch('http://localhost:3000/api/auth/register', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-CSRF-Token': tokenData.token,
+        'X-CSRF-Token': csrfData.token
       },
       body: JSON.stringify({
-        email: 'test@example.com',
-        password: 'testpassword',
-      }),
+        email: testEmail,
+        password: 'TestPassword123!',
+        firstName: 'Test',
+        lastName: 'User',
+        country: 'Italy'
+      })
     });
-
-    console.log('   Response status:', testResponse.status);
-    const responseText = await testResponse.text();
-    console.log('   Response body:', responseText.substring(0, 200) + '...\n');
-
-    // Step 3: Test without CSRF token (should fail)
-    console.log('3️⃣ Testing request without CSRF token (should fail)...');
-    const noTokenResponse = await fetch('http://localhost:3000/api/auth/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email: 'test@example.com',
-        password: 'testpassword',
-      }),
-    });
-
-    console.log('   Response status:', noTokenResponse.status);
-    const noTokenText = await noTokenResponse.text();
-    console.log('   Response body:', noTokenText.substring(0, 200) + '...\n');
-
-    // Step 4: Test admin login with CSRF
-    console.log('4️⃣ Testing admin login with CSRF token...');
-    const adminResponse = await fetch('http://localhost:3000/api/admin/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-Token': tokenData.token,
-      },
-      body: JSON.stringify({
-        email: 'admin@glgcapital.com',
-        password: 'admin123',
-      }),
-    });
-
-    console.log('   Admin response status:', adminResponse.status);
-    const adminText = await adminResponse.text();
-    console.log('   Admin response body:', adminText.substring(0, 200) + '...\n');
-
-    console.log('🎉 CSRF test completed!');
-
+    
+    const registerData = await registerResponse.json();
+    
+    console.log('Register Response Status:', registerResponse.status);
+    console.log('Register Response OK:', registerResponse.ok);
+    console.log('Register Response Data:', registerData);
+    
+    if (registerResponse.ok) {
+      console.log('✅ Registration successful!');
+    } else {
+      console.log('❌ Registration failed:', registerData.error);
+    }
+    
   } catch (error) {
-    console.error('❌ Error during CSRF test:', error.message);
+    console.log('❌ Error during test:', error.message);
   }
 }
 
-// Run the test
 testCSRF(); 

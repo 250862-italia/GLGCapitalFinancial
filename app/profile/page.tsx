@@ -24,7 +24,7 @@ import {
   Camera
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { fetchJSONWithCSRF, fetchFormDataWithCSRF } from '@/lib/csrf-client';
+import { fetchJSONWithCSRF, fetchFormDataWithCSRF, fetchWithCSRF } from '@/lib/csrf-client';
 import { useAuth } from '@/hooks/use-auth';
 import KYCDocumentUpload from '@/components/kyc/KYCDocumentUpload';
 

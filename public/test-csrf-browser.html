@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSRF Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        pre { background-color: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>CSRF Token Test</h1>
+    
+    <div class="test-section info">
+        <h3>Test Controls</h3>
+        <button onclick="getCSRFToken()">1. Get CSRF Token</button>
+        <button onclick="testRegistrationWithHeader()">2. Test Registration (Header)</button>
+        <button onclick="testRegistrationWithCookie()">3. Test Registration (Cookie)</button>
+        <button onclick="testRegistrationWithoutToken()">4. Test Registration (No Token)</button>
+        <button onclick="clearResults()">Clear Results</button>
+    </div>
+    
+    <div id="results"></div>
+    
+    <script>
+        let csrfToken = null;
+        let testResults = [];
+        
+        function addResult(title, success, data) {
+            const result = { title, success, data, timestamp: new Date().toISOString() };
+            testResults.push(result);
+            displayResults();
+        }
+        
+        function displayResults() {
+            const container = document.getElementById('results');
+            container.innerHTML = testResults.map(result => `
+                <div class="test-section ${result.success ? 'success' : 'error'}">
+                    <h3>${result.title}</h3>
+                    <p><strong>Status:</strong> ${result.success ? '✅ Success' : '❌ Failed'}</p>
+                    <p><strong>Time:</strong> ${new Date(result.timestamp).toLocaleTimeString()}</p>
+                    <pre>${JSON.stringify(result.data, null, 2)}</pre>
+                </div>
+            `).join('');
+        }
+        
+        function clearResults() {
+            testResults = [];
+            displayResults();
+        }
+        
+        async function getCSRFToken() {
+            try {
+                const response = await fetch('/api/csrf', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.token) {
+                    csrfToken = data.token;
+                    addResult('Get CSRF Token', true, {
+                        status: response.status,
+                        token: data.token.substring(0, 10) + '...',
+                        expiresIn: data.expiresIn
+                    });
+                } else {
+                    addResult('Get CSRF Token', false, {
+                        status: response.status,
+                        error: data.error || 'Unknown error'
+                    });
+                }
+            } catch (error) {
+                addResult('Get CSRF Token', false, {
+                    error: error.message
+                });
+            }
+        }
+        
+        async function testRegistrationWithHeader() {
+            if (!csrfToken) {
+                addResult('Registration with Header Token', false, {
+                    error: 'No CSRF token available. Please get a token first.'
+                });
+                return;
+            }
+            
+            try {
+                const testEmail = 'test_header_' + Date.now() + '@example.com';
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': csrfToken
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        email: testEmail,
+                        password: 'TestPassword123!',
+                        firstName: 'Test',
+                        lastName: 'User',
+                        country: 'Italy'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                addResult('Registration with Header Token', response.ok, {
+                    status: response.status,
+                    email: testEmail,
+                    success: data.success,
+                    error: data.error,
+                    message: data.message
+                });
+            } catch (error) {
+                addResult('Registration with Header Token', false, {
+                    error: error.message
+                });
+            }
+        }
+        
+        async function testRegistrationWithCookie() {
+            try {
+                const testEmail = 'test_cookie_' + Date.now() + '@example.com';
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        email: testEmail,
+                        password: 'TestPassword123!',
+                        firstName: 'Test',
+                        lastName: 'User',
+                        country: 'Italy'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                addResult('Registration with Cookie Token', response.ok, {
+                    status: response.status,
+                    email: testEmail,
+                    success: data.success,
+                    error: data.error,
+                    message: data.message
+                });
+            } catch (error) {
+                addResult('Registration with Cookie Token', false, {
+                    error: error.message
+                });
+            }
+        }
+        
+        async function testRegistrationWithoutToken() {
+            try {
+                const testEmail = 'test_none_' + Date.now() + '@example.com';
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: testEmail,
+                        password: 'TestPassword123!',
+                        firstName: 'Test',
+                        lastName: 'User',
+                        country: 'Italy'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                // This should fail with 403
+                const expectedFailure = response.status === 403;
+                addResult('Registration without Token', expectedFailure, {
+                    status: response.status,
+                    email: testEmail,
+                    expectedFailure: true,
+                    actualFailure: response.status === 403,
+                    error: data.error,
+                    message: data.message
+                });
+            } catch (error) {
+                addResult('Registration without Token', false, {
+                    error: error.message
+                });
+            }
+        }
+    </script>
+</body>
+</html> 
