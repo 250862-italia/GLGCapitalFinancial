@@ -2,6 +2,12 @@ import { createClient } from '@supabase/supabase-js';
 import { getSupabaseClient, getCurrentCheckpoint, getAllCheckpoints, refreshCheckpoints, initializeCheckpoints } from './supabase-checkpoints';
 import { getSupabaseFunctionRegion } from './supabase-region';
 import { createSmartClient, checkDatabaseHealth } from './supabase-fallback';
+import { initializeMemoryOptimization, MemoryOptimizer } from './memory-optimizer';
+
+// Initialize memory optimization on module load
+if (typeof window === 'undefined') {
+  initializeMemoryOptimization();
+}
 
 // Get Supabase configuration from environment variables
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -40,12 +46,21 @@ export function getSupabaseAdmin() {
   return supabaseAdmin;
 }
 
-// Enhanced client with fallback support
+// Enhanced client with fallback support and memory optimization
 let smartClient: any = null;
 let smartClientPromise: Promise<any> | null = null;
 
-// New checkpoint-based client with fallback
+// New checkpoint-based client with fallback and memory optimization
 export async function getSupabase() {
+  // Check memory usage before proceeding
+  if (typeof window === 'undefined') {
+    const optimizer = MemoryOptimizer.getInstance();
+    if (optimizer.isMemoryCritical()) {
+      console.warn('[SUPABASE] Memory usage critical, performing cleanup before database operation');
+      await optimizer.cleanup();
+    }
+  }
+
   try {
     // Try checkpoint-based client first
     const checkpointClient = await getSupabaseClient();
