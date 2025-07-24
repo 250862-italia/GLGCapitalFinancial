@@ -3,10 +3,12 @@ import { getSupabaseClient, getCurrentCheckpoint, getAllCheckpoints, refreshChec
 import { getSupabaseFunctionRegion } from './supabase-region';
 import { createSmartClient, checkDatabaseHealth } from './supabase-fallback';
 import { initializeMemoryOptimization, MemoryOptimizer } from './memory-optimizer';
+import { initializeRestartMonitoring } from './system-restart';
 
-// Initialize memory optimization on module load
+// Initialize memory optimization and restart monitoring on module load
 if (typeof window === 'undefined') {
   initializeMemoryOptimization();
+  initializeRestartMonitoring();
 }
 
 // Get Supabase configuration from environment variables
@@ -55,7 +57,16 @@ export async function getSupabase() {
   // Check memory usage before proceeding
   if (typeof window === 'undefined') {
     const optimizer = MemoryOptimizer.getInstance();
-    if (optimizer.isMemoryCritical()) {
+    const status = optimizer.getStatus();
+    
+    // If in emergency mode, perform aggressive cleanup
+    if (status.emergencyMode) {
+      console.warn('[SUPABASE] Emergency mode detected, performing aggressive cleanup');
+      await optimizer.aggressiveCleanup();
+    }
+    
+    // If memory usage is critical, perform cleanup
+    if (status.critical && !status.processingOperation) {
       console.warn('[SUPABASE] Memory usage critical, performing cleanup before database operation');
       await optimizer.cleanup();
     }

@@ -4,8 +4,9 @@ export class MemoryOptimizer {
   private memoryThreshold = 0.8; // 80%
   private cleanupInterval: NodeJS.Timeout | null = null;
   private lastCleanup = 0;
-  private cleanupCooldown = 300000; // 5 minutes (increased from 1 minute)
+  private cleanupCooldown = 60000; // 1 minute (reduced for critical situations)
   private isProcessingOperation = false; // Flag to prevent cleanup during operations
+  private emergencyMode = false; // Emergency mode for critical memory usage
 
   static getInstance(): MemoryOptimizer {
     if (!MemoryOptimizer.instance) {
@@ -37,6 +38,11 @@ export class MemoryOptimizer {
     return usage.percentage > (this.memoryThreshold * 100);
   }
 
+  // Check if in emergency mode
+  isEmergencyMode(): boolean {
+    return this.emergencyMode;
+  }
+
   // Start operation - prevents cleanup during critical operations
   startOperation(): void {
     this.isProcessingOperation = true;
@@ -59,6 +65,24 @@ export class MemoryOptimizer {
     }
   }
 
+  // Aggressive memory cleanup
+  async aggressiveCleanup(): Promise<void> {
+    console.warn('[MEMORY] AGGRESSIVE CLEANUP TRIGGERED');
+    
+    // Force multiple garbage collections
+    for (let i = 0; i < 5; i++) {
+      this.forceGarbageCollection();
+      await new Promise(resolve => setTimeout(resolve, 100)); // Small delay between GC calls
+    }
+    
+    // Clear ALL caches aggressively
+    this.clearAllCaches();
+    
+    // Log final memory usage
+    const usage = this.getMemoryUsage();
+    console.log(`[MEMORY] Aggressive cleanup completed. Usage: ${usage.percentage.toFixed(1)}%`);
+  }
+
   // Clean up memory
   async cleanup(): Promise<void> {
     // Don't cleanup if operation is in progress
@@ -72,18 +96,28 @@ export class MemoryOptimizer {
       return; // Too soon for another cleanup
     }
 
-    console.log('[MEMORY] Starting memory cleanup...');
-    this.lastCleanup = now;
-
-    // Force garbage collection
-    this.forceGarbageCollection();
-
-    // Clear any cached data (but not during operations)
-    this.clearCaches();
-
-    // Log memory usage after cleanup
     const usage = this.getMemoryUsage();
-    console.log(`[MEMORY] Cleanup completed. Usage: ${usage.percentage.toFixed(1)}%`);
+    
+    // If memory usage is extremely critical (>95%), use aggressive cleanup
+    if (usage.percentage > 95) {
+      this.emergencyMode = true;
+      console.warn(`[MEMORY] EMERGENCY MODE: ${usage.percentage.toFixed(1)}% usage`);
+      await this.aggressiveCleanup();
+      this.emergencyMode = false;
+    } else {
+      console.log('[MEMORY] Starting standard memory cleanup...');
+      this.lastCleanup = now;
+
+      // Force garbage collection
+      this.forceGarbageCollection();
+
+      // Clear caches
+      this.clearCaches();
+
+      // Log memory usage after cleanup
+      const newUsage = this.getMemoryUsage();
+      console.log(`[MEMORY] Cleanup completed. Usage: ${newUsage.percentage.toFixed(1)}%`);
+    }
   }
 
   // Clear various caches
@@ -114,12 +148,12 @@ export class MemoryOptimizer {
       if (!this.isProcessingOperation) {
         // Only clear old tokens, keep recent ones
         if (global.csrfTokens && global.csrfTokens.clear) {
-          // Keep only tokens from last 5 minutes
-          const fiveMinutesAgo = Date.now() - 300000;
+          // Keep only tokens from last 2 minutes (reduced from 5)
+          const twoMinutesAgo = Date.now() - 120000;
           const tokensToKeep = new Map();
           
           for (const [token, data] of global.csrfTokens.entries()) {
-            if (data.createdAt > fiveMinutesAgo) {
+            if (data.createdAt > twoMinutesAgo) {
               tokensToKeep.set(token, data);
             }
           }
@@ -135,8 +169,32 @@ export class MemoryOptimizer {
     }
   }
 
+  // Clear ALL caches (for emergency mode)
+  private clearAllCaches(): void {
+    // Clear ALL module cache
+    if (typeof require !== 'undefined') {
+      try {
+        const cache = require.cache;
+        Object.keys(cache).forEach(key => {
+          delete cache[key];
+        });
+        console.log('[MEMORY] Cleared ALL module cache');
+      } catch (error) {
+        console.warn('[MEMORY] Failed to clear all module cache:', error);
+      }
+    }
+
+    // Clear ALL global caches
+    if (typeof global !== 'undefined') {
+      if (global.csrfTokens && global.csrfTokens.clear) {
+        global.csrfTokens.clear();
+        console.log('[MEMORY] Cleared ALL CSRF tokens');
+      }
+    }
+  }
+
   // Start automatic memory monitoring
-  startMonitoring(intervalMs: number = 60000): void { // Increased from 30s to 60s
+  startMonitoring(intervalMs: number = 30000): void { // Reduced to 30s for critical situations
     if (this.cleanupInterval) {
       clearInterval(this.cleanupInterval);
     }
@@ -145,8 +203,8 @@ export class MemoryOptimizer {
       const usage = this.getMemoryUsage();
       
       if (usage.percentage > 95) {
-        console.warn(`[MEMORY] CRITICAL: ${usage.percentage.toFixed(1)}% usage`);
-        this.cleanup();
+        console.warn(`[MEMORY] CRITICAL: ${usage.percentage.toFixed(1)}% usage - EMERGENCY CLEANUP`);
+        this.cleanup(); // This will trigger aggressive cleanup
       } else if (usage.percentage > 85) {
         console.warn(`[MEMORY] HIGH: ${usage.percentage.toFixed(1)}% usage`);
         this.cleanup();
@@ -178,11 +236,22 @@ export class MemoryOptimizer {
     }
     
     // Clear all caches (even during operations)
-    this.clearCaches();
+    this.clearAllCaches();
     
     // Log final memory usage
     const usage = this.getMemoryUsage();
     console.log(`[MEMORY] Emergency cleanup completed. Usage: ${usage.percentage.toFixed(1)}%`);
+  }
+
+  // Get memory status
+  getStatus(): { usage: number; critical: boolean; emergencyMode: boolean; processingOperation: boolean } {
+    const usage = this.getMemoryUsage();
+    return {
+      usage: usage.percentage,
+      critical: this.isMemoryCritical(),
+      emergencyMode: this.emergencyMode,
+      processingOperation: this.isProcessingOperation
+    };
   }
 }
 
