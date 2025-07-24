@@ -12,12 +12,42 @@ const supabase = createClient(
 const ALLOWED_FILE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
+// Ensure storage bucket exists
+async function ensureBucketExists() {
+  try {
+    const { data: buckets } = await supabase.storage.listBuckets();
+    const bucketExists = buckets?.some(bucket => bucket.name === 'profile-photos');
+    
+    if (!bucketExists) {
+      console.log('Creating profile-photos bucket...');
+      const { error } = await supabase.storage.createBucket('profile-photos', {
+        public: true,
+        allowedMimeTypes: ALLOWED_FILE_TYPES,
+        fileSizeLimit: MAX_FILE_SIZE
+      });
+      
+      if (error) {
+        console.error('Failed to create bucket:', error);
+        throw error;
+      }
+      
+      console.log('profile-photos bucket created successfully');
+    }
+  } catch (error) {
+    console.error('Error ensuring bucket exists:', error);
+    // Don't throw, just log the error
+  }
+}
+
 export async function POST(request: NextRequest) {
   const memoryOptimizer = MemoryOptimizer.getInstance();
   
   try {
     // Start operation protection
     memoryOptimizer.startOperation();
+    
+    // Ensure bucket exists
+    await ensureBucketExists();
     
     // Validazione CSRF
     const csrfValidation = validateCSRFToken(request);
@@ -88,6 +118,8 @@ export async function POST(request: NextRequest) {
     const fileExtension = file.name.split('.').pop();
     const safeFileName = `${user_id}_${Date.now()}.${fileExtension}`;
 
+    console.log('Uploading file:', safeFileName, 'Size:', file.size, 'Type:', file.type);
+
     // Upload file a Supabase Storage
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('profile-photos')
@@ -99,15 +131,19 @@ export async function POST(request: NextRequest) {
     if (uploadError) {
       console.error('File upload error:', uploadError);
       return NextResponse.json(
-        { error: 'Failed to upload file' },
+        { error: 'Failed to upload file', details: uploadError.message },
         { status: 500 }
       );
     }
+
+    console.log('File uploaded successfully:', uploadData);
 
     // Ottieni URL pubblico
     const { data: urlData } = supabase.storage
       .from('profile-photos')
       .getPublicUrl(safeFileName);
+
+    console.log('Public URL generated:', urlData.publicUrl);
 
     // Aggiorna profilo utente con URL foto nella tabella clients
     const { error: updateError } = await supabase
@@ -121,6 +157,8 @@ export async function POST(request: NextRequest) {
     if (updateError) {
       console.error('Profile update error:', updateError);
       // Non fallire se l'aggiornamento del profilo fallisce
+    } else {
+      console.log('Profile updated successfully with photo URL');
     }
 
     return NextResponse.json({
@@ -133,7 +171,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Photo upload API error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   } finally {

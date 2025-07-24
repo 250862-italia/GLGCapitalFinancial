@@ -54,6 +54,7 @@
     "clsx": "^2.1.1",
     "critters": "^0.0.23",
     "dotenv": "^17.0.0",
+    "form-data": "^4.0.4",
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.523.0",

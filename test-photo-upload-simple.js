@@ -76,24 +76,26 @@ async function testPhotoUploadSimple() {
     
     const testUserId = '3016af70-23c1-4100-8bd0-0dffcc07d4a2';
     
-    // Create FormData with the real file
-    const FormData = require('form-data');
+    // Create FormData with the real file using native FormData
+    const FormData = global.FormData;
     const formData = new FormData();
-    formData.append('photo', fs.createReadStream(testImagePath), {
-      filename: 'test-image.jpg',
-      contentType: 'image/jpeg'
-    });
+    
+    // Read file as buffer and create blob
+    const fileBuffer = fs.readFileSync(testImagePath);
+    const blob = new Blob([fileBuffer], { type: 'image/jpeg' });
+    
+    formData.append('photo', blob, 'test-image.jpg');
     formData.append('user_id', testUserId);
     
     console.log('📝 Sending photo upload request...');
     console.log('   User ID:', testUserId);
-    console.log('   File size:', fs.statSync(testImagePath).size, 'bytes');
+    console.log('   File size:', fileBuffer.length, 'bytes');
     
     const uploadResponse = await fetch(`${BASE_URL}/api/profile/upload-photo`, {
       method: 'POST',
       headers: { 
-        'X-CSRF-Token': csrfToken,
-        ...formData.getHeaders()
+        'X-CSRF-Token': csrfToken
+        // Don't set Content-Type header - let browser set it with boundary
       },
       body: formData
     });
