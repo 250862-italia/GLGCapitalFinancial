@@ -126,6 +126,8 @@ export async function POST(request: NextRequest) {
         const clientData = {
           user_id: authData.user.id,
           profile_id: authData.user.id,
+          first_name: firstName,
+          last_name: lastName,
           client_code: clientCode,
           status: 'active',
           risk_profile: 'moderate',
