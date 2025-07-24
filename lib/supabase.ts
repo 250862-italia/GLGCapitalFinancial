@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { getSupabaseClient, getCurrentCheckpoint, getAllCheckpoints, refreshCheckpoints, initializeCheckpoints } from './supabase-checkpoints';
 import { getSupabaseFunctionRegion } from './supabase-region';
+import { createSmartClient, checkDatabaseHealth } from './supabase-fallback';
 
 // Get Supabase configuration from environment variables
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -19,7 +20,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
   }
 }
 
-// Create Supabase client (available on both client and server)
+// Create basic Supabase client (available on both client and server)
 export const supabase = createClient(supabaseUrl!, supabaseAnonKey!);
 
 // Create admin client only on server-side
@@ -39,13 +40,45 @@ export function getSupabaseAdmin() {
   return supabaseAdmin;
 }
 
-// New checkpoint-based client
+// Enhanced client with fallback support
+let smartClient: any = null;
+let smartClientPromise: Promise<any> | null = null;
+
+// New checkpoint-based client with fallback
 export async function getSupabase() {
   try {
-    return await getSupabaseClient();
+    // Try checkpoint-based client first
+    const checkpointClient = await getSupabaseClient();
+    
+    // Check if checkpoint client is healthy
+    const isHealthy = await checkDatabaseHealth(checkpointClient);
+    if (isHealthy) {
+      console.log('[SUPABASE] Using checkpoint client - healthy');
+      return checkpointClient;
+    }
+    
+    console.log('[SUPABASE] Checkpoint client unhealthy, trying smart client');
+    
+    // Fall back to smart client
+    if (!smartClientPromise) {
+      smartClientPromise = createSmartClient(supabaseUrl!, supabaseAnonKey!);
+    }
+    
+    const client = await smartClientPromise;
+    smartClient = client;
+    return client;
+    
   } catch (error) {
     console.warn('[SUPABASE] Checkpoint client failed, falling back to legacy client:', error);
-    return supabase;
+    
+    // Final fallback to basic client
+    if (!smartClientPromise) {
+      smartClientPromise = createSmartClient(supabaseUrl!, supabaseAnonKey!);
+    }
+    
+    const client = await smartClientPromise;
+    smartClient = client;
+    return client;
   }
 }
 

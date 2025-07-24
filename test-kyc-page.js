@@ -48,7 +48,8 @@ async function testKYCPage() {
     console.log('📊 Login Response:', {
       status: loginResponse.status,
       success: loginResult.success,
-      message: loginResult.message
+      message: loginResult.message,
+      hasToken: !!loginResult.session?.access_token
     });
     
     if (!loginResponse.ok) {
@@ -60,10 +61,17 @@ async function testKYCPage() {
     
     // Step 3: Test KYC API
     console.log('\n3️⃣ Testing KYC API...');
+    const adminToken = loginResult.session?.access_token;
+    
+    if (!adminToken) {
+      console.error('❌ No admin token found in login response');
+      return;
+    }
+    
     const { response: kycResponse, data: kycResult } = await makeRequest(`${BASE_URL}/api/admin/kyc`, {
       headers: {
         'X-CSRF-Token': csrfData.token,
-        'x-admin-token': loginResult.token
+        'x-admin-token': adminToken
       }
     });
     
@@ -84,7 +92,7 @@ async function testKYCPage() {
     console.log('\n4️⃣ Testing page accessibility...');
     const pageResponse = await fetch(`${BASE_URL}/admin/kyc`, {
       headers: {
-        'Cookie': `admin_token=${loginResult.token}`
+        'Cookie': `admin_token=${adminToken}`
       }
     });
     

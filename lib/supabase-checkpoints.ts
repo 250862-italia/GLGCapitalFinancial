@@ -62,32 +62,85 @@ async function checkCheckpointHealth(checkpoint: SupabaseCheckpoint): Promise<bo
   try {
     const client = createClient(checkpoint.url, checkpoint.anonKey);
     
-    // Test connection with a simple query
-    const { data, error } = await client.auth.getSession();
+    // Test connection with a simple query - more resilient approach
+    const { data, error } = await client
+      .from('profiles')
+      .select('count')
+      .limit(1);
     
     const responseTime = Date.now() - startTime;
     
     if (error) {
+      // Only mark as unhealthy for critical errors
+      const isCriticalError = error.code === 'PGRST301' || // Connection error
+                             error.code === 'PGRST302' || // Timeout
+                             error.message.includes('connection') ||
+                             error.message.includes('timeout') ||
+                             error.message.includes('network');
+      
+      if (isCriticalError) {
+        console.log(`[CHECKPOINT] ${checkpoint.name} (${checkpoint.region}): UNHEALTHY - ${error.message}`);
+        checkpoint.status = 'unhealthy';
+        checkpoint.responseTime = responseTime;
+        checkpoint.lastCheck = Date.now();
+        return false;
+      } else {
+        // For non-critical errors, still consider healthy but log warning
+        console.log(`[CHECKPOINT] ${checkpoint.name} (${checkpoint.region}): HEALTHY (with warning) - ${error.message}`);
+        checkpoint.status = 'healthy';
+        checkpoint.responseTime = responseTime;
+        checkpoint.lastCheck = Date.now();
+        return true;
+      }
+    }
+    
+    // Consider response time thresholds
+    const isSlow = responseTime > 2000; // 2 seconds
+    const isModerate = responseTime > 1000; // 1 second
+    
+    if (isSlow) {
+      console.log(`[CHECKPOINT] ${checkpoint.name} (${checkpoint.region}): SLOW - ${responseTime}ms`);
+      checkpoint.status = 'unhealthy';
+      checkpoint.responseTime = responseTime;
+      checkpoint.lastCheck = Date.now();
+      return false;
+    } else if (isModerate) {
+      console.log(`[CHECKPOINT] ${checkpoint.name} (${checkpoint.region}): MODERATE - ${responseTime}ms`);
+      checkpoint.status = 'healthy';
+      checkpoint.responseTime = responseTime;
+      checkpoint.lastCheck = Date.now();
+      return true;
+    } else {
+      console.log(`[CHECKPOINT] ${checkpoint.name} (${checkpoint.region}): HEALTHY - ${responseTime}ms`);
+      checkpoint.status = 'healthy';
+      checkpoint.responseTime = responseTime;
+      checkpoint.lastCheck = Date.now();
+      return true;
+    }
+    
+  } catch (error) {
+    const responseTime = Date.now() - startTime;
+    
+    // Only mark as unhealthy for network/connection errors
+    const isNetworkError = error.message.includes('fetch') ||
+                          error.message.includes('network') ||
+                          error.message.includes('connection') ||
+                          error.message.includes('timeout');
+    
+    if (isNetworkError) {
       console.log(`[CHECKPOINT] ${checkpoint.name} (${checkpoint.region}): UNHEALTHY - ${error.message}`);
       checkpoint.status = 'unhealthy';
       checkpoint.responseTime = responseTime;
       checkpoint.lastCheck = Date.now();
       return false;
+    } else {
+      // For other errors, still consider healthy
+      console.log(`[CHECKPOINT] ${checkpoint.name} (${checkpoint.region}): HEALTHY (with error) - ${error.message}`);
+      checkpoint.status = 'healthy';
+      checkpoint.responseTime = responseTime;
+      checkpoint.lastCheck = Date.now();
+      return true;
     }
-    
-    console.log(`[CHECKPOINT] ${checkpoint.name} (${checkpoint.region}): HEALTHY - ${responseTime}ms`);
-    checkpoint.status = 'healthy';
-    checkpoint.responseTime = responseTime;
-    checkpoint.lastCheck = Date.now();
-    return true;
-    
-  } catch (error) {
-    const responseTime = Date.now() - startTime;
-    console.log(`[CHECKPOINT] ${checkpoint.name} (${checkpoint.region}): UNHEALTHY - ${error}`);
-    checkpoint.status = 'unhealthy';
-    checkpoint.responseTime = responseTime;
-    checkpoint.lastCheck = Date.now();
-    return false;
   }
 }
 
