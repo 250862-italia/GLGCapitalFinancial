@@ -35,35 +35,35 @@ export default function RegisterPage() {
     const newErrors: Partial<FormData> = {};
 
     if (!formData.email) {
-      newErrors.email = 'Email è obbligatoria';
+      newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email non valida';
+      newErrors.email = 'Invalid email format';
     }
 
     if (!formData.password) {
-      newErrors.password = 'Password è obbligatoria';
+      newErrors.password = 'Password is required';
     } else if (formData.password.length < 8) {
-      newErrors.password = 'Password deve essere di almeno 8 caratteri';
+      newErrors.password = 'Password must be at least 8 characters';
     }
 
     if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Le password non coincidono';
+      newErrors.confirmPassword = 'Passwords do not match';
     }
 
     if (!formData.firstName) {
-      newErrors.firstName = 'Nome è obbligatorio';
+      newErrors.firstName = 'First name is required';
     }
 
     if (!formData.lastName) {
-      newErrors.lastName = 'Cognome è obbligatorio';
+      newErrors.lastName = 'Last name is required';
     }
 
     if (!formData.country) {
-      newErrors.country = 'Paese è obbligatorio';
+      newErrors.country = 'Country is required';
     }
 
     if (!formData.acceptTerms) {
-      newErrors.acceptTerms = 'Devi accettare i termini e condizioni';
+      newErrors.acceptTerms = 'You must accept the terms and conditions';
     }
 
     setErrors(newErrors);
@@ -83,10 +83,10 @@ export default function RegisterPage() {
     let debugLog = '';
 
     try {
-      debugLog += '🔄 Inizio registrazione...\n';
+      debugLog += '🔄 Starting registration...\n';
       
       // Step 1: Get CSRF token
-      debugLog += '🔍 Ottenendo CSRF token...\n';
+      debugLog += '🔍 Getting CSRF token...\n';
       
       let csrfToken: string;
       try {
@@ -104,24 +104,24 @@ export default function RegisterPage() {
         if (csrfResponse.ok) {
           const csrfData = await csrfResponse.json();
           csrfToken = csrfData.token;
-          debugLog += `✅ CSRF Token ottenuto dal server: ${csrfToken.substring(0, 10)}...\n`;
+          debugLog += `✅ CSRF Token obtained from server: ${csrfToken.substring(0, 10)}...\n`;
         } else {
           // Generate token locally if server is not available
-          debugLog += `⚠️ Server non disponibile, generando token localmente...\n`;
+          debugLog += `⚠️ Server not available, generating token locally...\n`;
           csrfToken = crypto.randomUUID ? crypto.randomUUID() : 
             Math.random().toString(36).substring(2) + '_' + Date.now().toString(36);
-          debugLog += `✅ CSRF Token generato localmente: ${csrfToken.substring(0, 10)}...\n`;
+          debugLog += `✅ CSRF Token generated locally: ${csrfToken.substring(0, 10)}...\n`;
         }
       } catch (error) {
         // Generate token locally if there's an error
-        debugLog += `⚠️ Errore nel server, generando token localmente...\n`;
+        debugLog += `⚠️ Server error, generating token locally...\n`;
         csrfToken = crypto.randomUUID ? crypto.randomUUID() : 
           Math.random().toString(36).substring(2) + '_' + Date.now().toString(36);
-        debugLog += `✅ CSRF Token generato localmente: ${csrfToken.substring(0, 10)}...\n`;
+        debugLog += `✅ CSRF Token generated locally: ${csrfToken.substring(0, 10)}...\n`;
       }
 
       // Step 2: Register user with CSRF token
-      debugLog += '🔍 Invio richiesta di registrazione...\n';
+      debugLog += '🔍 Sending registration request...\n';
       
       const registerData = {
         email: formData.email,
@@ -131,7 +131,7 @@ export default function RegisterPage() {
         country: formData.country
       };
 
-      debugLog += `📤 Dati inviati: ${JSON.stringify(registerData, null, 2)}\n`;
+      debugLog += `📤 Data sent: ${JSON.stringify(registerData, null, 2)}\n`;
 
       const registerResponse = await fetch('/api/auth/register', {
         method: 'POST',
@@ -156,7 +156,7 @@ export default function RegisterPage() {
       debugLog += `📥 Response Data: ${JSON.stringify(responseData, null, 2)}\n`;
 
       if (registerResponse.ok) {
-        debugLog += '✅ Registrazione completata con successo!\n';
+        debugLog += '✅ Registration completed successfully!\n';
         setDebugInfo(debugLog);
         
         // Show success message briefly before redirect
@@ -165,15 +165,15 @@ export default function RegisterPage() {
           router.push('/login?message=registration-success');
         }, 2000);
       } else {
-        debugLog += `❌ Registrazione fallita: ${responseData.error || 'Errore sconosciuto'}\n`;
+        debugLog += `❌ Registration failed: ${responseData.error || 'Unknown error'}\n`;
         setDebugInfo(debugLog);
-        setSubmitError(responseData.error || 'Errore durante la registrazione');
+        setSubmitError(responseData.error || 'Error during registration');
       }
 
     } catch (error) {
-      debugLog += `❌ Errore durante la registrazione: ${error}\n`;
+      debugLog += `❌ Error during registration: ${error}\n`;
       setDebugInfo(debugLog);
-      setSubmitError(error instanceof Error ? error.message : 'Errore durante la registrazione');
+      setSubmitError(error instanceof Error ? error.message : 'Error during registration');
     } finally {
       setIsLoading(false);
     }
@@ -202,12 +202,12 @@ export default function RegisterPage() {
       <div className="max-w-md w-full space-y-8 bg-white rounded-lg shadow-lg p-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Crea il tuo account
+            Create your account
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            O{' '}
+            Or{' '}
             <Link href="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
-              accedi al tuo account esistente
+              sign in to your existing account
             </Link>
           </p>
         </div>
@@ -227,7 +227,7 @@ export default function RegisterPage() {
                 className={`w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm ${
                   errors.email ? 'border-red-300' : 'border-gray-300'
                 }`}
-                placeholder="Inserisci la tua email"
+                placeholder="Enter your email"
                 value={formData.email}
                 onChange={handleInputChange}
               />
@@ -238,7 +238,7 @@ export default function RegisterPage() {
 
             <div>
               <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
-                Nome
+                First Name
               </label>
               <input
                 id="firstName"
@@ -249,7 +249,7 @@ export default function RegisterPage() {
                 className={`w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm ${
                   errors.firstName ? 'border-red-300' : 'border-gray-300'
                 }`}
-                placeholder="Inserisci il tuo nome"
+                placeholder="Enter your first name"
                 value={formData.firstName}
                 onChange={handleInputChange}
               />
@@ -260,7 +260,7 @@ export default function RegisterPage() {
 
             <div>
               <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
-                Cognome
+                Last Name
               </label>
               <input
                 id="lastName"
@@ -271,7 +271,7 @@ export default function RegisterPage() {
                 className={`w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm ${
                   errors.lastName ? 'border-red-300' : 'border-gray-300'
                 }`}
-                placeholder="Inserisci il tuo cognome"
+                placeholder="Enter your last name"
                 value={formData.lastName}
                 onChange={handleInputChange}
               />
@@ -282,7 +282,7 @@ export default function RegisterPage() {
 
             <div>
               <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-1">
-                Paese
+                Country
               </label>
               <select
                 id="country"
@@ -294,14 +294,14 @@ export default function RegisterPage() {
                 value={formData.country}
                 onChange={handleInputChange}
               >
-                <option value="">Seleziona il tuo paese</option>
-                <option value="Italy">Italia</option>
-                <option value="United States">Stati Uniti</option>
-                <option value="United Kingdom">Regno Unito</option>
-                <option value="Germany">Germania</option>
-                <option value="France">Francia</option>
-                <option value="Spain">Spagna</option>
-                <option value="Other">Altro</option>
+                <option value="">Select your country</option>
+                <option value="Italy">Italy</option>
+                <option value="United States">United States</option>
+                <option value="United Kingdom">United Kingdom</option>
+                <option value="Germany">Germany</option>
+                <option value="France">France</option>
+                <option value="Spain">Spain</option>
+                <option value="Other">Other</option>
               </select>
               {errors.country && (
                 <p className="mt-1 text-sm text-red-600">{errors.country}</p>
@@ -321,7 +321,7 @@ export default function RegisterPage() {
                 className={`w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm ${
                   errors.password ? 'border-red-300' : 'border-gray-300'
                 }`}
-                placeholder="Inserisci la password"
+                placeholder="Enter your password"
                 value={formData.password}
                 onChange={handleInputChange}
               />
@@ -332,7 +332,7 @@ export default function RegisterPage() {
 
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                Conferma Password
+                Confirm Password
               </label>
               <input
                 id="confirmPassword"
@@ -343,7 +343,7 @@ export default function RegisterPage() {
                 className={`w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm ${
                   errors.confirmPassword ? 'border-red-300' : 'border-gray-300'
                 }`}
-                placeholder="Conferma la password"
+                placeholder="Confirm your password"
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
               />
@@ -363,9 +363,9 @@ export default function RegisterPage() {
               onChange={handleInputChange}
             />
             <label htmlFor="acceptTerms" className="ml-2 block text-sm text-gray-900">
-              Accetto i{' '}
+              I accept the{' '}
               <Link href="/terms" className="text-indigo-600 hover:text-indigo-500">
-                termini e condizioni
+                terms and conditions
               </Link>
             </label>
           </div>
@@ -378,7 +378,7 @@ export default function RegisterPage() {
               <div className="flex">
                 <div className="ml-3">
                   <h3 className="text-sm font-medium text-red-800">
-                    Errore durante la registrazione
+                    Registration Error
                   </h3>
                   <div className="mt-2 text-sm text-red-700">
                     <p>{submitError}</p>
@@ -416,10 +416,10 @@ export default function RegisterPage() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Registrazione in corso...
+                  Registering...
                 </div>
               ) : (
-                'Registrati'
+                'Register'
               )}
             </button>
           </div>
