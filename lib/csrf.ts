@@ -179,6 +179,22 @@ export function validateCSRFToken(request: NextRequest): {
       return { valid: true, token };
     }
     
+    // In production, check if token is in cookie (fallback for serverless)
+    const cookieToken = request.cookies.get('csrf-token')?.value;
+    if (cookieToken === token) {
+      console.log('[CSRF] Token found in cookie, creating storage entry');
+      const newTokenData = {
+        token,
+        createdAt: Date.now(),
+        used: false,
+        useCount: 1,
+        protected: false,
+        lastUsed: Date.now()
+      };
+      csrfTokens.set(token, newTokenData);
+      return { valid: true, token };
+    }
+    
     return { 
       valid: false, 
       token, 
