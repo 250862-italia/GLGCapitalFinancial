@@ -8,9 +8,12 @@ import { Menu, X, ChevronDown } from 'lucide-react';
 export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const pathname = usePathname();
 
   useEffect(() => {
+    setIsMounted(true);
+    
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
@@ -20,6 +23,17 @@ export default function Navigation() {
   }, []);
 
   const isActive = (path: string) => pathname === path;
+
+  const handleMobileMenuToggle = () => {
+    console.log('🔘 Mobile menu button clicked!');
+    try {
+      setIsOpen(!isOpen);
+    } catch (error) {
+      console.error('Error toggling mobile menu:', error);
+      // Fallback: force close if there's an error
+      setIsOpen(false);
+    }
+  };
 
   return (
     <nav style={{
@@ -160,9 +174,9 @@ export default function Navigation() {
             </Link>
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile Menu Button - Always render */}
           <button
-            onClick={() => setIsOpen(!isOpen)}
+            onClick={handleMobileMenuToggle}
             style={{
               display: 'block',
               padding: '0.5rem',
@@ -171,9 +185,12 @@ export default function Navigation() {
               background: 'none',
               border: 'none',
               cursor: 'pointer',
-              color: isScrolled ? '#374151' : 'white'
+              color: isScrolled ? '#374151' : 'white',
+              zIndex: 1001
             }}
             className="lg:hidden"
+            aria-label="Toggle mobile menu"
+            type="button"
           >
             {isOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
@@ -189,7 +206,8 @@ export default function Navigation() {
               boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
               border: '1px solid #e2e8f0',
               background: isScrolled ? 'white' : 'rgba(15, 23, 42, 0.95)',
-              backdropFilter: 'blur(12px)'
+              backdropFilter: 'blur(12px)',
+              zIndex: 1000
             }}>
               <Link
                 href="/about"
@@ -260,7 +278,7 @@ export default function Navigation() {
                 Contacts
               </Link>
               
-              <div style={{ borderTop: '1px solid', borderColor: isScrolled ? '#e2e8f0' : 'rgba(255, 255, 255, 0.1)', marginTop: '0.5rem', paddingTop: '0.5rem' }}>
+              <div style={{ borderTop: '1px solid', borderColor: isScrolled ? '#e2e8f0' : 'rgba(255, 255, 255, 0.2)', marginTop: '0.5rem', paddingTop: '0.5rem' }}>
                 <Link
                   href="/register"
                   style={{
@@ -291,6 +309,7 @@ export default function Navigation() {
                     fontWeight: 500,
                     transition: 'all 0.2s ease',
                     color: isScrolled ? '#374151' : 'white',
+                    background: 'transparent',
                     textDecoration: 'none',
                     border: '1px solid',
                     borderColor: isScrolled ? '#d1d5db' : 'rgba(255, 255, 255, 0.3)',
