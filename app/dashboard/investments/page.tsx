@@ -229,11 +229,19 @@ export default function MyInvestmentsPage() {
           <button
             onClick={() => {
               console.log('🔘 Back to Dashboard button clicked (investments)!');
+              console.log('Router state:', { router, isReady: !!router });
+              
               try {
-                router.push('/dashboard');
+                if (router && typeof router.push === 'function') {
+                  console.log('Using router.push');
+                  router.push('/dashboard');
+                } else {
+                  console.log('Router not ready, using window.location');
+                  window.location.href = '/dashboard';
+                }
               } catch (error) {
                 console.error('Router error:', error);
-                // Fallback to window.location
+                console.log('Falling back to window.location');
                 window.location.href = '/dashboard';
               }
             }}
