@@ -1,11 +1,11 @@
 // CSRF token management - Edge Runtime compatible
-// Use in-memory storage with better error handling
+// Use in-memory storage with better error handling and memory optimization protection
 
 import { NextRequest, NextResponse } from 'next/server';
 
 // In-memory storage for CSRF tokens
 declare global {
-  var __csrfTokens: Map<string, { createdAt: number; used: boolean; useCount: number }> | undefined;
+  var __csrfTokens: Map<string, { createdAt: number; used: boolean; useCount: number; protected: boolean }> | undefined;
   var __csrfTokenCount: number | undefined;
 }
 
@@ -32,10 +32,15 @@ export function generateCSRFToken(): string {
   }
   
   const now = Date.now();
-  csrfTokens.set(token, { createdAt: now, used: false, useCount: 0 });
+  csrfTokens.set(token, { 
+    createdAt: now, 
+    used: false, 
+    useCount: 0,
+    protected: true // Mark as protected during generation
+  });
   global.__csrfTokenCount = (global.__csrfTokenCount || 0) + 1;
   
-  // Clean up old tokens (older than 1 hour)
+  // Clean up old tokens (older than 1 hour) but preserve protected ones
   cleanupExpiredTokens();
   
   console.log(`[CSRF] Generated token: ${token.substring(0, 10)}... (${csrfTokens.size} tokens in storage, total generated: ${global.__csrfTokenCount})`);
@@ -131,6 +136,7 @@ export function validateCSRFToken(request: NextRequest): { valid: boolean; token
   
   tokenData.used = true;
   tokenData.useCount++;
+  tokenData.protected = false; // Remove protection after use
   console.log(`[CSRF] Token validated successfully:`, token.substring(0, 10) + '...');
   
   return { valid: true, token };
@@ -176,45 +182,71 @@ export function validateCSRFTokenString(token: string): boolean {
   
   tokenData.used = true;
   tokenData.useCount++;
+  tokenData.protected = false; // Remove protection after use
   console.log(`[CSRF] Token validated successfully:`, token.substring(0, 10) + '...');
   
   return true;
 }
 
+// Funzione per pulire i token scaduti (preserva quelli protetti)
 function cleanupExpiredTokens(): void {
   const now = Date.now();
-  const expiredTokens: string[] = [];
+  const maxAge = 60 * 60 * 1000; // 1 hour
   
+  let cleanedCount = 0;
   for (const [token, data] of csrfTokens.entries()) {
-    if (now - data.createdAt > 60 * 60 * 1000) { // 1 hour
-      expiredTokens.push(token);
+    // Don't clean protected tokens unless they're very old (2 hours)
+    if (data.protected && (now - data.createdAt) < 2 * 60 * 60 * 1000) {
+      continue;
+    }
+    
+    // Clean expired tokens
+    if ((now - data.createdAt) > maxAge) {
+      csrfTokens.delete(token);
+      cleanedCount++;
     }
   }
   
-  expiredTokens.forEach(token => {
-    csrfTokens.delete(token);
-  });
-  
-  if (expiredTokens.length > 0) {
-    console.log(`[CSRF] Cleaned up ${expiredTokens.length} expired tokens`);
+  if (cleanedCount > 0) {
+    console.log(`[CSRF] Cleaned ${cleanedCount} expired tokens`);
   }
 }
 
-// Debug function for development
+// Funzione per ottenere il numero di token
 export function getCSRFTokenCount(): number {
   return csrfTokens.size;
 }
 
+// Funzione per pulire tutti i token (solo per debug)
 export function clearCSRFTokens(): void {
+  const count = csrfTokens.size;
   csrfTokens.clear();
-  global.__csrfTokenCount = 0;
-  console.log('[CSRF] All tokens cleared');
+  console.log(`[CSRF] Cleared ${count} tokens`);
 }
 
-// Debug function to list all tokens
+// Funzione per debug dei token
 export function debugCSRFTokens(): void {
-  console.log('[CSRF] Debug: Current tokens in storage:');
+  console.log(`[CSRF] Debug: ${csrfTokens.size} tokens in storage`);
   for (const [token, data] of csrfTokens.entries()) {
-    console.log(`  ${token.substring(0, 10)}... - Created: ${new Date(data.createdAt).toISOString()}, Used: ${data.used}, Count: ${data.useCount}`);
+    const age = Date.now() - data.createdAt;
+    console.log(`[CSRF] Token: ${token.substring(0, 10)}... | Age: ${Math.round(age / 1000)}s | Used: ${data.used} | Protected: ${data.protected}`);
+  }
+}
+
+// Funzione per proteggere un token specifico (usata durante operazioni critiche)
+export function protectCSRFToken(token: string): void {
+  const tokenData = csrfTokens.get(token);
+  if (tokenData) {
+    tokenData.protected = true;
+    console.log(`[CSRF] Protected token: ${token.substring(0, 10)}...`);
+  }
+}
+
+// Funzione per rimuovere la protezione di un token
+export function unprotectCSRFToken(token: string): void {
+  const tokenData = csrfTokens.get(token);
+  if (tokenData) {
+    tokenData.protected = false;
+    console.log(`[CSRF] Unprotected token: ${token.substring(0, 10)}...`);
   }
 } 

@@ -123,29 +123,34 @@ export class MemoryOptimizer {
     await this.ultraConservativeCleanup();
   }
 
-  // Clear only very old CSRF tokens (5 minutes)
+  // Clear only very old CSRF tokens (5 minutes) - respect protected tokens
   private clearVeryOldTokens(): void {
     if (typeof global !== 'undefined') {
-      if (global.csrfTokens && global.csrfTokens.clear) {
-        // Keep only tokens from last 5 minutes (very conservative)
+      if (global.__csrfTokens && global.__csrfTokens.clear) {
+        // Keep only tokens from last 5 minutes (very conservative) and protected tokens
         const fiveMinutesAgo = Date.now() - 300000;
         const tokensToKeep = new Map();
         
-        for (const [token, data] of global.csrfTokens.entries()) {
-          if (data.createdAt > fiveMinutesAgo) {
+        for (const [token, data] of global.__csrfTokens.entries()) {
+          // Keep protected tokens regardless of age (unless very old - 2 hours)
+          if (data.protected && (Date.now() - data.createdAt) < 2 * 60 * 60 * 1000) {
+            tokensToKeep.set(token, data);
+          }
+          // Keep recent tokens
+          else if (data.createdAt > fiveMinutesAgo) {
             tokensToKeep.set(token, data);
           }
         }
         
-        const originalSize = global.csrfTokens.size;
-        global.csrfTokens.clear();
+        const originalSize = global.__csrfTokens.size;
+        global.__csrfTokens.clear();
         for (const [token, data] of tokensToKeep.entries()) {
-          global.csrfTokens.set(token, data);
+          global.__csrfTokens.set(token, data);
         }
         
-        const newSize = global.csrfTokens.size;
+        const newSize = global.__csrfTokens.size;
         if (originalSize !== newSize) {
-          console.log(`[MEMORY] Cleaned very old CSRF tokens: ${originalSize} -> ${newSize}`);
+          console.log(`[MEMORY] Cleaned very old CSRF tokens: ${originalSize} -> ${newSize} (preserved protected tokens)`);
         }
       }
     }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { generateCSRFToken, validateCSRFToken } from '@/lib/csrf';
+import { generateCSRFToken, validateCSRFToken, protectCSRFToken } from '@/lib/csrf';
 import { 
   validateInput, 
   VALIDATION_SCHEMAS, 
@@ -36,6 +36,11 @@ export async function POST(request: NextRequest) {
         { error: 'CSRF validation failed', details: csrfValidation.error },
         { status: 403 }
       );
+    }
+    
+    // Proteggi il token CSRF durante l'operazione di registrazione
+    if (csrfValidation.token) {
+      protectCSRFToken(csrfValidation.token);
     }
 
     // Validazione input robusta
