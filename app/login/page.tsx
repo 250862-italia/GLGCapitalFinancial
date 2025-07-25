@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { fetchJSONWithCSRF } from '@/lib/csrf-client';
 
 interface LoginData {
