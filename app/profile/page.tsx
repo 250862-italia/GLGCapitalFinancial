@@ -210,14 +210,24 @@ export default function ProfilePage() {
   };
 
   const handleFieldChange = (fieldName: string, value: any) => {
+    console.log('🔄 Field change:', fieldName, 'Value:', value);
+    
     setEditForm(prev => ({ ...prev, [fieldName]: value }));
     
     // Check if value has changed from original
     const originalValue = originalData[fieldName];
     const hasChanged = value !== originalValue;
     
+    console.log('📊 Change detection:', {
+      fieldName,
+      newValue: value,
+      originalValue,
+      hasChanged
+    });
+    
     if (hasChanged) {
       setHasChanges(true);
+      console.log('✅ Changes detected, save button enabled');
     } else {
       // Check if any other fields have changes
       const currentEditForm = { ...editForm, [fieldName]: value };
@@ -226,6 +236,7 @@ export default function ProfilePage() {
         return currentEditForm[key] !== originalData[key];
       });
       setHasChanges(otherFieldsHaveChanges);
+      console.log('📊 Other fields have changes:', otherFieldsHaveChanges);
     }
   };
 
@@ -236,6 +247,8 @@ export default function ProfilePage() {
     setError(null);
     
     try {
+      console.log('💾 Starting to save changes...');
+      
       // Prepare all changed fields
       const changedFields: Record<string, any> = {};
       Object.keys(editForm).forEach(fieldName => {
@@ -246,7 +259,10 @@ export default function ProfilePage() {
         }
       });
 
+      console.log('📝 Changed fields:', changedFields);
+
       if (Object.keys(changedFields).length === 0) {
+        console.log('ℹ️ No changes to save');
         setSaving(false);
         return;
       }
@@ -259,11 +275,18 @@ export default function ProfilePage() {
         })
       });
 
+      console.log('📡 Save response status:', response.status);
+
       if (response.ok) {
         const result = await response.json();
+        console.log('✅ Save successful:', result);
         
         // Update profile with all changed fields
-        setProfile(prev => prev ? { ...prev, ...changedFields } : null);
+        setProfile(prev => {
+          const updated = prev ? { ...prev, ...changedFields } : null;
+          console.log('🔄 Profile state updated:', updated);
+          return updated;
+        });
         
         // Reset editing state
         setEditingFields(new Set());
@@ -273,8 +296,15 @@ export default function ProfilePage() {
         
         setSuccessMessage('All changes saved successfully!');
         setTimeout(() => setSuccessMessage(null), 3000);
+        
+        // Reload profile to ensure consistency
+        setTimeout(() => {
+          console.log('🔄 Reloading profile for consistency...');
+          loadProfile();
+        }, 1000);
       } else {
         const errorData = await response.json().catch(() => ({}));
+        console.error('❌ Save failed:', errorData);
         throw new Error(errorData.error || 'Failed to save changes');
       }
     } catch (error) {
@@ -300,6 +330,9 @@ export default function ProfilePage() {
     setError(null);
 
     try {
+      console.log('📸 Starting photo upload...');
+      console.log('📁 File:', file.name, 'Size:', file.size, 'Type:', file.type);
+
       const formData = new FormData();
       formData.append('photo', file);
       formData.append('user_id', user.id);
@@ -309,13 +342,29 @@ export default function ProfilePage() {
         body: formData
       });
 
+      console.log('📡 Photo upload response status:', response.status);
+
       if (response.ok) {
         const result = await response.json();
-        setProfile(prev => prev ? { ...prev, profile_photo: result.photo_url } : null);
+        console.log('✅ Photo upload successful:', result);
+        
+        setProfile(prev => {
+          const updated = prev ? { ...prev, profile_photo: result.photo_url } : null;
+          console.log('🔄 Profile photo updated:', updated?.profile_photo);
+          return updated;
+        });
+        
         setSuccessMessage('Profile photo updated successfully!');
         setTimeout(() => setSuccessMessage(null), 3000);
+        
+        // Reload profile to ensure consistency
+        setTimeout(() => {
+          console.log('🔄 Reloading profile after photo upload...');
+          loadProfile();
+        }, 1000);
       } else {
         const errorData = await response.json().catch(() => ({}));
+        console.error('❌ Photo upload failed:', errorData);
         throw new Error(errorData.error || 'Failed to upload photo');
       }
     } catch (error) {
