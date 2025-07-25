@@ -87,7 +87,7 @@ export default function RegisterPage() {
       
       // Step 1: Get CSRF token
       debugLog += '🔍 Ottenendo CSRF token...\n';
-      const csrfResponse = await fetch('/api/csrf', {
+      const csrfResponse = await fetch('/api/csrf-public', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

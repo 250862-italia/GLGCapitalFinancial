@@ -23,7 +23,7 @@ class CSRFManager {
   // Generate a new CSRF token
   async generateToken(): Promise<string> {
     try {
-      const response = await fetch('/api/csrf', {
+      const response = await fetch('/api/csrf-public', {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include'
