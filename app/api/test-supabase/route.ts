@@ -3,27 +3,62 @@ import { supabase } from '@/lib/supabase';
 
 export async function GET() {
   try {
-    // Prova a leggere la prima riga dalla tabella 'users' o 'clients'
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .limit(1);
+    // Test multiple tables to see which ones exist
+    const tests = [
+      { name: 'clients', query: supabase.from('clients').select('*').limit(1) },
+      { name: 'profiles', query: supabase.from('profiles').select('*').limit(1) },
+      { name: 'auth.users', query: supabase.auth.getUser() }
+    ];
 
-    if (error) {
+    const results = [];
+    
+    for (const test of tests) {
+      try {
+        const { data, error } = await test.query;
+        
+        if (error) {
+          results.push({
+            table: test.name,
+            status: 'error',
+            message: error.message,
+            code: error.code
+          });
+        } else {
+          results.push({
+            table: test.name,
+            status: 'success',
+            message: 'Table accessible',
+            count: Array.isArray(data) ? data.length : 'N/A'
+          });
+        }
+      } catch (err: any) {
+        results.push({
+          table: test.name,
+          status: 'error',
+          message: err.message,
+          code: 'EXCEPTION'
+        });
+      }
+    }
+
+    // Check if at least one table is accessible
+    const successfulTests = results.filter(r => r.status === 'success');
+    
+    if (successfulTests.length > 0) {
+      return NextResponse.json({
+        success: true,
+        message: 'Connessione a Supabase riuscita',
+        accessibleTables: successfulTests.map(t => t.table),
+        allResults: results
+      });
+    } else {
       return NextResponse.json({
         success: false,
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-        code: error.code
+        message: 'Nessuna tabella accessibile',
+        results: results
       }, { status: 500 });
     }
 
-    return NextResponse.json({
-      success: true,
-      message: 'Connessione a Supabase riuscita',
-      data
-    });
   } catch (err: any) {
     return NextResponse.json({
       success: false,

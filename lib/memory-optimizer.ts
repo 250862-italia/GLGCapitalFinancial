@@ -1,14 +1,16 @@
 // Memory optimization utilities
 export class MemoryOptimizer {
   private static instance: MemoryOptimizer;
-  private memoryThreshold = 0.95; // 95% (very high threshold)
+  private memoryThreshold = 0.85; // Reduced to 85% (more conservative)
+  private criticalThreshold = 0.95; // Critical threshold at 95%
   private cleanupInterval: NodeJS.Timeout | null = null;
   private lastCleanup = 0;
-  private cleanupCooldown = 300000; // 5 minutes (very long cooldown)
+  private cleanupCooldown = 60000; // Reduced to 1 minute (more frequent cleanup)
   private isProcessingOperation = false; // Flag to prevent cleanup during operations
   private emergencyMode = false; // Emergency mode for critical memory usage
   private operationTimeout: NodeJS.Timeout | null = null; // Timeout for operation protection
   private operationCount = 0; // Track active operations
+  private aggressiveCleanupMode = false; // New aggressive cleanup mode
 
   static getInstance(): MemoryOptimizer {
     if (!MemoryOptimizer.instance) {
@@ -40,6 +42,12 @@ export class MemoryOptimizer {
     return usage.percentage > (this.memoryThreshold * 100);
   }
 
+  // Check if memory usage is extremely critical
+  isMemoryExtremelyCritical(): boolean {
+    const usage = this.getMemoryUsage();
+    return usage.percentage > (this.criticalThreshold * 100);
+  }
+
   // Check if in emergency mode
   isEmergencyMode(): boolean {
     return this.emergencyMode;
@@ -50,7 +58,7 @@ export class MemoryOptimizer {
     this.operationCount++;
     this.isProcessingOperation = true;
     
-    // Set a timeout to automatically end operation protection after 60 seconds
+    // Set a timeout to automatically end operation protection after 30 seconds (reduced)
     if (this.operationTimeout) {
       clearTimeout(this.operationTimeout);
     }
@@ -58,7 +66,7 @@ export class MemoryOptimizer {
     this.operationTimeout = setTimeout(() => {
       this.endOperation();
       console.log('[MEMORY] Operation protection timeout - cleanup allowed again');
-    }, 60000); // 60 seconds timeout (increased)
+    }, 30000); // 30 seconds timeout (reduced)
   }
 
   // End operation - allows cleanup again
@@ -84,15 +92,37 @@ export class MemoryOptimizer {
     }
   }
 
+  // Aggressive memory cleanup for critical situations
+  async aggressiveCleanup(): Promise<void> {
+    console.log('[MEMORY] Starting aggressive cleanup...');
+    this.aggressiveCleanupMode = true;
+    
+    // Force garbage collection multiple times
+    for (let i = 0; i < 3; i++) {
+      this.forceGarbageCollection();
+      await new Promise(resolve => setTimeout(resolve, 100)); // Small delay between GC calls
+    }
+    
+    // Clear all caches regardless of operations
+    this.clearAllCaches();
+    this.clearVeryOldTokens();
+    
+    // Log memory usage after cleanup
+    const usage = this.getMemoryUsage();
+    console.log(`[MEMORY] Aggressive cleanup completed. Usage: ${usage.percentage.toFixed(1)}%`);
+    
+    this.aggressiveCleanupMode = false;
+  }
+
   // Ultra-conservative memory cleanup
   async ultraConservativeCleanup(): Promise<void> {
     console.log('[MEMORY] Starting ultra-conservative cleanup...');
     
-    // Only force garbage collection
+    // Force garbage collection
     this.forceGarbageCollection();
     
-    // Don't clear ANY caches during operations
-    if (!this.isProcessingOperation) {
+    // Only clear very old tokens if not in aggressive mode
+    if (!this.aggressiveCleanupMode && !this.isProcessingOperation) {
       this.clearVeryOldTokens();
     }
     
@@ -156,27 +186,51 @@ export class MemoryOptimizer {
     }
   }
 
+  // Clear all caches (placeholder - implementation needed)
+  private clearAllCaches(): void {
+    console.log('[MEMORY] Clearing all caches (placeholder)');
+    // Implement actual cache clearing logic here
+  }
+
   // Start automatic memory monitoring
-  startMonitoring(intervalMs: number = 120000): void { // Increased to 2 minutes
+  startMonitoring(intervalMs: number = 60000): void { // Reduced to 1 minute for more frequent checks
     if (this.cleanupInterval) {
       clearInterval(this.cleanupInterval);
     }
 
-    this.cleanupInterval = setInterval(() => {
+    this.cleanupInterval = setInterval(async () => {
       const usage = this.getMemoryUsage();
+      const now = Date.now();
       
-      // Only cleanup if memory usage is extremely critical (>98%)
-      if (usage.percentage > 98) {
-        console.warn(`[MEMORY] EXTREMELY CRITICAL: ${usage.percentage.toFixed(1)}% usage - EMERGENCY MODE`);
-        this.emergencyMode = true;
-        this.cleanup(); // This will use ultra-conservative cleanup
-        this.emergencyMode = false;
-      } else if (usage.percentage > 95) {
-        console.info(`[MEMORY] HIGH: ${usage.percentage.toFixed(1)}% usage - monitoring only`);
-        // Don't cleanup for high usage, just monitor
+      // Log memory usage
+      if (usage.percentage > 95) {
+        console.log(`[MEMORY] CRITICAL: ${usage.percentage.toFixed(1)}% usage - emergency cleanup needed`);
+      } else if (usage.percentage > 85) {
+        console.log(`[MEMORY] HIGH: ${usage.percentage.toFixed(1)}% usage - monitoring closely`);
       } else {
-        console.info(`[MEMORY] NORMAL: ${usage.percentage.toFixed(1)}% usage`);
-        // Don't cleanup for normal usage
+        console.log(`[MEMORY] NORMAL: ${usage.percentage.toFixed(1)}% usage`);
+      }
+      
+      // Check if cleanup is needed and allowed
+      if (usage.percentage > (this.memoryThreshold * 100) && 
+          now - this.lastCleanup > this.cleanupCooldown) {
+        
+        console.log(`[MEMORY] Memory cleanup triggered: ${usage.percentage.toFixed(1)}%`);
+        
+        if (usage.percentage > (this.criticalThreshold * 100)) {
+          // Emergency mode - aggressive cleanup regardless of operations
+          this.emergencyMode = true;
+          console.log('[MEMORY] CRITICAL: Performing emergency cleanup');
+          await this.aggressiveCleanup();
+          this.emergencyMode = false;
+        } else if (!this.isProcessingOperation) {
+          // Normal critical cleanup only if no operations are running
+          await this.ultraConservativeCleanup();
+        } else {
+          console.log('[MEMORY] Cleanup skipped - operation in progress');
+        }
+        
+        this.lastCleanup = now;
       }
     }, intervalMs);
 
