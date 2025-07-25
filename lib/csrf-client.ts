@@ -56,7 +56,7 @@ class CSRFClientManager {
   }
 
   /**
-   * Generate a new CSRF token
+   * Generate a new CSRF token with enhanced reliability
    */
   async generateToken(): Promise<string> {
     try {
@@ -74,18 +74,23 @@ class CSRFClientManager {
 
       if (response.ok) {
         const data = await response.json();
-        const tokenData: CSRFToken = {
-          token: data.token,
-          expiresIn: data.expiresIn * 1000, // Convert to milliseconds
-          createdAt: Date.now(),
-          lastUsed: Date.now()
-        };
+        if (data.token) {
+          const tokenData: CSRFToken = {
+            token: data.token,
+            expiresIn: (data.expiresIn || 3600) * 1000, // Convert to milliseconds
+            createdAt: Date.now(),
+            lastUsed: Date.now()
+          };
 
-        // Store in memory cache
-        this.storeToken(tokenData);
-        
-        console.log('[CSRF Client] Token generated from server:', tokenData.token.substring(0, 10) + '...');
-        return tokenData.token;
+          // Store in memory cache
+          this.storeToken(tokenData);
+          
+          console.log('[CSRF Client] Token generated from server:', tokenData.token.substring(0, 10) + '...');
+          return tokenData.token;
+        } else {
+          console.warn('[CSRF Client] Server response missing token, generating locally');
+          return this.generateTokenLocally();
+        }
       } else {
         console.warn('[CSRF Client] Server endpoint not available, generating locally');
         return this.generateTokenLocally();
@@ -100,64 +105,66 @@ class CSRFClientManager {
    * Generate token locally when server is not available
    */
   private generateTokenLocally(): string {
-    const token = this.generateLocalToken();
+    console.log('[CSRF Client] Generating local token...');
+    
+    // Try multiple methods for generating a secure token
+    let token: string;
+    
+    try {
+      if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        token = crypto.randomUUID();
+      } else if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+        const array = new Uint8Array(16);
+        crypto.getRandomValues(array);
+        token = Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+      } else {
+        // Ultimate fallback
+        const timestamp = Date.now().toString(36);
+        const random1 = Math.random().toString(36).substring(2);
+        const random2 = Math.random().toString(36).substring(2);
+        token = `${timestamp}-${random1}-${random2}`;
+      }
+    } catch (error) {
+      console.warn('[CSRF Client] Error generating local token, using fallback:', error);
+      token = `fallback-${Date.now()}-${Math.random().toString(36).substring(2)}`;
+    }
+
     const tokenData: CSRFToken = {
       token,
-      expiresIn: 60 * 60 * 1000, // 1 hour in milliseconds
+      expiresIn: 60 * 60 * 1000, // 1 hour
       createdAt: Date.now(),
       lastUsed: Date.now()
     };
 
-    // Store in memory cache
     this.storeToken(tokenData);
+    console.log('[CSRF Client] Local token generated:', token.substring(0, 10) + '...');
     
-    console.log('[CSRF Client] Generated local token:', token.substring(0, 10) + '...');
     return token;
   }
 
   /**
-   * Generate a local token
-   */
-  private generateLocalToken(): string {
-    try {
-      if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-        return crypto.randomUUID();
-      }
-    } catch (error) {
-      console.warn('[CSRF Client] crypto.randomUUID not available:', error);
-    }
-    
-    // Fallback for environments without crypto.randomUUID
-    const timestamp = Date.now().toString(36);
-    const random1 = Math.random().toString(36).substring(2);
-    const random2 = Math.random().toString(36).substring(2);
-    return `${timestamp}-${random1}-${random2}`;
-  }
-
-  /**
-   * Get existing token or generate new one
+   * Get a valid CSRF token, generating one if necessary
    */
   async getToken(): Promise<string> {
-    // Check memory cache first
-    for (const [token, tokenData] of this.tokenCache.entries()) {
-      if (this.isTokenValid(tokenData)) {
-        tokenData.lastUsed = Date.now();
+    // First, try to get from memory cache
+    for (const [token, data] of this.tokenCache.entries()) {
+      if (this.isTokenValid(data)) {
+        data.lastUsed = Date.now();
         console.log('[CSRF Client] Using cached token:', token.substring(0, 10) + '...');
         return token;
       }
     }
 
-    // Check localStorage
+    // Then, try to get from localStorage
     const storedToken = this.getStoredToken();
     if (storedToken && this.isTokenValid(storedToken)) {
-      // Add to memory cache
       this.tokenCache.set(storedToken.token, storedToken);
       storedToken.lastUsed = Date.now();
       console.log('[CSRF Client] Using stored token:', storedToken.token.substring(0, 10) + '...');
       return storedToken.token;
     }
 
-    // Generate new token if none valid
+    // Finally, generate a new token
     console.log('[CSRF Client] No valid token found, generating new one...');
     return this.generateToken();
   }
@@ -180,52 +187,58 @@ class CSRFClientManager {
     
     // Store in localStorage
     try {
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(tokenData));
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(tokenData));
+      }
     } catch (error) {
-      console.warn('[CSRF Client] Failed to store token in localStorage:', error);
+      console.warn('[CSRF Client] Error storing token in localStorage:', error);
     }
   }
 
   /**
-   * Load tokens from localStorage
+   * Load tokens from localStorage into memory cache
    */
   private loadFromStorage(): void {
     try {
-      const stored = localStorage.getItem(this.STORAGE_KEY);
-      if (stored) {
-        const tokenData: CSRFToken = JSON.parse(stored);
-        if (this.isTokenValid(tokenData)) {
-          this.tokenCache.set(tokenData.token, tokenData);
-          console.log('[CSRF Client] Loaded token from storage:', tokenData.token.substring(0, 10) + '...');
+      if (typeof localStorage !== 'undefined') {
+        const stored = localStorage.getItem(this.STORAGE_KEY);
+        if (stored) {
+          const tokenData: CSRFToken = JSON.parse(stored);
+          if (this.isTokenValid(tokenData)) {
+            this.tokenCache.set(tokenData.token, tokenData);
+            console.log('[CSRF Client] Loaded token from storage:', tokenData.token.substring(0, 10) + '...');
+          }
         }
       }
     } catch (error) {
-      console.warn('[CSRF Client] Failed to load token from localStorage:', error);
+      console.warn('[CSRF Client] Error loading from storage:', error);
     }
   }
 
   /**
-   * Get token from localStorage
+   * Get stored token from localStorage
    */
   private getStoredToken(): CSRFToken | null {
     try {
-      const stored = localStorage.getItem(this.STORAGE_KEY);
-      if (stored) {
-        return JSON.parse(stored);
+      if (typeof localStorage !== 'undefined') {
+        const stored = localStorage.getItem(this.STORAGE_KEY);
+        if (stored) {
+          return JSON.parse(stored);
+        }
       }
     } catch (error) {
-      console.warn('[CSRF Client] Failed to retrieve token from localStorage:', error);
+      console.warn('[CSRF Client] Error getting stored token:', error);
     }
     return null;
   }
 
   /**
-   * Check if token is still valid
+   * Check if a token is still valid
    */
   private isTokenValid(tokenData: CSRFToken): boolean {
     const now = Date.now();
-    const expiryTime = tokenData.createdAt + tokenData.expiresIn - this.TOKEN_EXPIRY_BUFFER;
-    return now < expiryTime;
+    const age = now - tokenData.createdAt;
+    return age < (tokenData.expiresIn - this.TOKEN_EXPIRY_BUFFER);
   }
 
   /**
@@ -234,9 +247,11 @@ class CSRFClientManager {
   removeToken(token: string): void {
     this.tokenCache.delete(token);
     try {
-      localStorage.removeItem(this.STORAGE_KEY);
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem(this.STORAGE_KEY);
+      }
     } catch (error) {
-      console.warn('[CSRF Client] Failed to remove token from localStorage:', error);
+      console.warn('[CSRF Client] Error removing token from storage:', error);
     }
   }
 
@@ -246,9 +261,11 @@ class CSRFClientManager {
   clearAllTokens(): void {
     this.tokenCache.clear();
     try {
-      localStorage.removeItem(this.STORAGE_KEY);
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem(this.STORAGE_KEY);
+      }
     } catch (error) {
-      console.warn('[CSRF Client] Failed to clear tokens from localStorage:', error);
+      console.warn('[CSRF Client] Error clearing tokens from storage:', error);
     }
   }
 
@@ -264,9 +281,9 @@ class CSRFClientManager {
     let lastTokenAge: number | null = null;
     
     if (this.tokenCache.size > 0) {
-      const newestToken = Array.from(this.tokenCache.values())
-        .sort((a, b) => b.createdAt - a.createdAt)[0];
-      lastTokenAge = now - newestToken.createdAt;
+      const oldestToken = Array.from(this.tokenCache.values())
+        .sort((a, b) => a.createdAt - b.createdAt)[0];
+      lastTokenAge = now - oldestToken.createdAt;
     }
     
     return {
@@ -277,11 +294,11 @@ class CSRFClientManager {
   }
 }
 
-// Export singleton instance
-export const csrfClient = CSRFClientManager.getInstance();
+// Global instance
+const csrfClient = CSRFClientManager.getInstance();
 
 /**
- * Fetch with CSRF token - Enhanced version
+ * Fetch wrapper with automatic CSRF token inclusion
  */
 export async function fetchWithCSRF(
   url: string, 
@@ -304,7 +321,7 @@ export async function fetchWithCSRF(
 }
 
 /**
- * Fetch FormData with CSRF token
+ * Fetch wrapper for FormData with CSRF token
  */
 export async function fetchFormDataWithCSRF(
   url: string, 
@@ -313,15 +330,17 @@ export async function fetchFormDataWithCSRF(
 ): Promise<Response> {
   const token = await csrfClient.getToken();
   
+  // Add CSRF token to FormData
+  formData.append('csrf', token);
+  
   const enhancedOptions: RequestInit = {
     ...options,
-    method: options.method || 'POST',
     headers: {
       ...options.headers,
       'X-CSRF-Token': token,
-      // Don't set Content-Type for FormData, let the browser set it with boundary
+      'Cache-Control': 'no-cache'
+      // Don't set Content-Type for FormData, browser handles it
     },
-    body: formData,
     credentials: 'include'
   };
   
@@ -330,56 +349,75 @@ export async function fetchFormDataWithCSRF(
 }
 
 /**
- * Fetch JSON with CSRF token
+ * Fetch wrapper for JSON with CSRF token
  */
 export async function fetchJSONWithCSRF<T = any>(
   url: string, 
   options: RequestInit = {}
 ): Promise<T> {
-  const response = await fetchWithCSRF(url, options);
+  const token = await csrfClient.getToken();
+  
+  const enhancedOptions: RequestInit = {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+      'X-CSRF-Token': token,
+      'Cache-Control': 'no-cache'
+    },
+    credentials: 'include'
+  };
+  
+  console.log('[CSRF Client] Making JSON request with token:', token.substring(0, 10) + '...');
+  
+  const response = await fetch(url, enhancedOptions);
   
   if (!response.ok) {
     const errorText = await response.text();
     console.error('[CSRF Client] Request failed:', response.status, errorText);
-    throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+    throw new Error(`Request failed: ${response.status} ${errorText}`);
   }
   
   return response.json();
 }
 
 /**
- * Utility function to fetch profile data
+ * Fetch user profile with CSRF protection
  */
 export async function fetchProfile(): Promise<any> {
-  const response = await fetchWithCSRF('/api/profile');
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+  try {
+    return await fetchJSONWithCSRF('/api/profile');
+  } catch (error) {
+    console.error('[CSRF Client] Error fetching profile:', error);
+    throw error;
   }
-  return response.json();
 }
 
 /**
- * Check if user has valid session
+ * Check if user session is valid
  */
 export function checkSession(): boolean {
   try {
-    const token = localStorage.getItem('csrf_token');
-    return !!token;
-  } catch {
-    return false;
+    if (typeof localStorage !== 'undefined') {
+      const session = localStorage.getItem('session');
+      return !!session;
+    }
+  } catch (error) {
+    console.warn('[CSRF Client] Error checking session:', error);
   }
+  return false;
 }
 
 /**
- * Cleanup on logout
+ * Clean up on logout
  */
 export function cleanupOnLogout(): void {
   csrfClient.clearAllTokens();
-  console.log('[CSRF Client] Cleaned up on logout');
+  console.log('[CSRF Client] Tokens cleared on logout');
 }
 
 /**
- * Get client statistics
+ * Get CSRF client statistics
  */
 export function getCSRFClientStats() {
   return csrfClient.getStats();

@@ -1,9 +1,9 @@
 "use client";
+export const dynamic = "force-dynamic";
 
-import { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { fetchJSONWithCSRF } from '@/lib/csrf-client';
 
 interface LoginData {
   email: string;
@@ -12,31 +12,22 @@ interface LoginData {
 }
 
 export default function LoginPage() {
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
+  const [formData, setFormData] = useState<LoginData>({
+    email: "",
+    password: "",
+    rememberMe: false,
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const router = useRouter();
 
-  // Test React functionality
-  useEffect(() => {
-    console.log('✅ React component loaded!');
-    console.log('✅ Form data state:', formData);
-  }, [formData]);
-
-  const handleInputChange = (field: string, value: string) => {
-    console.log('🔄 Input change:', field, value);
+  const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    console.log('🔄 Form submitted!', formData);
     
     if (!formData.email.trim() || !formData.password.trim()) {
       setError('Please fill in all fields');
@@ -47,39 +38,20 @@ export default function LoginPage() {
     setError('');
 
     try {
-      console.log('🔄 Getting CSRF token...');
+      console.log('🔄 Starting login process...');
       
-      // Get CSRF token first
-      const csrfResponse = await fetch('/api/csrf', {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include'
-      });
-
-      if (!csrfResponse.ok) {
-        throw new Error('Failed to get CSRF token');
-      }
-
-      const csrfData = await csrfResponse.json();
-      console.log('✅ CSRF token received:', csrfData.token);
-
-      // Login with CSRF token
-      console.log('🔄 Sending login request...');
-      const response = await fetch('/api/auth/login', {
+      // Use the improved CSRF client for login
+      const data = await fetchJSONWithCSRF('/api/auth/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-Token': csrfData.token
-        },
-        credentials: 'include',
-        body: JSON.stringify({ email: formData.email, password: formData.password })
+        body: JSON.stringify({ 
+          email: formData.email, 
+          password: formData.password 
+        })
       });
-
-      const data = await response.json();
       
       console.log('📥 Login response:', data);
 
-      if (response.ok && data.success) {
+      if (data.success) {
         console.log('✅ Login successful!');
         setSuccess('Login successful! Redirecting...');
         
@@ -177,13 +149,6 @@ export default function LoginPage() {
               Email Address <span style={{ color: '#ef4444' }}>*</span>
             </label>
             <div style={{ position: 'relative' }}>
-              <Mail size={20} style={{
-                position: 'absolute',
-                left: '0.75rem',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                color: '#9ca3af'
-              }} />
               <input
                 type="email"
                 value={formData.email}
@@ -212,15 +177,8 @@ export default function LoginPage() {
               Password <span style={{ color: '#ef4444' }}>*</span>
             </label>
             <div style={{ position: 'relative' }}>
-              <Lock size={20} style={{
-                position: 'absolute',
-                left: '0.75rem',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                color: '#9ca3af'
-              }} />
               <input
-                type={showPassword ? 'text' : 'password'}
+                type="password"
                 value={formData.password}
                 onChange={(e) => handleInputChange('password', e.target.value)}
                 style={{
@@ -234,22 +192,6 @@ export default function LoginPage() {
                 placeholder="Enter your password"
                 required
               />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                style={{
-                  position: 'absolute',
-                  right: '0.75rem',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: '#9ca3af'
-                }}
-              >
-                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-              </button>
             </div>
           </div>
 
@@ -263,28 +205,24 @@ export default function LoginPage() {
             <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: 14, color: '#374151' }}>
               <input
                 type="checkbox"
-                checked={false}
-                onChange={(e) => {}}
+                checked={formData.rememberMe}
+                onChange={(e) => handleInputChange('rememberMe', e.target.checked)}
               />
               Remember me
             </label>
-            <Link href="/forgot-password" style={{
+            {/* <Link href="/forgot-password" style={{
               fontSize: 14,
               color: '#059669',
               textDecoration: 'underline'
             }}>
               Forgot password?
-            </Link>
+            </Link> */}
           </div>
 
           {/* Submit Button */}
           <button
             type="submit"
             disabled={isLoading}
-            onClick={(e) => {
-              console.log('🔄 Button clicked directly!');
-              // Don't prevent default here, let the form handle it
-            }}
             style={{
               width: '100%',
               background: isLoading ? '#e5e7eb' : '#059669',
@@ -325,7 +263,8 @@ export default function LoginPage() {
                   console.log('🧪 Fill test data clicked!');
                   setFormData({
                     email: 'test_button@example.com',
-                    password: 'test123'
+                    password: 'test123',
+                    rememberMe: false
                   });
                 }}
                 style={{
