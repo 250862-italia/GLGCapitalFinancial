@@ -229,48 +229,40 @@ export function validateCSRFToken(request: NextRequest): {
   return { valid: true, token };
 }
 
-// Funzione legacy per compatibilità (accetta stringa)
+/**
+ * Legacy function for string-based validation
+ */
 export function validateCSRFTokenString(token: string): boolean {
-  if (!token) {
-    console.log('[CSRF] No token provided');
-    // Always require CSRF tokens for security
+  if (!token || token.length < 10) {
     return false;
   }
   
   const tokenData = csrfTokens.get(token);
   if (!tokenData) {
-    console.log('[CSRF] Token not found in storage:', token.substring(0, 10) + '...');
-    
-    // Always reject invalid tokens for security
     return false;
   }
   
-  // Check if token is expired (1 hour)
   const now = Date.now();
   const tokenAge = now - tokenData.createdAt;
-  if (tokenAge > 60 * 60 * 1000) { // 1 hour
-    console.log('[CSRF] Token expired:', token.substring(0, 10) + '...');
+  if (tokenAge > TOKEN_EXPIRY) {
     csrfTokens.delete(token);
     return false;
   }
   
-  // In development, allow multiple uses
+  tokenData.lastUsed = now;
+  
   if (isDevelopment) {
     tokenData.useCount++;
-    console.log(`[CSRF] Token used ${tokenData.useCount} times:`, token.substring(0, 10) + '...');
     return true;
   }
   
-  // In production, one-time use
   if (tokenData.used) {
-    console.log('[CSRF] Token already used:', token.substring(0, 10) + '...');
     return false;
   }
   
   tokenData.used = true;
   tokenData.useCount++;
-  tokenData.protected = false; // Remove protection after use
-  console.log(`[CSRF] Token validated successfully:`, token.substring(0, 10) + '...');
+  tokenData.protected = false;
   
   return true;
 }

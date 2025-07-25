@@ -27,17 +27,6 @@ class CSRFClientManager {
     return CSRFClientManager.instance;
   }
 
-  // Generate a new CSRF token locally
-  private generateLocalToken(): string {
-    // Use crypto.randomUUID() if available, otherwise fallback to Math.random()
-    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-      return crypto.randomUUID();
-    }
-    
-    // Fallback for environments without crypto.randomUUID
-    return Math.random().toString(36).substring(2) + '_' + Date.now().toString(36);
-  }
-
   /**
    * Initialize the CSRF client
    */
