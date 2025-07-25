@@ -42,6 +42,9 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   addRequestId(request);
   
   console.log(`🔄 Login [${requestId}]: Starting login process...`);
+  console.log(`🔄 Login [${requestId}]: Environment: ${process.env.NODE_ENV}`);
+  console.log(`🔄 Login [${requestId}]: Supabase URL: ${process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Set' : 'Missing'}`);
+  console.log(`🔄 Login [${requestId}]: Service Key: ${process.env.SUPABASE_SERVICE_ROLE_KEY ? 'Set' : 'Missing'}`);
   
   try {
     const body = await request.json();
@@ -83,7 +86,37 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
     console.log(`🔄 Login [${requestId}]: Attempting login for user:`, { email });
 
+    // Test connessione Supabase prima del login
+    try {
+      console.log(`🔄 Login [${requestId}]: Testing Supabase connection...`);
+      const { data: testData, error: testError } = await supabase
+        .from('profiles')
+        .select('count')
+        .limit(1);
+      
+      if (testError) {
+        console.error(`❌ Login [${requestId}]: Supabase connection test failed:`, testError);
+        return NextResponse.json({
+          success: false,
+          error: 'Errore di connessione al database. Riprova più tardi.',
+          code: 'DATABASE_CONNECTION_ERROR',
+          details: process.env.NODE_ENV === 'development' ? testError.message : undefined
+        }, { status: 503 });
+      }
+      
+      console.log(`✅ Login [${requestId}]: Supabase connection test passed`);
+    } catch (connectionError) {
+      console.error(`❌ Login [${requestId}]: Supabase connection error:`, connectionError);
+      return NextResponse.json({
+        success: false,
+        error: 'Errore di connessione al database. Riprova più tardi.',
+        code: 'DATABASE_CONNECTION_ERROR',
+        details: process.env.NODE_ENV === 'development' ? connectionError.message : undefined
+      }, { status: 503 });
+    }
+
     // Autenticazione diretta con Supabase
+    console.log(`🔄 Login [${requestId}]: Starting Supabase authentication...`);
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
       email,
       password
@@ -92,6 +125,14 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     if (authError) {
       console.error(`❌ Login [${requestId}]: Authentication error:`, authError);
       performanceMonitor.end('login_user', startTime);
+      
+      // Log dettagliato dell'errore
+      console.error(`❌ Login [${requestId}]: Auth error details:`, {
+        message: authError.message,
+        status: authError.status,
+        name: authError.name,
+        stack: authError.stack
+      });
       
       // Restituisci errori di autenticazione appropriati invece di lanciare eccezioni
       if (authError.message.includes('Invalid login credentials')) {
@@ -110,18 +151,32 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         }, { status: 403 });
       }
       
-      // Log dettagliato per errori generici
-      console.error(`❌ Login [${requestId}]: Generic auth error details:`, {
-        message: authError.message,
-        status: authError.status,
-        name: authError.name
-      });
+      if (authError.message.includes('Too many requests')) {
+        return NextResponse.json({
+          success: false,
+          error: 'Troppi tentativi di accesso. Riprova più tardi.',
+          code: 'RATE_LIMIT_EXCEEDED'
+        }, { status: 429 });
+      }
       
+      if (authError.message.includes('Network error') || authError.message.includes('fetch failed')) {
+        return NextResponse.json({
+          success: false,
+          error: 'Errore di rete. Verifica la connessione e riprova.',
+          code: 'NETWORK_ERROR'
+        }, { status: 503 });
+      }
+      
+      // Per tutti gli altri errori, restituisci un errore generico ma con dettagli in development
       return NextResponse.json({
         success: false,
         error: 'Errore durante l\'accesso. Riprova più tardi.',
         code: 'AUTH_ERROR',
-        details: process.env.NODE_ENV === 'development' ? authError.message : undefined
+        details: process.env.NODE_ENV === 'development' ? {
+          message: authError.message,
+          status: authError.status,
+          name: authError.name
+        } : undefined
       }, { status: 500 });
     }
 
@@ -251,13 +306,17 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
   } catch (error) {
     console.error(`❌ Login [${requestId}]: Unexpected error:`, error);
+    console.error(`❌ Login [${requestId}]: Error stack:`, error.stack);
     performanceMonitor.end('login_user', startTime);
     
     return NextResponse.json({
       success: false,
       error: 'Errore interno del server. Riprova più tardi.',
       code: 'INTERNAL_ERROR',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      details: process.env.NODE_ENV === 'development' ? {
+        message: error.message,
+        stack: error.stack
+      } : undefined
     }, { status: 500 });
   }
 }); 
