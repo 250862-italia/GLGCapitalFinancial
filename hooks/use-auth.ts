@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { logoutUser } from '@/lib/logout-manager';
 
 interface User {
   id: string;
@@ -220,35 +221,30 @@ export function useAuth() {
 
   const logout = async () => {
     try {
-      // Get CSRF token first
-      const csrfResponse = await fetch('/api/csrf', {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include'
+      console.log('🔄 useAuth: Starting logout...');
+      
+      await logoutUser({
+        redirectTo: '/login',
+        clearUserData: true,
+        showConfirmation: false
       });
-
-      if (csrfResponse.ok) {
-        const csrfData = await csrfResponse.json();
-
-        // Logout with CSRF token
-        await fetch('/api/auth/logout', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-Token': csrfData.token
-          },
-          credentials: 'include'
-        });
-      }
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
+      
+      // The logout manager handles the redirect, but we still need to update state
       setAuthState({
         user: null,
         loading: false,
         error: null
       });
       hasCheckedAuth.current = false; // Reset per permettere nuovo controllo
+    } catch (error) {
+      console.error('❌ useAuth: Logout error:', error);
+      // Even if there's an error, clear state and redirect
+      setAuthState({
+        user: null,
+        loading: false,
+        error: null
+      });
+      hasCheckedAuth.current = false;
       router.push('/login');
     }
   };

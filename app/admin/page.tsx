@@ -31,6 +31,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recha
 import AdminConsole from '@/components/admin/AdminConsole';
 import AdminNotifications from '@/components/admin/AdminNotifications';
 import { fetchJSONWithCSRF } from '@/lib/csrf-client';
+import { logoutAdmin } from '@/lib/logout-manager';
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -74,24 +75,19 @@ export default function AdminDashboardPage() {
   const clearLogs = () => setLogs([]);
 
   // Logout function
-  const handleLogout = () => {
+  const handleLogout = async () => {
     try {
-      // Clear all admin data
-      localStorage.removeItem("admin_user");
-      localStorage.removeItem("admin_token");
-      localStorage.removeItem("user");
-      localStorage.removeItem("token");
+      console.log('🔄 Admin page: Starting admin logout...');
       
-      // Clear any cookies
-      document.cookie = 'auth-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-      document.cookie = 'admin-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      await logoutAdmin({
+        redirectTo: '/',
+        clearAdminData: true,
+        showConfirmation: false
+      });
       
       addLog("Admin logged out successfully");
-      
-      // Force redirect to home
-      window.location.href = '/';
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error('❌ Admin page: Logout error:', error);
       addLog("Logout error: " + error);
       // Fallback redirect
       window.location.href = '/';

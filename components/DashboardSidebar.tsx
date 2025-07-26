@@ -1,25 +1,19 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { 
   Home, 
   TrendingUp, 
   User, 
-  Settings, 
-  LogOut, 
-  Menu, 
-  X,
-  Package,
-  FileText,
-  CreditCard,
+  FileText, 
   Shield,
-  BarChart3,
-  MessageSquare,
-  Bell
+  LogOut,
+  Menu,
+  X
 } from 'lucide-react';
-import { useAuth } from '../hooks/use-auth';
+import { useAuth } from '@/hooks/use-auth';
+import { logoutUser, logoutAdmin } from '@/lib/logout-manager';
 
 interface DashboardSidebarProps {
   isOpen: boolean;
@@ -29,7 +23,7 @@ interface DashboardSidebarProps {
 export default function DashboardSidebar({ isOpen, onToggle }: DashboardSidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   useEffect(() => {
@@ -38,20 +32,39 @@ export default function DashboardSidebar({ isOpen, onToggle }: DashboardSidebarP
     if (adminUser) {
       try {
         const adminData = JSON.parse(adminUser);
-        setIsSuperAdmin(adminData.role === 'super_admin');
+        setIsSuperAdmin(adminData.role === 'super_admin' || adminData.role === 'superadmin');
       } catch (e) {
         setIsSuperAdmin(false);
       }
     }
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     try {
-      logout();
-      // Force redirect to home
-      window.location.href = '/';
+      console.log('🔄 DashboardSidebar: Starting logout...');
+      
+      // Check if user is admin or regular user
+      const adminUser = localStorage.getItem('admin_user');
+      
+      if (adminUser) {
+        // Admin logout
+        console.log('🔄 DashboardSidebar: Admin logout detected');
+        await logoutAdmin({
+          redirectTo: '/',
+          clearAdminData: true,
+          showConfirmation: false
+        });
+      } else {
+        // Regular user logout
+        console.log('🔄 DashboardSidebar: User logout detected');
+        await logoutUser({
+          redirectTo: '/login',
+          clearUserData: true,
+          showConfirmation: false
+        });
+      }
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error('❌ DashboardSidebar: Logout error:', error);
       // Fallback redirect
       window.location.href = '/';
     }
@@ -95,16 +108,17 @@ export default function DashboardSidebar({ isOpen, onToggle }: DashboardSidebarP
   return (
     <div style={{
       position: 'fixed',
-      left: 0,
       top: 0,
+      left: 0,
       height: '100vh',
       width: isOpen ? '280px' : '80px',
-      background: 'var(--primary)',
-      color: 'var(--secondary)',
+      background: 'linear-gradient(180deg, #1e293b 0%, #0f172a 100%)',
+      color: 'white',
       transition: 'width 0.3s ease',
       zIndex: 1000,
       boxShadow: '2px 0 10px rgba(0,0,0,0.1)',
-      overflow: 'hidden'
+      display: 'flex',
+      flexDirection: 'column'
     }}>
       {/* Header */}
       <div style={{
@@ -114,32 +128,43 @@ export default function DashboardSidebar({ isOpen, onToggle }: DashboardSidebarP
         alignItems: 'center',
         justifyContent: 'space-between'
       }}>
-        {isOpen && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <div style={{
-              width: '32px',
-              height: '32px',
-              background: 'var(--accent)',
-              borderRadius: '6px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              <Shield size={18} />
-            </div>
-            <span style={{ fontWeight: 700, fontSize: '1.1rem' }}>
-              {isSuperAdmin ? 'Admin Panel' : 'Dashboard'}
-            </span>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.75rem',
+          overflow: 'hidden'
+        }}>
+          <div style={{
+            width: '32px',
+            height: '32px',
+            background: '#3b82f6',
+            borderRadius: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0
+          }}>
+            <Shield size={18} />
           </div>
-        )}
+          {isOpen && (
+            <span style={{
+              fontSize: '1.125rem',
+              fontWeight: 700,
+              whiteSpace: 'nowrap'
+            }}>
+              GLG Capital
+            </span>
+          )}
+        </div>
+        
         <button
           onClick={onToggle}
           style={{
             background: 'none',
             border: 'none',
-            color: 'var(--secondary)',
+            color: 'white',
             cursor: 'pointer',
-            padding: '0.5rem',
+            padding: '0.25rem',
             borderRadius: '4px',
             display: 'flex',
             alignItems: 'center',
@@ -150,45 +175,33 @@ export default function DashboardSidebar({ isOpen, onToggle }: DashboardSidebarP
         </button>
       </div>
 
-      {/* User Info */}
-      {isOpen && user && (
-        <div style={{
-          padding: '1rem 1.5rem',
-          borderBottom: '1px solid rgba(255,255,255,0.1)',
-          background: 'rgba(255,255,255,0.05)'
-        }}>
-          <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>
-            {user.name || user.profile?.first_name || user.email}
-          </div>
-          <div style={{ fontSize: '0.875rem', opacity: 0.8 }}>
-            {isSuperAdmin ? 'Super Administrator' : 'Client'}
-          </div>
-        </div>
-      )}
-
-      {/* Navigation Menu */}
-      <nav style={{ padding: '1rem 0', flex: 1 }}>
-        <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+      {/* Navigation */}
+      <nav style={{ flex: 1, padding: '1rem 0' }}>
+        <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
           {filteredMenuItems.map((item, index) => {
             const isActive = pathname === item.href;
             return (
               <li key={index}>
-                <Link
-                  href={item.href}
+                <button
+                  onClick={() => router.push(item.href)}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
+                    gap: '0.75rem',
+                    width: '100%',
                     padding: '0.75rem 1.5rem',
-                    color: isActive ? 'var(--accent)' : 'var(--secondary)',
-                    textDecoration: 'none',
-                    background: isActive ? 'rgba(255,255,255,0.1)' : 'transparent',
-                    borderLeft: isActive ? '3px solid var(--accent)' : '3px solid transparent',
+                    background: isActive ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
+                    border: 'none',
+                    color: isActive ? '#3b82f6' : 'white',
+                    cursor: 'pointer',
                     transition: 'all 0.2s ease',
-                    gap: '0.75rem'
+                    textAlign: 'left',
+                    fontSize: '0.875rem',
+                    fontWeight: isActive ? 600 : 500
                   }}
                   onMouseEnter={(e) => {
                     if (!isActive) {
-                      e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+                      e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
                     }
                   }}
                   onMouseLeave={(e) => {
@@ -198,8 +211,8 @@ export default function DashboardSidebar({ isOpen, onToggle }: DashboardSidebarP
                   }}
                 >
                   {item.icon}
-                  {isOpen && <span style={{ fontWeight: 500 }}>{item.title}</span>}
-                </Link>
+                  {isOpen && <span>{item.title}</span>}
+                </button>
               </li>
             );
           })}

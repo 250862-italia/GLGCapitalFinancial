@@ -1,12 +1,11 @@
 "use client";
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { LogOut } from 'lucide-react';
+import { logoutUser } from '@/lib/logout-manager';
 
 export default function ClientLogoutButton() {
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
 
   const handleLogout = async () => {
     if (isLoading) return;
@@ -14,50 +13,26 @@ export default function ClientLogoutButton() {
     setIsLoading(true);
     
     try {
-      console.log('🔄 Frontend: Starting logout process...');
+      console.log('🔄 ClientLogoutButton: Starting logout...');
       
-      // Get CSRF token first
-      const csrfResponse = await fetch('/api/csrf', {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include'
+      // Use the unified logout manager
+      const success = await logoutUser({
+        redirectTo: '/login',
+        clearUserData: true,
+        showConfirmation: false
       });
 
-      if (!csrfResponse.ok) {
-        throw new Error('Failed to get CSRF token');
-      }
-
-      const csrfData = await csrfResponse.json();
-
-      // Logout with CSRF token
-      const response = await fetch('/api/auth/logout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-Token': csrfData.token
-        },
-        credentials: 'include'
-      });
-
-      if (response.ok) {
-        console.log('✅ Frontend: Logout successful');
-        
-        // Clear any local storage data
-        localStorage.removeItem('user');
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('csrf_token');
-        
-        // Redirect to login page
-        router.push('/login');
+      if (success) {
+        console.log('✅ ClientLogoutButton: Logout successful');
       } else {
-        console.error('❌ Frontend: Logout failed');
-        // Even if logout fails, redirect to login
-        router.push('/login');
+        console.log('❌ ClientLogoutButton: Logout failed');
+        // Even if it fails, redirect to login
+        window.location.href = '/login';
       }
     } catch (error) {
-      console.error('❌ Frontend: Logout error:', error);
-      // Even if there's an error, redirect to login
-      router.push('/login');
+      console.error('❌ ClientLogoutButton: Logout error:', error);
+      // Fallback redirect
+      window.location.href = '/login';
     } finally {
       setIsLoading(false);
     }
