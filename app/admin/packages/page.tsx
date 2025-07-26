@@ -34,18 +34,47 @@ export default function AdminPackagesPage() {
     setError(null);
     
     try {
+      console.log('🔍 Starting fetchPackages...');
+      
       const adminToken = localStorage.getItem('admin_token');
+      console.log('🔍 Admin token found:', !!adminToken);
+      
       if (!adminToken) {
         setError('Admin token not found. Please login again.');
         setLoading(false);
         return;
       }
 
+      console.log('🔍 Making fetch request to /api/admin/packages...');
+      
+      // Try with regular fetch first to debug
+      const testResponse = await fetch('/api/admin/packages', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-token': adminToken
+        }
+      });
+      
+      console.log('🔍 Test response status:', testResponse.status);
+      
+      if (testResponse.ok) {
+        const testData = await testResponse.json();
+        console.log('✅ Test fetch successful:', testData);
+        setPackages(testData.packages || []);
+        setLoading(false);
+        return;
+      }
+
+      // If regular fetch works, try with CSRF
+      console.log('🔍 Trying with CSRF fetch...');
       const response = await fetchWithCSRF('/api/admin/packages', {
         headers: {
           'x-admin-token': adminToken
         }
       });
+
+      console.log('🔍 CSRF response status:', response.status);
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -53,8 +82,10 @@ export default function AdminPackagesPage() {
       }
 
       const data = await response.json();
+      console.log('✅ CSRF fetch successful:', data);
       setPackages(data.packages || []);
     } catch (err: any) {
+      console.error('❌ Fetch error:', err);
       const errorMessage = typeof err === 'string' ? err : err?.message || err?.error || 'Failed to fetch packages';
       setError(errorMessage);
     }
