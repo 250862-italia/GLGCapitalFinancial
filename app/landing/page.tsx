@@ -497,6 +497,21 @@ export default function HomePage() {
 
     </main>
     
+    {/* Direct Debug Element */}
+    <div style={{
+      position: 'fixed',
+      bottom: '20px',
+      right: '20px',
+      background: 'red',
+      color: 'white',
+      padding: '10px',
+      borderRadius: '5px',
+      zIndex: 9999,
+      fontSize: '12px'
+    }}>
+      Direct Debug: Loaded ✅
+    </div>
+    
     {/* Simple ChatBot Component */}
     <SimpleChatBot />
   </>
