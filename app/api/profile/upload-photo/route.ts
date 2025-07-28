@@ -60,17 +60,29 @@ export async function POST(request: NextRequest) {
 
     // Verifica content type
     const contentType = request.headers.get('content-type');
+    console.log('🔍 Content-Type header:', contentType);
+    console.log('📋 All headers:', Object.fromEntries(request.headers.entries()));
+    
     if (!contentType || !contentType.startsWith('multipart/form-data')) {
+      console.log('❌ Invalid content type:', contentType);
       return NextResponse.json(
         { error: 'Invalid content type. Expected multipart/form-data' },
         { status: 400 }
       );
     }
+    
+    console.log('✅ Content-Type valid:', contentType);
 
     // Parsing form data
+    console.log('🔍 Parsing form data...');
     const formData = await request.formData();
+    console.log('📝 FormData entries:', Array.from(formData.entries()).map(([key, value]) => `${key}: ${typeof value}`));
+    
     const user_id = formData.get('user_id') as string;
     const file = formData.get('photo') as File;
+    
+    console.log('👤 User ID:', user_id);
+    console.log('📁 File:', file ? `${file.name} (${file.size} bytes, ${file.type})` : 'null');
 
     if (!user_id) {
       return NextResponse.json(

@@ -79,17 +79,47 @@ export default function AdminDashboardPage() {
     try {
       console.log('🔄 Admin page: Starting admin logout...');
       
-      await logoutAdmin({
-        redirectTo: '/',
-        clearAdminData: true,
-        showConfirmation: false
-      });
+      // Clear admin data manually first
+      localStorage.removeItem('admin_user');
+      localStorage.removeItem('admin_token');
+      localStorage.removeItem('admin_session');
+      
+      // Clear any user data as well
+      localStorage.removeItem('user');
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('token');
+      localStorage.removeItem('session');
+      
+      console.log('✅ Admin page: Local storage cleared');
+      
+      // Try the logout function
+      try {
+        await logoutAdmin({
+          redirectTo: '/',
+          clearAdminData: true,
+          showConfirmation: false
+        });
+      } catch (logoutError) {
+        console.warn('⚠️ Admin page: Logout function failed, using fallback:', logoutError);
+      }
       
       addLog("Admin logged out successfully");
+      
+      // Force redirect
+      window.location.href = '/';
+      
     } catch (error) {
       console.error('❌ Admin page: Logout error:', error);
       addLog("Logout error: " + error);
-      // Fallback redirect
+      
+      // Ultimate fallback - clear everything and redirect
+      try {
+        localStorage.clear();
+        sessionStorage.clear();
+      } catch (clearError) {
+        console.error('Failed to clear storage:', clearError);
+      }
+      
       window.location.href = '/';
     }
   };

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Logout Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .button {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        .button:hover {
+            background: #b91c1c;
+        }
+        .info {
+            background: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success { background: #dcfce7; color: #166534; }
+        .error { background: #fef2f2; color: #dc2626; }
+        .warning { background: #fef3c7; color: #d97706; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Admin Logout Test</h1>
+        
+        <div class="info">
+            <h3>Test del Bottone Logout Admin</h3>
+            <p>Questa pagina testa il funzionamento del logout admin.</p>
+        </div>
+
+        <div id="status"></div>
+
+        <h3>Azioni di Test:</h3>
+        
+        <button class="button" onclick="setAdminData()">
+            📝 Imposta Dati Admin
+        </button>
+        
+        <button class="button" onclick="checkAdminData()">
+            🔍 Controlla Dati Admin
+        </button>
+        
+        <button class="button" onclick="clearAdminData()">
+            🧹 Pulisci Dati Admin
+        </button>
+        
+        <button class="button" onclick="testLogout()">
+            🚪 Test Logout
+        </button>
+        
+        <button class="button" onclick="goToAdmin()">
+            🏠 Vai all'Admin
+        </button>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        function showResults(message) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML += `<div style="margin: 10px 0; padding: 10px; background: #f8fafc; border-radius: 4px;">${message}</div>`;
+        }
+
+        function setAdminData() {
+            try {
+                localStorage.setItem('admin_user', JSON.stringify({
+                    id: 'test-admin-id',
+                    name: 'Test Admin',
+                    email: 'admin@test.com',
+                    role: 'super_admin'
+                }));
+                localStorage.setItem('admin_token', 'test-admin-token');
+                showStatus('✅ Dati admin impostati con successo', 'success');
+                showResults('📝 Admin data set: admin_user, admin_token');
+            } catch (error) {
+                showStatus('❌ Errore nell\'impostare i dati admin: ' + error, 'error');
+            }
+        }
+
+        function checkAdminData() {
+            try {
+                const adminUser = localStorage.getItem('admin_user');
+                const adminToken = localStorage.getItem('admin_token');
+                
+                let message = '📋 Stato dati admin:\n';
+                message += `- admin_user: ${adminUser ? 'PRESENTE' : 'ASSENTE'}\n`;
+                message += `- admin_token: ${adminToken ? 'PRESENTE' : 'ASSENTE'}`;
+                
+                if (adminUser) {
+                    try {
+                        const userData = JSON.parse(adminUser);
+                        message += `\n- Nome: ${userData.name}`;
+                        message += `\n- Email: ${userData.email}`;
+                        message += `\n- Role: ${userData.role}`;
+                    } catch (e) {
+                        message += `\n- Errore parsing: ${e.message}`;
+                    }
+                }
+                
+                showStatus('✅ Controllo completato', 'success');
+                showResults(message);
+            } catch (error) {
+                showStatus('❌ Errore nel controllo: ' + error, 'error');
+            }
+        }
+
+        function clearAdminData() {
+            try {
+                localStorage.removeItem('admin_user');
+                localStorage.removeItem('admin_token');
+                localStorage.removeItem('admin_session');
+                
+                // Clear user data too
+                localStorage.removeItem('user');
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('token');
+                localStorage.removeItem('session');
+                
+                showStatus('✅ Dati admin puliti con successo', 'success');
+                showResults('🧹 Admin data cleared: admin_user, admin_token, admin_session');
+            } catch (error) {
+                showStatus('❌ Errore nella pulizia: ' + error, 'error');
+            }
+        }
+
+        function testLogout() {
+            try {
+                showStatus('🔄 Testando logout...', 'warning');
+                
+                // Simulate the logout process
+                clearAdminData();
+                
+                setTimeout(() => {
+                    showStatus('✅ Logout test completato', 'success');
+                    showResults('🚪 Logout test: dati puliti, redirect simulato');
+                    
+                    // Simulate redirect
+                    setTimeout(() => {
+                        if (confirm('Simulare redirect alla home page?')) {
+                            window.location.href = '/';
+                        }
+                    }, 1000);
+                }, 500);
+                
+            } catch (error) {
+                showStatus('❌ Errore nel test logout: ' + error, 'error');
+            }
+        }
+
+        function goToAdmin() {
+            window.location.href = '/admin';
+        }
+
+        // Auto-check on load
+        window.onload = function() {
+            checkAdminData();
+        };
+    </script>
+</body>
+</html> 

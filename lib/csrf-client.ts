@@ -325,21 +325,17 @@ export async function fetchWithCSRF(
  */
 export async function fetchFormDataWithCSRF(
   url: string, 
-  formData: FormData,
   options: RequestInit = {}
 ): Promise<Response> {
   const token = await csrfClient.getToken();
   
-  // Add CSRF token to FormData
-  formData.append('csrf', token);
-  
   const enhancedOptions: RequestInit = {
     ...options,
+    method: options.method || 'POST',
     headers: {
       ...options.headers,
       'X-CSRF-Token': token,
-      'Cache-Control': 'no-cache'
-      // Don't set Content-Type for FormData, browser handles it
+      // Don't set Content-Type for FormData, let the browser set it with boundary
     },
     credentials: 'include'
   };

@@ -1,10 +1,12 @@
 "use client";
 export const dynamic = "force-dynamic";
 import { InvestmentFormData } from "@/types/investment";
+import ChatBot from "@/components/ChatBot";
 
 export default function HomePage() {
   return (
-    <main style={{ maxWidth: 1200, margin: '0 auto', padding: '2rem', background: '#fff' }}>
+    <>
+      <main style={{ maxWidth: 1200, margin: '0 auto', padding: '2rem', background: '#fff' }}>
       
       {/* HERO SECTION */}
       <section style={{ textAlign: 'center', marginBottom: '4rem', padding: '3rem 0' }}>
@@ -648,5 +650,9 @@ export default function HomePage() {
       </section>
 
     </main>
+    
+    {/* ChatBot Component */}
+    <ChatBot />
+  </>
   );
 }

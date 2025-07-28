@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile UI Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        .button:hover {
+            background: #2563eb;
+        }
+        .button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        .success { background: #dcfce7; color: #166534; }
+        .error { background: #fef2f2; color: #dc2626; }
+        .warning { background: #fef3c7; color: #d97706; }
+        .info { background: #f0f9ff; color: #0c4a6e; }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .field {
+            margin: 15px 0;
+            padding: 15px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            background: #f9fafb;
+        }
+        .field label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .field input, .field select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            margin-top: 5px;
+        }
+        .save-buttons {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f0f9ff;
+            border-radius: 6px;
+            border: 1px solid #0ea5e9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Profile UI Test</h1>
+        
+        <div class="status info">
+            <h3>Test Interfaccia Utente Profilo</h3>
+            <p>Questa pagina simula l'interfaccia utente del profilo per verificare i problemi di salvataggio.</p>
+        </div>
+
+        <div id="status"></div>
+
+        <h3>Test Campi Editabili:</h3>
+        
+        <div class="field">
+            <label for="firstName">First Name:</label>
+            <input type="text" id="firstName" value="Simple Test" onchange="handleFieldChange('first_name', this.value)">
+        </div>
+        
+        <div class="field">
+            <label for="lastName">Last Name:</label>
+            <input type="text" id="lastName" value="User" onchange="handleFieldChange('last_name', this.value)">
+        </div>
+        
+        <div class="field">
+            <label for="nationality">Nationality:</label>
+            <select id="nationality" onchange="handleFieldChange('nationality', this.value)">
+                <option value="italian" selected>Italian</option>
+                <option value="american">American</option>
+                <option value="british">British</option>
+                <option value="german">German</option>
+                <option value="french">French</option>
+            </select>
+        </div>
+        
+        <div class="field">
+            <label for="company">Company:</label>
+            <input type="text" id="company" value="Test Company" onchange="handleFieldChange('company', this.value)">
+        </div>
+        
+        <div class="field">
+            <label for="phone">Phone:</label>
+            <input type="text" id="phone" value="123456789" onchange="handleFieldChange('phone', this.value)">
+        </div>
+
+        <div class="save-buttons">
+            <h4>Bottoni di Salvataggio:</h4>
+            <button class="button" onclick="testSaveChanges()" id="saveBtn">
+                💾 Save All Changes
+            </button>
+            <button class="button" onclick="testCancelChanges()" style="background: #6b7280;">
+                ❌ Cancel All
+            </button>
+            <button class="button" onclick="checkHasChanges()" style="background: #059669;">
+                🔍 Check Has Changes
+            </button>
+        </div>
+
+        <div class="save-buttons">
+            <h4>Test Upload Foto:</h4>
+            <input type="file" id="photoFile" accept="image/*" style="margin: 10px 0;">
+            <button class="button" onclick="testPhotoUpload()" id="uploadBtn">
+                📤 Test Upload Foto
+            </button>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script>
+        let hasChanges = false;
+        let changedFields = {};
+        let originalData = {
+            first_name: 'Simple Test',
+            last_name: 'User',
+            nationality: 'italian',
+            company: 'Test Company',
+            phone: '123456789'
+        };
+
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        function showResults(message) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML += `<div style="margin: 10px 0; padding: 10px; background: #f8fafc; border-radius: 4px; border-left: 4px solid #3b82f6;">${message}</div>`;
+        }
+
+        function handleFieldChange(fieldName, value) {
+            console.log('🔄 Field change:', fieldName, 'Value:', value);
+            
+            const originalValue = originalData[fieldName];
+            const hasChanged = value !== originalValue;
+            
+            console.log('📊 Change detection:', {
+                fieldName,
+                newValue: value,
+                originalValue,
+                hasChanged
+            });
+            
+            if (hasChanged) {
+                changedFields[fieldName] = value;
+                hasChanges = true;
+                console.log('✅ Changes detected, save button enabled');
+                document.getElementById('saveBtn').disabled = false;
+                document.getElementById('saveBtn').textContent = '💾 Save All Changes (Modified)';
+            } else {
+                delete changedFields[fieldName];
+                hasChanges = Object.keys(changedFields).length > 0;
+                console.log('📊 Other fields have changes:', hasChanges);
+                
+                if (!hasChanges) {
+                    document.getElementById('saveBtn').disabled = true;
+                    document.getElementById('saveBtn').textContent = '💾 Save All Changes';
+                }
+            }
+            
+            showResults(`🔄 Campo ${fieldName} modificato: "${value}" (Originale: "${originalValue}")`);
+        }
+
+        function checkHasChanges() {
+            showResults(`📊 Stato modifiche:`);
+            showResults(`- hasChanges: ${hasChanges}`);
+            showResults(`- changedFields: ${JSON.stringify(changedFields)}`);
+            showResults(`- Numero campi modificati: ${Object.keys(changedFields).length}`);
+        }
+
+        async function testSaveChanges() {
+            if (!hasChanges) {
+                showStatus('❌ Nessuna modifica da salvare', 'error');
+                return;
+            }
+
+            showStatus('🔄 Testando salvataggio modifiche...', 'warning');
+            showResults(`📝 Campi da salvare: ${JSON.stringify(changedFields)}`);
+
+            try {
+                // Get CSRF token
+                const csrfResponse = await fetch('/api/csrf');
+                const csrfData = await csrfResponse.json();
+                
+                if (!csrfResponse.ok) {
+                    throw new Error('Failed to get CSRF token');
+                }
+                
+                showResults('✅ CSRF token ottenuto');
+
+                // Test profile update
+                const updateData = {
+                    user_id: '3016af70-23c1-4100-8bd0-0dffcc07d4a2',
+                    ...changedFields
+                };
+
+                showResults(`📝 Dati da aggiornare: ${JSON.stringify(updateData, null, 2)}`);
+
+                const response = await fetch('/api/profile/update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': csrfData.token
+                    },
+                    body: JSON.stringify(updateData)
+                });
+
+                showResults(`📡 Response Status: ${response.status}`);
+
+                const result = await response.json();
+                showResults(`📋 Response Data: ${JSON.stringify(result, null, 2)}`);
+
+                if (response.ok && result.success) {
+                    showStatus('✅ Salvataggio completato con successo!', 'success');
+                    
+                    // Reset changes
+                    changedFields = {};
+                    hasChanges = false;
+                    originalData = { ...originalData, ...changedFields };
+                    
+                    document.getElementById('saveBtn').disabled = true;
+                    document.getElementById('saveBtn').textContent = '💾 Save All Changes';
+                    
+                    showResults('🔄 Stato reset: modifiche salvate');
+                } else {
+                    showStatus('❌ Salvataggio fallito', 'error');
+                    showResults(`❌ Error: ${result.error || 'Unknown error'}`);
+                }
+
+            } catch (error) {
+                console.error('Save error:', error);
+                showStatus(`❌ Errore salvataggio: ${error.message}`, 'error');
+                showResults(`❌ Error details: ${error.message}`);
+            }
+        }
+
+        function testCancelChanges() {
+            showStatus('🔄 Annullando modifiche...', 'warning');
+            
+            // Reset all fields to original values
+            document.getElementById('firstName').value = originalData.first_name;
+            document.getElementById('lastName').value = originalData.last_name;
+            document.getElementById('nationality').value = originalData.nationality;
+            document.getElementById('company').value = originalData.company;
+            document.getElementById('phone').value = originalData.phone;
+            
+            // Reset state
+            changedFields = {};
+            hasChanges = false;
+            
+            document.getElementById('saveBtn').disabled = true;
+            document.getElementById('saveBtn').textContent = '💾 Save All Changes';
+            
+            showStatus('✅ Modifiche annullate', 'success');
+            showResults('🔄 Tutti i campi ripristinati ai valori originali');
+        }
+
+        async function testPhotoUpload() {
+            const fileInput = document.getElementById('photoFile');
+            const file = fileInput.files[0];
+            const uploadBtn = document.getElementById('uploadBtn');
+            
+            if (!file) {
+                showStatus('❌ Seleziona prima un file', 'error');
+                return;
+            }
+
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = '⏳ Uploading...';
+            
+            try {
+                showStatus('🔄 Testando upload foto...', 'warning');
+                showResults(`📁 File selezionato: ${file.name} (${file.size} bytes, ${file.type})`);
+
+                // Get CSRF token
+                const csrfResponse = await fetch('/api/csrf');
+                const csrfData = await csrfResponse.json();
+                
+                if (!csrfResponse.ok) {
+                    throw new Error('Failed to get CSRF token');
+                }
+                
+                showResults('✅ CSRF token ottenuto');
+
+                // Create FormData
+                const formData = new FormData();
+                formData.append('photo', file);
+                formData.append('user_id', '3016af70-23c1-4100-8bd0-0dffcc07d4a2');
+
+                showResults('📝 FormData creato con successo');
+
+                // Upload photo
+                const response = await fetch('/api/profile/upload-photo', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-Token': csrfData.token
+                    },
+                    body: formData
+                });
+
+                showResults(`📡 Response Status: ${response.status}`);
+
+                const result = await response.json();
+                showResults(`📋 Response Data: ${JSON.stringify(result, null, 2)}`);
+
+                if (response.ok && result.success) {
+                    showStatus('✅ Upload foto completato con successo!', 'success');
+                    showResults(`📸 Photo URL: ${result.photo_url}`);
+                } else {
+                    showStatus('❌ Upload foto fallito', 'error');
+                    showResults(`❌ Error: ${result.error || 'Unknown error'}`);
+                }
+
+            } catch (error) {
+                console.error('Upload error:', error);
+                showStatus(`❌ Errore upload: ${error.message}`, 'error');
+                showResults(`❌ Error details: ${error.message}`);
+            } finally {
+                uploadBtn.disabled = false;
+                uploadBtn.textContent = '📤 Test Upload Foto';
+            }
+        }
+
+        // Initialize
+        window.onload = function() {
+            showStatus('✅ Pagina di test caricata. Modifica i campi e testa il salvataggio.', 'success');
+            document.getElementById('saveBtn').disabled = true;
+        };
+    </script>
+</body>
+</html> 

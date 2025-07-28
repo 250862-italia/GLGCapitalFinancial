@@ -337,8 +337,15 @@ export default function ProfilePage() {
       formData.append('photo', file);
       formData.append('user_id', user.id);
 
-      const response = await fetchFormDataWithCSRF('/api/profile/upload-photo', {
+      // Get CSRF token first
+      const csrfResponse = await fetch('/api/csrf');
+      const csrfData = await csrfResponse.json();
+      
+      const response = await fetch('/api/profile/upload-photo', {
         method: 'POST',
+        headers: {
+          'X-CSRF-Token': csrfData.token
+        },
         body: formData
       });
 

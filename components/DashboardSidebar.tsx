@@ -24,20 +24,7 @@ export default function DashboardSidebar({ isOpen, onToggle }: DashboardSidebarP
   const router = useRouter();
   const pathname = usePathname();
   const { user } = useAuth();
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
-  useEffect(() => {
-    // Check if user is superadmin
-    const adminUser = localStorage.getItem('admin_user');
-    if (adminUser) {
-      try {
-        const adminData = JSON.parse(adminUser);
-        setIsSuperAdmin(adminData.role === 'super_admin' || adminData.role === 'superadmin');
-      } catch (e) {
-        setIsSuperAdmin(false);
-      }
-    }
-  }, []);
 
   const handleLogout = async () => {
     try {
@@ -74,36 +61,26 @@ export default function DashboardSidebar({ isOpen, onToggle }: DashboardSidebarP
     {
       title: 'Dashboard',
       icon: <Home size={20} />,
-      href: '/dashboard',
-      adminOnly: false
+      href: '/dashboard'
     },
     {
       title: 'My Investments',
       icon: <TrendingUp size={20} />,
-      href: '/dashboard/investments',
-      adminOnly: false
+      href: '/dashboard/investments'
     },
     {
       title: 'Profile',
       icon: <User size={20} />,
-      href: '/profile',
-      adminOnly: false
+      href: '/profile'
     },
     {
       title: 'Request Documentation',
       icon: <FileText size={20} />,
-      href: '/informational-request',
-      adminOnly: false
-    },
-    {
-      title: 'Admin Panel',
-      icon: <Shield size={20} />,
-      href: '/admin',
-      adminOnly: true
+      href: '/informational-request'
     }
   ];
 
-  const filteredMenuItems = menuItems.filter(item => !item.adminOnly || isSuperAdmin);
+  const filteredMenuItems = menuItems;
 
   return (
     <div style={{

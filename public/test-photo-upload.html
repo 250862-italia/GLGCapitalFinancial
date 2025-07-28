@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Upload Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        .button:hover {
+            background: #2563eb;
+        }
+        .button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        .info {
+            background: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success { background: #dcfce7; color: #166534; }
+        .error { background: #fef2f2; color: #dc2626; }
+        .warning { background: #fef3c7; color: #d97706; }
+        .file-input {
+            margin: 20px 0;
+        }
+        .results {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 6px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📸 Photo Upload Test</h1>
+        
+        <div class="info">
+            <h3>Test Upload Foto Profilo</h3>
+            <p>Questa pagina testa il funzionamento dell'upload delle foto profilo.</p>
+        </div>
+
+        <div id="status"></div>
+
+        <h3>Test Upload:</h3>
+        
+        <div class="file-input">
+            <label for="photoFile">Seleziona un'immagine:</label><br>
+            <input type="file" id="photoFile" accept="image/*" style="margin: 10px 0;">
+        </div>
+        
+        <button class="button" onclick="testPhotoUpload()" id="uploadBtn">
+            📤 Test Upload Foto
+        </button>
+        
+        <button class="button" onclick="testProfileUpdate()">
+            💾 Test Aggiornamento Profilo
+        </button>
+        
+        <button class="button" onclick="clearResults()">
+            🧹 Pulisci Risultati
+        </button>
+
+        <div id="results" class="results" style="display: none;"></div>
+    </div>
+
+    <script>
+        function showStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        function showResults(message) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.style.display = 'block';
+            resultsDiv.innerHTML += `<div style="margin: 10px 0; padding: 10px; background: white; border-radius: 4px; border-left: 4px solid #3b82f6;">${message}</div>`;
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+            document.getElementById('results').style.display = 'none';
+        }
+
+        async function testPhotoUpload() {
+            const fileInput = document.getElementById('photoFile');
+            const file = fileInput.files[0];
+            const uploadBtn = document.getElementById('uploadBtn');
+            
+            if (!file) {
+                showStatus('❌ Seleziona prima un file', 'error');
+                return;
+            }
+
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = '⏳ Uploading...';
+            
+            try {
+                showStatus('🔄 Iniziando upload foto...', 'warning');
+                showResults(`📁 File selezionato: ${file.name} (${file.size} bytes, ${file.type})`);
+
+                // Get CSRF token
+                const csrfResponse = await fetch('/api/csrf');
+                const csrfData = await csrfResponse.json();
+                
+                if (!csrfResponse.ok) {
+                    throw new Error('Failed to get CSRF token');
+                }
+                
+                showResults('✅ CSRF token ottenuto');
+
+                // Create FormData
+                const formData = new FormData();
+                formData.append('photo', file);
+                formData.append('user_id', '3016af70-23c1-4100-8bd0-0dffcc07d4a2'); // Test user ID
+
+                showResults('📝 FormData creato con successo');
+
+                // Upload photo
+                const response = await fetch('/api/profile/upload-photo', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-Token': csrfData.token
+                    },
+                    body: formData
+                });
+
+                showResults(`📡 Response Status: ${response.status}`);
+
+                const result = await response.json();
+                showResults(`📋 Response Data: ${JSON.stringify(result, null, 2)}`);
+
+                if (response.ok && result.success) {
+                    showStatus('✅ Upload foto completato con successo!', 'success');
+                    showResults(`📸 Photo URL: ${result.photo_url}`);
+                } else {
+                    showStatus('❌ Upload foto fallito', 'error');
+                    showResults(`❌ Error: ${result.error || 'Unknown error'}`);
+                }
+
+            } catch (error) {
+                console.error('Upload error:', error);
+                showStatus(`❌ Errore upload: ${error.message}`, 'error');
+                showResults(`❌ Error details: ${error.message}`);
+            } finally {
+                uploadBtn.disabled = false;
+                uploadBtn.textContent = '📤 Test Upload Foto';
+            }
+        }
+
+        async function testProfileUpdate() {
+            try {
+                showStatus('🔄 Testando aggiornamento profilo...', 'warning');
+                showResults('📝 Iniziando test aggiornamento profilo...');
+
+                // Get CSRF token
+                const csrfResponse = await fetch('/api/csrf');
+                const csrfData = await csrfResponse.json();
+                
+                if (!csrfResponse.ok) {
+                    throw new Error('Failed to get CSRF token');
+                }
+                
+                showResults('✅ CSRF token ottenuto');
+
+                // Test profile update
+                const updateData = {
+                    user_id: '3016af70-23c1-4100-8bd0-0dffcc07d4a2',
+                    nationality: 'italian',
+                    company: 'Test Company Updated',
+                    phone: '987654321'
+                };
+
+                showResults(`📝 Dati da aggiornare: ${JSON.stringify(updateData, null, 2)}`);
+
+                const response = await fetch('/api/profile/update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': csrfData.token
+                    },
+                    body: JSON.stringify(updateData)
+                });
+
+                showResults(`📡 Response Status: ${response.status}`);
+
+                const result = await response.json();
+                showResults(`📋 Response Data: ${JSON.stringify(result, null, 2)}`);
+
+                if (response.ok && result.success) {
+                    showStatus('✅ Aggiornamento profilo completato con successo!', 'success');
+                    showResults(`📝 Profilo aggiornato: ${result.data ? 'Sì' : 'No'}`);
+                } else {
+                    showStatus('❌ Aggiornamento profilo fallito', 'error');
+                    showResults(`❌ Error: ${result.error || 'Unknown error'}`);
+                }
+
+            } catch (error) {
+                console.error('Profile update error:', error);
+                showStatus(`❌ Errore aggiornamento: ${error.message}`, 'error');
+                showResults(`❌ Error details: ${error.message}`);
+            }
+        }
+
+        // Auto-check on load
+        window.onload = function() {
+            showStatus('✅ Pagina di test caricata. Seleziona un file e testa l\'upload.', 'success');
+        };
+    </script>
+</body>
+</html> 
