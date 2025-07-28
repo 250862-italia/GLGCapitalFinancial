@@ -1,7 +1,6 @@
 "use client";
 export const dynamic = "force-dynamic";
 import { InvestmentFormData } from "@/types/investment";
-import SimpleChatBot from "@/components/SimpleChatBot";
 
 export default function HomePage() {
   return (
@@ -511,9 +510,6 @@ export default function HomePage() {
     }}>
       Direct Debug: Loaded ✅
     </div>
-    
-    {/* Simple ChatBot Component */}
-    <SimpleChatBot />
   </>
   );
 }
