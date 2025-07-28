@@ -7,6 +7,21 @@ export default function HomePage() {
     <>
       <main style={{ maxWidth: 1200, margin: '0 auto', padding: '2rem', background: '#fff' }}>
       
+      {/* Debug Element */}
+      <div style={{
+        position: 'fixed',
+        top: '20px',
+        left: '20px',
+        background: 'red',
+        color: 'white',
+        padding: '10px',
+        borderRadius: '5px',
+        zIndex: 9999,
+        fontSize: '12px'
+      }}>
+        Debug: Loaded ✅
+      </div>
+      
       {/* HERO SECTION */}
       <section style={{ textAlign: 'center', marginBottom: '4rem', padding: '3rem 0' }}>
         <h1 style={{ 
