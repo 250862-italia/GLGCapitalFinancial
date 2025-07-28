@@ -40,6 +40,13 @@ export default function InvestmentsPage() {
 
   const fetchPackages = async () => {
     try {
+      // Skip API calls during build time
+      if (typeof window === 'undefined') {
+        console.log('Build time detected, skipping API call');
+        setLoading(false);
+        return;
+      }
+      
       const response = await fetchJSONWithCSRF('/api/investments');
       if (response.ok) {
         const data = await response.json();
@@ -49,6 +56,10 @@ export default function InvestmentsPage() {
       }
     } catch (error) {
       console.error('Error fetching packages:', error);
+      // Don't show error during build
+      if (typeof window !== 'undefined') {
+        console.error('Error fetching packages:', error);
+      }
     } finally {
       setLoading(false);
     }

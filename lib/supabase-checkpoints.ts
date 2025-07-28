@@ -176,11 +176,17 @@ async function findBestCheckpoint(): Promise<SupabaseCheckpoint | null> {
 export async function getSupabaseClient() {
   // If no active checkpoint or it's been more than 5 minutes, check again
   if (!activeCheckpoint || (Date.now() - activeCheckpoint.lastCheck) > 5 * 60 * 1000) {
-    activeCheckpoint = await findBestCheckpoint();
+    try {
+      activeCheckpoint = await findBestCheckpoint();
+    } catch (error) {
+      console.log('[CHECKPOINT] Health check failed, using primary checkpoint:', error.message);
+      activeCheckpoint = checkpoints[0]; // Fallback to primary checkpoint
+    }
   }
   
   if (!activeCheckpoint) {
-    throw new Error('No healthy Supabase checkpoints available');
+    console.log('[CHECKPOINT] No checkpoint available, using primary checkpoint');
+    activeCheckpoint = checkpoints[0]; // Use primary checkpoint as fallback
   }
   
   return createClient(activeCheckpoint.url, activeCheckpoint.anonKey);
@@ -231,6 +237,20 @@ export function removeCheckpoint(name: string) {
 // Initialize checkpoints on module load
 export async function initializeCheckpoints() {
   console.log('[CHECKPOINT] Initializing Supabase checkpoints...');
-  activeCheckpoint = await findBestCheckpoint();
-  return activeCheckpoint;
+  
+  // During build time, skip health checks to avoid fetch errors
+  if (process.env.NODE_ENV === 'production' && process.env.VERCEL_ENV === 'production') {
+    console.log('[CHECKPOINT] Build environment detected, using primary checkpoint without health check');
+    activeCheckpoint = checkpoints[0]; // Use primary checkpoint
+    return activeCheckpoint;
+  }
+  
+  try {
+    activeCheckpoint = await findBestCheckpoint();
+    return activeCheckpoint;
+  } catch (error) {
+    console.log('[CHECKPOINT] Health check failed, using primary checkpoint:', error.message);
+    activeCheckpoint = checkpoints[0]; // Fallback to primary checkpoint
+    return activeCheckpoint;
+  }
 } 

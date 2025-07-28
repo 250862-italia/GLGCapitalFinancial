@@ -100,6 +100,13 @@ export default function ProfilePage() {
   const loadProfile = async () => {
     if (!user) return;
     
+    // Skip API calls during build time
+    if (typeof window === 'undefined') {
+      console.log('Build time detected, skipping profile load');
+      setLoading(false);
+      return;
+    }
+    
     setLoading(true);
     setError('');
     
@@ -154,7 +161,10 @@ export default function ProfilePage() {
       }
     } catch (error) {
       console.error('Error loading profile:', error);
-      setError(error instanceof Error ? error.message : 'Failed to load profile');
+      // Only show error in browser, not during build
+      if (typeof window !== 'undefined') {
+        setError(error instanceof Error ? error.message : 'Failed to load profile');
+      }
     } finally {
       setLoading(false);
     }
@@ -162,6 +172,13 @@ export default function ProfilePage() {
 
   const loadInvestments = async () => {
     if (!user) return;
+    
+    // Skip API calls during build time
+    if (typeof window === 'undefined') {
+      console.log('Build time detected, skipping investments load');
+      setLoadingInvestments(false);
+      return;
+    }
     
     setLoadingInvestments(true);
     try {
@@ -174,6 +191,10 @@ export default function ProfilePage() {
       }
     } catch (error) {
       console.error('Error loading investments:', error);
+      // Don't show error during build
+      if (typeof window !== 'undefined') {
+        console.error('Error loading investments:', error);
+      }
     }
     setLoadingInvestments(false);
   };
