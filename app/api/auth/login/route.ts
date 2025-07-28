@@ -17,6 +17,7 @@ import {
   addRequestId,
   generateRequestId
 } from '@/lib/error-handler';
+import { safeAuthCall, safeDatabaseQuery } from '@/lib/supabase-safe';
 
 // Interface per il profilo utente
 interface UserProfile {
@@ -117,10 +118,12 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
     // Autenticazione diretta con Supabase
     console.log(`🔄 Login [${requestId}]: Starting Supabase authentication...`);
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
+    
+    // Usa il wrapper sicuro per l'autenticazione
+    const { data: authData, error: authError } = await safeAuthCall(
+      async (client) => client.auth.signInWithPassword({ email, password }),
+      null
+    );
 
     if (authError) {
       console.error(`❌ Login [${requestId}]: Authentication error:`, authError);
@@ -159,7 +162,8 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         }, { status: 429 });
       }
       
-      if (authError.message.includes('Network error') || authError.message.includes('fetch failed')) {
+      if (authError.message.includes('Network error') || authError.message.includes('fetch failed') || authError.message.includes('TypeError: fetch failed')) {
+        console.log(`⚠️ Login [${requestId}]: Network error detected:`, authError.message);
         return NextResponse.json({
           success: false,
           error: 'Errore di rete. Verifica la connessione e riprova.',
@@ -195,42 +199,43 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     // Recupera profilo utente
     console.log(`🔍 Login [${requestId}]: Fetching user profile...`);
     let profileData = null;
-    try {
-      const { data: profile, error: profileError } = await supabase
+    
+    const { data: profile, error: profileError } = await safeDatabaseQuery(
+      'profiles',
+      async (client) => client
         .from('profiles')
         .select('*')
         .eq('id', authData.user.id)
-        .single();
+        .single(),
+      null
+    );
 
-      if (profileError) {
-        console.log(`⚠️ Login [${requestId}]: Profile not found:`, profileError.message);
-      } else {
-        console.log(`✅ Login [${requestId}]: Profile retrieved successfully`);
-        profileData = profile;
-      }
-    } catch (error) {
-      console.log(`⚠️ Login [${requestId}]: Profile retrieval error:`, error.message);
+    if (profileError) {
+      console.log(`⚠️ Login [${requestId}]: Profile not found:`, profileError);
+    } else {
+      console.log(`✅ Login [${requestId}]: Profile retrieved successfully`);
+      profileData = profile;
     }
 
     // Recupera dati cliente se disponibili (semplificato)
     let clientData = null;
-    try {
-      console.log(`🔍 Login [${requestId}]: Fetching client data...`);
-      const { data: client, error: clientError } = await supabase
+    console.log(`🔍 Login [${requestId}]: Fetching client data...`);
+    
+    const { data: client, error: clientError } = await safeDatabaseQuery(
+      'clients',
+      async (client) => client
         .from('clients')
         .select('*')
         .eq('user_id', authData.user.id)
-        .single();
+        .single(),
+      null
+    );
 
-      if (clientError) {
-        console.error(`❌ Login [${requestId}]: Error retrieving client:`, clientError);
-      } else {
-        console.log(`✅ Login [${requestId}]: Client data retrieved successfully`);
-        clientData = client;
-      }
-    } catch (error) {
-      console.error(`❌ Login [${requestId}]: General error retrieving client:`, error);
-      console.log(`⚠️ Login [${requestId}]: Client not retrieved, but login continues`);
+    if (clientError) {
+      console.error(`❌ Login [${requestId}]: Error retrieving client:`, clientError);
+    } else {
+      console.log(`✅ Login [${requestId}]: Client data retrieved successfully`);
+      clientData = client;
     }
 
     // Genera nuovo CSRF token per la sessione

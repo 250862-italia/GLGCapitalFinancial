@@ -83,7 +83,8 @@ export async function GET(request: NextRequest) {
     console.error('Users API error:', error);
     
     // Gestione errori di rete/connessione
-    if (error instanceof Error && error.message.includes('fetch failed')) {
+    if (error instanceof Error && (error.message.includes('fetch failed') || error.message.includes('TypeError: fetch failed'))) {
+      console.log('⚠️ Users API: Network error detected:', error.message);
       return NextResponse.json(
         { error: 'Service temporarily unavailable' },
         { status: 503 }
