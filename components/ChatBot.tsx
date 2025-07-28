@@ -11,6 +11,8 @@ interface Message {
 }
 
 export default function ChatBot() {
+  console.log('🔍 ChatBot component loaded!'); // Debug log
+  
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -100,15 +102,15 @@ export default function ChatBot() {
       return "We're headquartered at 1309 Coffeen Avenue STE 1200, Sheridan, Wyoming 82801, United States.";
     }
     
-    if (input.includes('hello') || input.includes('hi')) {
-      return "Hello! Welcome to GLG Capital Group LLC. How can I assist you today?";
+    if (input.includes('equity') || input.includes('pledge')) {
+      return "Our equity pledge system allows companies to secure financing by pledging shares as collateral. This innovative approach provides fixed returns while maintaining ownership control. Would you like to learn more?";
     }
     
-    if (input.includes('help')) {
-      return "I can help you with information about our services, contact details, investment opportunities, and general inquiries about GLG Capital Group LLC. What would you like to know?";
+    if (input.includes('hello') || input.includes('hi') || input.includes('hey')) {
+      return "Hello! Welcome to GLG Capital Group. I'm here to help you with any questions about our investment services, equity pledge financing, or general inquiries. How can I assist you today?";
     }
     
-    return "Thank you for your message. I'm here to help with information about GLG Capital Group LLC's services, contact details, and investment opportunities. Could you please be more specific about what you'd like to know?";
+    return "Thank you for your question. GLG Capital Group specializes in innovative financial solutions including equity pledge financing and strategic investment consulting. For specific inquiries, please contact us at corefound@glgcapitalgroupllc.com or call +1 307 263 0876.";
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -120,21 +122,36 @@ export default function ChatBot() {
 
   return (
     <>
-      {/* Chat Button */}
+      {/* Debug div - always visible */}
+      <div style={{
+        position: 'fixed',
+        bottom: '20px',
+        right: '20px',
+        background: 'red',
+        color: 'white',
+        padding: '10px',
+        borderRadius: '5px',
+        zIndex: 9999,
+        fontSize: '12px'
+      }}>
+        ChatBot Debug: Loaded ✅
+      </div>
+      
+      {/* ChatBot Button */}
       <button
         onClick={() => setIsOpen(true)}
         style={{
           position: 'fixed',
-          bottom: '2rem',
-          right: '2rem',
+          bottom: '20px',
+          right: '20px',
           width: '60px',
           height: '60px',
           borderRadius: '50%',
           background: 'linear-gradient(135deg, #0a2540 0%, #1a3556 100%)',
-          color: 'white',
           border: 'none',
+          color: 'white',
           cursor: 'pointer',
-          boxShadow: '0 4px 20px rgba(10,37,64,0.3)',
+          boxShadow: '0 4px 12px rgba(10,37,64,0.3)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -144,17 +161,15 @@ export default function ChatBot() {
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.transform = 'scale(1.1)';
-          e.currentTarget.style.boxShadow = '0 6px 25px rgba(10,37,64,0.4)';
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.transform = 'scale(1)';
-          e.currentTarget.style.boxShadow = '0 4px 20px rgba(10,37,64,0.3)';
         }}
       >
         <MessageCircle size={24} />
       </button>
 
-      {/* Chat Modal */}
+      {/* ChatBot Modal */}
       {isOpen && (
         <div
           style={{
@@ -164,17 +179,13 @@ export default function ChatBot() {
             right: 0,
             bottom: 0,
             background: 'rgba(0,0,0,0.5)',
-            zIndex: 1001,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            zIndex: 1001,
             padding: '1rem'
           }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setIsOpen(false);
-            }
-          }}
+          onClick={() => setIsOpen(false)}
         >
           <div
             style={{
@@ -182,31 +193,28 @@ export default function ChatBot() {
               borderRadius: '16px',
               width: '100%',
               maxWidth: '400px',
-              height: '600px',
+              maxHeight: '600px',
               display: 'flex',
               flexDirection: 'column',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+              boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
               overflow: 'hidden'
             }}
+            onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
             <div
               style={{
                 background: 'linear-gradient(135deg, #0a2540 0%, #1a3556 100%)',
                 color: 'white',
-                padding: '1.5rem',
+                padding: '1rem',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between'
               }}
             >
-              <div>
-                <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 600 }}>
-                  GLG Capital Assistant
-                </h3>
-                <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.9rem', opacity: 0.8 }}>
-                  AI-powered support
-                </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <MessageCircle size={20} />
+                <span style={{ fontWeight: 600 }}>GLG Capital Assistant</span>
               </div>
               <button
                 onClick={() => setIsOpen(false)}
@@ -215,17 +223,7 @@ export default function ChatBot() {
                   border: 'none',
                   color: 'white',
                   cursor: 'pointer',
-                  padding: '0.5rem',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'transparent';
+                  padding: '0.25rem'
                 }}
               >
                 <X size={20} />
@@ -236,11 +234,12 @@ export default function ChatBot() {
             <div
               style={{
                 flex: 1,
-                overflowY: 'auto',
                 padding: '1rem',
+                overflowY: 'auto',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '1rem'
+                gap: '0.75rem',
+                maxHeight: '400px'
               }}
             >
               {messages.map((message) => (
