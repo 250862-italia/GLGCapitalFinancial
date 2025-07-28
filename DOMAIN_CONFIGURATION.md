@@ -10,7 +10,7 @@
 ### **URL di Produzione:**
 - **Vercel URL**: https://glgcapitalfinancial-k89axsh91-250862-italias-projects.vercel.app
 - **Dominio Principale**: https://glgcapitalgroup.com
-- **Dominio WWW**: https://glgwww.glgcapitalgroup.com
+- **Dominio WWW**: https://www.glgcapitalgroup.com
 
 ## 🔧 **Configurazione Completata**
 
