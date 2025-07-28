@@ -1,7 +1,7 @@
 "use client";
 export const dynamic = "force-dynamic";
 import { InvestmentFormData } from "@/types/investment";
-import ChatBot from "@/components/ChatBot";
+import SimpleChatBot from "@/components/SimpleChatBot";
 
 export default function HomePage() {
   return (
@@ -105,7 +105,7 @@ export default function HomePage() {
                 Global Reach
               </h3>
               <p style={{ fontSize: '1rem', lineHeight: 1.5, opacity: 0.9 }}>
-                US-based financial services company
+                US-based financial services company with international expertise
               </p>
             </div>
 
@@ -128,7 +128,7 @@ export default function HomePage() {
                 Proven Results
               </h3>
               <p style={{ fontSize: '1rem', lineHeight: 1.5, opacity: 0.9 }}>
-                Strategic capital solutions driving exponential growth and resilience
+                Strategic capital solutions driving exponential growth
               </p>
             </div>
 
@@ -145,65 +145,17 @@ export default function HomePage() {
                 margin: '0 auto 1rem',
                 fontSize: '2rem'
               }}>
-                🔒
+                🛡️
               </div>
               <h3 style={{ fontSize: '1.3rem', fontWeight: 700, marginBottom: '0.5rem' }}>
-                Secure & Transparent
+                Secure & Compliant
               </h3>
               <p style={{ fontSize: '1rem', lineHeight: 1.5, opacity: 0.9 }}>
-                Robust collateralization and transparent reporting for all investments
+                Full regulatory compliance with robust security measures
               </p>
             </div>
-
-          </div>
-          
-          <div style={{ 
-            textAlign: 'center', 
-            marginTop: '2rem', 
-            paddingTop: '2rem', 
-            borderTop: '1px solid rgba(255,255,255,0.2)'
-          }}>
-            <a 
-              href="/equity-pledge" 
-              style={{
-                background: '#f59e0b',
-                color: '#0a2540',
-                padding: '1rem 2rem',
-                borderRadius: 8,
-                textDecoration: 'none',
-                fontWeight: 600,
-                fontSize: '1.1rem',
-                display: 'inline-block',
-                transition: 'all 0.3s ease'
-              }}
-            >
-              Learn About Our Equity Pledge System →
-            </a>
           </div>
         </div>
-      </section>
-
-      {/* VISION SECTION */}
-      <section style={{ marginBottom: '4rem', padding: '3rem', background: '#f8fafc', borderRadius: 16 }}>
-        <h2 style={{ 
-          color: '#0a2540', 
-          fontSize: '2.5rem', 
-          fontWeight: 800, 
-          marginBottom: '1.5rem',
-          textAlign: 'center'
-        }}>
-          Our Vision
-        </h2>
-        <p style={{ 
-          color: '#1a3556', 
-          fontSize: '1.2rem', 
-          lineHeight: 1.7,
-          textAlign: 'center',
-          maxWidth: 900,
-          margin: '0 auto'
-        }}>
-          At GLG Capital Group, we believe in the power of innovative ideas, prudent capital management, and long-term partnerships. We strive to be industry leaders by offering solutions that blend advanced market insights with rigorous risk management.
-        </p>
       </section>
 
       {/* SERVICES SECTION */}
@@ -217,347 +169,241 @@ export default function HomePage() {
         }}>
           Our Services
         </h2>
-        
-        {/* Equity-Pledge Model Block */}
-        <div style={{
-          background: '#fff',
-          border: '2px solid #f59e0b',
-          borderRadius: 14,
-          boxShadow: '0 4px 20px rgba(245,158,11,0.08)',
-          padding: '2.5rem',
-          marginBottom: '2.5rem',
-          maxWidth: 900,
-          marginLeft: 'auto',
-          marginRight: 'auto',
-        }}>
-          <h3 style={{
-            color: '#f59e0b',
-            fontSize: '1.7rem',
-            fontWeight: 800,
-            marginBottom: '1.2rem',
-            textAlign: 'center',
-            letterSpacing: 0.5
-          }}>
-            How Our Equity-Pledge Model Works
-          </h3>
-          <ul style={{
-            color: '#1a3556',
-            fontSize: '1.1rem',
-            lineHeight: 1.7,
-            marginBottom: '1.5rem',
-            paddingLeft: '1.5rem',
-            maxWidth: 800,
-            margin: '0 auto'
-          }}>
-            <li><b>Dedicated Vehicle:</b> We create a special branch or subsidiary empowered to issue shares exclusively for investors.</li>
-            <li><b>Simple Subscription:</b> Investors complete an online form, e-sign the agreement, and wire funds to a segregated account.</li>
-            <li><b>Secured by Pledge:</b> Each investment is backed by a formal pledge of those newly issued shares—guaranteeing repayment.</li>
-            <li><b>Fixed, Attractive Yield:</b> 12% p.a. gross return (minus a 0.7% management fee), paid at a 36-month maturity.</li>
-            <li><b>Transparent Reporting:</b> Quarterly statements keep investors informed of principal and interest accrual.</li>
-            <li><b>Automatic Release:</b> On maturity, capital + net yield is wired back and the pledge is lifted—no hidden costs, no surprises.</li>
-          </ul>
-          <div style={{
-            color: '#0a2540',
-            fontWeight: 700,
-            fontSize: '1.15rem',
-            textAlign: 'center',
-            marginTop: '1.5rem'
-          }}>
-            Empower your growth with predictable returns and rock-solid security.
-          </div>
-        </div>
-
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
           gap: '2rem' 
         }}>
           
           {/* Service 1 */}
           <div style={{ 
-            background: '#fff', 
+            background: 'white', 
             padding: '2rem', 
             borderRadius: 12, 
-            boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
             border: '1px solid #e2e8f0'
           }}>
             <h3 style={{ 
               color: '#0a2540', 
-              fontSize: '1.4rem', 
+              fontSize: '1.5rem', 
               fontWeight: 700, 
               marginBottom: '1rem' 
             }}>
-              Direct Business Structuring & Financing
+              Equity Pledge Financing
             </h3>
+            <p style={{ 
+              color: '#1a3556', 
+              lineHeight: 1.6, 
+              marginBottom: '1rem' 
+            }}>
+              Our innovative equity pledge system allows companies to secure financing by pledging shares as collateral. This approach provides fixed returns while maintaining ownership control.
+            </p>
             <ul style={{ 
               color: '#1a3556', 
               lineHeight: 1.6,
               paddingLeft: '1.5rem'
             }}>
-              <li>Direct business structuring to financing through equity market</li>
-              <li>Business requirements analysis and business target assessment</li>
-              <li>Financial and capital restructuring</li>
-              <li>Due diligence for patronage attribution</li>
-              <li>Creation of business attraction - "Make the Business More Attractive To Lenders"</li>
+              <li>Fixed return rates</li>
+              <li>Share-based collateral</li>
+              <li>Maintained ownership</li>
+              <li>Flexible terms</li>
             </ul>
           </div>
 
           {/* Service 2 */}
           <div style={{ 
-            background: '#fff', 
+            background: 'white', 
             padding: '2rem', 
             borderRadius: 12, 
-            boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
             border: '1px solid #e2e8f0'
           }}>
             <h3 style={{ 
               color: '#0a2540', 
-              fontSize: '1.4rem', 
+              fontSize: '1.5rem', 
               fontWeight: 700, 
               marginBottom: '1rem' 
             }}>
-              Valuation & Risk Management
+              Investment Consulting
             </h3>
+            <p style={{ 
+              color: '#1a3556', 
+              lineHeight: 1.6, 
+              marginBottom: '1rem' 
+            }}>
+              Strategic investment advisory services tailored to your specific financial goals and risk tolerance.
+            </p>
             <ul style={{ 
               color: '#1a3556', 
               lineHeight: 1.6,
               paddingLeft: '1.5rem'
             }}>
-              <li>Asset valuations and transfer appraisals</li>
-              <li>Due Diligence and Business Planner</li>
-              <li>Drafting and assisting in AP&C (Asset Adjustment and Capitalization)</li>
-              <li>Operational plans (Services to support AP&C)</li>
+              <li>Portfolio management</li>
+              <li>Risk assessment</li>
+              <li>Market analysis</li>
+              <li>Performance tracking</li>
             </ul>
           </div>
 
           {/* Service 3 */}
           <div style={{ 
-            background: '#fff', 
+            background: 'white', 
             padding: '2rem', 
             borderRadius: 12, 
-            boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
             border: '1px solid #e2e8f0'
           }}>
             <h3 style={{ 
               color: '#0a2540', 
-              fontSize: '1.4rem', 
+              fontSize: '1.5rem', 
               fontWeight: 700, 
               marginBottom: '1rem' 
             }}>
-              Advisory & Asset Restructuring
+              Corporate Financing
             </h3>
+            <p style={{ 
+              color: '#1a3556', 
+              lineHeight: 1.6, 
+              marginBottom: '1rem' 
+            }}>
+              Comprehensive financial solutions for businesses seeking growth capital and strategic partnerships.
+            </p>
             <ul style={{ 
               color: '#1a3556', 
               lineHeight: 1.6,
               paddingLeft: '1.5rem'
             }}>
-              <li>Enhancement of Corporate and Intangible Assets</li>
-              <li>REOCO Structures Services</li>
-              <li>Real Estate and Real Estate portfolio management and strategy</li>
+              <li>Growth capital</li>
+              <li>Strategic partnerships</li>
+              <li>Mergers & acquisitions</li>
+              <li>Financial restructuring</li>
             </ul>
-          </div>
-
-          {/* Service 4 */}
-          <div style={{ 
-            background: '#fff', 
-            padding: '2rem', 
-            borderRadius: 12, 
-            boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
-            border: '1px solid #e2e8f0'
-          }}>
-            <h3 style={{ 
-              color: '#0a2540', 
-              fontSize: '1.4rem', 
-              fontWeight: 700, 
-              marginBottom: '1rem' 
-            }}>
-              Investments Research & Assistance
-            </h3>
-            <ul style={{ 
-              color: '#1a3556', 
-              lineHeight: 1.6,
-              paddingLeft: '1.5rem'
-            }}>
-              <li>Research and assistance for professional and qualified investors</li>
-              <li>Purchase and credit management services through qualified private banking investors and SGRs</li>
-            </ul>
-          </div>
-
-          {/* Service 5 */}
-          <div style={{ 
-            background: '#fff', 
-            padding: '2rem', 
-            borderRadius: 12, 
-            boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
-            border: '1px solid #e2e8f0'
-          }}>
-            <h3 style={{ 
-              color: '#0a2540', 
-              fontSize: '1.4rem', 
-              fontWeight: 700, 
-              marginBottom: '1rem' 
-            }}>
-              Auction Real Estate Marketplace
-            </h3>
-            <ul style={{ 
-              color: '#1a3556', 
-              lineHeight: 1.6,
-              paddingLeft: '1.5rem'
-            }}>
-              <li>Marketplace of credit assignment and real estate rights</li>
-            </ul>
-          </div>
-
-        </div>
-      </section>
-
-      {/* APPROACH SECTION */}
-      <section style={{ marginBottom: '4rem', padding: '3rem', background: '#f8fafc', borderRadius: 16 }}>
-        <h2 style={{ 
-          color: '#0a2540', 
-          fontSize: '2.5rem', 
-          fontWeight: 800, 
-          marginBottom: '1.5rem',
-          textAlign: 'center'
-        }}>
-          Our Approach
-        </h2>
-        <p style={{ 
-          color: '#1a3556', 
-          fontSize: '1.2rem', 
-          lineHeight: 1.7,
-          marginBottom: '2rem',
-          textAlign: 'center'
-        }}>
-          GLG Capital Group LLC employs a data-driven approach, combining in-depth financial market analysis with our extensive industry expertise. Every investment decision is guided by our dedication to excellence and safeguarding our clients' interests.
-        </p>
-        
-        <h3 style={{ 
-          color: '#0a2540', 
-          fontSize: '2rem', 
-          fontWeight: 700, 
-          marginBottom: '1.5rem',
-          textAlign: 'center'
-        }}>
-          Why Choose GLG Capital Group LLC?
-        </h3>
-        
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
-          gap: '1.5rem',
-          marginTop: '2rem'
-        }}>
-          <div style={{ textAlign: 'center' }}>
-            <h4 style={{ color: '#0a2540', fontSize: '1.2rem', fontWeight: 600, marginBottom: '0.5rem' }}>
-              Extensive Experience
-            </h4>
-            <p style={{ color: '#1a3556', fontSize: '1rem' }}>
-              Our team comprises seasoned experts with profound knowledge of global financial markets.
-            </p>
-          </div>
-          
-          <div style={{ textAlign: 'center' }}>
-            <h4 style={{ color: '#0a2540', fontSize: '1.2rem', fontWeight: 600, marginBottom: '0.5rem' }}>
-              Transparency
-            </h4>
-            <p style={{ color: '#1a3556', fontSize: '1rem' }}>
-              We operate with utmost integrity, ensuring our clients always have access to clear and up-to-date information.
-            </p>
-          </div>
-          
-          <div style={{ textAlign: 'center' }}>
-            <h4 style={{ color: '#0a2540', fontSize: '1.2rem', fontWeight: 600, marginBottom: '0.5rem' }}>
-              Tangible Results
-            </h4>
-            <p style={{ color: '#1a3556', fontSize: '1rem' }}>
-              We focus on delivering solutions that create real, measurable value.
-            </p>
-          </div>
-          
-          <div style={{ textAlign: 'center' }}>
-            <h4 style={{ color: '#0a2540', fontSize: '1.2rem', fontWeight: 600, marginBottom: '0.5rem' }}>
-              Innovation
-            </h4>
-            <p style={{ color: '#1a3556', fontSize: '1rem' }}>
-              We remain at the forefront of adopting new technologies and market strategies.
-            </p>
           </div>
         </div>
       </section>
 
-      {/* ITALIAN PARTNERS SECTION */}
+      {/* ABOUT SECTION */}
       <section style={{ marginBottom: '4rem' }}>
-                <h2 style={{
-          color: '#0a2540', 
-          fontSize: '2.5rem', 
-          fontWeight: 800, 
-          marginBottom: '2rem',
+        <div style={{ 
+          background: 'linear-gradient(135deg, #f8fafc 0%, #ffffff 100%)', 
+          padding: '3rem', 
+          borderRadius: 16,
+          border: '1px solid #e2e8f0'
+        }}>
+          <h2 style={{ 
+            color: '#0a2540', 
+            fontSize: '2.5rem', 
+            fontWeight: 800, 
+            marginBottom: '1.5rem',
+            textAlign: 'center'
+          }}>
+            About GLG Capital Group
+          </h2>
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
+            gap: '2rem',
+            marginTop: '2rem'
+          }}>
+            <div>
+              <h3 style={{ 
+                color: '#0a2540', 
+                fontSize: '1.3rem', 
+                fontWeight: 700, 
+                marginBottom: '1rem' 
+              }}>
+                Our Mission
+              </h3>
+              <p style={{ 
+                color: '#1a3556', 
+                lineHeight: 1.6 
+              }}>
+                To provide innovative financial solutions that empower businesses and individuals to achieve sustainable growth and long-term success through strategic capital management and investment consulting.
+              </p>
+            </div>
+            <div>
+              <h3 style={{ 
+                color: '#0a2540', 
+                fontSize: '1.3rem', 
+                fontWeight: 700, 
+                marginBottom: '1rem' 
+              }}>
+                Our Values
+              </h3>
+              <p style={{ 
+                color: '#1a3556', 
+                lineHeight: 1.6 
+              }}>
+                Integrity, transparency, and client-focused approach drive everything we do. We believe in building lasting partnerships based on trust and mutual success.
+              </p>
+            </div>
+            <div>
+              <h3 style={{ 
+                color: '#0a2540', 
+                fontSize: '1.3rem', 
+                fontWeight: 700, 
+                marginBottom: '1rem' 
+              }}>
+                Our Expertise
+              </h3>
+              <p style={{ 
+                color: '#1a3556', 
+                lineHeight: 1.6 
+              }}>
+                With years of experience in financial services, our team brings deep expertise in equity pledge financing, investment consulting, and strategic capital management.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* PARTNERSHIP SECTION */}
+      <section style={{ marginBottom: '4rem' }}>
+        <div style={{ 
+          background: 'linear-gradient(135deg, #0a2540 0%, #1a3556 100%)', 
+          color: 'white', 
+          padding: '3rem', 
+          borderRadius: 16,
           textAlign: 'center'
         }}>
-          Our Partners
-        </h2>
-
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', 
-          gap: '2rem' 
-        }}>
-          
-
-
-          {/* Partner 2 */}
+          <h2 style={{ 
+            fontSize: '2.5rem', 
+            fontWeight: 800, 
+            marginBottom: '1.5rem' 
+          }}>
+            Partnership with PentaWash
+          </h2>
+          <p style={{ 
+            fontSize: '1.2rem', 
+            lineHeight: 1.7,
+            marginBottom: '2rem',
+            maxWidth: 800,
+            margin: '0 auto 2rem'
+          }}>
+            GLG Capital Group LLC is proud to partner with PentaWash, a leading provider of innovative cleaning solutions. Together, we offer comprehensive financial and operational support for businesses in the cleaning industry.
+          </p>
           <div style={{ 
-            background: '#fff', 
+            background: 'rgba(255,255,255,0.1)', 
             padding: '2rem', 
-            borderRadius: 12, 
-            boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
-            border: '1px solid #e2e8f0'
+            borderRadius: 12,
+            maxWidth: 600,
+            margin: '0 auto'
           }}>
             <h3 style={{ 
-              color: '#0a2540', 
-              fontSize: '1.4rem', 
+              fontSize: '1.5rem', 
               fontWeight: 700, 
               marginBottom: '1rem' 
             }}>
-              Wash The World – Innovating for a Plastic-Free Future
+              PentaWash Services
             </h3>
             <p style={{ 
-              color: '#1a3556', 
-              lineHeight: 1.6,
-              marginBottom: '1rem'
-            }}>
-              Wash The World is a pioneering association dedicated to promoting plastic waste reduction by identifying and introducing <strong>innovative, sustainable products</strong> to the market. With a strong commitment to environmental awareness and practical solutions, Wash The World collaborates with companies, institutions, and communities to drive real change. Through research, partnerships, and education, we empower individuals and businesses to embrace eco-friendly alternatives and contribute to a cleaner planet.
-            </p>
-            <p style={{ color: '#1a3556', fontSize: '0.9rem' }}>
-              For more information, contact us: <strong>https://www.washtheworld.it</strong>
-            </p>
-          </div>
-
-          {/* Partner 3 */}
-          <div style={{ 
-            background: '#fff', 
-            padding: '2rem', 
-            borderRadius: 12, 
-            boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
-            border: '1px solid #e2e8f0'
-          }}>
-            <h3 style={{ 
-              color: '#0a2540', 
-              fontSize: '1.4rem', 
-              fontWeight: 700, 
+              fontSize: '1.1rem', 
+              lineHeight: 1.6, 
               marginBottom: '1rem' 
             }}>
-              Pentawash – The First Wash The World Approved Product
-            </h3>
-            <p style={{ 
-              color: '#1a3556', 
-              lineHeight: 1.6,
-              marginBottom: '1rem'
-            }}>
-              Pentawash is the first <strong>Wash The World</strong> approved product, embodying our mission to reduce plastic waste through innovative and sustainable solutions. Designed to revolutionize laundry care, Pentawash offers an <strong>eco-friendly, efficient, and plastic-free alternative</strong>, making it easier for households to contribute to a cleaner planet. As a pioneer in sustainable home care, Pentawash aligns with our vision of introducing cutting-edge products that support a greener future.
+              Professional cleaning solutions for commercial and residential properties, including advanced equipment and eco-friendly products.
             </p>
-            <p style={{ color: '#1a3556', fontSize: '0.9rem' }}>
+            <p style={{ color: '#f59e0b', fontSize: '0.9rem' }}>
               For more information, contact us: <strong>www.pentawash.com</strong>
             </p>
           </div>
@@ -651,8 +497,8 @@ export default function HomePage() {
 
     </main>
     
-    {/* ChatBot Component */}
-    <ChatBot />
+    {/* Simple ChatBot Component */}
+    <SimpleChatBot />
   </>
   );
 }
