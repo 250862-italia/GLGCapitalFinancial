@@ -119,11 +119,11 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     // Autenticazione diretta con Supabase
     console.log(`🔄 Login [${requestId}]: Starting Supabase authentication...`);
     
-    // Usa il wrapper sicuro per l'autenticazione
-    const { data: authData, error: authError } = await safeAuthCall(
-      async (client) => client.auth.signInWithPassword({ email, password }),
-      null
-    );
+    // Usa l'autenticazione diretta invece del wrapper sicuro per il login
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({ 
+      email, 
+      password 
+    });
 
     if (authError) {
       console.error(`❌ Login [${requestId}]: Authentication error:`, authError);

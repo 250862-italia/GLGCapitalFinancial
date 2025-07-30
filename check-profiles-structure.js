@@ -1,94 +1,81 @@
 const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config({ path: '.env.local' });
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+console.log('🔍 Checking Profiles Table Structure');
+console.log('='.repeat(50));
+
+if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+  console.log('❌ Missing environment variables');
+  process.exit(1);
+}
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 async function checkProfilesStructure() {
   try {
-    console.log('🔍 Checking profiles table structure...');
-
-    // Try to get a sample profile to see the structure
-    const { data: sampleProfile, error: sampleError } = await supabase
+    console.log('1️⃣ Fetching profiles table structure...');
+    
+    // Get a sample profile to see the structure
+    const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
       .select('*')
       .limit(1);
-
-    if (sampleError) {
-      console.log('❌ Error accessing profiles table:', sampleError.message);
-      return;
+    
+    if (profilesError) {
+      console.log('❌ Error fetching profiles:', profilesError.message);
+      return false;
     }
-
-    if (sampleProfile.length > 0) {
-      console.log('✅ Profiles table is accessible');
-      console.log('📋 Available columns:', Object.keys(sampleProfile[0]));
+    
+    if (profiles && profiles.length > 0) {
+      console.log('✅ Profiles table structure:');
+      const sampleProfile = profiles[0];
+      Object.keys(sampleProfile).forEach(key => {
+        console.log(`   - ${key}: ${typeof sampleProfile[key]} (${sampleProfile[key]})`);
+      });
     } else {
-      console.log('✅ Profiles table is accessible but empty');
+      console.log('⚠️ No profiles found, checking table structure...');
       
-      // Try to insert a minimal profile to see what columns are required
-      const minimalProfile = {
-        user_id: 'test-user-id',
-        first_name: 'Test',
-        last_name: 'User',
-        email: 'test@example.com'
-      };
-
-      const { data: testInsert, error: insertError } = await supabase
+      // Try to insert a minimal profile to see what columns exist
+      const { data: insertData, error: insertError } = await supabase
         .from('profiles')
-        .insert(minimalProfile)
+        .insert({
+          id: 'test-structure-check',
+          email: 'test@example.com',
+          first_name: 'Test',
+          last_name: 'User',
+          role: 'user',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
         .select();
-
+      
       if (insertError) {
-        console.log('❌ Error inserting minimal profile:', insertError.message);
+        console.log('❌ Insert error:', insertError.message);
+        console.log('   This shows us what columns are missing');
       } else {
         console.log('✅ Minimal profile inserted successfully');
-        console.log('📋 Available columns:', Object.keys(testInsert[0]));
-        
-        // Clean up test data
-        await supabase
-          .from('profiles')
-          .delete()
-          .eq('user_id', 'test-user-id');
       }
     }
-
-    // Check if we can query the table structure directly
-    console.log('\n🔍 Checking table schema...');
     
-    const { data: schemaInfo, error: schemaError } = await supabase
-      .rpc('get_table_columns', { table_name: 'profiles' })
-      .catch(() => ({ data: null, error: 'RPC not available' }));
-
-    if (schemaError) {
-      console.log('⚠️ Cannot query schema directly, using alternative method');
-      
-      // Try to get column info from information_schema
-      const { data: columns, error: columnsError } = await supabase
-        .from('information_schema.columns')
-        .select('column_name, data_type, is_nullable')
-        .eq('table_name', 'profiles')
-        .eq('table_schema', 'public');
-
-      if (columnsError) {
-        console.log('❌ Error querying column information:', columnsError.message);
-      } else {
-        console.log('📋 Profiles table columns:');
-        columns.forEach(col => {
-          console.log(`   - ${col.column_name} (${col.data_type}, nullable: ${col.is_nullable})`);
-        });
-      }
-    } else {
-      console.log('📋 Profiles table columns from RPC:');
-      schemaInfo.forEach(col => {
-        console.log(`   - ${col.column_name} (${col.data_type})`);
-      });
-    }
-
+    return true;
+    
   } catch (error) {
-    console.error('❌ Error checking profiles structure:', error);
+    console.log('❌ Error checking structure:', error.message);
+    return false;
   }
 }
 
-checkProfilesStructure(); 
+async function main() {
+  const success = await checkProfilesStructure();
+  
+  if (success) {
+    console.log('\n✅ Structure check completed');
+  } else {
+    console.log('\n❌ Structure check failed');
+  }
+}
+
+main().catch(console.error); 
