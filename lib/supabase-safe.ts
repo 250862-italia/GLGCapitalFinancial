@@ -19,7 +19,9 @@ export async function safeSupabaseCall<T>(
       error.message.includes('TypeError: fetch failed') ||
       error.message.includes('Network error') ||
       error.message.includes('ERR_NAME_NOT_RESOLVED') ||
-      error.message.includes('ENOTFOUND')
+      error.message.includes('ENOTFOUND') ||
+      error.message.includes('ECONNREFUSED') ||
+      error.message.includes('ETIMEDOUT')
     )) {
       console.log('⚠️ Network error detected, using fallback');
       return { data: fallback || null, error: 'NETWORK_ERROR' };
@@ -49,7 +51,9 @@ export async function safeDatabaseQuery<T>(
         result.error.message.includes('TypeError: fetch failed') ||
         result.error.message.includes('Network error') ||
         result.error.message.includes('ERR_NAME_NOT_RESOLVED') ||
-        result.error.message.includes('ENOTFOUND')
+        result.error.message.includes('ENOTFOUND') ||
+        result.error.message.includes('ECONNREFUSED') ||
+        result.error.message.includes('ETIMEDOUT')
       )) {
         console.log(`⚠️ Network error for ${table}, using fallback`);
         return { data: fallback || null, error: 'NETWORK_ERROR' };
@@ -68,7 +72,9 @@ export async function safeDatabaseQuery<T>(
       error.message.includes('TypeError: fetch failed') ||
       error.message.includes('Network error') ||
       error.message.includes('ERR_NAME_NOT_RESOLVED') ||
-      error.message.includes('ENOTFOUND')
+      error.message.includes('ENOTFOUND') ||
+      error.message.includes('ECONNREFUSED') ||
+      error.message.includes('ETIMEDOUT')
     )) {
       console.log(`⚠️ Network error for ${table}, using fallback`);
       return { data: fallback || null, error: 'NETWORK_ERROR' };
@@ -95,7 +101,9 @@ export async function safeAuthCall<T>(
       error.message.includes('TypeError: fetch failed') ||
       error.message.includes('Network error') ||
       error.message.includes('ERR_NAME_NOT_RESOLVED') ||
-      error.message.includes('ENOTFOUND')
+      error.message.includes('ENOTFOUND') ||
+      error.message.includes('ECONNREFUSED') ||
+      error.message.includes('ETIMEDOUT')
     )) {
       console.log('⚠️ Network error in auth, using fallback');
       return { data: fallback || null, error: 'NETWORK_ERROR' };
