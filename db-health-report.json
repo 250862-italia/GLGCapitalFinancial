@@ -1,0 +1,121 @@
+{
+  "timestamp": "2025-07-30T09:38:43.717Z",
+  "database": {
+    "connection": true,
+    "authentication": true
+  },
+  "tables": {
+    "profiles": {
+      "exists": false,
+      "error": "supabase.rpc(...).catch is not a function"
+    },
+    "clients": {
+      "exists": false,
+      "error": "supabase.rpc(...).catch is not a function"
+    },
+    "investments": {
+      "exists": false,
+      "error": "supabase.rpc(...).catch is not a function"
+    },
+    "packages": {
+      "exists": false,
+      "error": "supabase.rpc(...).catch is not a function"
+    },
+    "payments": {
+      "exists": false,
+      "error": "supabase.rpc(...).catch is not a function"
+    },
+    "notifications": {
+      "exists": false,
+      "error": "supabase.rpc(...).catch is not a function"
+    },
+    "team_members": {
+      "exists": false,
+      "error": "supabase.rpc(...).catch is not a function"
+    },
+    "audit_logs": {
+      "exists": false,
+      "error": "supabase.rpc(...).catch is not a function"
+    },
+    "email_queue": {
+      "exists": false,
+      "error": "supabase.rpc(...).catch is not a function"
+    },
+    "informational_requests": {
+      "exists": false,
+      "error": "supabase.rpc(...).catch is not a function"
+    },
+    "kyc_requests": {
+      "exists": false,
+      "error": "supabase.rpc(...).catch is not a function"
+    },
+    "analytics": {
+      "exists": false,
+      "error": "supabase.rpc(...).catch is not a function"
+    },
+    "content": {
+      "exists": false,
+      "error": "supabase.rpc(...).catch is not a function"
+    },
+    "partnerships": {
+      "exists": false,
+      "error": "supabase.rpc(...).catch is not a function"
+    },
+    "notes": {
+      "exists": false,
+      "error": "supabase.rpc(...).catch is not a function"
+    }
+  },
+  "relations": {
+    "clients.user_id": {
+      "valid": true
+    },
+    "investments.user_id": {
+      "valid": true
+    },
+    "investments.client_id": {
+      "valid": true
+    },
+    "investments.package_id": {
+      "valid": true
+    },
+    "payments.user_id": {
+      "valid": true
+    },
+    "payments.investment_id": {
+      "valid": true
+    },
+    "notifications.user_id": {
+      "valid": true
+    },
+    "team_members.user_id": {
+      "valid": true
+    },
+    "audit_logs.user_id": {
+      "valid": true
+    },
+    "email_queue.user_id": {
+      "valid": false,
+      "error": "column email_queue.user_id does not exist"
+    },
+    "informational_requests.user_id": {
+      "valid": true
+    },
+    "kyc_requests.user_id": {
+      "valid": true
+    },
+    "analytics.user_id": {
+      "valid": true
+    },
+    "content.author_id": {
+      "valid": true
+    }
+  },
+  "summary": {
+    "totalTables": 15,
+    "healthyTables": 0,
+    "totalRelations": 14,
+    "healthyRelations": 13,
+    "overallHealth": "POOR"
+  }
+}

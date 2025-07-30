@@ -1,335 +1,150 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { globalPerformanceMonitor } from '@/lib/performance-monitor';
-import { generateRequestId } from '@/lib/error-handler';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
-// Configurazione sicurezza
-const SECURITY_CONFIG = {
-  // Rate limiting
-  RATE_LIMIT: {
-    WINDOW_MS: 60 * 1000, // 1 minuto
-    MAX_REQUESTS: 100, // 100 richieste per minuto
-    BLOCK_DURATION: 5 * 60 * 1000 // Blocca per 5 minuti
-  },
-  
-  // Headers di sicurezza
-  SECURITY_HEADERS: {
-    'X-Frame-Options': 'DENY',
-    'X-Content-Type-Options': 'nosniff',
-    'Referrer-Policy': 'strict-origin-when-cross-origin',
-    'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
-    'X-DNS-Prefetch-Control': 'off'
-  },
-  
-  // CORS
-  CORS: {
-    ALLOWED_ORIGINS: [
-      'http://localhost:3000',
-      'http://localhost:3001',
-      'http://localhost:3002',
-      'https://glg-capital-financial.vercel.app',
-      'https://glgcapitalfinancial.com',
-      'https://www.glgcapitalgroup.com',
-      'https://glgcapitalgroup.com'
-    ],
-    ALLOWED_METHODS: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    ALLOWED_HEADERS: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'X-Requested-With']
-  }
-};
+// Rotte che richiedono autenticazione
+const PROTECTED_ROUTES = [
+  '/admin',
+  '/dashboard',
+  '/profile',
+  '/investments',
+  '/settings'
+];
 
-// Cache per rate limiting
-const rateLimitCache = new Map<string, { count: number; resetTime: number; blockedUntil?: number }>();
+// Rotte admin che richiedono permessi speciali
+const ADMIN_ROUTES = [
+  '/admin',
+  '/admin/analytics',
+  '/admin/clients',
+  '/admin/investments',
+  '/admin/users',
+  '/admin/kyc',
+  '/admin/payments',
+  '/admin/notifications',
+  '/admin/team',
+  '/admin/partnerships',
+  '/admin/content',
+  '/admin/backup',
+  '/admin/audit-trail',
+  '/admin/diagnostics',
+  '/admin/informational-requests'
+];
 
-// Funzione per pulire la cache del rate limiting
-function cleanupRateLimitCache() {
-  const now = Date.now();
-  for (const [key, value] of rateLimitCache.entries()) {
-    if (now > value.resetTime && (!value.blockedUntil || now > value.blockedUntil)) {
-      rateLimitCache.delete(key);
-    }
-  }
-}
-
-// Funzione per controllare il rate limiting
-function checkRateLimit(ip: string): { allowed: boolean; remaining: number; resetTime: number } {
-  const now = Date.now();
-  const key = `rate_limit:${ip}`;
-  
-  let record = rateLimitCache.get(key);
-  
-  if (!record || now > record.resetTime) {
-    record = {
-      count: 0,
-      resetTime: now + SECURITY_CONFIG.RATE_LIMIT.WINDOW_MS
-    };
-  }
-  
-  // Controlla se l'IP è bloccato
-  if (record.blockedUntil && now < record.blockedUntil) {
-    return {
-      allowed: false,
-      remaining: 0,
-      resetTime: record.blockedUntil
-    };
-  }
-  
-  // Rimuovi il blocco se scaduto
-  if (record.blockedUntil && now >= record.blockedUntil) {
-    delete record.blockedUntil;
-  }
-  
-  record.count++;
-  rateLimitCache.set(key, record);
-  
-  // Blocca se supera il limite
-  if (record.count > SECURITY_CONFIG.RATE_LIMIT.MAX_REQUESTS) {
-    record.blockedUntil = now + SECURITY_CONFIG.RATE_LIMIT.BLOCK_DURATION;
-    rateLimitCache.set(key, record);
-    
-    return {
-      allowed: false,
-      remaining: 0,
-      resetTime: record.blockedUntil
-    };
-  }
-  
-  return {
-    allowed: true,
-    remaining: Math.max(0, SECURITY_CONFIG.RATE_LIMIT.MAX_REQUESTS - record.count),
-    resetTime: record.resetTime
-  };
-}
-
-// Funzione per ottenere l'IP reale
-function getRealIP(request: NextRequest): string {
-  return request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-         request.headers.get('x-real-ip') ||
-         request.ip ||
-         'unknown';
-}
-
-// Funzione per controllare CORS
-function checkCORS(request: NextRequest): { allowed: boolean; headers: Record<string, string> } {
-  const origin = request.headers.get('origin');
-  const method = request.method;
-  
-  // In development, be more permissive
-  if (process.env.NODE_ENV === 'development') {
-    // Allow all localhost origins in development
-    if (!origin || origin.startsWith('http://localhost:')) {
-      const corsHeaders: Record<string, string> = {
-        'Access-Control-Allow-Origin': origin || 'http://localhost:3000',
-        'Access-Control-Allow-Methods': SECURITY_CONFIG.CORS.ALLOWED_METHODS.join(', '),
-        'Access-Control-Allow-Headers': SECURITY_CONFIG.CORS.ALLOWED_HEADERS.join(', '),
-        'Access-Control-Allow-Credentials': 'true',
-        'Access-Control-Max-Age': '86400' // 24 ore
-      };
-      
-      return {
-        allowed: true,
-        headers: corsHeaders
-      };
-    }
-  }
-  
-  // Controlla origine
-  const isAllowedOrigin = !origin || SECURITY_CONFIG.CORS.ALLOWED_ORIGINS.includes(origin);
-  
-  // Controlla metodo
-  const isAllowedMethod = SECURITY_CONFIG.CORS.ALLOWED_METHODS.includes(method);
-  
-  if (!isAllowedOrigin || !isAllowedMethod) {
-    return {
-      allowed: false,
-      headers: {}
-    };
-  }
-  
-  const corsHeaders: Record<string, string> = {
-    'Access-Control-Allow-Origin': origin || '*',
-    'Access-Control-Allow-Methods': SECURITY_CONFIG.CORS.ALLOWED_METHODS.join(', '),
-    'Access-Control-Allow-Headers': SECURITY_CONFIG.CORS.ALLOWED_HEADERS.join(', '),
-    'Access-Control-Allow-Credentials': 'true',
-    'Access-Control-Max-Age': '86400' // 24 ore
-  };
-  
-  return {
-    allowed: true,
-    headers: corsHeaders
-  };
-}
-
-// Funzione per aggiungere headers di sicurezza
-function addSecurityHeaders(response: NextResponse): NextResponse {
-  Object.entries(SECURITY_CONFIG.SECURITY_HEADERS).forEach(([key, value]) => {
-    response.headers.set(key, value);
-  });
-  
-  // Aggiungi CSP in produzione
-  if (process.env.NODE_ENV === 'production') {
-    response.headers.set('Content-Security-Policy', 
-      "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://*.supabase.co https://*.vercel.app;"
-    );
-  }
-  
-  return response;
-}
-
-// Funzione per log delle richieste
-function logRequest(request: NextRequest, response: NextResponse, startTime: number) {
-  const duration = Date.now() - startTime;
-  const ip = getRealIP(request);
-  const method = request.method;
-  const pathname = request.nextUrl.pathname;
-  const status = response.status;
-  
-  // Registra nelle metriche delle performance
-  globalPerformanceMonitor.recordAPICall(
-    `${method} ${pathname}`,
-    duration,
-    status < 400
-  );
-  
-  // Log dettagliato per richieste importanti
-  if (pathname.startsWith('/api/') || status >= 400) {
-    console.log(`[${new Date().toISOString()}] ${method} ${pathname} - ${status} - ${duration}ms - IP: ${ip}`);
-  }
-}
+// Rotte pubbliche che non richiedono autenticazione
+const PUBLIC_ROUTES = [
+  '/',
+  '/login',
+  '/register',
+  '/forgot-password',
+  '/about',
+  '/contact',
+  '/landing',
+  '/equity-pledge',
+  '/informational-request'
+];
 
 export function middleware(request: NextRequest) {
-  const startTime = Date.now();
+  const { pathname } = request.nextUrl;
   
-  // Aggiungi request ID se non presente
-  if (!request.headers.get('x-request-id')) {
-    request.headers.set('x-request-id', generateRequestId());
+  console.log(`🔒 Middleware processing: ${pathname}`);
+  
+  // Gestione CORS
+  const response = NextResponse.next();
+  
+  // Aggiungi headers CORS
+  response.headers.set('Access-Control-Allow-Origin', '*');
+  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-CSRF-Token');
+  
+  // Gestione preflight requests
+  if (request.method === 'OPTIONS') {
+    return new NextResponse(null, { status: 200, headers: response.headers });
   }
   
-  try {
-    // Pulisci cache rate limiting periodicamente
-    if (Math.random() < 0.01) { // 1% di probabilità
-      cleanupRateLimitCache();
-    }
+  // Verifica se è una rotta pubblica
+  if (PUBLIC_ROUTES.some(route => pathname.startsWith(route))) {
+    console.log(`✅ Public route: ${pathname}`);
+    return response;
+  }
+  
+  // Verifica se è una rotta API
+  if (pathname.startsWith('/api/')) {
+    console.log(`🔧 API route: ${pathname}`);
     
-    // Ottieni IP reale
-    const ip = getRealIP(request);
-    
-    // Controlla rate limiting
-    const rateLimit = checkRateLimit(ip);
-    if (!rateLimit.allowed) {
-      const response = NextResponse.json(
-        { 
-          error: 'Rate limit exceeded',
-          retryAfter: Math.ceil((rateLimit.resetTime - Date.now()) / 1000)
-        },
-        { status: 429 }
-      );
-      
-      response.headers.set('Retry-After', Math.ceil((rateLimit.resetTime - Date.now()) / 1000).toString());
-      response.headers.set('X-RateLimit-Limit', SECURITY_CONFIG.RATE_LIMIT.MAX_REQUESTS.toString());
-      response.headers.set('X-RateLimit-Remaining', '0');
-      response.headers.set('X-RateLimit-Reset', rateLimit.resetTime.toString());
-      
-      logRequest(request, response, startTime);
-      return addSecurityHeaders(response);
-    }
-    
-    // Controlla CORS per richieste preflight
-    if (request.method === 'OPTIONS') {
-      const cors = checkCORS(request);
-      if (!cors.allowed) {
-        const response = NextResponse.json({ error: 'CORS not allowed' }, { status: 403 });
-        logRequest(request, response, startTime);
-        return addSecurityHeaders(response);
-      }
-      
-      const response = new NextResponse(null, { status: 200 });
-      Object.entries(cors.headers).forEach(([key, value]) => {
-        response.headers.set(key, value);
-      });
-      
-      logRequest(request, response, startTime);
-      return addSecurityHeaders(response);
-    }
-    
-    // Controlla CORS per richieste normali
-    const cors = checkCORS(request);
-    if (!cors.allowed) {
-      const response = NextResponse.json({ error: 'CORS not allowed' }, { status: 403 });
-      logRequest(request, response, startTime);
-      return addSecurityHeaders(response);
-    }
-    
-    // Gestisci richieste speciali
-    const { pathname } = request.nextUrl;
-    
-    // Endpoint per metriche delle performance (solo in sviluppo o con autenticazione)
-    if (pathname === '/api/performance') {
-      if (process.env.NODE_ENV === 'production') {
-        // In produzione, richiedi autenticazione per le metriche
-        const authHeader = request.headers.get('authorization');
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-          const response = NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-          logRequest(request, response, startTime);
-          return addSecurityHeaders(response);
-        }
-      }
-    }
-    
-    // Endpoint per health check
-    if (pathname === '/api/health') {
-      const response = NextResponse.json({
-        status: 'healthy',
-        timestamp: new Date().toISOString(),
-        version: process.env.npm_package_version || '1.0.0'
-      });
-      
-      logRequest(request, response, startTime);
-      return addSecurityHeaders(response);
-    }
-    
-    // Gestisci autenticazione per endpoint protetti
-    if (pathname.startsWith('/api/admin/') && pathname !== '/api/admin/login') {
-      // Check for admin session header (our custom auth system)
-      const adminSession = request.headers.get('x-admin-session');
-      const adminToken = request.headers.get('x-admin-token');
-      
-      // Also check for Bearer token (standard auth)
+    // Proteggi le API admin
+    if (pathname.startsWith('/api/admin/')) {
       const authHeader = request.headers.get('authorization');
+      const csrfToken = request.headers.get('x-csrf-token');
       
-      // Allow if any admin authentication method is present
-      if (!adminSession && !adminToken && (!authHeader || !authHeader.startsWith('Bearer '))) {
-        const response = NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        logRequest(request, response, startTime);
-        return addSecurityHeaders(response);
+      if (!authHeader || !csrfToken) {
+        console.log(`❌ Admin API access denied: ${pathname}`);
+        return NextResponse.json(
+          { error: 'Accesso negato. Autenticazione richiesta.' },
+          { status: 401 }
+        );
       }
     }
     
-    // Continua con la richiesta normale
-    const response = NextResponse.next();
-    
-    // Aggiungi headers CORS
-    Object.entries(cors.headers).forEach(([key, value]) => {
-      response.headers.set(key, value);
-    });
-    
-    // Aggiungi headers rate limiting
-    response.headers.set('X-RateLimit-Limit', SECURITY_CONFIG.RATE_LIMIT.MAX_REQUESTS.toString());
-    response.headers.set('X-RateLimit-Remaining', rateLimit.remaining.toString());
-    response.headers.set('X-RateLimit-Reset', rateLimit.resetTime.toString());
-    
-    logRequest(request, response, startTime);
-    return addSecurityHeaders(response);
-    
-  } catch (error) {
-    console.error('❌ Errore middleware:', error);
-    
-    const response = NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-    
-    logRequest(request, response, startTime);
-    return addSecurityHeaders(response);
+    return response;
   }
+  
+  // Verifica se è una rotta protetta
+  if (PROTECTED_ROUTES.some(route => pathname.startsWith(route))) {
+    console.log(`🔒 Protected route: ${pathname}`);
+    
+    // Verifica autenticazione
+    const session = request.cookies.get('session');
+    const authToken = request.cookies.get('auth-token');
+    
+    if (!session && !authToken) {
+      console.log(`❌ Unauthenticated access to: ${pathname}`);
+      
+      // Redirect al login
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+    
+    // Verifica se è una rotta admin
+    if (ADMIN_ROUTES.some(route => pathname.startsWith(route))) {
+      console.log(`👑 Admin route: ${pathname}`);
+      
+      // Verifica permessi admin
+      const userRole = request.cookies.get('user-role');
+      const isAdmin = userRole?.value === 'admin';
+      
+      if (!isAdmin) {
+        console.log(`❌ Non-admin access to admin route: ${pathname}`);
+        
+        // Redirect alla dashboard utente
+        return NextResponse.redirect(new URL('/dashboard', request.url));
+      }
+    }
+  }
+  
+  // Aggiungi headers di sicurezza
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+  response.headers.set('X-Frame-Options', 'DENY');
+  response.headers.set('X-XSS-Protection', '1; mode=block');
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  
+  // Aggiungi CSP header
+  const csp = [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: https:",
+    "font-src 'self'",
+    "connect-src 'self' https://*.supabase.co https://vercel.live",
+    "frame-src 'self'",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'"
+  ].join('; ');
+  
+  response.headers.set('Content-Security-Policy', csp);
+  
+  console.log(`✅ Route processed: ${pathname}`);
+  return response;
 }
 
 export const config = {
