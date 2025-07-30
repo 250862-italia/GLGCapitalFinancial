@@ -163,7 +163,7 @@ export default function ProfilePage() {
       console.error('Error loading profile:', error);
       // Only show error in browser, not during build
       if (typeof window !== 'undefined') {
-        setError(error instanceof Error ? error.message : 'Failed to load profile');
+      setError(error instanceof Error ? error.message : 'Failed to load profile');
       }
     } finally {
       setLoading(false);
@@ -193,7 +193,7 @@ export default function ProfilePage() {
       console.error('Error loading investments:', error);
       // Don't show error during build
       if (typeof window !== 'undefined') {
-        console.error('Error loading investments:', error);
+      console.error('Error loading investments:', error);
       }
     }
     setLoadingInvestments(false);

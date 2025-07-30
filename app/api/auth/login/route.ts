@@ -210,16 +210,16 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       null
     );
 
-    if (profileError) {
+      if (profileError) {
       console.log(`⚠️ Login [${requestId}]: Profile not found:`, profileError);
-    } else {
-      console.log(`✅ Login [${requestId}]: Profile retrieved successfully`);
-      profileData = profile;
+      } else {
+        console.log(`✅ Login [${requestId}]: Profile retrieved successfully`);
+        profileData = profile;
     }
 
     // Recupera dati cliente se disponibili (semplificato)
     let clientData = null;
-    console.log(`🔍 Login [${requestId}]: Fetching client data...`);
+      console.log(`🔍 Login [${requestId}]: Fetching client data...`);
     
     const { data: client, error: clientError } = await safeDatabaseQuery(
       'clients',
@@ -231,11 +231,11 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       null
     );
 
-    if (clientError) {
-      console.error(`❌ Login [${requestId}]: Error retrieving client:`, clientError);
-    } else {
-      console.log(`✅ Login [${requestId}]: Client data retrieved successfully`);
-      clientData = client;
+      if (clientError) {
+        console.error(`❌ Login [${requestId}]: Error retrieving client:`, clientError);
+      } else {
+        console.log(`✅ Login [${requestId}]: Client data retrieved successfully`);
+        clientData = client;
     }
 
     // Genera nuovo CSRF token per la sessione

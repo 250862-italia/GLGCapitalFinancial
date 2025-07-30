@@ -177,7 +177,7 @@ export async function getSupabaseClient() {
   // If no active checkpoint or it's been more than 5 minutes, check again
   if (!activeCheckpoint || (Date.now() - activeCheckpoint.lastCheck) > 5 * 60 * 1000) {
     try {
-      activeCheckpoint = await findBestCheckpoint();
+    activeCheckpoint = await findBestCheckpoint();
     } catch (error) {
       console.log('[CHECKPOINT] Health check failed, using primary checkpoint:', error.message);
       activeCheckpoint = checkpoints[0]; // Fallback to primary checkpoint
@@ -246,8 +246,8 @@ export async function initializeCheckpoints() {
   }
   
   try {
-    activeCheckpoint = await findBestCheckpoint();
-    return activeCheckpoint;
+  activeCheckpoint = await findBestCheckpoint();
+  return activeCheckpoint;
   } catch (error) {
     console.log('[CHECKPOINT] Health check failed, using primary checkpoint:', error.message);
     activeCheckpoint = checkpoints[0]; // Fallback to primary checkpoint
