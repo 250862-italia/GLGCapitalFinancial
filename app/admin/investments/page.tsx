@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 import { InvestmentFormData } from "@/types/investment";
 import { fetchJSONWithCSRF, fetchWithCSRF } from "@/lib/csrf-client";
 import InvestmentNotifications from "@/components/admin/InvestmentNotifications";
-import { apiCallWithFallback, skipDuringBuild } from "@/lib/fetch-error-handler";
 
 // Tipo per investimenti con join
 interface InvestmentWithJoin extends InvestmentFormData {
@@ -59,15 +58,6 @@ export default function AdminInvestmentsPage() {
   const loadInvestments = async () => {
     setLoading(true);
     setError("");
-    
-    // Skip during build time
-    const buildCheck = skipDuringBuild([]);
-    if (buildCheck.success) {
-      setInvestments(buildCheck.data || []);
-      setLoading(false);
-      return;
-    }
-    
     try {
       // Get admin session
       const adminToken = localStorage.getItem('admin_token');
@@ -82,29 +72,30 @@ export default function AdminInvestmentsPage() {
         return;
       }
 
-      // Use enhanced error handling
-      const result = await apiCallWithFallback("/api/admin/investments", {
+      const res = await fetchJSONWithCSRF("/api/admin/investments", {
         headers: {
           'x-admin-token': adminToken
         }
-      }, 'admin-investments');
+      });
       
-      if (!result.success) {
-        if (result.error?.type === 'AUTH') {
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        if (res.status === 401) {
           setError("Sessione admin scaduta. Reindirizzamento al login...");
           setTimeout(() => {
             router.push('/admin/login');
           }, 2000);
           return;
         }
-        setError(result.error?.message || "Errore nel caricamento investimenti");
+        setError(errorData.error || "Errore nel caricamento investimenti");
         return;
       }
       
-      if (result.data?.success && result.data?.data) {
-        setInvestments(result.data.data);
+      const data = await res.json();
+      if (data.success && data.data) {
+        setInvestments(data.data);
       } else {
-        setInvestments(result.data || []);
+        setInvestments(data);
       }
     } catch (e) {
       console.error('Network error:', e);
