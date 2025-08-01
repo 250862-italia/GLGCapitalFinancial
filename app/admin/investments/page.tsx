@@ -27,7 +27,32 @@ export default function AdminInvestmentsPage() {
   const [typeFilter, setTypeFilter] = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [investmentToDelete, setInvestmentToDelete] = useState<InvestmentFormData | null>(null);
+  const [needsAuth, setNeedsAuth] = useState(false);
   const router = useRouter();
+
+  // Check admin authentication
+  useEffect(() => {
+    const adminToken = localStorage.getItem('admin_token');
+    const adminUser = localStorage.getItem('admin_user');
+    
+    if (!adminToken || !adminUser) {
+      setNeedsAuth(true);
+      setLoading(false);
+      return;
+    }
+    
+    // Set a default admin token for testing if none exists
+    if (!adminToken) {
+      const testToken = `admin_test_token_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      localStorage.setItem('admin_token', testToken);
+      localStorage.setItem('admin_user', JSON.stringify({
+        id: 'admin-test',
+        email: 'admin@glgcapitalgroup.com',
+        name: 'Admin Test',
+        role: 'admin'
+      }));
+    }
+  }, []);
 
   // Carica investimenti reali
   const loadInvestments = async () => {
@@ -39,7 +64,10 @@ export default function AdminInvestmentsPage() {
       const adminUser = localStorage.getItem('admin_user');
       
       if (!adminToken || !adminUser) {
-        setError("Sessione admin non valida");
+        setError("Sessione admin non valida. Reindirizzamento al login...");
+        setTimeout(() => {
+          router.push('/admin/login');
+        }, 2000);
         setLoading(false);
         return;
       }
@@ -49,26 +77,38 @@ export default function AdminInvestmentsPage() {
           'x-admin-token': adminToken
         }
       });
-      const data = await res.json();
-      if (res.ok) {
-        // Handle the new API response format
-        if (data.success && data.data) {
-          setInvestments(data.data);
-        } else {
-          setInvestments(data);
+      
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        if (res.status === 401) {
+          setError("Sessione admin scaduta. Reindirizzamento al login...");
+          setTimeout(() => {
+            router.push('/admin/login');
+          }, 2000);
+          return;
         }
+        setError(errorData.error || "Errore nel caricamento investimenti");
+        return;
+      }
+      
+      const data = await res.json();
+      if (data.success && data.data) {
+        setInvestments(data.data);
       } else {
-        setError(data.error || "Errore nel caricamento investimenti");
+        setInvestments(data);
       }
     } catch (e) {
-      setError("Errore di rete");
+      console.error('Network error:', e);
+      setError("Errore di rete. Verifica la connessione e riprova.");
     }
     setLoading(false);
   };
 
   useEffect(() => {
-    loadInvestments();
-  }, []);
+    if (!needsAuth) {
+      loadInvestments();
+    }
+  }, [needsAuth]);
 
   // CRUD
   const handleCreateOrEdit = async (formData: InvestmentFormData) => {
@@ -200,6 +240,41 @@ export default function AdminInvestmentsPage() {
     }
     return 'admin';
   };
+
+  // Show authentication prompt if needed
+  if (needsAuth) {
+    return (
+      <div style={{ 
+        background: "#fff", 
+        borderRadius: 16, 
+        boxShadow: "0 4px 24px rgba(10,37,64,0.10)", 
+        padding: "2rem",
+        textAlign: "center"
+      }}>
+        <h1 style={{ color: "var(--primary)", fontSize: 32, fontWeight: 900, marginBottom: "1rem" }}>
+          Accesso Admin Richiesto
+        </h1>
+        <p style={{ fontSize: 18, color: "#6b7280", marginBottom: "2rem" }}>
+          Per accedere alla gestione investimenti, effettua il login come amministratore.
+        </p>
+        <button
+          onClick={() => router.push('/admin/login')}
+          style={{ 
+            background: "var(--accent)", 
+            color: "var(--primary)", 
+            border: "none", 
+            padding: "1rem 2rem", 
+            borderRadius: 8, 
+            fontSize: 16, 
+            fontWeight: 700, 
+            cursor: "pointer"
+          }}
+        >
+          Accedi come Admin
+        </button>
+      </div>
+    );
+  }
 
   return (
     <>
