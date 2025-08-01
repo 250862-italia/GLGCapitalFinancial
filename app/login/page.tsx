@@ -74,34 +74,27 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-amber-400/20 to-orange-500/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-blue-400/20 to-cyan-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-purple-400/10 to-pink-400/10 rounded-full blur-3xl animate-pulse delay-500"></div>
-      </div>
-
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       {/* Main Content */}
-      <div className="relative z-10 max-w-md w-full">
+      <div className="max-w-md w-full">
         {/* Logo and Header */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-6">
-            <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-2xl">
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
               <span className="text-2xl font-bold text-white">G</span>
             </div>
           </div>
-          <h1 className="text-4xl font-bold text-white mb-2">GLG Capital Group</h1>
-          <p className="text-slate-300 text-lg">Financial Services</p>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">GLG Capital Group</h1>
+          <p className="text-gray-600 text-lg">Financial Services</p>
         </div>
 
         {/* Login Form */}
-        <div className="bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8">
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-white mb-2">
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">
               Welcome back
             </h2>
-            <p className="text-slate-300">
+            <p className="text-gray-600">
               Sign in to your account
             </p>
           </div>
@@ -109,7 +102,7 @@ export default function LoginPage() {
           <form className="space-y-6" onSubmit={handleSubmit}>
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-semibold text-slate-200 mb-2">
+              <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
                 Email Address
               </label>
               <input
@@ -117,7 +110,7 @@ export default function LoginPage() {
                 type="email"
                 autoComplete="email"
                 required
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all duration-200"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                 placeholder="Enter your email"
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
@@ -126,7 +119,7 @@ export default function LoginPage() {
 
             {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-sm font-semibold text-slate-200 mb-2">
+              <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
                 Password
               </label>
               <input
@@ -134,7 +127,7 @@ export default function LoginPage() {
                 type="password"
                 autoComplete="current-password"
                 required
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all duration-200"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                 placeholder="Enter your password"
                 value={formData.password}
                 onChange={(e) => handleInputChange('password', e.target.value)}
@@ -147,16 +140,16 @@ export default function LoginPage() {
                 <input
                   id="rememberMe"
                   type="checkbox"
-                  className="h-4 w-4 text-amber-500 focus:ring-amber-400 border-white/20 rounded bg-white/10"
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   checked={formData.rememberMe}
                   onChange={(e) => handleInputChange('rememberMe', e.target.checked)}
                 />
-                <label htmlFor="rememberMe" className="ml-2 block text-sm text-slate-300">
+                <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-700">
                   Remember me
                 </label>
               </div>
               <div className="text-sm">
-                <Link href="/forgot-password" className="text-amber-400 hover:text-amber-300 font-semibold">
+                <Link href="/forgot-password" className="text-blue-600 hover:text-blue-500 font-semibold">
                   Forgot password?
                 </Link>
               </div>
@@ -164,7 +157,7 @@ export default function LoginPage() {
 
             {/* Error Display */}
             {error && (
-              <div className="bg-red-500/20 border border-red-400/50 rounded-xl p-4">
+              <div className="bg-red-50 border border-red-200 rounded-xl p-4">
                 <div className="flex">
                   <div className="flex-shrink-0">
                     <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
@@ -172,10 +165,10 @@ export default function LoginPage() {
                     </svg>
                   </div>
                   <div className="ml-3">
-                    <h3 className="text-sm font-medium text-red-200">
+                    <h3 className="text-sm font-medium text-red-800">
                       Login Error
                     </h3>
-                    <div className="mt-2 text-sm text-red-300">
+                    <div className="mt-2 text-sm text-red-700">
                       <p>{error}</p>
                     </div>
                   </div>
@@ -185,7 +178,7 @@ export default function LoginPage() {
 
             {/* Success Display */}
             {success && (
-              <div className="bg-green-500/20 border border-green-400/50 rounded-xl p-4">
+              <div className="bg-green514 border border-green-200 rounded-xl p-4">
                 <div className="flex">
                   <div className="flex-shrink-0">
                     <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
@@ -193,10 +186,10 @@ export default function LoginPage() {
                     </svg>
                   </div>
                   <div className="ml-3">
-                    <h3 className="text-sm font-medium text-green-200">
+                    <h3 className="text-sm font-medium text-green-800">
                       Success
                     </h3>
-                    <div className="mt-2 text-sm text-green-300">
+                    <div className="mt-2 text-sm text-green-700">
                       <p>{success}</p>
                     </div>
                   </div>
@@ -208,13 +201,13 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold py-3 px-6 rounded-xl hover:from-amber-600 hover:to-orange-600 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 focus:ring-offset-slate-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg"
+              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold py-3 px-6 rounded-xl hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg"
             >
               {isLoading ? (
                 <div className="flex items-center justify-center">
                   <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.952 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
                   Signing in...
                 </div>
@@ -226,9 +219,9 @@ export default function LoginPage() {
 
           {/* Sign Up Link */}
           <div className="text-center mt-6">
-            <p className="text-slate-300 text-sm">
+            <p className="text-gray-700 text-sm">
               Don't have an account?{' '}
-              <Link href="/register" className="text-amber-400 hover:text-amber-300 font-semibold transition-colors">
+              <Link href="/register" className="text-blue-600 hover:text-blue-500 font-semibold transition-colors">
                 Sign up here
               </Link>
             </p>
@@ -237,13 +230,13 @@ export default function LoginPage() {
 
         {/* Footer */}
         <div className="text-center mt-8">
-          <p className="text-slate-400 text-sm">
+          <p className="text-gray-600 text-sm">
             By signing in, you agree to our{' '}
-            <Link href="/privacy" className="text-amber-400 hover:text-amber-300">
+            <Link href="/privacy" className="text-blue-600 hover:text-blue-500">
               Privacy Policy
             </Link>{' '}
             and{' '}
-            <Link href="/terms" className="text-amber-400 hover:text-amber-300">
+            <Link href="/terms" className="text-blue-600 hover:text-blue-500">
               Terms of Service
             </Link>
           </p>
