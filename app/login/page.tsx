@@ -74,243 +74,177 @@ export default function LoginPage() {
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      padding: '2rem'
-    }}>
-      <div style={{
-        background: 'white',
-        borderRadius: 16,
-        padding: '3rem',
-        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-        width: '100%',
-        maxWidth: 450
-      }}>
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <h1 style={{
-            fontSize: 32,
-            fontWeight: 700,
-            color: '#1f2937',
-            marginBottom: '0.5rem'
-          }}>
-            Welcome Back
-          </h1>
-          <p style={{
-            fontSize: 16,
-            color: '#6b7280',
-            margin: 0
-          }}>
-            Sign in to your account to continue
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-amber-400/20 to-orange-500/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-blue-400/20 to-cyan-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-purple-400/10 to-pink-400/10 rounded-full blur-3xl animate-pulse delay-500"></div>
+      </div>
+
+      {/* Main Content */}
+      <div className="relative z-10 max-w-md w-full">
+        {/* Logo and Header */}
+        <div className="text-center mb-8">
+          <div className="flex justify-center mb-6">
+            <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-2xl">
+              <span className="text-2xl font-bold text-white">G</span>
+            </div>
+          </div>
+          <h1 className="text-4xl font-bold text-white mb-2">GLG Capital Group</h1>
+          <p className="text-slate-300 text-lg">Financial Services</p>
         </div>
 
-        {/* Error/Success Messages */}
-        {error && (
-          <div style={{
-            background: '#fef2f2',
-            border: '1px solid #fecaca',
-            color: '#dc2626',
-            padding: '0.75rem',
-            borderRadius: 8,
-            marginBottom: '1.5rem',
-            fontSize: 14
-          }}>
-            {error}
+        {/* Login Form */}
+        <div className="bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-white mb-2">
+              Welcome back
+            </h2>
+            <p className="text-slate-300">
+              Sign in to your account
+            </p>
           </div>
-        )}
 
-        {success && (
-          <div style={{
-            background: '#f0fdf4',
-            border: '1px solid #bbf7d0',
-            color: '#16a34a',
-            padding: '0.75rem',
-            borderRadius: 8,
-            marginBottom: '1.5rem',
-            fontSize: 14
-          }}>
-            {success}
-          </div>
-        )}
-
-        {/* Form */}
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{
-              display: 'block',
-              marginBottom: '0.5rem',
-              fontWeight: 600,
-              color: '#374151'
-            }}>
-              Email Address <span style={{ color: '#ef4444' }}>*</span>
-            </label>
-            <div style={{ position: 'relative' }}>
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            {/* Email Field */}
+            <div>
+              <label htmlFor="email" className="block text-sm font-semibold text-slate-200 mb-2">
+                Email Address
+              </label>
               <input
+                id="email"
                 type="email"
+                autoComplete="email"
+                required
+                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all duration-200"
+                placeholder="Enter your email"
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem 0.75rem 0.75rem 2.5rem',
-                  border: '1px solid #d1d5db',
-                  borderRadius: 8,
-                  fontSize: 16,
-                  boxSizing: 'border-box'
-                }}
-                placeholder="Enter your email address"
-                required
               />
             </div>
-          </div>
 
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{
-              display: 'block',
-              marginBottom: '0.5rem',
-              fontWeight: 600,
-              color: '#374151'
-            }}>
-              Password <span style={{ color: '#ef4444' }}>*</span>
-            </label>
-            <div style={{ position: 'relative' }}>
+            {/* Password Field */}
+            <div>
+              <label htmlFor="password" className="block text-sm font-semibold text-slate-200 mb-2">
+                Password
+              </label>
               <input
+                id="password"
                 type="password"
+                autoComplete="current-password"
+                required
+                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all duration-200"
+                placeholder="Enter your password"
                 value={formData.password}
                 onChange={(e) => handleInputChange('password', e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem 2.5rem 0.75rem 2.5rem',
-                  border: '1px solid #d1d5db',
-                  borderRadius: 8,
-                  fontSize: 16,
-                  boxSizing: 'border-box'
-                }}
-                placeholder="Enter your password"
-                required
               />
             </div>
-          </div>
 
-          {/* Remember Me & Forgot Password */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '2rem'
-          }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: 14, color: '#374151' }}>
-              <input
-                type="checkbox"
-                checked={formData.rememberMe}
-                onChange={(e) => handleInputChange('rememberMe', e.target.checked)}
-              />
-              Remember me
-            </label>
-            {/* <Link href="/forgot-password" style={{
-              fontSize: 14,
-              color: '#059669',
-              textDecoration: 'underline'
-            }}>
-              Forgot password?
-            </Link> */}
-          </div>
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={isLoading}
-            style={{
-              width: '100%',
-              background: isLoading ? '#e5e7eb' : '#059669',
-              color: 'white',
-              border: 'none',
-              padding: '0.75rem',
-              borderRadius: 8,
-              cursor: isLoading ? 'not-allowed' : 'pointer',
-              fontSize: 16,
-              fontWeight: 600,
-              marginBottom: '1.5rem',
-              transition: 'background 0.2s ease'
-            }}
-          >
-            {isLoading ? 'Signing In...' : 'Sign In'}
-          </button>
-        </form>
-
-        {/* Debug Info (only in development) */}
-        {process.env.NODE_ENV === 'development' && (
-          <div style={{
-            background: '#f3f4f6',
-            padding: '0.5rem',
-            borderRadius: '4px',
-            fontSize: '12px',
-            color: '#6b7280',
-            marginBottom: '1rem'
-          }}>
-            <div>Email: {formData.email ? '✓' : '✗'}</div>
-            <div>Password: {formData.password ? '✓' : '✗'}</div>
-            <div>Loading: {isLoading ? '✓' : '✗'}</div>
-            <div>Button disabled: {isLoading ? '✓' : '✗'}</div>
-            
-            {/* Test Buttons */}
-            <div style={{ marginTop: '0.5rem', display: 'flex', gap: '0.5rem' }}>
-              <button
-                onClick={() => {
-                  console.log('🧪 Fill test data clicked!');
-                  setFormData({
-                    email: 'test_button@example.com',
-                    password: 'test123',
-                    rememberMe: false
-                  });
-                }}
-                style={{
-                  background: '#3b82f6',
-                  color: 'white',
-                  border: 'none',
-                  padding: '0.25rem 0.5rem',
-                  borderRadius: '4px',
-                  fontSize: '10px',
-                  cursor: 'pointer'
-                }}
-              >
-                Fill Test Data
-              </button>
-              
-              <button
-                onClick={() => {
-                  console.log('🧪 Test form submission clicked!');
-                  const form = document.querySelector('form');
-                  if (form) {
-                    form.dispatchEvent(new Event('submit', { bubbles: true }));
-                  }
-                }}
-                style={{
-                  background: '#10b981',
-                  color: 'white',
-                  border: 'none',
-                  padding: '0.25rem 0.5rem',
-                  borderRadius: '4px',
-                  fontSize: '10px',
-                  cursor: 'pointer'
-                }}
-              >
-                Test Submit
-              </button>
+            {/* Remember Me and Forgot Password */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <input
+                  id="rememberMe"
+                  type="checkbox"
+                  className="h-4 w-4 text-amber-500 focus:ring-amber-400 border-white/20 rounded bg-white/10"
+                  checked={formData.rememberMe}
+                  onChange={(e) => handleInputChange('rememberMe', e.target.checked)}
+                />
+                <label htmlFor="rememberMe" className="ml-2 block text-sm text-slate-300">
+                  Remember me
+                </label>
+              </div>
+              <div className="text-sm">
+                <Link href="/forgot-password" className="text-amber-400 hover:text-amber-300 font-semibold">
+                  Forgot password?
+                </Link>
+              </div>
             </div>
-          </div>
-        )}
 
-        {/* Register Link */}
-        <div style={{ textAlign: 'center' }}>
-          <p style={{ fontSize: 14, color: '#6b7280', margin: 0 }}>
-            Don't have an account?{' '}
-            <Link href="/register" style={{ color: '#059669', textDecoration: 'underline', fontWeight: 600 }}>
-              Sign up here
+            {/* Error Display */}
+            {error && (
+              <div className="bg-red-500/20 border border-red-400/50 rounded-xl p-4">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-red-200">
+                      Login Error
+                    </h3>
+                    <div className="mt-2 text-sm text-red-300">
+                      <p>{error}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Success Display */}
+            {success && (
+              <div className="bg-green-500/20 border border-green-400/50 rounded-xl p-4">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-green-200">
+                      Success
+                    </h3>
+                    <div className="mt-2 text-sm text-green-300">
+                      <p>{success}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold py-3 px-6 rounded-xl hover:from-amber-600 hover:to-orange-600 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 focus:ring-offset-slate-900 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg"
+            >
+              {isLoading ? (
+                <div className="flex items-center justify-center">
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Signing in...
+                </div>
+              ) : (
+                'Sign In'
+              )}
+            </button>
+          </form>
+
+          {/* Sign Up Link */}
+          <div className="text-center mt-6">
+            <p className="text-slate-300 text-sm">
+              Don't have an account?{' '}
+              <Link href="/register" className="text-amber-400 hover:text-amber-300 font-semibold transition-colors">
+                Sign up here
+              </Link>
+            </p>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="text-center mt-8">
+          <p className="text-slate-400 text-sm">
+            By signing in, you agree to our{' '}
+            <Link href="/privacy" className="text-amber-400 hover:text-amber-300">
+              Privacy Policy
+            </Link>{' '}
+            and{' '}
+            <Link href="/terms" className="text-amber-400 hover:text-amber-300">
+              Terms of Service
             </Link>
           </p>
         </div>
