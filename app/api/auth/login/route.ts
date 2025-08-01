@@ -10,6 +10,7 @@ import {
 import { safeAuthCall, safeDatabaseQuery } from '@/lib/supabase-safe';
 import { withErrorHandling, generateRequestId, addRequestId } from '@/lib/error-handler';
 import { offlineDataManager } from '@/lib/offline-data';
+import { testSupabaseConnection } from '@/lib/supabase-fallback';
 
 interface UserProfile {
   id: string;
@@ -141,34 +142,22 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       }
     }
 
-    // Test connessione Supabase prima del login
-    try {
-      console.log(`🔄 Login [${requestId}]: Testing Supabase connection...`);
-      const { data: testData, error: testError } = await supabase
-        .from('profiles')
-        .select('count')
-        .limit(1);
-      
-      if (testError) {
-        console.error(`❌ Login [${requestId}]: Supabase connection test failed:`, testError);
-        return NextResponse.json({
-          success: false,
-          error: 'Errore di connessione al database. Riprova più tardi.',
-          code: 'DATABASE_CONNECTION_ERROR',
-          details: process.env.NODE_ENV === 'development' ? testError.message : undefined
-        }, { status: 503 });
-      }
-      
-      console.log(`✅ Login [${requestId}]: Supabase connection test passed`);
-    } catch (connectionError) {
-      console.error(`❌ Login [${requestId}]: Supabase connection error:`, connectionError);
+    // Test connessione Supabase usando il sistema di fallback
+    console.log(`🔄 Login [${requestId}]: Testing Supabase connection...`);
+    const isSupabaseConnected = await testSupabaseConnection();
+    
+    if (!isSupabaseConnected) {
+      console.log(`❌ Login [${requestId}]: Supabase not available, user not found offline`);
+      performanceMonitor.end('login_user', startTime);
       return NextResponse.json({
         success: false,
-        error: 'Errore di connessione al database. Riprova più tardi.',
-        code: 'DATABASE_CONNECTION_ERROR',
-        details: process.env.NODE_ENV === 'development' ? connectionError.message : undefined
-      }, { status: 503 });
+        error: 'Utente non trovato. Verifica le credenziali o registrati.',
+        code: 'USER_NOT_FOUND',
+        details: 'Database non disponibile e utente non registrato offline'
+      }, { status: 404 });
     }
+    
+    console.log(`✅ Login [${requestId}]: Supabase connection test passed`);
 
     // Autenticazione diretta con Supabase
     console.log(`🔄 Login [${requestId}]: Starting Supabase authentication...`);
@@ -205,7 +194,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
           success: false,
           error: 'Email non confermata. Controlla la tua casella email.',
           code: 'EMAIL_NOT_CONFIRMED'
-        }, { status: 403 });
+        }, { status: 401 });
       }
       
       if (authError.message.includes('Too many requests')) {
@@ -216,47 +205,31 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         }, { status: 429 });
       }
       
-      if (authError.message.includes('Network error') || authError.message.includes('fetch failed') || authError.message.includes('TypeError: fetch failed')) {
-        console.log(`⚠️ Login [${requestId}]: Network error detected:`, authError.message);
-        return NextResponse.json({
-          success: false,
-          error: 'Errore di rete. Verifica la connessione e riprova.',
-          code: 'NETWORK_ERROR'
-        }, { status: 503 });
-      }
-      
-      // Per tutti gli altri errori, restituisci un errore generico ma con dettagli in development
+      // Errore generico di autenticazione
       return NextResponse.json({
         success: false,
-        error: 'Errore durante l\'accesso. Riprova più tardi.',
-        code: 'AUTH_ERROR',
-        details: process.env.NODE_ENV === 'development' ? {
-          message: authError.message,
-          status: authError.status,
-          name: authError.name
-        } : undefined
+        error: 'Errore durante l\'autenticazione. Riprova più tardi.',
+        code: 'AUTHENTICATION_ERROR',
+        details: process.env.NODE_ENV === 'development' ? authError.message : undefined
       }, { status: 500 });
     }
 
     if (!authData?.user) {
-      console.error(`❌ Login [${requestId}]: No user data returned`);
+      console.log(`❌ Login [${requestId}]: No user data returned from Supabase`);
       performanceMonitor.end('login_user', startTime);
       return NextResponse.json({
         success: false,
-        error: 'Errore durante l\'autenticazione',
-        code: 'AUTHENTICATION_FAILED'
-      }, { status: 401 });
+        error: 'Errore durante l\'autenticazione. Riprova più tardi.',
+        code: 'NO_USER_DATA'
+      }, { status: 500 });
     }
 
-    console.log(`✅ Login [${requestId}]: User authenticated successfully:`, authData.user.id);
+    console.log(`✅ Login [${requestId}]: Supabase authentication successful for user:`, authData.user.id);
 
-    // Recupera profilo utente
-    console.log(`🔍 Login [${requestId}]: Fetching user profile...`);
-    let profileData = null;
-    
-    const { data: profile, error: profileError } = await safeDatabaseQuery(
+    // Ottieni profilo utente
+    const { data: profileData, error: profileError } = await safeDatabaseQuery(
       'profiles',
-      async (client) => client
+      (client) => client
         .from('profiles')
         .select('*')
         .eq('id', authData.user.id)
@@ -265,19 +238,14 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     );
 
     if (profileError) {
-      console.log(`⚠️ Login [${requestId}]: Profile not found:`, profileError);
-    } else {
-      console.log(`✅ Login [${requestId}]: Profile retrieved successfully`);
-      profileData = profile;
+      console.error(`❌ Login [${requestId}]: Error fetching profile:`, profileError);
+      // Non bloccare il login se il profilo non esiste
     }
 
-    // Recupera dati cliente se disponibili (semplificato)
-    let clientData = null;
-    console.log(`🔍 Login [${requestId}]: Fetching client data...`);
-    
-    const { data: client, error: clientError } = await safeDatabaseQuery(
+    // Ottieni dati cliente se esiste
+    const { data: clientData, error: clientError } = await safeDatabaseQuery(
       'clients',
-      async (client) => client
+      (client) => client
         .from('clients')
         .select('*')
         .eq('user_id', authData.user.id)
@@ -286,61 +254,54 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     );
 
     if (clientError) {
-      console.error(`❌ Login [${requestId}]: Error retrieving client:`, clientError);
-    } else {
-      console.log(`✅ Login [${requestId}]: Client data retrieved successfully`);
-      clientData = client;
+      console.error(`❌ Login [${requestId}]: Error fetching client data:`, clientError);
+      // Non bloccare il login se i dati cliente non esistono
     }
 
     // Genera nuovo CSRF token per la sessione
     const csrfToken = generateCSRFToken();
-    console.log(`✅ Login [${requestId}]: New CSRF token generated`);
 
-    // Prepara risposta ottimizzata
-    const userName = authData.user.user_metadata?.name || 'Utente';
-    const userRole = 'user';
-    
     const responseData = {
       success: true,
       user: {
         id: authData.user.id,
-        email: authData.user.email,
-        name: userName,
-        role: userRole,
+        email: authData.user.email!,
+        name: profileData?.name || `${profileData?.first_name || ''} ${profileData?.last_name || ''}`.trim() || authData.user.email,
+        role: profileData?.role || 'user',
         profile: profileData ? {
           first_name: profileData.first_name,
           last_name: profileData.last_name,
           country: profileData.country,
-          kyc_status: profileData.kyc_status
+          kyc_status: profileData.kyc_status || 'pending'
         } : null,
         client: clientData ? {
           client_code: clientData.client_code,
           status: clientData.status,
-          risk_profile: clientData.risk_profile,
-          total_invested: clientData.total_invested
+          risk_profile: clientData.risk_profile || 'standard',
+          total_invested: clientData.total_invested || 0
         } : null
       },
       session: {
-        access_token: authData.session?.access_token,
-        refresh_token: authData.session?.refresh_token,
-        expires_at: authData.session?.expires_at
+        access_token: authData.session?.access_token || `online_${Date.now()}`,
+        refresh_token: authData.session?.refresh_token || `online_refresh_${Date.now()}`,
+        expires_at: authData.session?.expires_at || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
       },
       csrfToken,
       message: 'Accesso effettuato con successo',
       mode: 'online'
     };
 
-    const response = NextResponse.json(responseData, {
+    console.log(`✅ Login [${requestId}]: Login successful, returning user data`);
+    performanceMonitor.end('login_user', startTime);
+
+    return NextResponse.json(responseData, {
       headers: {
         'X-Performance': `${Date.now() - startTime}ms`,
         'X-Mode': 'online'
       }
     });
 
-    performanceMonitor.end('login_user', startTime);
-    return response;
-
-  } catch (error) {
+  } catch (error: any) {
     console.error(`❌ Login [${requestId}]: Unexpected error:`, error);
     performanceMonitor.end('login_user', startTime);
     
