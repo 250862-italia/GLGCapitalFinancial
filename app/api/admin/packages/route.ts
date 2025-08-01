@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getPackagesWithFallback } from '@/lib/supabase-fallback';
+import { getPackages, createPackage, updatePackage, deletePackage, syncPackages } from '@/lib/packages-storage';
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://zaeakwbpiqzhywhlqqse.supabase.co',
@@ -24,9 +25,9 @@ export async function GET(request: NextRequest) {
   console.log('🔍 Admin packages API called');
   
   try {
-    // Usa la nuova funzione per recuperare pacchetti reali
-    const packages = await getPackagesWithFallback();
-    console.log('✅ Packages fetched successfully:', packages.length);
+    // Usa il sistema di storage locale
+    const packages = getPackages();
+    console.log('✅ Packages fetched from local storage:', packages.length);
     
     return NextResponse.json({ packages });
   } catch (error) {
@@ -62,40 +63,18 @@ export async function POST(request: NextRequest) {
       expected_return: parseFloat(expected_return),
       status: status || 'active',
       type: type || 'balanced',
-      risk_level: risk_level || 'medium',
-      created_at: new Date().toISOString()
+      risk_level: risk_level || 'medium'
     };
 
-    try {
-      const { data, error } = await supabaseAdmin
-        .from('packages')
-        .insert([packageData])
-        .select()
-        .single();
-
-      if (error) {
-        console.log('⚠️ Supabase insert failed, returning success anyway:', error.message);
-        return NextResponse.json({ 
-          success: true, 
-          message: 'Pacchetto creato con successo (modalità offline)',
-          package: { id: Date.now().toString(), ...packageData }
-        });
-      }
-
-      console.log('✅ Package created successfully in Supabase');
-      return NextResponse.json({ 
-        success: true, 
-        message: 'Pacchetto creato con successo',
-        package: data 
-      });
-    } catch (supabaseError) {
-      console.log('⚠️ Supabase error, returning success anyway');
-      return NextResponse.json({ 
-        success: true, 
-        message: 'Pacchetto creato con successo (modalità offline)',
-        package: { id: Date.now().toString(), ...packageData }
-      });
-    }
+    // Crea il pacchetto nel storage locale
+    const newPackage = createPackage(packageData);
+    
+    console.log('✅ Package created successfully in local storage');
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Pacchetto creato con successo',
+      package: newPackage 
+    });
   } catch (error) {
     console.error('❌ Unexpected error:', error);
     return NextResponse.json({ 
@@ -127,41 +106,24 @@ export async function PUT(request: NextRequest) {
       expected_return: parseFloat(expected_return),
       status: status || 'active',
       type: type || 'balanced',
-      risk_level: risk_level || 'medium',
-      updated_at: new Date().toISOString()
+      risk_level: risk_level || 'medium'
     };
 
-    try {
-      const { data, error } = await supabaseAdmin
-        .from('packages')
-        .update(packageData)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) {
-        console.log('⚠️ Supabase update failed, returning success anyway:', error.message);
-        return NextResponse.json({ 
-          success: true, 
-          message: 'Pacchetto aggiornato con successo (modalità offline)',
-          package: { id, ...packageData }
-        });
-      }
-
-      console.log('✅ Package updated successfully in Supabase');
+    // Aggiorna il pacchetto nel storage locale
+    const updatedPackage = updatePackage(id, packageData);
+    
+    if (!updatedPackage) {
       return NextResponse.json({ 
-        success: true, 
-        message: 'Pacchetto aggiornato con successo',
-        package: data 
-      });
-    } catch (supabaseError) {
-      console.log('⚠️ Supabase error, returning success anyway');
-      return NextResponse.json({ 
-        success: true, 
-        message: 'Pacchetto aggiornato con successo (modalità offline)',
-        package: { id, ...packageData }
-      });
+        error: 'Pacchetto non trovato' 
+      }, { status: 404 });
     }
+
+    console.log('✅ Package updated successfully in local storage');
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Pacchetto aggiornato con successo',
+      package: updatedPackage 
+    });
   } catch (error) {
     console.error('❌ Unexpected error:', error);
     return NextResponse.json({ 
@@ -184,32 +146,20 @@ export async function DELETE(request: NextRequest) {
       }, { status: 400 });
     }
 
-    try {
-      const { error } = await supabaseAdmin
-        .from('packages')
-        .delete()
-        .eq('id', id);
-
-      if (error) {
-        console.log('⚠️ Supabase delete failed, returning success anyway:', error.message);
-        return NextResponse.json({ 
-          success: true, 
-          message: 'Pacchetto eliminato con successo (modalità offline)' 
-        });
-      }
-
-      console.log('✅ Package deleted successfully from Supabase');
+    // Elimina il pacchetto dal storage locale
+    const success = deletePackage(id);
+    
+    if (!success) {
       return NextResponse.json({ 
-        success: true, 
-        message: 'Pacchetto eliminato con successo' 
-      });
-    } catch (supabaseError) {
-      console.log('⚠️ Supabase error, returning success anyway');
-      return NextResponse.json({ 
-        success: true, 
-        message: 'Pacchetto eliminato con successo (modalità offline)' 
-      });
+        error: 'Pacchetto non trovato' 
+      }, { status: 404 });
     }
+
+    console.log('✅ Package deleted successfully from local storage');
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Pacchetto eliminato con successo' 
+    });
   } catch (error) {
     console.error('❌ Unexpected error:', error);
     return NextResponse.json({ 
