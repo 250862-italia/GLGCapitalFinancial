@@ -8,6 +8,7 @@ import {
   performanceMonitor
 } from '@/lib/api-optimizer';
 import { offlineDataManager } from '@/lib/offline-data';
+import { InputSanitizer } from '@/lib/input-sanitizer';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -25,8 +26,18 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
-    // Sanitizzazione input
-    const sanitizedBody = sanitizeInput(body);
+    // Sanitizzazione input con il nuovo sanitizer robusto
+    let sanitizedBody;
+    try {
+      sanitizedBody = InputSanitizer.sanitizeRegistrationData(body);
+    } catch (sanitizationError) {
+      console.error('❌ Registration sanitization error:', sanitizationError);
+      performanceMonitor.end('register_user', startTime);
+      return NextResponse.json(
+        { error: sanitizationError instanceof Error ? sanitizationError.message : 'Invalid input data' },
+        { status: 400 }
+      );
+    }
     
     // Validazione CSRF - più permissiva per token generati localmente
     const csrfValidation = validateCSRFToken(request);
@@ -48,12 +59,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Validazione input robusta
+    // Validazione input robusta sui dati già sanitizzati
     const validation = validateInput(sanitizedBody, {
       email: VALIDATION_SCHEMAS.email,
       password: VALIDATION_SCHEMAS.password,
-      firstName: (value) => VALIDATION_SCHEMAS.string(value, 100),
-      lastName: (value) => VALIDATION_SCHEMAS.string(value, 100),
+      firstName: (value) => VALIDATION_SCHEMAS.string(value, 50),
+      lastName: (value) => VALIDATION_SCHEMAS.string(value, 50),
       country: VALIDATION_SCHEMAS.required
     });
 
@@ -65,7 +76,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { email, password, firstName, lastName, country } = sanitizedBody;
+    const { email, firstName, lastName, country } = sanitizedBody;
     const name = `${firstName} ${lastName}`.trim();
 
     console.log('🔄 Registrazione utente:', { email, firstName, lastName, country });
@@ -84,7 +95,7 @@ export async function POST(request: NextRequest) {
     try {
       const { data: authData, error: authError } = await supabase.auth.admin.createUser({
         email,
-        password,
+        password: sanitizedBody.password,
         email_confirm: true,
         user_metadata: {
           first_name: firstName,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { validateCSRFToken } from '@/lib/csrf';
 import { MemoryOptimizer } from '@/lib/memory-optimizer';
+import { InputSanitizer } from '@/lib/input-sanitizer';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -30,8 +31,20 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log('📝 Request body:', body);
     
+    // Sanitizzazione input con il nuovo sanitizer robusto
+    let sanitizedBody;
+    try {
+      sanitizedBody = InputSanitizer.sanitizeProfileData(body);
+    } catch (sanitizationError) {
+      console.error('❌ Profile update sanitization error:', sanitizationError);
+      return NextResponse.json(
+        { error: sanitizationError instanceof Error ? sanitizationError.message : 'Invalid input data' },
+        { status: 400 }
+      );
+    }
+    
     // Validazione input
-    if (!body.user_id) {
+    if (!sanitizedBody.user_id) {
       console.log('❌ User ID is missing');
       return NextResponse.json(
         { error: 'User ID is required' },
@@ -39,7 +52,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const user_id = body.user_id;
+    const user_id = sanitizedBody.user_id;
     console.log('👤 Processing update for user:', user_id);
 
     // Test connection first
@@ -86,41 +99,41 @@ export async function POST(request: NextRequest) {
         updated_at: new Date().toISOString()
       };
 
-      // Add fields that are provided in the request
-      if (body.first_name !== undefined) updateData.first_name = body.first_name;
-      if (body.last_name !== undefined) updateData.last_name = body.last_name;
-      if (body.phone !== undefined) updateData.phone = body.phone;
-      if (body.company !== undefined) updateData.company = body.company;
-      if (body.position !== undefined) updateData.position = body.position;
-      if (body.date_of_birth !== undefined) updateData.date_of_birth = body.date_of_birth;
-      if (body.nationality !== undefined) updateData.nationality = body.nationality;
-      if (body.address !== undefined) updateData.address = body.address;
-      if (body.city !== undefined) updateData.city = body.city;
-      if (body.country !== undefined) updateData.country = body.country;
-      if (body.postal_code !== undefined) updateData.postal_code = body.postal_code;
-      if (body.iban !== undefined) updateData.iban = body.iban;
-      if (body.bic !== undefined) updateData.bic = body.bic;
-      if (body.account_holder !== undefined) updateData.account_holder = body.account_holder;
-      if (body.usdt_wallet !== undefined) updateData.usdt_wallet = body.usdt_wallet;
+      // Add fields that are provided in the request (using sanitized data)
+      if (sanitizedBody.first_name !== undefined) updateData.first_name = sanitizedBody.first_name;
+      if (sanitizedBody.last_name !== undefined) updateData.last_name = sanitizedBody.last_name;
+      if (sanitizedBody.phone !== undefined) updateData.phone = sanitizedBody.phone;
+      if (sanitizedBody.company !== undefined) updateData.company = sanitizedBody.company;
+      if (sanitizedBody.position !== undefined) updateData.position = sanitizedBody.position;
+      if (sanitizedBody.date_of_birth !== undefined) updateData.date_of_birth = sanitizedBody.date_of_birth;
+      if (sanitizedBody.nationality !== undefined) updateData.nationality = sanitizedBody.nationality;
+      if (sanitizedBody.address !== undefined) updateData.address = sanitizedBody.address;
+      if (sanitizedBody.city !== undefined) updateData.city = sanitizedBody.city;
+      if (sanitizedBody.country !== undefined) updateData.country = sanitizedBody.country;
+      if (sanitizedBody.postal_code !== undefined) updateData.postal_code = sanitizedBody.postal_code;
+      if (sanitizedBody.iban !== undefined) updateData.iban = sanitizedBody.iban;
+      if (sanitizedBody.bic !== undefined) updateData.bic = sanitizedBody.bic;
+      if (sanitizedBody.account_holder !== undefined) updateData.account_holder = sanitizedBody.account_holder;
+      if (sanitizedBody.usdt_wallet !== undefined) updateData.usdt_wallet = sanitizedBody.usdt_wallet;
       
       // Financial Information fields
-      if (body.annual_income !== undefined) updateData.annual_income = parseFloat(body.annual_income) || 0;
-      if (body.net_worth !== undefined) updateData.net_worth = parseFloat(body.net_worth) || 0;
-      if (body.investment_experience !== undefined) updateData.investment_experience = body.investment_experience;
-      if (body.risk_tolerance !== undefined) updateData.risk_tolerance = body.risk_tolerance;
-      if (body.investment_goals !== undefined) updateData.investment_goals = body.investment_goals;
-      if (body.preferred_investment_types !== undefined) updateData.preferred_investment_types = body.preferred_investment_types;
-      if (body.monthly_investment_budget !== undefined) updateData.monthly_investment_budget = parseFloat(body.monthly_investment_budget) || 0;
-      if (body.emergency_fund !== undefined) updateData.emergency_fund = parseFloat(body.emergency_fund) || 0;
-      if (body.debt_amount !== undefined) updateData.debt_amount = parseFloat(body.debt_amount) || 0;
-      if (body.credit_score !== undefined) updateData.credit_score = parseInt(body.credit_score) || 0;
-      if (body.employment_status !== undefined) updateData.employment_status = body.employment_status;
-      if (body.employer_name !== undefined) updateData.employer_name = body.employer_name;
-      if (body.job_title !== undefined) updateData.job_title = body.job_title;
-      if (body.years_employed !== undefined) updateData.years_employed = parseInt(body.years_employed) || 0;
-      if (body.source_of_funds !== undefined) updateData.source_of_funds = body.source_of_funds;
-      if (body.tax_residency !== undefined) updateData.tax_residency = body.tax_residency;
-      if (body.tax_id !== undefined) updateData.tax_id = body.tax_id;
+      if (sanitizedBody.annual_income !== undefined) updateData.annual_income = parseFloat(sanitizedBody.annual_income) || 0;
+      if (sanitizedBody.net_worth !== undefined) updateData.net_worth = parseFloat(sanitizedBody.net_worth) || 0;
+      if (sanitizedBody.investment_experience !== undefined) updateData.investment_experience = sanitizedBody.investment_experience;
+      if (sanitizedBody.risk_tolerance !== undefined) updateData.risk_tolerance = sanitizedBody.risk_tolerance;
+      if (sanitizedBody.investment_goals !== undefined) updateData.investment_goals = sanitizedBody.investment_goals;
+      if (sanitizedBody.preferred_investment_types !== undefined) updateData.preferred_investment_types = sanitizedBody.preferred_investment_types;
+      if (sanitizedBody.monthly_investment_budget !== undefined) updateData.monthly_investment_budget = parseFloat(sanitizedBody.monthly_investment_budget) || 0;
+      if (sanitizedBody.emergency_fund !== undefined) updateData.emergency_fund = parseFloat(sanitizedBody.emergency_fund) || 0;
+      if (sanitizedBody.debt_amount !== undefined) updateData.debt_amount = parseFloat(sanitizedBody.debt_amount) || 0;
+      if (sanitizedBody.credit_score !== undefined) updateData.credit_score = parseInt(sanitizedBody.credit_score) || 0;
+      if (sanitizedBody.employment_status !== undefined) updateData.employment_status = sanitizedBody.employment_status;
+      if (sanitizedBody.employer_name !== undefined) updateData.employer_name = sanitizedBody.employer_name;
+      if (sanitizedBody.job_title !== undefined) updateData.job_title = sanitizedBody.job_title;
+      if (sanitizedBody.years_employed !== undefined) updateData.years_employed = parseInt(sanitizedBody.years_employed) || 0;
+      if (sanitizedBody.source_of_funds !== undefined) updateData.source_of_funds = sanitizedBody.source_of_funds;
+      if (sanitizedBody.tax_residency !== undefined) updateData.tax_residency = sanitizedBody.tax_residency;
+      if (sanitizedBody.tax_id !== undefined) updateData.tax_id = sanitizedBody.tax_id;
 
       console.log('📝 Update data:', updateData);
 
@@ -139,41 +152,41 @@ export async function POST(request: NextRequest) {
       const newProfile = {
         user_id: user_id,
         profile_id: user_id, // Use user_id as profile_id for now
-        first_name: body.first_name || '',
-        last_name: body.last_name || '',
-        email: body.email || '',
-        phone: body.phone || '',
-        company: body.company || '',
-        position: body.position || '',
-        date_of_birth: body.date_of_birth || null,
-        nationality: body.nationality || '',
-        profile_photo: body.profile_photo || '',
-        address: body.address || '',
-        city: body.city || '',
-        country: body.country || '',
-        postal_code: body.postal_code || '',
-        iban: body.iban || '',
-        bic: body.bic || '',
-        account_holder: body.account_holder || '',
-        usdt_wallet: body.usdt_wallet || '',
+        first_name: sanitizedBody.first_name || '',
+        last_name: sanitizedBody.last_name || '',
+        email: sanitizedBody.email || '',
+        phone: sanitizedBody.phone || '',
+        company: sanitizedBody.company || '',
+        position: sanitizedBody.position || '',
+        date_of_birth: sanitizedBody.date_of_birth || null,
+        nationality: sanitizedBody.nationality || '',
+        profile_photo: sanitizedBody.profile_photo || '',
+        address: sanitizedBody.address || '',
+        city: sanitizedBody.city || '',
+        country: sanitizedBody.country || '',
+        postal_code: sanitizedBody.postal_code || '',
+        iban: sanitizedBody.iban || '',
+        bic: sanitizedBody.bic || '',
+        account_holder: sanitizedBody.account_holder || '',
+        usdt_wallet: sanitizedBody.usdt_wallet || '',
         // Financial Information fields
-        annual_income: parseFloat(body.annual_income) || 0,
-        net_worth: parseFloat(body.net_worth) || 0,
-        investment_experience: body.investment_experience || 'beginner',
-        risk_tolerance: body.risk_tolerance || 'medium',
-        investment_goals: body.investment_goals || {},
-        preferred_investment_types: body.preferred_investment_types || [],
-        monthly_investment_budget: parseFloat(body.monthly_investment_budget) || 0,
-        emergency_fund: parseFloat(body.emergency_fund) || 0,
-        debt_amount: parseFloat(body.debt_amount) || 0,
-        credit_score: parseInt(body.credit_score) || 0,
-        employment_status: body.employment_status || '',
-        employer_name: body.employer_name || '',
-        job_title: body.job_title || '',
-        years_employed: parseInt(body.years_employed) || 0,
-        source_of_funds: body.source_of_funds || '',
-        tax_residency: body.tax_residency || '',
-        tax_id: body.tax_id || '',
+        annual_income: parseFloat(sanitizedBody.annual_income) || 0,
+        net_worth: parseFloat(sanitizedBody.net_worth) || 0,
+        investment_experience: sanitizedBody.investment_experience || 'beginner',
+        risk_tolerance: sanitizedBody.risk_tolerance || 'medium',
+        investment_goals: sanitizedBody.investment_goals || {},
+        preferred_investment_types: sanitizedBody.preferred_investment_types || [],
+        monthly_investment_budget: parseFloat(sanitizedBody.monthly_investment_budget) || 0,
+        emergency_fund: parseFloat(sanitizedBody.emergency_fund) || 0,
+        debt_amount: parseFloat(sanitizedBody.debt_amount) || 0,
+        credit_score: parseInt(sanitizedBody.credit_score) || 0,
+        employment_status: sanitizedBody.employment_status || '',
+        employer_name: sanitizedBody.employer_name || '',
+        job_title: sanitizedBody.job_title || '',
+        years_employed: parseInt(sanitizedBody.years_employed) || 0,
+        source_of_funds: sanitizedBody.source_of_funds || '',
+        tax_residency: sanitizedBody.tax_residency || '',
+        tax_id: sanitizedBody.tax_id || '',
         client_code: 'CLI-' + user_id.substring(0, 8) + '-' + Math.floor(Math.random() * 1000),
         status: 'active'
       };
@@ -201,7 +214,7 @@ export async function POST(request: NextRequest) {
         data: {
           id: `temp-${user_id}`,
           user_id: user_id,
-          ...body,
+          ...sanitizedBody,
           status: 'active',
           updated_at: new Date().toISOString()
         }
@@ -225,9 +238,9 @@ export async function POST(request: NextRequest) {
       message: 'Profile updated successfully',
       warning: 'Unexpected error occurred',
       data: {
-        id: `temp-${body?.user_id || 'unknown'}`,
-        user_id: body?.user_id || 'unknown',
-        ...body,
+        id: `temp-${sanitizedBody?.user_id || 'unknown'}`,
+        user_id: sanitizedBody?.user_id || 'unknown',
+        ...sanitizedBody,
         status: 'active',
         updated_at: new Date().toISOString()
       }

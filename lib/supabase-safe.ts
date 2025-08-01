@@ -13,21 +13,16 @@ export async function safeSupabaseCall<T>(
   } catch (error) {
     console.log('⚠️ Supabase call failed:', error);
     
-    // Se è un errore di rete specifico, restituisci il fallback
+    // Se è un errore di rete, restituisci il fallback
     if (error instanceof Error && (
       error.message.includes('fetch failed') ||
       error.message.includes('TypeError: fetch failed') ||
-      error.message.includes('Network error') ||
-      error.message.includes('ERR_NAME_NOT_RESOLVED') ||
-      error.message.includes('ENOTFOUND') ||
-      error.message.includes('ECONNREFUSED') ||
-      error.message.includes('ETIMEDOUT')
+      error.message.includes('Network error')
     )) {
       console.log('⚠️ Network error detected, using fallback');
       return { data: fallback || null, error: 'NETWORK_ERROR' };
     }
     
-    // Per altri errori, restituisci l'errore originale
     return { data: null, error };
   }
 }
@@ -45,22 +40,15 @@ export async function safeDatabaseQuery<T>(
     if (result.error) {
       console.log(`⚠️ Database query error for ${table}:`, result.error);
       
-      // Se è un errore di rete specifico, restituisci il fallback
+      // Se è un errore di rete, restituisci il fallback
       if (result.error.message && (
         result.error.message.includes('fetch failed') ||
         result.error.message.includes('TypeError: fetch failed') ||
-        result.error.message.includes('Network error') ||
-        result.error.message.includes('ERR_NAME_NOT_RESOLVED') ||
-        result.error.message.includes('ENOTFOUND') ||
-        result.error.message.includes('ECONNREFUSED') ||
-        result.error.message.includes('ETIMEDOUT')
+        result.error.message.includes('Network error')
       )) {
         console.log(`⚠️ Network error for ${table}, using fallback`);
         return { data: fallback || null, error: 'NETWORK_ERROR' };
       }
-      
-      // Per altri errori, restituisci l'errore originale
-      return result;
     }
     
     return result;
@@ -70,11 +58,7 @@ export async function safeDatabaseQuery<T>(
     if (error instanceof Error && (
       error.message.includes('fetch failed') ||
       error.message.includes('TypeError: fetch failed') ||
-      error.message.includes('Network error') ||
-      error.message.includes('ERR_NAME_NOT_RESOLVED') ||
-      error.message.includes('ENOTFOUND') ||
-      error.message.includes('ECONNREFUSED') ||
-      error.message.includes('ETIMEDOUT')
+      error.message.includes('Network error')
     )) {
       console.log(`⚠️ Network error for ${table}, using fallback`);
       return { data: fallback || null, error: 'NETWORK_ERROR' };
@@ -99,11 +83,7 @@ export async function safeAuthCall<T>(
     if (error instanceof Error && (
       error.message.includes('fetch failed') ||
       error.message.includes('TypeError: fetch failed') ||
-      error.message.includes('Network error') ||
-      error.message.includes('ERR_NAME_NOT_RESOLVED') ||
-      error.message.includes('ENOTFOUND') ||
-      error.message.includes('ECONNREFUSED') ||
-      error.message.includes('ETIMEDOUT')
+      error.message.includes('Network error')
     )) {
       console.log('⚠️ Network error in auth, using fallback');
       return { data: fallback || null, error: 'NETWORK_ERROR' };
