@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import type { CSSProperties } from 'react';
+import { getPackagesWithFallback } from '@/lib/supabase-fallback';
 
 interface Package {
   id: string;
@@ -15,46 +16,6 @@ interface Package {
   risk_level?: string;
   created_at?: string;
 }
-
-// Dati di fallback per quando l'API non è disponibile
-const FALLBACK_PACKAGES: Package[] = [
-  {
-    id: '1',
-    name: 'Pacchetto Starter',
-    description: 'Pacchetto ideale per iniziare con investimenti sicuri',
-    min_investment: 1000,
-    max_investment: 5000,
-    duration_months: 12,
-    expected_return: 8.5,
-    status: 'active',
-    type: 'conservative',
-    risk_level: 'low'
-  },
-  {
-    id: '2',
-    name: 'Pacchetto Growth',
-    description: 'Pacchetto per crescita moderata con rischio bilanciato',
-    min_investment: 5000,
-    max_investment: 25000,
-    duration_months: 24,
-    expected_return: 12.0,
-    status: 'active',
-    type: 'balanced',
-    risk_level: 'medium'
-  },
-  {
-    id: '3',
-    name: 'Pacchetto Premium',
-    description: 'Pacchetto avanzato per investitori esperti',
-    min_investment: 25000,
-    max_investment: 100000,
-    duration_months: 36,
-    expected_return: 15.5,
-    status: 'active',
-    type: 'aggressive',
-    risk_level: 'high'
-  }
-];
 
 export default function AdminPackagesPage() {
   const [packages, setPackages] = useState<Package[]>([]);
@@ -91,31 +52,14 @@ export default function AdminPackagesPage() {
     try {
       console.log('🔍 Starting fetchPackages...');
       
-      // Prova a chiamare l'API
-      const response = await fetch('/api/admin/packages', {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-token': 'admin-access' // Token semplificato
-        }
-      });
+      // Usa la nuova funzione per recuperare pacchetti reali da Supabase
+      const realPackages = await getPackagesWithFallback();
+      console.log('✅ Packages fetched successfully:', realPackages.length);
       
-      console.log('🔍 Response status:', response.status);
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log('✅ API fetch successful:', data);
-        setPackages(data.packages || []);
-      } else {
-        // Se l'API fallisce, usa i dati di fallback
-        console.log('⚠️ API failed, using fallback data');
-        setPackages(FALLBACK_PACKAGES);
-      }
+      setPackages(realPackages);
     } catch (err: any) {
       console.error('❌ Fetch error:', err);
-      // In caso di errore, usa i dati di fallback
-      console.log('⚠️ Using fallback data due to error');
-      setPackages(FALLBACK_PACKAGES);
+      setError('Errore nel caricamento dei pacchetti');
     }
     
     setLoading(false);
@@ -177,7 +121,7 @@ export default function AdminPackagesPage() {
       if (response.ok) {
         console.log('✅ Package saved successfully');
         closeModal();
-        fetchPackages();
+        fetchPackages(); // Ricarica i pacchetti reali
       } else {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to save package');
@@ -205,7 +149,7 @@ export default function AdminPackagesPage() {
 
       if (response.ok) {
         console.log('✅ Package deleted successfully');
-        fetchPackages();
+        fetchPackages(); // Ricarica i pacchetti reali
       } else {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to delete package');
@@ -234,6 +178,9 @@ export default function AdminPackagesPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Gestione Pacchetti</h1>
           <p className="text-gray-600">Gestisci i pacchetti di investimento disponibili</p>
+          <p className="text-sm text-blue-600 mt-1">
+            {packages.length > 0 ? `Caricati ${packages.length} pacchetti dal database` : 'Nessun pacchetto trovato'}
+          </p>
         </div>
 
         {/* Error Display */}
@@ -297,6 +244,18 @@ export default function AdminPackagesPage() {
                   <span className="text-sm text-gray-500">Rendimento Atteso:</span>
                   <span className="text-sm font-medium text-green-600">{pkg.expected_return}%</span>
                 </div>
+                {pkg.type && (
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-500">Tipo:</span>
+                    <span className="text-sm font-medium capitalize">{pkg.type}</span>
+                  </div>
+                )}
+                {pkg.risk_level && (
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-500">Rischio:</span>
+                    <span className="text-sm font-medium capitalize">{pkg.risk_level}</span>
+                  </div>
+                )}
               </div>
               
               <div className="flex space-x-2">

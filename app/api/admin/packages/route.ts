@@ -1,53 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { getPackagesWithFallback } from '@/lib/supabase-fallback';
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://zaeakwbpiqzhywhlqqse.supabase.co',
   process.env.SUPABASE_SERVICE_ROLE_KEY || 'mock-service-key'
 );
-
-// Dati di fallback per quando Supabase non è disponibile
-const FALLBACK_PACKAGES = [
-  {
-    id: '1',
-    name: 'Pacchetto Starter',
-    description: 'Pacchetto ideale per iniziare con investimenti sicuri',
-    min_investment: 1000,
-    max_investment: 5000,
-    duration_months: 12,
-    expected_return: 8.5,
-    status: 'active',
-    type: 'conservative',
-    risk_level: 'low',
-    created_at: new Date().toISOString()
-  },
-  {
-    id: '2',
-    name: 'Pacchetto Growth',
-    description: 'Pacchetto per crescita moderata con rischio bilanciato',
-    min_investment: 5000,
-    max_investment: 25000,
-    duration_months: 24,
-    expected_return: 12.0,
-    status: 'active',
-    type: 'balanced',
-    risk_level: 'medium',
-    created_at: new Date().toISOString()
-  },
-  {
-    id: '3',
-    name: 'Pacchetto Premium',
-    description: 'Pacchetto avanzato per investitori esperti',
-    min_investment: 25000,
-    max_investment: 100000,
-    duration_months: 36,
-    expected_return: 15.5,
-    status: 'active',
-    type: 'aggressive',
-    risk_level: 'high',
-    created_at: new Date().toISOString()
-  }
-];
 
 // Semplificata verifica admin
 async function verifyAdminAuth(request: NextRequest) {
@@ -66,22 +24,17 @@ export async function GET(request: NextRequest) {
   console.log('🔍 Admin packages API called');
   
   try {
-    // Prova a ottenere i pacchetti da Supabase
-    const { data: packages, error } = await supabaseAdmin
-      .from('packages')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.log('⚠️ Supabase error, using fallback data:', error.message);
-      return NextResponse.json({ packages: FALLBACK_PACKAGES });
-    }
-
-    console.log('✅ Packages fetched successfully from Supabase:', packages?.length || 0);
-    return NextResponse.json({ packages: packages || FALLBACK_PACKAGES });
+    // Usa la nuova funzione per recuperare pacchetti reali
+    const packages = await getPackagesWithFallback();
+    console.log('✅ Packages fetched successfully:', packages.length);
+    
+    return NextResponse.json({ packages });
   } catch (error) {
-    console.log('⚠️ Supabase connection failed, using fallback data');
-    return NextResponse.json({ packages: FALLBACK_PACKAGES });
+    console.error('❌ Error fetching packages:', error);
+    return NextResponse.json({ 
+      error: 'Errore nel recupero dei pacchetti',
+      packages: []
+    }, { status: 500 });
   }
 }
 

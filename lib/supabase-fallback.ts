@@ -76,6 +76,47 @@ const FALLBACK_DATA = {
       updated_at: new Date().toISOString()
     }
   ],
+  packages: [
+    {
+      id: '1',
+      name: 'Pacchetto Starter',
+      description: 'Pacchetto ideale per iniziare con investimenti sicuri',
+      min_investment: 1000,
+      max_investment: 5000,
+      duration_months: 12,
+      expected_return: 8.5,
+      status: 'active',
+      type: 'conservative',
+      risk_level: 'low',
+      created_at: new Date().toISOString()
+    },
+    {
+      id: '2',
+      name: 'Pacchetto Growth',
+      description: 'Pacchetto per crescita moderata con rischio bilanciato',
+      min_investment: 5000,
+      max_investment: 25000,
+      duration_months: 24,
+      expected_return: 12.0,
+      status: 'active',
+      type: 'balanced',
+      risk_level: 'medium',
+      created_at: new Date().toISOString()
+    },
+    {
+      id: '3',
+      name: 'Pacchetto Premium',
+      description: 'Pacchetto avanzato per investitori esperti',
+      min_investment: 25000,
+      max_investment: 100000,
+      duration_months: 36,
+      expected_return: 15.5,
+      status: 'active',
+      type: 'aggressive',
+      risk_level: 'high',
+      created_at: new Date().toISOString()
+    }
+  ],
   users: [
     {
       id: 'user_1',
@@ -107,7 +148,7 @@ export async function testSupabaseConnection(): Promise<boolean> {
   try {
     const supabaseUrl = 'https://zaeakwbpiqzhywhlqqse.supabase.co';
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    
+
     if (!supabaseKey) {
       console.log('⚠️ Supabase anon key not configured, using fallback');
       return false;
@@ -120,7 +161,7 @@ export async function testSupabaseConnection(): Promise<boolean> {
         'Authorization': `Bearer ${supabaseKey}`
       }
     }, 'Supabase Connection Test');
-    
+
     if (result.success) {
       console.log('✅ Supabase connection successful to zaeakwbpiqzhywhlqqse');
       return true;
@@ -134,19 +175,19 @@ export async function testSupabaseConnection(): Promise<boolean> {
   }
 }
 
-// Wrapper per chiamate Supabase con fallback e gestione errori migliorata
+// Wrapper per chiamate Supabase con fallback
 export async function supabaseWithFallback<T>(
   operation: () => Promise<T>,
   fallbackData: T
 ): Promise<T> {
   try {
     const isConnected = await testSupabaseConnection();
-    
+
     if (!isConnected) {
       console.log('⚠️ Using fallback data - Supabase not available');
       return fallbackData;
     }
-    
+
     return await operation();
   } catch (error) {
     console.log('⚠️ Supabase operation failed, using fallback:', error);
@@ -168,7 +209,7 @@ export async function getClientsWithFallback() {
           .select('*')
           .order('created_at', { ascending: false })
           .limit(10);
-        
+
         if (error) throw error;
         return data || [];
       } catch (error) {
@@ -193,7 +234,7 @@ export async function getInvestmentsWithFallback() {
           .select('*')
           .order('created_at', { ascending: false })
           .limit(10);
-        
+
         if (error) throw error;
         return data || [];
       } catch (error) {
@@ -218,7 +259,7 @@ export async function getPaymentsWithFallback() {
           .select('*')
           .order('created_at', { ascending: false })
           .limit(10);
-        
+
         if (error) throw error;
         return data || [];
       } catch (error) {
@@ -227,6 +268,31 @@ export async function getPaymentsWithFallback() {
       }
     },
     FALLBACK_DATA.payments
+  );
+}
+
+// NUOVA FUNZIONE: Recupera pacchetti reali da Supabase
+export async function getPackagesWithFallback() {
+  return supabaseWithFallback(
+    async () => {
+      try {
+        const supabase = createClient(
+          'https://zaeakwbpiqzhywhlqqse.supabase.co',
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        );
+        const { data, error } = await supabase
+          .from('packages')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        return data || [];
+      } catch (error) {
+        console.log('❌ Error fetching packages from Supabase:', error);
+        throw error;
+      }
+    },
+    FALLBACK_DATA.packages
   );
 }
 
@@ -243,7 +309,7 @@ export async function getUsersWithFallback() {
           .select('*')
           .order('created_at', { ascending: false })
           .limit(10);
-        
+
         if (error) throw error;
         return data || [];
       } catch (error) {
@@ -261,12 +327,12 @@ export async function getDashboardOverviewWithFallback() {
     const clients = await getClientsWithFallback();
     const investments = await getInvestmentsWithFallback();
     const payments = await getPaymentsWithFallback();
-    
+
     const totalUsers = clients.length;
     const activeUsers = clients.filter(c => c.status === 'active').length;
     const totalInvestments = investments.reduce((sum, inv) => sum + (inv.amount || 0), 0);
     const totalRevenue = totalInvestments * 0.1;
-    
+
     return {
       overview: {
         totalUsers,
@@ -276,24 +342,12 @@ export async function getDashboardOverviewWithFallback() {
         userGrowth: 12.5,
         revenueGrowth: 8.3
       },
-      recentActivity: clients.slice(-5).map(client => ({
-        id: client.id,
-        type: 'client_registration',
-        description: `New client: ${client.first_name} ${client.last_name}`,
-        timestamp: new Date(client.created_at),
-        severity: 'low' as const
-      })),
+      recentActivity: [],
       topClients: clients.slice(-3),
       chartData: {
-        userGrowth: [
-          { date: new Date().toISOString().split('T')[0], users: totalUsers }
-        ],
-        revenue: [
-          { date: new Date().toISOString().split('T')[0], revenue: totalRevenue }
-        ],
-        investments: [
-          { date: new Date().toISOString().split('T')[0], amount: totalInvestments }
-        ]
+        userGrowth: [{ date: new Date().toISOString().split('T')[0], users: totalUsers }],
+        revenue: [{ date: new Date().toISOString().split('T')[0], revenue: totalRevenue }],
+        investments: [{ date: new Date().toISOString().split('T')[0], amount: totalInvestments }]
       }
     };
   } catch (error) {
