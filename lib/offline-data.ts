@@ -43,9 +43,95 @@ export interface OfflineClient {
 }
 
 // Array condivisi per i dati offline
-export let offlineUsers: OfflineUser[] = [];
-export let offlineProfiles: OfflineProfile[] = [];
-export let offlineClients: OfflineClient[] = [];
+export let offlineUsers: OfflineUser[] = [
+  // Utente di test predefinito
+  {
+    id: 'test-user-1',
+    email: 'test@glgcapitalgroup.com',
+    first_name: 'Test',
+    last_name: 'User',
+    role: 'user',
+    is_active: true,
+    email_verified: true,
+    last_login: new Date().toISOString(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: 'test-user-2',
+    email: 'admin@glgcapitalgroup.com',
+    first_name: 'Admin',
+    last_name: 'User',
+    role: 'admin',
+    is_active: true,
+    email_verified: true,
+    last_login: new Date().toISOString(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  }
+];
+
+export let offlineProfiles: OfflineProfile[] = [
+  {
+    id: 'test-user-1',
+    name: 'Test User',
+    email: 'test@glgcapitalgroup.com',
+    role: 'user',
+    first_name: 'Test',
+    last_name: 'User',
+    country: 'United States',
+    kyc_status: 'verified',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: 'test-user-2',
+    name: 'Admin User',
+    email: 'admin@glgcapitalgroup.com',
+    role: 'admin',
+    first_name: 'Admin',
+    last_name: 'User',
+    country: 'United States',
+    kyc_status: 'verified',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  }
+];
+
+export let offlineClients: OfflineClient[] = [
+  {
+    id: 'test-client-1',
+    user_id: 'test-user-1',
+    first_name: 'Test',
+    last_name: 'User',
+    email: 'test@glgcapitalgroup.com',
+    phone: '+1234567890',
+    country: 'United States',
+    city: 'New York',
+    status: 'active',
+    client_code: 'CLI001',
+    risk_profile: 'moderate',
+    total_invested: 50000,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: 'test-client-2',
+    user_id: 'test-user-2',
+    first_name: 'Admin',
+    last_name: 'User',
+    email: 'admin@glgcapitalgroup.com',
+    phone: '+0987654321',
+    country: 'United States',
+    city: 'Los Angeles',
+    status: 'active',
+    client_code: 'CLI002',
+    risk_profile: 'conservative',
+    total_invested: 75000,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  }
+];
 
 // Funzioni per gestire i dati offline
 export const offlineDataManager = {
@@ -88,7 +174,15 @@ export const offlineDataManager = {
     if (!user) return false;
     
     // Password semplificate per modalità offline
-    return password === 'TestPassword123!' || password === 'test123';
+    const validPasswords = [
+      'TestPassword123!',
+      'test123',
+      'admin123',
+      'password123',
+      '123456'
+    ];
+    
+    return validPasswords.includes(password);
   },
 
   // Ottieni tutti i dati offline per debug
@@ -100,20 +194,20 @@ export const offlineDataManager = {
     };
   },
 
-  // Pulisci dati offline (per testing)
+  // Pulisci tutti i dati offline
   clearOfflineData: () => {
     offlineUsers = [];
     offlineProfiles = [];
     offlineClients = [];
-    console.log('🧹 Offline data cleared');
+    console.log('🧹 All offline data cleared');
   },
 
-  // Dashboard overview per analytics
+  // Ottieni dashboard overview con dati offline
   getDashboardOverview: () => {
     const totalUsers = offlineUsers.length;
     const activeUsers = offlineUsers.filter(u => u.is_active).length;
-    const totalInvestments = offlineClients.reduce((sum, client) => sum + (client.total_invested || 0), 0);
-    const totalRevenue = totalInvestments * 0.1; // 10% revenue assumption
+    const totalInvestments = offlineClients.reduce((sum, c) => sum + (c.total_invested || 0), 0);
+    const totalRevenue = totalInvestments * 0.1;
 
     return {
       overview: {
@@ -124,30 +218,53 @@ export const offlineDataManager = {
         userGrowth: 12.5,
         revenueGrowth: 8.3
       },
-      recentActivity: offlineClients.slice(-5).map(client => ({
-        id: client.id,
-        type: 'client_registration',
-        description: `New client: ${client.first_name} ${client.last_name}`,
-        timestamp: new Date(client.created_at),
+      recentActivity: offlineUsers.slice(-5).map(user => ({
+        id: user.id,
+        type: 'user_registration',
+        description: `New user: ${user.first_name} ${user.last_name}`,
+        timestamp: new Date(user.created_at),
         severity: 'low' as const
       })),
-      topClients: offlineClients.slice(-3)
+      topClients: offlineClients.slice(-3),
+      chartData: {
+        userGrowth: [
+          { date: new Date().toISOString().split('T')[0], users: totalUsers }
+        ],
+        revenue: [
+          { date: new Date().toISOString().split('T')[0], revenue: totalRevenue }
+        ],
+        investments: [
+          { date: new Date().toISOString().split('T')[0], amount: totalInvestments }
+        ]
+      }
     };
   },
 
-  // Analytics data
+  // Ottieni analytics con dati offline
   getAnalytics: () => {
+    const totalUsers = offlineUsers.length;
+    const activeUsers = offlineUsers.filter(u => u.is_active).length;
+    const totalInvestments = offlineClients.reduce((sum, c) => sum + (c.total_invested || 0), 0);
+    const totalRevenue = totalInvestments * 0.1;
+
     return {
+      overview: {
+        totalUsers,
+        activeUsers,
+        totalInvestments,
+        totalRevenue,
+        userGrowth: 12.5,
+        revenueGrowth: 8.3
+      },
       userMetrics: {
-        newUsers: offlineUsers.length,
-        verifiedUsers: offlineUsers.filter(u => u.email_verified).length,
+        newUsers: Math.floor(totalUsers * 0.1),
+        verifiedUsers: activeUsers,
         blockedUsers: 0
       },
       investmentMetrics: {
-        totalAmount: offlineClients.reduce((sum, client) => sum + (client.total_invested || 0), 0),
-        averageInvestment: offlineClients.length > 0 ? 
-          offlineClients.reduce((sum, client) => sum + (client.total_invested || 0), 0) / offlineClients.length : 0,
-        successfulTransactions: offlineClients.length,
+        totalAmount: totalInvestments,
+        averageInvestment: totalInvestments / Math.max(offlineClients.length, 1),
+        successfulTransactions: Math.floor(totalInvestments / 1000),
         failedTransactions: 0
       },
       securityMetrics: {
@@ -156,15 +273,22 @@ export const offlineDataManager = {
         blockedIPs: 0,
         failedLogins: 0
       },
+      recentActivity: offlineUsers.slice(-5).map(user => ({
+        id: user.id,
+        type: 'user_registration',
+        description: `New user: ${user.first_name} ${user.last_name}`,
+        timestamp: new Date(user.created_at),
+        severity: 'low' as const
+      })),
       chartData: {
         userGrowth: [
-          { date: new Date().toISOString().split('T')[0], users: offlineUsers.length }
+          { date: new Date().toISOString().split('T')[0], users: totalUsers }
         ],
         revenue: [
-          { date: new Date().toISOString().split('T')[0], revenue: offlineClients.reduce((sum, client) => sum + (client.total_invested || 0), 0) * 0.1 }
+          { date: new Date().toISOString().split('T')[0], revenue: totalRevenue }
         ],
         investments: [
-          { date: new Date().toISOString().split('T')[0], amount: offlineClients.reduce((sum, client) => sum + (client.total_invested || 0), 0) }
+          { date: new Date().toISOString().split('T')[0], amount: totalInvestments }
         ]
       }
     };
