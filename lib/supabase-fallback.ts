@@ -79,6 +79,45 @@ const FALLBACK_DATA = {
   packages: [
     {
       id: '1',
+      name: 'Pacchetto Real Estate',
+      description: 'Investimenti immobiliari sicuri con rendimenti garantiti',
+      min_investment: 10000,
+      max_investment: 50000,
+      duration_months: 18,
+      expected_return: 10.5,
+      status: 'active',
+      type: 'conservative',
+      risk_level: 'low',
+      created_at: new Date().toISOString()
+    },
+    {
+      id: '2',
+      name: 'Pacchetto Tech Growth',
+      description: 'Investimenti in startup tecnologiche ad alto potenziale',
+      min_investment: 15000,
+      max_investment: 75000,
+      duration_months: 24,
+      expected_return: 18.0,
+      status: 'active',
+      type: 'aggressive',
+      risk_level: 'high',
+      created_at: new Date().toISOString()
+    },
+    {
+      id: '3',
+      name: 'Pacchetto Green Energy',
+      description: 'Investimenti in energie rinnovabili e sostenibilità',
+      min_investment: 8000,
+      max_investment: 40000,
+      duration_months: 30,
+      expected_return: 12.5,
+      status: 'active',
+      type: 'balanced',
+      risk_level: 'medium',
+      created_at: new Date().toISOString()
+    },
+    {
+      id: '4',
       name: 'Pacchetto Starter',
       description: 'Pacchetto ideale per iniziare con investimenti sicuri',
       min_investment: 1000,
@@ -91,7 +130,7 @@ const FALLBACK_DATA = {
       created_at: new Date().toISOString()
     },
     {
-      id: '2',
+      id: '5',
       name: 'Pacchetto Growth',
       description: 'Pacchetto per crescita moderata con rischio bilanciato',
       min_investment: 5000,
@@ -104,7 +143,7 @@ const FALLBACK_DATA = {
       created_at: new Date().toISOString()
     },
     {
-      id: '3',
+      id: '6',
       name: 'Pacchetto Premium',
       description: 'Pacchetto avanzato per investitori esperti',
       min_investment: 25000,
@@ -148,6 +187,10 @@ export async function testSupabaseConnection(): Promise<boolean> {
   try {
     const supabaseUrl = 'https://zaeakwbpiqzhywhlqqse.supabase.co';
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    console.log('🔍 Testing Supabase connection...');
+    console.log('URL:', supabaseUrl);
+    console.log('Key configured:', !!supabaseKey);
 
     if (!supabaseKey) {
       console.log('⚠️ Supabase anon key not configured, using fallback');
@@ -273,9 +316,12 @@ export async function getPaymentsWithFallback() {
 
 // NUOVA FUNZIONE: Recupera pacchetti reali da Supabase
 export async function getPackagesWithFallback() {
+  console.log('🔍 Getting packages with fallback...');
+  
   return supabaseWithFallback(
     async () => {
       try {
+        console.log('🔄 Attempting to fetch packages from Supabase...');
         const supabase = createClient(
           'https://zaeakwbpiqzhywhlqqse.supabase.co',
           process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -285,7 +331,12 @@ export async function getPackagesWithFallback() {
           .select('*')
           .order('created_at', { ascending: false });
 
-        if (error) throw error;
+        if (error) {
+          console.log('❌ Supabase packages error:', error.message);
+          throw error;
+        }
+
+        console.log('✅ Packages fetched from Supabase:', data?.length || 0);
         return data || [];
       } catch (error) {
         console.log('❌ Error fetching packages from Supabase:', error);

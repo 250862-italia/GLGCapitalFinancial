@@ -25,6 +25,7 @@ export default function AdminPackagesPage() {
   const [form, setForm] = useState<any>(emptyForm());
   const [isEdit, setIsEdit] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [dataSource, setDataSource] = useState<'supabase' | 'fallback'>('fallback');
 
   function emptyForm() {
     return {
@@ -56,10 +57,15 @@ export default function AdminPackagesPage() {
       const realPackages = await getPackagesWithFallback();
       console.log('✅ Packages fetched successfully:', realPackages.length);
       
+      // Determina la fonte dei dati
+      const isSupabaseConnected = await import('@/lib/supabase-fallback').then(m => m.testSupabaseConnection());
+      setDataSource(isSupabaseConnected ? 'supabase' : 'fallback');
+      
       setPackages(realPackages);
     } catch (err: any) {
       console.error('❌ Fetch error:', err);
       setError('Errore nel caricamento dei pacchetti');
+      setDataSource('fallback');
     }
     
     setLoading(false);
@@ -178,9 +184,40 @@ export default function AdminPackagesPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Gestione Pacchetti</h1>
           <p className="text-gray-600">Gestisci i pacchetti di investimento disponibili</p>
-          <p className="text-sm text-blue-600 mt-1">
-            {packages.length > 0 ? `Caricati ${packages.length} pacchetti dal database` : 'Nessun pacchetto trovato'}
-          </p>
+          
+          {/* Data Source Indicator */}
+          <div className="mt-2 flex items-center space-x-2">
+            <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+              dataSource === 'supabase' 
+                ? 'bg-green-100 text-green-800' 
+                : 'bg-yellow-100 text-yellow-800'
+            }`}>
+              {dataSource === 'supabase' ? '🟢 Database Supabase' : '🟡 Dati di Fallback'}
+            </div>
+            <span className="text-sm text-gray-500">
+              {packages.length > 0 ? `${packages.length} pacchetti caricati` : 'Nessun pacchetto trovato'}
+            </span>
+          </div>
+          
+          {dataSource === 'fallback' && (
+            <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-yellow-800">Modalità Offline</h3>
+                  <div className="mt-1 text-sm text-yellow-700">
+                    Supabase non è configurato. Stai visualizzando dati di esempio. 
+                    <br />
+                    <span className="font-medium">Per vedere i tuoi pacchetti reali, configura le variabili d'ambiente Supabase.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Error Display */}
