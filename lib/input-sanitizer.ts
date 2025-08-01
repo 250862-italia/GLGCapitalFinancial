@@ -173,7 +173,7 @@ export class InputSanitizer {
     
     let sanitized = this.removeUnicodeControlChars(location.trim());
     
-    // Remove dangerous patterns
+    // Remove dangerous patterns but keep letters and spaces
     sanitized = sanitized
       .replace(/[<>]/g, '')
       .replace(/[&]/g, '&amp;')
@@ -196,14 +196,10 @@ export class InputSanitizer {
       .replace(/[*]/g, '')
       .replace(/[+]/g, '')
       .replace(/[,]/g, '')
-      .replace(/[.]/g, '')
       .replace(/[/]/g, '')
       .replace(/[?]/g, '')
-      .replace(/[0-9]/g, '')
-      .replace(/[A-Z]/g, '')
-      .replace(/[a-z]/g, '')
-      .replace(/[\s]/g, '')
-      .replace(/[^\u00C0-\u017F\u0100-\u017F\u0180-\u024F\u1E00-\u1EFF\u2C60-\u2C7F\uA720-\uA7FF]/g, '');
+      // Keep letters, numbers, spaces, and common punctuation for locations
+      .replace(/[^a-zA-Z0-9\s\-\.]/g, '');
     
     return sanitized.substring(0, 50); // Limit length
   }
