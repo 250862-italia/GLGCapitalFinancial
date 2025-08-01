@@ -1,217 +1,202 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
-import { offlineDataManager } from '@/lib/offline-data';
+import { createClient } from '@supabase/supabase-js';
+import { getClients, createClient as createClientLocal, updateClient, deleteClient, syncClients } from '@/lib/clients-storage';
 
-export const dynamic = 'force-dynamic';
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://zaeakwbpiqzhywhlqqse.supabase.co',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || 'mock-service-key'
+);
 
-export async function GET() {
+// Semplificata verifica admin
+async function verifyAdminAuth(request: NextRequest) {
+  const adminToken = request.headers.get('x-admin-token');
+  
+  // Token semplificato per accesso admin
+  if (adminToken === 'admin-access') {
+    return { success: true, adminId: 'admin' };
+  }
+  
+  return { success: false, error: 'Admin access required' };
+}
+
+// GET - Fetch all clients
+export async function GET(request: NextRequest) {
+  console.log('🔍 Admin clients API called');
+  
   try {
-    // Check if supabaseAdmin is available
-    if (!supabaseAdmin) {
-      console.log('Supabase admin client not available, using offline data');
-      const clients = offlineDataManager.getClients();
-      const users = offlineDataManager.getUsers();
-      const userMap = new Map(users.map(u => [u.id, u]));
-      const data = clients.map(client => ({
-        ...client,
-        user: userMap.get(client.user_id)
-      }));
-      return NextResponse.json({
-        data,
-        warning: 'Database connection unavailable'
-      });
-    }
-
-    // Test Supabase connection first
-    const connectionPromise = supabaseAdmin!
-      .from('clients')
-      .select('count')
-      .limit(1);
+    // Usa il sistema di storage locale
+    const clients = getClients();
+    console.log('✅ Clients fetched from local storage:', clients.length);
     
-    const connectionTimeout = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Connection timeout')), 5000)
-    );
-    
-    let connectionTest, connectionError;
-    try {
-      const result = await Promise.race([connectionPromise, connectionTimeout]) as any;
-      connectionTest = result.data;
-      connectionError = result.error;
-    } catch (timeoutError) {
-      connectionError = timeoutError;
-    }
-
-    if (connectionError) {
-      console.log('Supabase connection failed, using offline data:', connectionError.message);
-      
-      // Use offline data
-      const clients = offlineDataManager.getClients();
-      const users = offlineDataManager.getUsers();
-      
-      // Combine offline data
-      const userMap = new Map(users.map(u => [u.id, u]));
-      const data = clients.map(client => ({
-        ...client,
-        user: userMap.get(client.user_id)
-      }));
-      
-      return NextResponse.json({
-        data,
-        warning: 'Database connection unavailable'
-      });
-    }
-
-    // Get all clients with profile information
-    const { data: clients, error: clientsError } = await supabaseAdmin!
-      .from('clients')
-      .select(`
-        *,
-        profiles!inner(
-          id,
-          email,
-          first_name,
-          last_name,
-          role,
-          created_at,
-          updated_at
-        )
-      `)
-      .order('created_at', { ascending: false });
-
-    if (clientsError) {
-      console.log('Supabase error, using offline data:', clientsError.message);
-      
-      // Fallback to offline data
-      const offlineClients = offlineDataManager.getClients();
-      const offlineUsers = offlineDataManager.getUsers();
-      
-      const userMap = new Map(offlineUsers.map(u => [u.id, u]));
-      const data = offlineClients.map(client => ({
-        ...client,
-        user: userMap.get(client.user_id)
-      }));
-      
-      return NextResponse.json({
-        data,
-        warning: 'Database error'
-      });
-    }
-
-    // Transform the data to match expected format
-    const transformedData = clients?.map(client => ({
-      // Client fields
-      id: client.id,
-      user_id: client.user_id,
-      first_name: client.first_name || client.profiles?.first_name || '',
-      last_name: client.last_name || client.profiles?.last_name || '',
-      email: client.email || client.profiles?.email || '',
-      phone: client.phone || '',
-      company: client.company || '',
-      position: client.position || '',
-      date_of_birth: client.date_of_birth,
-      nationality: client.nationality || '',
-      profile_photo: client.profile_photo || '',
-      address: client.address || '',
-      city: client.city || '',
-      country: client.country || '',
-      postal_code: client.postal_code || '',
-      iban: client.iban || '',
-      bic: client.bic || '',
-      account_holder: client.account_holder || '',
-      usdt_wallet: client.usdt_wallet || '',
-      client_code: client.client_code || '',
-      status: client.status || 'active',
-      risk_profile: client.risk_profile || 'moderate',
-      investment_preferences: client.investment_preferences || {},
-      total_invested: client.total_invested || 0,
-      created_at: client.created_at,
-      updated_at: client.updated_at,
-      // Profile fields
-      user: {
-        id: client.profiles?.id,
-        email: client.profiles?.email,
-        first_name: client.profiles?.first_name,
-        last_name: client.profiles?.last_name,
-        role: client.profiles?.role,
-        created_at: client.profiles?.created_at,
-        updated_at: client.profiles?.updated_at
-      }
-    })) || [];
-
-    return NextResponse.json({
-      data: transformedData
-    });
+    return NextResponse.json({ clients });
   } catch (error) {
-    console.error('Error in GET /api/admin/clients:', error);
-    console.log('Using offline data due to exception');
-    
-    // Final fallback to offline data
-    const clients = offlineDataManager.getClients();
-    const users = offlineDataManager.getUsers();
-    
-    const userMap = new Map(users.map(u => [u.id, u]));
-    const data = clients.map(client => ({
-      ...client,
-      user: userMap.get(client.user_id)
-    }));
-    
-    return NextResponse.json({
-      data,
-      warning: 'System error'
-    });
+    console.error('❌ Error fetching clients:', error);
+    return NextResponse.json({ 
+      error: 'Errore nel recupero dei clienti',
+      clients: []
+    }, { status: 500 });
   }
 }
 
-export async function PUT(request: NextRequest) {
+// POST - Create new client
+export async function POST(request: NextRequest) {
+  console.log('🔍 Admin create client API called');
+  
   try {
     const body = await request.json();
-    const { id, ...updateData } = body;
+    const { 
+      first_name, last_name, email, phone, company, position, 
+      date_of_birth, nationality, address, city, country, 
+      postal_code, iban, bic, account_holder, usdt_wallet, 
+      status, risk_profile 
+    } = body;
 
-    if (!id) {
-      return NextResponse.json({ error: 'Client ID is required' }, { status: 400 });
+    // Validate required fields
+    if (!first_name || !last_name || !email) {
+      return NextResponse.json({ 
+        error: 'Nome, cognome e email sono obbligatori' 
+      }, { status: 400 });
     }
 
-    const { data, error } = await supabaseAdmin!
-      .from('clients')
-      .update(updateData)
-      .eq('id', id)
-      .select()
-      .single();
+    const clientData = {
+      user_id: `user_${Date.now()}`,
+      profile_id: `profile_${Date.now()}`,
+      first_name,
+      last_name,
+      email,
+      phone: phone || '',
+      company: company || '',
+      position: position || '',
+      date_of_birth: date_of_birth || '',
+      nationality: nationality || '',
+      profile_photo: '',
+      address: address || '',
+      city: city || '',
+      country: country || '',
+      postal_code: postal_code || '',
+      iban: iban || '',
+      bic: bic || '',
+      account_holder: account_holder || '',
+      usdt_wallet: usdt_wallet || '',
+      client_code: `CLI${Date.now()}`,
+      status: status || 'active',
+      risk_profile: risk_profile || 'moderate',
+      investment_preferences: { type: 'balanced', sectors: ['general'] },
+      total_invested: 0
+    };
 
-    if (error) {
-      console.error('Error updating client:', error);
-      return NextResponse.json({ error: 'Failed to update client' }, { status: 500 });
-    }
-
-    return NextResponse.json(data);
+    // Crea il cliente nel storage locale
+    const newClient = createClientLocal(clientData);
+    
+    console.log('✅ Client created successfully in local storage');
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Cliente creato con successo',
+      client: newClient 
+    });
   } catch (error) {
-    console.error('Error in PUT /api/admin/clients:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('❌ Unexpected error:', error);
+    return NextResponse.json({ 
+      error: 'Errore interno del server' 
+    }, { status: 500 });
   }
 }
 
-export async function DELETE(request: NextRequest) {
+// PUT - Update client
+export async function PUT(request: NextRequest) {
+  console.log('🔍 Admin update client API called');
+  
   try {
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
+    const body = await request.json();
+    const { 
+      id, first_name, last_name, email, phone, company, position, 
+      date_of_birth, nationality, address, city, country, 
+      postal_code, iban, bic, account_holder, usdt_wallet, 
+      status, risk_profile 
+    } = body;
 
     if (!id) {
-      return NextResponse.json({ error: 'Client ID is required' }, { status: 400 });
+      return NextResponse.json({ 
+        error: 'ID cliente richiesto' 
+      }, { status: 400 });
     }
 
-    const { error } = await supabaseAdmin!
-      .from('clients')
-      .delete()
-      .eq('id', id);
+    const clientData = {
+      first_name,
+      last_name,
+      email,
+      phone: phone || '',
+      company: company || '',
+      position: position || '',
+      date_of_birth: date_of_birth || '',
+      nationality: nationality || '',
+      address: address || '',
+      city: city || '',
+      country: country || '',
+      postal_code: postal_code || '',
+      iban: iban || '',
+      bic: bic || '',
+      account_holder: account_holder || '',
+      usdt_wallet: usdt_wallet || '',
+      status: status || 'active',
+      risk_profile: risk_profile || 'moderate'
+    };
 
-    if (error) {
-      console.error('Error deleting client:', error);
-      return NextResponse.json({ error: 'Failed to delete client' }, { status: 500 });
+    // Aggiorna il cliente nel storage locale
+    const updatedClient = updateClient(id, clientData);
+    
+    if (!updatedClient) {
+      return NextResponse.json({ 
+        error: 'Cliente non trovato' 
+      }, { status: 404 });
     }
 
-    return NextResponse.json({ message: 'Client deleted successfully' });
+    console.log('✅ Client updated successfully in local storage');
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Cliente aggiornato con successo',
+      client: updatedClient 
+    });
   } catch (error) {
-    console.error('Error in DELETE /api/admin/clients:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('❌ Unexpected error:', error);
+    return NextResponse.json({ 
+      error: 'Errore interno del server' 
+    }, { status: 500 });
+  }
+}
+
+// DELETE - Delete client
+export async function DELETE(request: NextRequest) {
+  console.log('🔍 Admin delete client API called');
+  
+  try {
+    const url = new URL(request.url);
+    const id = url.pathname.split('/').pop();
+
+    if (!id) {
+      return NextResponse.json({ 
+        error: 'ID cliente richiesto' 
+      }, { status: 400 });
+    }
+
+    // Elimina il cliente dal storage locale
+    const success = deleteClient(id);
+    
+    if (!success) {
+      return NextResponse.json({ 
+        error: 'Cliente non trovato' 
+      }, { status: 404 });
+    }
+
+    console.log('✅ Client deleted successfully from local storage');
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Cliente eliminato con successo' 
+    });
+  } catch (error) {
+    console.error('❌ Unexpected error:', error);
+    return NextResponse.json({ 
+      error: 'Errore interno del server' 
+    }, { status: 500 });
   }
 } 
