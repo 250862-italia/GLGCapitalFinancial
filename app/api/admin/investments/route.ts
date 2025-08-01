@@ -3,6 +3,9 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { offlineDataManager } from '@/lib/offline-data';
 import { verifyAdmin } from '@/lib/admin-auth';
 
+// Force dynamic rendering to avoid static generation issues
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     console.log('🔍 Admin investments API called');

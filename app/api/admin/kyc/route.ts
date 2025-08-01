@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSupabaseAdmin } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
+import { generateCSRFToken, validateCSRFToken } from '@/lib/csrf';
+import { 
+  validateInput, 
+  VALIDATION_SCHEMAS, 
+  sanitizeInput,
+  performanceMonitor
+} from '@/lib/api-optimizer';
 import { verifyAdmin } from '@/lib/admin-auth';
+
+// Force dynamic rendering to avoid static generation issues
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {

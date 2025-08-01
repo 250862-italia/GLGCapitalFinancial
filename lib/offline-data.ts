@@ -106,5 +106,67 @@ export const offlineDataManager = {
     offlineProfiles = [];
     offlineClients = [];
     console.log('🧹 Offline data cleared');
+  },
+
+  // Dashboard overview per analytics
+  getDashboardOverview: () => {
+    const totalUsers = offlineUsers.length;
+    const activeUsers = offlineUsers.filter(u => u.is_active).length;
+    const totalInvestments = offlineClients.reduce((sum, client) => sum + (client.total_invested || 0), 0);
+    const totalRevenue = totalInvestments * 0.1; // 10% revenue assumption
+
+    return {
+      overview: {
+        totalUsers,
+        activeUsers,
+        totalInvestments,
+        totalRevenue,
+        userGrowth: 12.5,
+        revenueGrowth: 8.3
+      },
+      recentActivity: offlineClients.slice(-5).map(client => ({
+        id: client.id,
+        type: 'client_registration',
+        description: `New client: ${client.first_name} ${client.last_name}`,
+        timestamp: new Date(client.created_at),
+        severity: 'low' as const
+      })),
+      topClients: offlineClients.slice(-3)
+    };
+  },
+
+  // Analytics data
+  getAnalytics: () => {
+    return {
+      userMetrics: {
+        newUsers: offlineUsers.length,
+        verifiedUsers: offlineUsers.filter(u => u.email_verified).length,
+        blockedUsers: 0
+      },
+      investmentMetrics: {
+        totalAmount: offlineClients.reduce((sum, client) => sum + (client.total_invested || 0), 0),
+        averageInvestment: offlineClients.length > 0 ? 
+          offlineClients.reduce((sum, client) => sum + (client.total_invested || 0), 0) / offlineClients.length : 0,
+        successfulTransactions: offlineClients.length,
+        failedTransactions: 0
+      },
+      securityMetrics: {
+        securityAlerts: 0,
+        suspiciousActivities: 0,
+        blockedIPs: 0,
+        failedLogins: 0
+      },
+      chartData: {
+        userGrowth: [
+          { date: new Date().toISOString().split('T')[0], users: offlineUsers.length }
+        ],
+        revenue: [
+          { date: new Date().toISOString().split('T')[0], revenue: offlineClients.reduce((sum, client) => sum + (client.total_invested || 0), 0) * 0.1 }
+        ],
+        investments: [
+          { date: new Date().toISOString().split('T')[0], amount: offlineClients.reduce((sum, client) => sum + (client.total_invested || 0), 0) }
+        ]
+      }
+    };
   }
 }; 
