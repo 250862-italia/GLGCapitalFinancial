@@ -2,7 +2,7 @@
 // Handles all types of fetch errors including network, timeout, and authentication issues
 
 export interface FetchError {
-  type: 'NETWORK' | 'TIMEOUT' | 'AUTH' | 'SERVER' | 'UNKNOWN';
+  type: 'NETWORK' | 'TIMEOUT' | 'AUTH' | 'SERVER' | 'BUILD_ERROR' | 'UNKNOWN';
   message: string;
   code?: string;
   status?: number;
@@ -68,6 +68,29 @@ export const safeFetch = async <T = any>(
   context: string = 'API Call',
   timeout: number = 10000
 ): Promise<FetchResponse<T>> => {
+  
+  // Check build health first (if in browser)
+  if (typeof window !== 'undefined') {
+    try {
+      const { checkBuildHealth } = await import('./build-error-detector');
+      const buildHealth = checkBuildHealth();
+      if (!buildHealth.healthy) {
+        console.error(`🚨 [${context}] Build errors detected, skipping fetch`);
+        return {
+          data: null,
+          error: {
+            type: 'BUILD_ERROR',
+            message: 'Build errors prevent API calls',
+            details: buildHealth.errors
+          },
+          success: false
+        };
+      }
+    } catch (e) {
+      console.warn(`⚠️ [${context}] Build health check failed:`, e);
+    }
+  }
+  
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
 
