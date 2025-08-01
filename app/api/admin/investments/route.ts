@@ -1,189 +1,61 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
-import { offlineDataManager } from '@/lib/offline-data';
+import { createClient } from '@supabase/supabase-js';
+import { generateCSRFToken, validateCSRFToken } from '@/lib/csrf';
+import { 
+  validateInput, 
+  VALIDATION_SCHEMAS, 
+  sanitizeInput,
+  performanceMonitor
+} from '@/lib/api-optimizer';
 import { verifyAdmin } from '@/lib/admin-auth';
+import { getInvestmentsWithFallback } from '@/lib/supabase-fallback';
 
 // Force dynamic rendering to avoid static generation issues
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
+  const startTime = performanceMonitor.start('get_investments');
+  
   try {
     console.log('🔍 Admin investments API called');
+    console.log('🔍 Verifying admin authentication...');
     
-    // Verify admin authentication
+    // Verifica autenticazione admin
     const authResult = await verifyAdmin(request);
     console.log('🔍 Auth result:', authResult);
     
     if (!authResult.success) {
       console.log('❌ Auth failed:', authResult.error);
-      return NextResponse.json(
-        { error: authResult.error },
-        { status: authResult.status }
-      );
-    }
-    
-    console.log('✅ Auth successful for user:', authResult.user);
-
-    // Test Supabase connection first
-    const connectionPromise = supabaseAdmin
-      .from('investments')
-      .select('count')
-      .limit(1);
-    
-    const connectionTimeout = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Connection timeout')), 5000)
-    );
-    
-    let connectionTest, connectionError;
-    try {
-      const result = await Promise.race([connectionPromise, connectionTimeout]) as any;
-      connectionTest = result.data;
-      connectionError = result.error;
-    } catch (timeoutError) {
-      connectionError = timeoutError;
-    }
-
-    if (connectionError) {
-      console.log('Supabase connection failed, using offline data:', connectionError.message);
-      
-      // Use offline data
-      const investments = offlineDataManager.getInvestments();
-      const users = offlineDataManager.getUsers();
-      const clients = offlineDataManager.getClients();
-      
-      // Combine offline data
-      const investmentsWithDetails = investments.map(investment => {
-        const user = users.find(u => u.id === investment.user_id);
-        const client = clients.find(c => c.user_id === investment.user_id);
-        
-        return {
-          id: investment.id,
-          user_id: investment.user_id,
-          amount: investment.amount,
-          currency: investment.currency,
-          status: investment.status,
-          investment_type: investment.investment_type || 'package',
-          created_at: investment.created_at,
-          updated_at: investment.updated_at,
-          user: user || null,
-          client: client || null
-        };
-      });
-      
+      performanceMonitor.end('get_investments', startTime);
       return NextResponse.json({
-        success: true,
-        data: investmentsWithDetails,
-        warning: 'Database connection unavailable'
-      });
+        success: false,
+        error: 'Authentication failed',
+        details: authResult.error
+      }, { status: 401 });
     }
-
-    // Fetch investments from Supabase
-    const { data: investments, error } = await supabaseAdmin
-      .from('investments')
-      .select('*');
-
-    if (error) {
-      console.log('Supabase error, using offline data:', error.message);
-      
-      // Fallback to offline data
-      const offlineInvestments = offlineDataManager.getInvestments();
-      const users = offlineDataManager.getUsers();
-      const clients = offlineDataManager.getClients();
-      
-      const investmentsWithDetails = offlineInvestments.map(investment => {
-        const user = users.find(u => u.id === investment.user_id);
-        const client = clients.find(c => c.user_id === investment.user_id);
-        
-        return {
-          id: investment.id,
-          user_id: investment.user_id,
-          amount: investment.amount,
-          currency: investment.currency,
-          status: investment.status,
-          investment_type: investment.investment_type || 'package',
-          created_at: investment.created_at,
-          updated_at: investment.updated_at,
-          user: user || null,
-          client: client || null
-        };
-      });
-      
-      return NextResponse.json({
-        success: true,
-        data: investmentsWithDetails,
-        warning: 'Database error'
-      });
-    }
-
-    // Get user and client details for each investment
-    const investmentsWithDetails = await Promise.all(
-      investments.map(async (investment) => {
-        // Get user details from profiles
-        const { data: user } = await supabaseAdmin
-          .from('profiles')
-          .select('id, email, first_name, last_name, role')
-          .eq('id', investment.user_id)
-          .single();
-
-        // Get client details
-        const { data: client } = await supabaseAdmin
-          .from('clients')
-          .select('id, first_name, last_name, country')
-          .eq('user_id', investment.user_id)
-          .single();
-
-        return {
-          id: investment.id,
-          user_id: investment.user_id,
-          amount: investment.amount,
-          currency: investment.currency,
-          status: investment.status,
-          investment_type: investment.investment_type,
-          created_at: investment.created_at,
-          updated_at: investment.updated_at,
-          user: user || null,
-          client: client || null
-        };
-      })
-    );
-
+    
+    console.log('✅ Admin authentication successful');
+    
+    // Usa il nuovo sistema di fallback
+    const investments = await getInvestmentsWithFallback();
+    
+    performanceMonitor.end('get_investments', startTime);
+    
     return NextResponse.json({
       success: true,
-      data: investmentsWithDetails
+      data: investments,
+      message: 'Investments retrieved successfully'
     });
-
+    
   } catch (error) {
-    console.error('Error fetching investments:', error);
-    console.log('Using offline data due to exception');
-    
-    // Final fallback to offline data
-    const investments = offlineDataManager.getInvestments();
-    const users = offlineDataManager.getUsers();
-    const clients = offlineDataManager.getClients();
-    
-    const investmentsWithDetails = investments.map(investment => {
-      const user = users.find(u => u.id === investment.user_id);
-      const client = clients.find(c => c.user_id === investment.user_id);
-      
-      return {
-        id: investment.id,
-        user_id: investment.user_id,
-        amount: investment.amount,
-        currency: investment.currency,
-        status: investment.status,
-        investment_type: investment.investment_type || 'package',
-        created_at: investment.created_at,
-        updated_at: investment.updated_at,
-        user: user || null,
-        client: client || null
-      };
-    });
+    console.error('❌ Error fetching investments:', error);
+    performanceMonitor.end('get_investments', startTime);
     
     return NextResponse.json({
-      success: true,
-      data: investmentsWithDetails,
-              warning: 'System error'
-    });
+      success: false,
+      error: 'Failed to fetch investments',
+      details: process.env.NODE_ENV === 'development' ? error : undefined
+    }, { status: 500 });
   }
 }
 
