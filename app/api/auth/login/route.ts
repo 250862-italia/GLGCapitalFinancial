@@ -7,7 +7,7 @@ import {
   sanitizeInput,
   performanceMonitor
 } from '@/lib/api-optimizer';
-import { safeAuthCall, safeDatabaseQuery } from '@/lib/safe-supabase';
+import { safeAuthCall, safeDatabaseQuery } from '@/lib/supabase-safe';
 import { withErrorHandling, generateRequestId, addRequestId } from '@/lib/error-handler';
 import { offlineDataManager } from '@/lib/offline-data';
 
