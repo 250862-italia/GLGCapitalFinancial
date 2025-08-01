@@ -15,56 +15,31 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// Simulazione di un database offline per utenti registrati
-let offlineUsers: any[] = [];
-let offlineProfiles: any[] = [];
-let offlineClients: any[] = [];
-
 export async function POST(request: NextRequest) {
   const startTime = performanceMonitor.start('register_user');
   
   try {
     const body = await request.json();
-    
-    // Sanitizzazione input con il nuovo sanitizer robusto
-    let sanitizedBody;
-    try {
-      sanitizedBody = InputSanitizer.sanitizeRegistrationData(body);
-    } catch (sanitizationError) {
-      console.error('❌ Registration sanitization error:', sanitizationError);
-      performanceMonitor.end('register_user', startTime);
-      return NextResponse.json(
-        { error: sanitizationError instanceof Error ? sanitizationError.message : 'Invalid input data' },
-        { status: 400 }
-      );
-    }
-    
-    // Validazione CSRF - più permissiva per token generati localmente
+
+    // Sanitizzazione input
+    const sanitizedBody = sanitizeInput(body);
+
+    // Validazione CSRF
     const csrfValidation = validateCSRFToken(request);
     if (!csrfValidation.valid) {
-      // In produzione, accetta token generati localmente per la registrazione
-      if (process.env.NODE_ENV === 'production') {
-        console.log('[REGISTER] CSRF validation failed, but allowing local token for registration');
-      } else {
-        performanceMonitor.end('register_user', startTime);
-        return NextResponse.json(
-          { error: 'CSRF validation failed', details: csrfValidation.error },
-          { status: 403 }
-        );
-      }
-    } else {
-      // Proteggi il token CSRF durante l'operazione di registrazione
-      if (csrfValidation.token) {
-        protectCSRFToken(csrfValidation.token);
-      }
+      performanceMonitor.end('register_user', startTime);
+      return NextResponse.json(
+        { error: 'CSRF validation failed' },
+        { status: 403 }
+      );
     }
 
-    // Validazione input robusta sui dati già sanitizzati
+    // Validazione input
     const validation = validateInput(sanitizedBody, {
       email: VALIDATION_SCHEMAS.email,
       password: VALIDATION_SCHEMAS.password,
-      firstName: (value) => VALIDATION_SCHEMAS.string(value, 50),
-      lastName: (value) => VALIDATION_SCHEMAS.string(value, 50),
+      firstName: VALIDATION_SCHEMAS.required,
+      lastName: VALIDATION_SCHEMAS.required,
       country: VALIDATION_SCHEMAS.required
     });
 
@@ -82,8 +57,8 @@ export async function POST(request: NextRequest) {
     console.log('🔄 Registrazione utente:', { email, firstName, lastName, country });
 
     // Controlla se l'utente esiste già (sia online che offline)
-    const existingUser = offlineUsers.find(u => u.email === email);
-    if (existingUser) {
+    const existingOfflineUser = offlineDataManager.findOfflineUser(email);
+    if (existingOfflineUser) {
       performanceMonitor.end('register_user', startTime);
       return NextResponse.json(
         { error: 'Un utente con questa email è già registrato' },
@@ -137,40 +112,36 @@ export async function POST(request: NextRequest) {
 
       if (profileError) {
         console.error('❌ Errore creazione profilo:', profileError);
-        console.log('⚠️ Profilo non creato, ma utente registrato con successo');
       } else {
-        console.log('✅ Profilo creato con successo');
+        console.log('✅ Profilo creato:', profile.id);
         
-        // Crea record cliente se il profilo è stato creato con successo
+        // Crea record cliente
         const clientCode = `CLI${Date.now()}${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
-        
         const clientData = {
           user_id: authData.user.id,
-          profile_id: authData.user.id,
           first_name: firstName,
           last_name: lastName,
-          email: email,
-          client_code: clientCode,
+          email,
+          phone: '',
+          country,
+          city: '',
           status: 'active',
-          risk_profile: 'moderate',
-          investment_preferences: {},
-          total_invested: 0.00,
+          client_code: clientCode,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         };
 
-        const { error: clientInsertError } = await supabase
+        const { data: client, error: clientCreateError } = await supabase
           .from('clients')
           .insert(clientData)
           .select()
           .single();
 
-        if (clientInsertError) {
-          console.error('❌ Errore creazione cliente:', clientInsertError);
-          console.log('⚠️ Cliente non creato, ma utente e profilo registrati con successo');
-          clientError = clientInsertError;
+        if (clientCreateError) {
+          console.error('❌ Errore creazione cliente:', clientCreateError);
+          clientError = clientCreateError;
         } else {
-          console.log('✅ Cliente creato con successo');
+          console.log('✅ Cliente creato:', client.id);
         }
       }
 
@@ -229,6 +200,7 @@ export async function POST(request: NextRequest) {
         first_name: firstName,
         last_name: lastName,
         country,
+        kyc_status: 'pending',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
@@ -245,14 +217,17 @@ export async function POST(request: NextRequest) {
         country,
         city: '',
         status: 'active',
+        client_code: clientCode,
+        risk_profile: 'standard',
+        total_invested: 0,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
       
-      // Salva nei dati offline
-      offlineUsers.push(offlineUser);
-      offlineProfiles.push(offlineProfile);
-      offlineClients.push(offlineClient);
+      // Salva nei dati offline usando il manager condiviso
+      offlineDataManager.addOfflineUser(offlineUser);
+      offlineDataManager.addOfflineProfile(offlineProfile);
+      offlineDataManager.addOfflineClient(offlineClient);
       
       console.log('✅ Utente registrato in modalità offline:', userId);
       

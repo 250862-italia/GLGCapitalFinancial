@@ -1,25 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { generateCSRFToken, validateCSRFToken } from '@/lib/csrf';
+import { generateCSRFToken, validateCSRFToken, protectCSRFToken } from '@/lib/csrf';
 import { 
   validateInput, 
   VALIDATION_SCHEMAS, 
   sanitizeInput,
-  performanceMonitor,
-  generateCacheKey
+  performanceMonitor
 } from '@/lib/api-optimizer';
-import { 
-  withErrorHandling, 
-  createValidationError, 
-  createAuthError, 
-  createInternalError,
-  handleSupabaseError,
-  addRequestId,
-  generateRequestId
-} from '@/lib/error-handler';
-import { safeAuthCall, safeDatabaseQuery } from '@/lib/supabase-safe';
+import { safeAuthCall, safeDatabaseQuery } from '@/lib/safe-supabase';
+import { withErrorHandling, generateRequestId, addRequestId } from '@/lib/error-handler';
+import { offlineDataManager } from '@/lib/offline-data';
 
-// Interface per il profilo utente
 interface UserProfile {
   id: string;
   first_name: string;
@@ -86,6 +77,69 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     const { email, password } = sanitizedBody;
 
     console.log(`🔄 Login [${requestId}]: Attempting login for user:`, { email });
+
+    // Prima controlla se l'utente esiste offline
+    const offlineUser = offlineDataManager.findOfflineUser(email);
+    if (offlineUser) {
+      console.log(`🔄 Login [${requestId}]: Found offline user, attempting offline login`);
+      
+      // Verifica credenziali offline usando il manager
+      if (offlineDataManager.validateOfflineCredentials(email, password)) {
+        console.log(`✅ Login [${requestId}]: Offline login successful`);
+        
+        const offlineProfile = offlineDataManager.findOfflineProfile(offlineUser.id);
+        const offlineClient = offlineDataManager.findOfflineClient(offlineUser.id);
+        
+        // Genera nuovo CSRF token per la sessione
+        const csrfToken = generateCSRFToken();
+        
+        const responseData = {
+          success: true,
+          user: {
+            id: offlineUser.id,
+            email: offlineUser.email,
+            name: offlineProfile?.name || `${offlineProfile?.first_name} ${offlineProfile?.last_name}`,
+            role: 'user',
+            profile: offlineProfile ? {
+              first_name: offlineProfile.first_name,
+              last_name: offlineProfile.last_name,
+              country: offlineProfile.country,
+              kyc_status: offlineProfile.kyc_status || 'pending'
+            } : null,
+            client: offlineClient ? {
+              client_code: offlineClient.client_code,
+              status: offlineClient.status,
+              risk_profile: offlineClient.risk_profile || 'standard',
+              total_invested: offlineClient.total_invested || 0
+            } : null
+          },
+          session: {
+            access_token: `offline_${Date.now()}`,
+            refresh_token: `offline_refresh_${Date.now()}`,
+            expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+          },
+          csrfToken,
+          message: 'Accesso effettuato con successo (modalità offline)',
+          mode: 'offline'
+        };
+
+        performanceMonitor.end('login_user', startTime);
+        return NextResponse.json(responseData, {
+          headers: {
+            'X-Performance': `${Date.now() - startTime}ms`,
+            'X-Mode': 'offline'
+          }
+        });
+      } else {
+        console.log(`❌ Login [${requestId}]: Invalid offline credentials`);
+        performanceMonitor.end('login_user', startTime);
+        return NextResponse.json({
+          success: false,
+          error: 'Credenziali non valide. Verifica email e password.',
+          code: 'INVALID_CREDENTIALS'
+        }, { status: 401 });
+      }
+    }
 
     // Test connessione Supabase prima del login
     try {
@@ -210,16 +264,16 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       null
     );
 
-      if (profileError) {
+    if (profileError) {
       console.log(`⚠️ Login [${requestId}]: Profile not found:`, profileError);
-      } else {
-        console.log(`✅ Login [${requestId}]: Profile retrieved successfully`);
-        profileData = profile;
+    } else {
+      console.log(`✅ Login [${requestId}]: Profile retrieved successfully`);
+      profileData = profile;
     }
 
     // Recupera dati cliente se disponibili (semplificato)
     let clientData = null;
-      console.log(`🔍 Login [${requestId}]: Fetching client data...`);
+    console.log(`🔍 Login [${requestId}]: Fetching client data...`);
     
     const { data: client, error: clientError } = await safeDatabaseQuery(
       'clients',
@@ -231,11 +285,11 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       null
     );
 
-      if (clientError) {
-        console.error(`❌ Login [${requestId}]: Error retrieving client:`, clientError);
-      } else {
-        console.log(`✅ Login [${requestId}]: Client data retrieved successfully`);
-        clientData = client;
+    if (clientError) {
+      console.error(`❌ Login [${requestId}]: Error retrieving client:`, clientError);
+    } else {
+      console.log(`✅ Login [${requestId}]: Client data retrieved successfully`);
+      clientData = client;
     }
 
     // Genera nuovo CSRF token per la sessione
@@ -272,56 +326,29 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         expires_at: authData.session?.expires_at
       },
       csrfToken,
-      message: 'Accesso effettuato con successo'
+      message: 'Accesso effettuato con successo',
+      mode: 'online'
     };
 
     const response = NextResponse.json(responseData, {
       headers: {
         'X-Performance': `${Date.now() - startTime}ms`,
-        'X-User-Role': userRole,
-        'X-Request-ID': requestId
+        'X-Mode': 'online'
       }
     });
 
-    // Set session cookies if available
-    if (authData.session) {
-      console.log(`🍪 Login [${requestId}]: Setting session cookies...`);
-      
-      // Set the session cookie
-      response.cookies.set('sb-access-token', authData.session.access_token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: authData.session.expires_in || 3600 // 1 hour default
-      });
-
-      if (authData.session.refresh_token) {
-        response.cookies.set('sb-refresh-token', authData.session.refresh_token, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          maxAge: 30 * 24 * 60 * 60 // 30 days
-        });
-      }
-    }
-
-    console.log(`✅ Login [${requestId}]: Login process completed successfully`);
     performanceMonitor.end('login_user', startTime);
     return response;
 
   } catch (error) {
     console.error(`❌ Login [${requestId}]: Unexpected error:`, error);
-    console.error(`❌ Login [${requestId}]: Error stack:`, error.stack);
     performanceMonitor.end('login_user', startTime);
     
     return NextResponse.json({
       success: false,
       error: 'Errore interno del server. Riprova più tardi.',
       code: 'INTERNAL_ERROR',
-      details: process.env.NODE_ENV === 'development' ? {
-        message: error.message,
-        stack: error.stack
-      } : undefined
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
     }, { status: 500 });
   }
 }); 
