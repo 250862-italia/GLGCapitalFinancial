@@ -1,4 +1,4 @@
-// Sistema di fallback completo per modalità offline
+// Sistema di fallback con nuovo progetto Supabase
 import { createClient } from '@supabase/supabase-js';
 
 // Dati di fallback per quando Supabase non è disponibile
@@ -101,47 +101,150 @@ const FALLBACK_DATA = {
   ]
 };
 
-// Funzione per testare la connessione Supabase (sempre false in modalità offline)
+// Funzione per testare la connessione al nuovo progetto Supabase
 export async function testSupabaseConnection(): Promise<boolean> {
-  console.log('🔧 System running in offline mode - Supabase connection test disabled');
-  return false; // Sempre false per forzare l'uso dei dati offline
+  try {
+    const supabaseUrl = 'https://zaeakwbpiqzhywhlqqse.supabase.co';
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    
+    if (!supabaseKey) {
+      console.log('⚠️ Supabase anon key not configured');
+      return false;
+    }
+
+    // Test di connessione con timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    
+    const response = await fetch(`${supabaseUrl}/rest/v1/`, {
+      headers: {
+        'apikey': supabaseKey,
+        'Authorization': `Bearer ${supabaseKey}`
+      },
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (response.ok) {
+      console.log('✅ Supabase connection successful to zaeakwbpiqzhywhlqqse');
+      return true;
+    } else {
+      console.log('❌ Supabase connection failed:', response.status);
+      return false;
+    }
+  } catch (error) {
+    console.log('❌ Supabase connection error:', error);
+    return false;
+  }
 }
 
-// Wrapper per chiamate Supabase con fallback (sempre usa fallback)
+// Wrapper per chiamate Supabase con fallback
 export async function supabaseWithFallback<T>(
   operation: () => Promise<T>,
   fallbackData: T
 ): Promise<T> {
-  console.log('🔧 Using fallback data - System running in offline mode');
-  return fallbackData;
+  try {
+    const isConnected = await testSupabaseConnection();
+    
+    if (!isConnected) {
+      console.log('⚠️ Using fallback data - Supabase not available');
+      return fallbackData;
+    }
+    
+    return await operation();
+  } catch (error) {
+    console.log('⚠️ Supabase operation failed, using fallback:', error);
+    return fallbackData;
+  }
 }
 
 // Funzioni specifiche per ogni tabella
 export async function getClientsWithFallback() {
-  console.log('🔧 Returning fallback clients data');
-  return FALLBACK_DATA.clients;
+  return supabaseWithFallback(
+    async () => {
+      const supabase = createClient(
+        'https://zaeakwbpiqzhywhlqqse.supabase.co',
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+      const { data, error } = await supabase
+        .from('clients')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(10);
+      
+      if (error) throw error;
+      return data || [];
+    },
+    FALLBACK_DATA.clients
+  );
 }
 
 export async function getInvestmentsWithFallback() {
-  console.log('🔧 Returning fallback investments data');
-  return FALLBACK_DATA.investments;
+  return supabaseWithFallback(
+    async () => {
+      const supabase = createClient(
+        'https://zaeakwbpiqzhywhlqqse.supabase.co',
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+      const { data, error } = await supabase
+        .from('investments')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(10);
+      
+      if (error) throw error;
+      return data || [];
+    },
+    FALLBACK_DATA.investments
+  );
 }
 
 export async function getPaymentsWithFallback() {
-  console.log('🔧 Returning fallback payments data');
-  return FALLBACK_DATA.payments;
+  return supabaseWithFallback(
+    async () => {
+      const supabase = createClient(
+        'https://zaeakwbpiqzhywhlqqse.supabase.co',
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+      const { data, error } = await supabase
+        .from('payments')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(10);
+      
+      if (error) throw error;
+      return data || [];
+    },
+    FALLBACK_DATA.payments
+  );
 }
 
 export async function getUsersWithFallback() {
-  console.log('🔧 Returning fallback users data');
-  return FALLBACK_DATA.users;
+  return supabaseWithFallback(
+    async () => {
+      const supabase = createClient(
+        'https://zaeakwbpiqzhywhlqqse.supabase.co',
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(10);
+      
+      if (error) throw error;
+      return data || [];
+    },
+    FALLBACK_DATA.users
+  );
 }
 
 // Dashboard overview con fallback
 export async function getDashboardOverviewWithFallback() {
-  const clients = FALLBACK_DATA.clients;
-  const investments = FALLBACK_DATA.investments;
-  const payments = FALLBACK_DATA.payments;
+  const clients = await getClientsWithFallback();
+  const investments = await getInvestmentsWithFallback();
+  const payments = await getPaymentsWithFallback();
   
   const totalUsers = clients.length;
   const activeUsers = clients.filter(c => c.status === 'active').length;

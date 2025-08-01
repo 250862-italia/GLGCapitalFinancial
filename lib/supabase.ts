@@ -1,41 +1,41 @@
-// Mock Supabase client per compatibilità - Sistema completamente offline
+// Supabase client con nuovo progetto
 import { createClient } from '@supabase/supabase-js';
 
-// Configurazione mock per Supabase
-const MOCK_SUPABASE_CONFIG = {
-  url: 'https://mock.supabase.co',
-  anonKey: 'mock-anon-key',
-  serviceKey: 'mock-service-key'
+// Configurazione per il nuovo progetto Supabase
+const SUPABASE_CONFIG = {
+  url: 'https://zaeakwbpiqzhywhlqqse.supabase.co',
+  anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'mock-anon-key',
+  serviceKey: process.env.SUPABASE_SERVICE_ROLE_KEY || 'mock-service-key'
 };
 
-// Client Supabase mock che non fa chiamate reali
+// Client Supabase per il nuovo progetto
 export const supabase = createClient(
-  MOCK_SUPABASE_CONFIG.url,
-  MOCK_SUPABASE_CONFIG.anonKey,
+  SUPABASE_CONFIG.url,
+  SUPABASE_CONFIG.anonKey,
   {
     auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-      detectSessionInUrl: false
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true
     }
   }
 );
 
-// Client admin mock
+// Client admin per il nuovo progetto
 export const supabaseAdmin = createClient(
-  MOCK_SUPABASE_CONFIG.url,
-  MOCK_SUPABASE_CONFIG.serviceKey,
+  SUPABASE_CONFIG.url,
+  SUPABASE_CONFIG.serviceKey,
   {
     auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-      detectSessionInUrl: false
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true
     }
   }
 );
 
-// Funzioni mock per compatibilità
+// Funzioni per compatibilità
 export const createSupabaseClient = () => supabase;
 export const createSupabaseAdminClient = () => supabaseAdmin;
 
-console.log('🔧 Using mock Supabase client - System running in offline mode');
+console.log('🔧 Using new Supabase project: zaeakwbpiqzhywhlqqse.supabase.co');
