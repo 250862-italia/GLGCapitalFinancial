@@ -72,34 +72,29 @@ export default function AdminInvestmentsPage() {
         return;
       }
 
-      const res = await fetchJSONWithCSRF("/api/admin/investments", {
+      const data = await fetchJSONWithCSRF("/api/admin/investments", {
         headers: {
           'x-admin-token': adminToken
         }
       });
       
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        if (res.status === 401) {
-          setError("Sessione admin scaduta. Reindirizzamento al login...");
-          setTimeout(() => {
-            router.push('/admin/login');
-          }, 2000);
-          return;
-        }
-        setError(errorData.error || "Errore nel caricamento investimenti");
-        return;
-      }
-      
-      const data = await res.json();
       if (data.success && data.data) {
         setInvestments(data.data);
       } else {
         setInvestments(data);
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error('Network error:', e);
-      setError("Errore di rete. Verifica la connessione e riprova.");
+      if (e.message?.includes('Authentication required')) {
+        setError("Sessione admin scaduta. Reindirizzamento al login...");
+        setTimeout(() => {
+          router.push('/admin/login');
+        }, 2000);
+      } else if (e.message?.includes('Network connection failed')) {
+        setError("Errore di connessione. Verifica la tua connessione internet.");
+      } else {
+        setError("Errore di rete. Verifica la connessione e riprova.");
+      }
     }
     setLoading(false);
   };
@@ -118,16 +113,16 @@ export default function AdminInvestmentsPage() {
     try {
       const adminToken = localStorage.getItem('admin_token');
       
-      let res;
+      let data;
       if (isEdit) {
         // Update existing investment
-        res = await fetchJSONWithCSRF("/api/investments", {
+        data = await fetchJSONWithCSRF("/api/investments", {
           method: "PUT",
           body: JSON.stringify(formData)
         });
       } else {
         // Create new investment using admin API
-        res = await fetchJSONWithCSRF("/api/admin/investments/create", {
+        data = await fetchJSONWithCSRF("/api/admin/investments/create", {
           method: "POST",
           headers: {
             'x-admin-token': adminToken
@@ -136,16 +131,24 @@ export default function AdminInvestmentsPage() {
         });
       }
       
-      const data = await res.json();
-      if (res.ok) {
+      if (data.success) {
         setSuccess(isEdit ? "Investimento aggiornato!" : "Investimento creato!");
         setShowForm(false);
         loadInvestments();
       } else {
         setError(data.error || "Errore salvataggio investimento");
       }
-    } catch (e) {
-      setError("Errore di rete");
+    } catch (e: any) {
+      if (e.message?.includes('Authentication required')) {
+        setError("Sessione admin scaduta. Reindirizzamento al login...");
+        setTimeout(() => {
+          router.push('/admin/login');
+        }, 2000);
+      } else if (e.message?.includes('Network connection failed')) {
+        setError("Errore di connessione. Verifica la tua connessione internet.");
+      } else {
+        setError("Errore di rete");
+      }
     }
     setLoading(false);
   };
@@ -156,17 +159,25 @@ export default function AdminInvestmentsPage() {
     setSuccess("");
     setLoading(true);
     try {
-      const res = await fetchJSONWithCSRF(`/api/investments?id=${investmentToDelete.id}`, { method: "DELETE" });
-      const data = await res.json();
-      if (res.ok) {
+      const data = await fetchJSONWithCSRF(`/api/investments?id=${investmentToDelete.id}`, { method: "DELETE" });
+      if (data.success) {
         setSuccess("Investimento eliminato!");
         setShowDeleteModal(false);
         loadInvestments();
       } else {
         setError(data.error || "Errore eliminazione investimento");
       }
-    } catch (e) {
-      setError("Errore di rete");
+    } catch (e: any) {
+      if (e.message?.includes('Authentication required')) {
+        setError("Sessione admin scaduta. Reindirizzamento al login...");
+        setTimeout(() => {
+          router.push('/admin/login');
+        }, 2000);
+      } else if (e.message?.includes('Network connection failed')) {
+        setError("Errore di connessione. Verifica la tua connessione internet.");
+      } else {
+        setError("Errore di rete");
+      }
     }
     setLoading(false);
   };
@@ -186,22 +197,30 @@ export default function AdminInvestmentsPage() {
         return;
       }
 
-      const res = await fetchJSONWithCSRF("/api/admin/investments", {
+      const data = await fetchJSONWithCSRF("/api/admin/investments", {
         method: "PUT",
         headers: {
           'x-admin-token': adminToken
         },
         body: JSON.stringify({ investment_id: invId, status: newStatus })
       });
-      const data = await res.json();
-      if (res.ok) {
+      if (data.success) {
         setSuccess("Stato investimento aggiornato!");
         loadInvestments();
       } else {
         setError(data.error || "Errore aggiornamento stato");
       }
-    } catch (e) {
-      setError("Errore di rete");
+    } catch (e: any) {
+      if (e.message?.includes('Authentication required')) {
+        setError("Sessione admin scaduta. Reindirizzamento al login...");
+        setTimeout(() => {
+          router.push('/admin/login');
+        }, 2000);
+      } else if (e.message?.includes('Network connection failed')) {
+        setError("Errore di connessione. Verifica la tua connessione internet.");
+      } else {
+        setError("Errore di rete");
+      }
     }
     setLoading(false);
   };

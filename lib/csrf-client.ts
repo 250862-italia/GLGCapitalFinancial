@@ -366,31 +366,21 @@ export async function fetchJSONWithCSRF<T = any>(
   
   console.log('[CSRF Client] Making JSON request with token:', token.substring(0, 10) + '...');
   
-  try {
-    const response = await fetch(url, enhancedOptions);
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('[CSRF Client] Request failed:', response.status, errorText);
-      throw new Error(`Request failed: ${response.status} ${errorText}`);
-    }
-    
-    return response.json();
-  } catch (error) {
-    console.error('[CSRF Client] Fetch error:', error);
-    
-    // Check if it's a network error
-    if (error instanceof Error && (
-      error.message.includes('fetch failed') ||
-      error.message.includes('TypeError: fetch failed') ||
-      error.message.includes('Network error') ||
-      error.message.includes('Failed to fetch')
-    )) {
+  // Use the enhanced fetch handler
+  const { safeFetch } = await import('./fetch-error-handler');
+  const result = await safeFetch(url, enhancedOptions, 'CSRF-Client');
+  
+  if (!result.success) {
+    if (result.error?.type === 'NETWORK') {
       throw new Error('Network connection failed. Please check your internet connection.');
+    } else if (result.error?.type === 'AUTH') {
+      throw new Error('Authentication required. Please login again.');
+    } else {
+      throw new Error(result.error?.message || 'Request failed');
     }
-    
-    throw error;
   }
+  
+  return result.data;
 }
 
 /**
