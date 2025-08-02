@@ -159,6 +159,13 @@ export default function AdminPackagesPage() {
     setSaving(true);
     
     try {
+      const adminToken = localStorage.getItem('admin_token');
+      if (!adminToken) {
+        setError('Token admin non trovato');
+        setSaving(false);
+        return;
+      }
+
       const packageData = {
         name: form.name,
         description: form.description,
@@ -172,17 +179,44 @@ export default function AdminPackagesPage() {
       };
 
       if (isEdit) {
-        // Aggiorna pacchetto esistente
-        const updatedPackage = updatePackage(form.id, packageData);
-        if (updatedPackage) {
-          console.log('✅ Package updated locally:', updatedPackage.name);
+        // Aggiorna pacchetto esistente nel database
+        const response = await fetch('/api/admin/packages/update', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-token': adminToken
+          },
+          body: JSON.stringify({
+            id: form.id,
+            ...packageData
+          })
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+          console.log('✅ Package updated in database:', data.data.name);
         } else {
-          throw new Error('Failed to update package');
+          throw new Error(data.error || 'Failed to update package');
         }
       } else {
-        // Crea nuovo pacchetto
-        const newPackage = createPackage(packageData);
-        console.log('✅ Package created locally:', newPackage.name);
+        // Crea nuovo pacchetto nel database
+        const response = await fetch('/api/admin/packages/create', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-token': adminToken
+          },
+          body: JSON.stringify(packageData)
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+          console.log('✅ Package created in database:', data.data.name);
+        } else {
+          throw new Error(data.error || 'Failed to create package');
+        }
       }
 
       closeModal();
@@ -201,12 +235,26 @@ export default function AdminPackagesPage() {
     }
     
     try {
-      const success = deletePackage(id);
-      if (success) {
-        console.log('✅ Package deleted locally');
+      const adminToken = localStorage.getItem('admin_token');
+      if (!adminToken) {
+        setError('Token admin non trovato');
+        return;
+      }
+
+      const response = await fetch(`/api/admin/packages/delete?id=${id}`, {
+        method: 'DELETE',
+        headers: {
+          'x-admin-token': adminToken
+        }
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        console.log('✅ Package deleted from database successfully');
         fetchPackages(); // Ricarica i pacchetti
       } else {
-        throw new Error('Failed to delete package');
+        throw new Error(data.error || 'Failed to delete package');
       }
     } catch (err: any) {
       console.error('❌ Delete error:', err);

@@ -139,20 +139,38 @@ export default function AdminClientsPage() {
 
   const handleCreateClient = async () => {
     try {
-      const newClient = createClient({
-        user_id: `user_${Date.now()}`,
-        profile_id: `profile_${Date.now()}`,
-        client_code: generateClientCode(),
-        profile_photo: '',
-        investment_preferences: { type: 'balanced', sectors: ['general'] },
-        total_invested: 0,
-        ...formData
+      const adminToken = localStorage.getItem('admin_token');
+      if (!adminToken) {
+        setError('Token admin non trovato');
+        return;
+      }
+
+      const response = await fetch('/api/admin/clients/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-token': adminToken
+        },
+        body: JSON.stringify({
+          user_id: `user_${Date.now()}`,
+          profile_id: `profile_${Date.now()}`,
+          profile_photo: '',
+          investment_preferences: { type: 'balanced', sectors: ['general'] },
+          total_invested: 0,
+          ...formData
+        })
       });
 
-      console.log('✅ Client created:', newClient.first_name, newClient.last_name);
-      setShowCreateModal(false);
-      resetForm();
-      fetchClients();
+      const data = await response.json();
+      
+      if (data.success) {
+        console.log('✅ Client created in database:', data.data.first_name, data.data.last_name);
+        setShowCreateModal(false);
+        resetForm();
+        fetchClients(); // Ricarica i clienti aggiornati
+      } else {
+        throw new Error(data.error || 'Failed to create client');
+      }
     } catch (error) {
       console.error('❌ Error creating client:', error);
       setError('Errore nella creazione del cliente');
@@ -163,16 +181,34 @@ export default function AdminClientsPage() {
     if (!editingClient) return;
 
     try {
-      const updatedClient = updateClient(editingClient.id, formData);
+      const adminToken = localStorage.getItem('admin_token');
+      if (!adminToken) {
+        setError('Token admin non trovato');
+        return;
+      }
+
+      const response = await fetch('/api/admin/clients/update', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-token': adminToken
+        },
+        body: JSON.stringify({
+          id: editingClient.id,
+          ...formData
+        })
+      });
+
+      const data = await response.json();
       
-      if (updatedClient) {
-        console.log('✅ Client updated:', updatedClient.first_name, updatedClient.last_name);
+      if (data.success) {
+        console.log('✅ Client updated in database:', data.data.first_name, data.data.last_name);
         setShowEditModal(false);
         setEditingClient(null);
         resetForm();
-        fetchClients();
+        fetchClients(); // Ricarica i clienti aggiornati
       } else {
-        throw new Error('Failed to update client');
+        throw new Error(data.error || 'Failed to update client');
       }
     } catch (error) {
       console.error('❌ Error updating client:', error);
@@ -186,13 +222,26 @@ export default function AdminClientsPage() {
     }
 
     try {
-      const success = deleteClient(clientId);
+      const adminToken = localStorage.getItem('admin_token');
+      if (!adminToken) {
+        setError('Token admin non trovato');
+        return;
+      }
+
+      const response = await fetch(`/api/admin/clients/delete?id=${clientId}`, {
+        method: 'DELETE',
+        headers: {
+          'x-admin-token': adminToken
+        }
+      });
+
+      const data = await response.json();
       
-      if (success) {
-        console.log('✅ Client deleted successfully');
-        fetchClients();
+      if (data.success) {
+        console.log('✅ Client deleted from database successfully');
+        fetchClients(); // Ricarica i clienti aggiornati
       } else {
-        throw new Error('Failed to delete client');
+        throw new Error(data.error || 'Failed to delete client');
       }
     } catch (error) {
       console.error('❌ Error deleting client:', error);
