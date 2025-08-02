@@ -7,6 +7,22 @@ export {
   getSupabaseClient 
 } from './supabase-client';
 
+// Funzioni per compatibilità con file esistenti
+export const getSupabaseAdmin = () => supabaseAdmin;
+
+// Funzioni per checkpoints (placeholder)
+export const getAllCheckpoints = async () => {
+  return { data: [], error: null };
+};
+
+export const getCurrentCheckpoint = async () => {
+  return { data: null, error: null };
+};
+
+export const refreshCheckpoints = async () => {
+  return { data: [], error: null };
+};
+
 // Health check function
 export async function getSupabaseHealth() {
   const startTime = Date.now();
