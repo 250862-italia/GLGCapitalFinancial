@@ -1,4 +1,6 @@
 // Configurazione database con fallback sicuri
+import { supabase } from './supabase-client';
+
 export const DATABASE_CONFIG = {
   // Supabase Configuration
   supabase: {
@@ -29,13 +31,6 @@ export const DATABASE_CONFIG = {
 // Funzione per testare la connessione database
 export async function testDatabaseConnection() {
   try {
-    const { createClient } = await import('@supabase/supabase-js');
-    
-    const supabase = createClient(
-      DATABASE_CONFIG.supabase.url,
-      DATABASE_CONFIG.supabase.anonKey
-    );
-    
     // Test semplice con SELECT 1
     const { data, error } = await supabase
       .from('profiles')
