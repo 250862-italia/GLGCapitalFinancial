@@ -1,0 +1,22 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://www.glgcapitalgroup.com/sitemap.xml
+
+# Disallow admin areas
+Disallow: /admin/
+Disallow: /api/admin/
+Disallow: /debug/
+
+# Allow important pages
+Allow: /
+Allow: /about
+Allow: /contact
+Allow: /investments
+Allow: /equity-pledge
+Allow: /login
+Allow: /register
+
+# Crawl delay
+Crawl-delay: 1 
