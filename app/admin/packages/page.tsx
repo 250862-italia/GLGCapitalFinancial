@@ -47,28 +47,37 @@ export default function AdminPackagesPage() {
     try {
       console.log('🔍 Starting fetchPackages...');
       
-      // Prima prova a ottenere dati da Supabase
-      const supabasePackages = await getPackagesWithFallback();
-      console.log('✅ Supabase packages fetched:', supabasePackages.length);
-      
-      // Determina la fonte dei dati
-      const isSupabaseConnected = await import('@/lib/supabase-fallback').then(m => m.testSupabaseConnection());
-      
-      if (isSupabaseConnected && supabasePackages.length > 0) {
-        // Se Supabase è connesso e ha dati, sincronizza
-        syncPackages(supabasePackages);
-        setDataSource('supabase');
-        console.log('✅ Using Supabase data');
-      } else {
-        // Altrimenti usa i dati locali
-        setDataSource('local');
-        console.log('✅ Using local storage data');
+      // Prima prova a sincronizzare con il database
+      const adminToken = localStorage.getItem('admin_token');
+      if (adminToken) {
+        try {
+          const response = await fetch('/api/admin/packages/sync', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-admin-token': adminToken
+            }
+          });
+
+          const data = await response.json();
+          
+          if (data.success && data.data && data.data.length > 0) {
+            console.log('✅ Packages loaded from database:', data.data.length);
+            setPackages(data.data);
+            setDataSource('supabase');
+            setLoading(false);
+            return;
+          }
+        } catch (syncError) {
+          console.warn('⚠️ Database sync failed, using local data:', syncError);
+        }
       }
       
-      // Carica i pacchetti dal storage locale (che ora contiene i dati aggiornati)
+      // Fallback: carica i pacchetti dal storage locale
       const localPackages = getPackages();
       setPackages(localPackages);
-      console.log('✅ Local packages loaded:', localPackages.length);
+      setDataSource('local');
+      console.log('✅ Packages loaded from local storage:', localPackages.length);
       
     } catch (err: any) {
       console.error('❌ Fetch error:', err);

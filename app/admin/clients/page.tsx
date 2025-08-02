@@ -79,7 +79,33 @@ export default function AdminClientsPage() {
     try {
       console.log('🔍 Starting fetchClients...');
       
-      // Carica i clienti dal storage locale
+      // Prima prova a sincronizzare con il database
+      const adminToken = localStorage.getItem('admin_token');
+      if (adminToken) {
+        try {
+          const response = await fetch('/api/admin/clients/sync', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-admin-token': adminToken
+            }
+          });
+
+          const data = await response.json();
+          
+          if (data.success && data.data && data.data.length > 0) {
+            console.log('✅ Clients loaded from database:', data.data.length);
+            setClients(data.data);
+            setDataSource('supabase');
+            setLoading(false);
+            return;
+          }
+        } catch (syncError) {
+          console.warn('⚠️ Database sync failed, using local data:', syncError);
+        }
+      }
+      
+      // Fallback: carica i clienti dal storage locale
       const localClients = getClients();
       setClients(localClients);
       setDataSource('local');
