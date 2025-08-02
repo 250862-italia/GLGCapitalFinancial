@@ -109,7 +109,66 @@ export async function POST(request: NextRequest) {
     const isSupabaseConnected = await testSupabaseConnection();
     
     if (!isSupabaseConnected) {
-      console.log('❌ Login: Supabase not available, user not found offline');
+      console.log('⚠️ Login: Supabase not available, trying offline mode...');
+      
+      // Prova a trovare l'utente offline
+      const offlineUser = offlineDataManager.findOfflineUser(email);
+      if (offlineUser) {
+        console.log('🔄 Login: Found offline user, attempting offline login');
+        
+        // Verifica credenziali offline usando il manager
+        if (offlineDataManager.validateOfflineCredentials(email, password)) {
+          console.log('✅ Login: Offline login successful');
+          
+          const offlineProfile = offlineDataManager.findOfflineProfile(offlineUser.id);
+          const offlineClient = offlineDataManager.findOfflineClient(offlineUser.id);
+          
+          // Genera nuovo CSRF token per la sessione
+          const csrfToken = generateCSRFToken();
+          
+          const responseData = {
+            success: true,
+            user: {
+              id: offlineUser.id,
+              email: offlineUser.email,
+              name: offlineProfile?.name || `${offlineProfile?.first_name} ${offlineProfile?.last_name}`,
+              role: 'user',
+              profile: offlineProfile ? {
+                first_name: offlineProfile.first_name,
+                last_name: offlineProfile.last_name,
+                country: offlineProfile.country,
+                kyc_status: offlineProfile.kyc_status || 'pending'
+              } : null,
+              client: offlineClient ? {
+                client_code: offlineClient.client_code,
+                status: offlineClient.status,
+                risk_profile: offlineClient.risk_profile || 'standard',
+                total_invested: offlineClient.total_invested || 0
+              } : null
+            },
+            session: {
+              access_token: `offline_${Date.now()}`,
+              refresh_token: `offline_refresh_${Date.now()}`,
+              expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+            },
+            csrfToken,
+            message: 'Accesso effettuato con successo (modalità offline)',
+            mode: 'offline'
+          };
+
+          return NextResponse.json(responseData);
+        } else {
+          console.log('❌ Login: Invalid offline credentials');
+          return NextResponse.json({
+            success: false,
+            error: 'Credenziali non valide. Verifica email e password.',
+            code: 'INVALID_CREDENTIALS'
+          }, { status: 401 });
+        }
+      }
+      
+      // Se non trova l'utente offline, restituisci errore
+      console.log('❌ Login: User not found in offline mode');
       return NextResponse.json({
         success: false,
         error: 'Utente non trovato. Verifica le credenziali o registrati.',
