@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 import { emailService } from '@/lib/email-service';
 import { validateCSRFToken } from '@/lib/csrf';
 
+export const dynamic = 'force-dynamic';
 
 // Banking details for wire transfers
 const BANK_DETAILS = {

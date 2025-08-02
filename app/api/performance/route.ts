@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { globalPerformanceMonitor, getPrometheusMetrics } from '@/lib/performance-monitor';
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/performance - Ottieni metriche delle performance
 export async function GET(request: NextRequest) {
   try {
