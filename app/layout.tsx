@@ -2,6 +2,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import Navigation from '../components/Navigation';
 import Footer from '../components/Footer';
+import { ErrorBoundary } from '../components/ui/ErrorBoundary';
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -24,17 +25,19 @@ export default function RootLayout({
         flexDirection: 'column', 
         minHeight: '100vh' 
       }}>
-        <div style={{ 
-          display: 'flex', 
-          flexDirection: 'column', 
-          flex: 1 
-        }}>
-          <Navigation />
-          <main style={{ flex: 1 }}>
-            {children}
-          </main>
-          <Footer />
-        </div>
+        <ErrorBoundary>
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            flex: 1 
+          }}>
+            <Navigation />
+            <main style={{ flex: 1 }}>
+              {children}
+            </main>
+            <Footer />
+          </div>
+        </ErrorBoundary>
       </body>
     </html>
   );
