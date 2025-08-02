@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { 
   User, Mail, Phone, Calendar, Eye, Edit, Trash2, Plus, Search, Filter, 
-  Building, MapPin, CreditCard, Shield, Save, X, AlertCircle 
+  Building, MapPin, CreditCard, Shield, Save, X, AlertCircle, RefreshCw
 } from 'lucide-react';
 import { 
   getClients, 
@@ -88,6 +88,49 @@ export default function AdminClientsPage() {
     } catch (err: any) {
       console.error('❌ Fetch error:', err);
       setError('Errore nel caricamento dei clienti');
+      setDataSource('local');
+    }
+    
+    setLoading(false);
+  };
+
+  const handleSyncWithDatabase = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      console.log('🔄 Starting database sync...');
+      
+      const adminToken = localStorage.getItem('admin_token');
+      if (!adminToken) {
+        setError('Token admin non trovato');
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch('/api/admin/clients/sync', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-token': adminToken
+        }
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        console.log('✅ Database sync successful:', data.message);
+        setDataSource('supabase');
+        fetchClients(); // Ricarica i clienti aggiornati
+      } else {
+        console.error('❌ Database sync failed:', data.error);
+        setError(data.error || 'Errore nella sincronizzazione');
+        setDataSource('local');
+      }
+      
+    } catch (err: any) {
+      console.error('❌ Sync error:', err);
+      setError('Errore nella sincronizzazione con il database');
       setDataSource('local');
     }
     
@@ -313,6 +356,14 @@ export default function AdminClientsPage() {
           >
             <Plus className="h-4 w-4 mr-2" />
             Nuovo Cliente
+          </button>
+          
+          <button
+            onClick={handleSyncWithDatabase}
+            className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 flex items-center"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Sincronizza DB
           </button>
           
           <div className="flex-1 flex gap-2">

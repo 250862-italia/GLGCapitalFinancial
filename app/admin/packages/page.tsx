@@ -83,6 +83,49 @@ export default function AdminPackagesPage() {
     setLoading(false);
   }
 
+  async function handleSyncWithDatabase() {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      console.log('🔄 Starting database sync...');
+      
+      const adminToken = localStorage.getItem('admin_token');
+      if (!adminToken) {
+        setError('Token admin non trovato');
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch('/api/admin/packages/sync', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-token': adminToken
+        }
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        console.log('✅ Database sync successful:', data.message);
+        setDataSource('supabase');
+        fetchPackages(); // Ricarica i pacchetti aggiornati
+      } else {
+        console.error('❌ Database sync failed:', data.error);
+        setError(data.error || 'Errore nella sincronizzazione');
+        setDataSource('local');
+      }
+      
+    } catch (err: any) {
+      console.error('❌ Sync error:', err);
+      setError('Errore nella sincronizzazione con il database');
+      setDataSource('local');
+    }
+    
+    setLoading(false);
+  }
+
   function openAdd() {
     setForm(emptyForm());
     setIsEdit(false);
@@ -242,13 +285,23 @@ export default function AdminPackagesPage() {
           </div>
         )}
 
-        {/* Action Button */}
-        <div className="mb-6">
+        {/* Action Buttons */}
+        <div className="mb-6 flex gap-4">
           <button
             onClick={openAdd}
             className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
           >
             + Nuovo Pacchetto
+          </button>
+          
+          <button
+            onClick={handleSyncWithDatabase}
+            className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 flex items-center"
+          >
+            <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Sincronizza DB
           </button>
         </div>
 

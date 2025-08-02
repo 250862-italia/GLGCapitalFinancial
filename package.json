@@ -35,6 +35,8 @@
     "security:audit": "npm audit --audit-level=high && node scripts/security-scan.js",
     "db:migrate": "node scripts/database-migrate.js",
     "db:seed": "node scripts/database-seed.js",
+    "populate-db": "node scripts/populate-database.js",
+    "sync-data": "npm run populate-db",
     "clean": "rm -rf .next && rm -rf node_modules/.cache",
     "reset": "npm run clean && npm install && npm run build"
   },
