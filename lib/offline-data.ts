@@ -42,96 +42,80 @@ export interface OfflineClient {
   updated_at: string;
 }
 
+// Funzione per caricare dati dal file JSON
+function loadOfflineData() {
+  try {
+    if (typeof window !== 'undefined') {
+      // In browser, usa localStorage
+      const stored = localStorage.getItem('offline_data');
+      if (stored) {
+        const data = JSON.parse(stored);
+        return {
+          users: data.users || [],
+          profiles: data.profiles || [],
+          clients: data.clients || []
+        };
+      }
+    } else {
+      // In Node.js, leggi dal file
+      const fs = require('fs');
+      const path = require('path');
+      const filePath = path.join(process.cwd(), 'lib', 'offline-data.json');
+      if (fs.existsSync(filePath)) {
+        const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+        return {
+          users: data.users || [],
+          profiles: data.profiles || [],
+          clients: data.clients || []
+        };
+      }
+    }
+  } catch (error) {
+    console.error('Error loading offline data:', error);
+  }
+  
+  // Fallback ai dati di default
+  return {
+    users: [
+      {
+        id: 'test-user-1',
+        email: 'test@glgcapitalgroup.com',
+        first_name: 'Test',
+        last_name: 'User',
+        role: 'user',
+        is_active: true,
+        email_verified: true,
+        last_login: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      },
+      {
+        id: 'test-user-2',
+        email: 'admin@glgcapitalgroup.com',
+        first_name: 'Admin',
+        last_name: 'User',
+        role: 'admin',
+        is_active: true,
+        email_verified: true,
+        last_login: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+    ],
+    profiles: [],
+    clients: []
+  };
+}
+
+// Carica dati offline
+const offlineData = loadOfflineData();
+
 // Array condivisi per i dati offline
-export let offlineUsers: OfflineUser[] = [
-  // Utente di test predefinito
-  {
-    id: 'test-user-1',
-    email: 'test@glgcapitalgroup.com',
-    first_name: 'Test',
-    last_name: 'User',
-    role: 'user',
-    is_active: true,
-    email_verified: true,
-    last_login: new Date().toISOString(),
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  },
-  {
-    id: 'test-user-2',
-    email: 'admin@glgcapitalgroup.com',
-    first_name: 'Admin',
-    last_name: 'User',
-    role: 'admin',
-    is_active: true,
-    email_verified: true,
-    last_login: new Date().toISOString(),
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  }
-];
+export let offlineUsers: OfflineUser[] = offlineData.users;
 
-export let offlineProfiles: OfflineProfile[] = [
-  {
-    id: 'test-user-1',
-    name: 'Test User',
-    email: 'test@glgcapitalgroup.com',
-    role: 'user',
-    first_name: 'Test',
-    last_name: 'User',
-    country: 'United States',
-    kyc_status: 'verified',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  },
-  {
-    id: 'test-user-2',
-    name: 'Admin User',
-    email: 'admin@glgcapitalgroup.com',
-    role: 'admin',
-    first_name: 'Admin',
-    last_name: 'User',
-    country: 'United States',
-    kyc_status: 'verified',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  }
-];
+export let offlineProfiles: OfflineProfile[] = offlineData.profiles;
 
-export let offlineClients: OfflineClient[] = [
-  {
-    id: 'test-client-1',
-    user_id: 'test-user-1',
-    first_name: 'Test',
-    last_name: 'User',
-    email: 'test@glgcapitalgroup.com',
-    phone: '+1234567890',
-    country: 'United States',
-    city: 'New York',
-    status: 'active',
-    client_code: 'CLI001',
-    risk_profile: 'moderate',
-    total_invested: 50000,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  },
-  {
-    id: 'test-client-2',
-    user_id: 'test-user-2',
-    first_name: 'Admin',
-    last_name: 'User',
-    email: 'admin@glgcapitalgroup.com',
-    phone: '+0987654321',
-    country: 'United States',
-    city: 'Los Angeles',
-    status: 'active',
-    client_code: 'CLI002',
-    risk_profile: 'conservative',
-    total_invested: 75000,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  }
-];
+export let offlineClients: OfflineClient[] = offlineData.clients;
 
 // Funzioni per gestire i dati offline
 export const offlineDataManager = {

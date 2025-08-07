@@ -1,169 +1,109 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { getPackagesWithFallback } from '@/lib/supabase-fallback';
-import { getPackages, createPackage, updatePackage, deletePackage, syncPackages } from '@/lib/packages-storage';
+import { verifyAdminToken } from '@/lib/admin-auth';
+import { getPackages, createPackage, updatePackage, deletePackage } from '@/lib/data-manager';
+import { getMockPackages, addMockPackage, updateMockPackage, deleteMockPackage } from '@/lib/mock-data';
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://zaeakwbpiqzhywhlqqse.supabase.co',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || 'mock-service-key'
-);
-
-// Semplificata verifica admin
-async function verifyAdminAuth(request: NextRequest) {
-  const adminToken = request.headers.get('x-admin-token');
-  
-  // Token semplificato per accesso admin
-  if (adminToken === 'admin-access') {
-    return { success: true, adminId: 'admin' };
-  }
-  
-  return { success: false, error: 'Admin access required' };
-}
-
-// GET - Fetch all packages
 export async function GET(request: NextRequest) {
-  console.log('🔍 Admin packages API called');
-  
   try {
-    // Usa il sistema di storage locale
-    const packages = getPackages();
-    console.log('✅ Packages fetched from local storage:', packages.length);
-    
-    return NextResponse.json({ packages });
+    const token = request.headers.get('x-admin-token');
+    if (!token || !(await verifyAdminToken(token))) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    try {
+      const packages = await getPackages();
+      return NextResponse.json({ success: true, data: packages });
+    } catch (dbError) {
+      console.log('Database not available, using mock data');
+      const mockPackages = getMockPackages();
+      return NextResponse.json({ success: true, data: mockPackages });
+    }
   } catch (error) {
-    console.error('❌ Error fetching packages:', error);
-    return NextResponse.json({ 
-      error: 'Errore nel recupero dei pacchetti',
-      packages: []
-    }, { status: 500 });
+    console.error('GET /api/admin/packages error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
-// POST - Create new package
 export async function POST(request: NextRequest) {
-  console.log('🔍 Admin create package API called');
-  
   try {
-    const body = await request.json();
-    const { name, description, min_investment, max_investment, duration_months, expected_return, status, type, risk_level } = body;
-
-    // Validate required fields
-    if (!name || !description || !min_investment || !max_investment || !duration_months || !expected_return) {
-      return NextResponse.json({ 
-        error: 'Tutti i campi sono obbligatori' 
-      }, { status: 400 });
+    const token = request.headers.get('x-admin-token');
+    if (!token || !(await verifyAdminToken(token))) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const packageData = {
-      name,
-      description,
-      min_investment: parseFloat(min_investment),
-      max_investment: parseFloat(max_investment),
-      duration_months: parseInt(duration_months),
-      expected_return: parseFloat(expected_return),
-      status: status || 'active',
-      type: type || 'balanced',
-      risk_level: risk_level || 'medium'
-    };
-
-    // Crea il pacchetto nel storage locale
-    const newPackage = createPackage(packageData);
+    const packageData = await request.json();
     
-    console.log('✅ Package created successfully in local storage');
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Pacchetto creato con successo',
-      package: newPackage 
-    });
+    try {
+      const newPackage = await createPackage(packageData);
+      if (!newPackage) {
+        throw new Error('Database create failed');
+      }
+      return NextResponse.json({ success: true, data: newPackage });
+    } catch (dbError) {
+      console.log('Database not available, using mock data');
+      const newPackage = addMockPackage(packageData);
+      return NextResponse.json({ success: true, data: newPackage });
+    }
   } catch (error) {
-    console.error('❌ Unexpected error:', error);
-    return NextResponse.json({ 
-      error: 'Errore interno del server' 
-    }, { status: 500 });
+    console.error('POST /api/admin/packages error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
-// PUT - Update package
 export async function PUT(request: NextRequest) {
-  console.log('🔍 Admin update package API called');
-  
   try {
-    const body = await request.json();
-    const { id, name, description, min_investment, max_investment, duration_months, expected_return, status, type, risk_level } = body;
-
-    if (!id) {
-      return NextResponse.json({ 
-        error: 'ID pacchetto richiesto' 
-      }, { status: 400 });
+    const token = request.headers.get('x-admin-token');
+    if (!token || !(await verifyAdminToken(token))) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const packageData = {
-      name,
-      description,
-      min_investment: parseFloat(min_investment),
-      max_investment: parseFloat(max_investment),
-      duration_months: parseInt(duration_months),
-      expected_return: parseFloat(expected_return),
-      status: status || 'active',
-      type: type || 'balanced',
-      risk_level: risk_level || 'medium'
-    };
-
-    // Aggiorna il pacchetto nel storage locale
-    const updatedPackage = updatePackage(id, packageData);
+    const { id, ...updateData } = await request.json();
     
-    if (!updatedPackage) {
-      return NextResponse.json({ 
-        error: 'Pacchetto non trovato' 
-      }, { status: 404 });
+    try {
+      const updatedPackage = await updatePackage(id, updateData);
+      if (!updatedPackage) {
+        throw new Error('Database update failed');
+      }
+      return NextResponse.json({ success: true, data: updatedPackage });
+    } catch (dbError) {
+      console.log('Database not available, using mock data');
+      const updatedPackage = updateMockPackage(id, updateData);
+      if (!updatedPackage) {
+        return NextResponse.json({ error: 'Package not found' }, { status: 404 });
+      }
+      return NextResponse.json({ success: true, data: updatedPackage });
     }
-
-    console.log('✅ Package updated successfully in local storage');
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Pacchetto aggiornato con successo',
-      package: updatedPackage 
-    });
   } catch (error) {
-    console.error('❌ Unexpected error:', error);
-    return NextResponse.json({ 
-      error: 'Errore interno del server' 
-    }, { status: 500 });
+    console.error('PUT /api/admin/packages error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
-// DELETE - Delete package
 export async function DELETE(request: NextRequest) {
-  console.log('🔍 Admin delete package API called');
-  
   try {
-    const url = new URL(request.url);
-    const id = url.pathname.split('/').pop();
-
-    if (!id) {
-      return NextResponse.json({ 
-        error: 'ID pacchetto richiesto' 
-      }, { status: 400 });
+    const token = request.headers.get('x-admin-token');
+    if (!token || !(await verifyAdminToken(token))) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Elimina il pacchetto dal storage locale
-    const success = deletePackage(id);
+    const { id } = await request.json();
     
-    if (!success) {
-      return NextResponse.json({ 
-        error: 'Pacchetto non trovato' 
-      }, { status: 404 });
+    try {
+      const success = await deletePackage(id);
+      if (!success) {
+        throw new Error('Database delete failed');
+      }
+      return NextResponse.json({ success: true });
+    } catch (dbError) {
+      console.log('Database not available, using mock data');
+      const success = deleteMockPackage(id);
+      if (!success) {
+        return NextResponse.json({ error: 'Package not found' }, { status: 404 });
+      }
+      return NextResponse.json({ success: true });
     }
-
-    console.log('✅ Package deleted successfully from local storage');
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Pacchetto eliminato con successo' 
-    });
   } catch (error) {
-    console.error('❌ Unexpected error:', error);
-    return NextResponse.json({ 
-      error: 'Errore interno del server' 
-    }, { status: 500 });
+    console.error('DELETE /api/admin/packages error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 } 

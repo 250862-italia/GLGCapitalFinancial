@@ -1,176 +1,40 @@
-"use client";
+import type { Metadata } from 'next';
+import '../globals.css';
+import RealTimeNotifications from '@/components/RealTimeNotifications';
 
-import { useEffect, useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import AdminNotifications from '@/components/admin/AdminNotifications';
-import '@/app/globals.css';
+export const metadata: Metadata = {
+  title: 'Admin Dashboard - GLG Capital Financial',
+  description: 'Pannello di amministrazione per la gestione di clienti e investimenti',
+};
 
-interface AdminLayoutProps {
+export default function AdminLayout({
+  children,
+}: {
   children: React.ReactNode;
-}
-
-export default function AdminLayout({ children }: AdminLayoutProps) {
-  const [isAuthorized, setIsAuthorized] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const router = useRouter();
-  const pathname = usePathname();
-
-  useEffect(() => {
-    const checkAuth = () => {
-      // Skip auth check for login page to avoid redirect loops
-      if (pathname === '/admin/login') {
-        setIsAuthorized(true);
-        setIsLoading(false);
-        return;
-      }
-
-      const adminUser = localStorage.getItem('admin_user');
-      const adminToken = localStorage.getItem('admin_token');
-      
-      console.log('🔍 Admin Auth Check:', { adminUser, adminToken, pathname });
-      
-      if (!adminUser || !adminToken) {
-        console.log('❌ Admin Auth: Missing user or token');
-        router.push('/admin/login');
-        return;
-      }
-
-      try {
-        const adminData = JSON.parse(adminUser);
-        console.log('🔍 Admin Data:', adminData);
-        
-        if (adminData.role !== 'admin' && adminData.role !== 'super_admin' && adminData.role !== 'superadmin') {
-          console.log('❌ Admin Auth: Invalid role:', adminData.role);
-          router.push('/admin/login');
-          return;
-        }
-        
-        console.log('✅ Admin Auth: Authorized');
-        setIsAuthorized(true);
-      } catch (e) {
-        console.log('❌ Admin Auth: Error parsing user data:', e);
-        router.push('/admin/login');
-        return;
-      }
-      
-      setIsLoading(false);
-    };
-
-    checkAuth();
-  }, [router, pathname]);
-
-  if (isLoading) {
-    return (
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '100vh',
-        background: '#f9fafb'
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{
-            width: 40,
-            height: 40,
-            border: '4px solid #e2e8f0',
-            borderTop: '4px solid #1a2238',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-            margin: '0 auto 1rem'
-          }} />
-          <p style={{ color: '#64748b' }}>Verificando accesso admin...</p>
-        </div>
-        <style jsx>{`
-          @keyframes spin { 
-            0% { transform: rotate(0deg); } 
-            100% { transform: rotate(360deg); } 
-          }
-        `}</style>
-      </div>
-    );
-  }
-
-  if (!isAuthorized) {
-    return null; // Will redirect to login
-  }
-
-  // Get admin user ID for notifications
-  const getAdminId = () => {
-    try {
-      const adminUser = localStorage.getItem('admin_user');
-      if (adminUser) {
-        const adminData = JSON.parse(adminUser);
-        return adminData.id || 'admin';
-      }
-    } catch (e) {
-      console.warn('Error parsing admin user data:', e);
-    }
-    return 'admin';
-  };
-
+}) {
   return (
-    <>
-      {/* Admin Header with Return to Dashboard button */}
-      {pathname !== '/admin' && pathname !== '/admin/login' && (
-        <div style={{
-          background: '#1a2238',
-          padding: '1rem 2rem',
-          borderBottom: '1px solid #374151',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          position: 'sticky',
-          top: 0,
-          zIndex: 1001
-        }}>
-          <div style={{ color: 'white', fontSize: '1.25rem', fontWeight: '600' }}>
-            GLG Capital Group - Admin Panel
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            {/* Real-time notifications for admin */}
-            <AdminNotifications adminId={getAdminId()} />
-            <button
-              onClick={() => {
-                console.log('🔘 Return to Dashboard button clicked!');
-                router.push('/admin');
-              }}
-              style={{
-                background: '#059669',
-                color: 'white',
-                border: 'none',
-                padding: '0.75rem 1.5rem',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: '500',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                transition: 'background-color 0.2s',
-                position: 'relative',
-                zIndex: 1002,
-                pointerEvents: 'auto',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-              }}
-              onMouseOver={(e) => e.currentTarget.style.background = '#047857'}
-              onMouseOut={(e) => e.currentTarget.style.background = '#059669'}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                <polyline points="9,22 9,12 15,12 15,22"/>
-              </svg>
-              Return to Dashboard
-            </button>
+    <div className="min-h-screen bg-gray-50">
+      <nav className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex items-center">
+              <h1 className="text-xl font-semibold text-gray-900">
+                GLG Capital Financial - Admin
+              </h1>
+            </div>
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-500">Admin Panel</span>
+            </div>
           </div>
         </div>
-      )}
+      </nav>
       
-      <div style={{ 
-        marginTop: pathname !== '/admin' && pathname !== '/admin/login' ? '0' : '0',
-        minHeight: 'calc(100vh - 80px)' // Account for header height
-      }}>
+      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         {children}
-      </div>
-    </>
+      </main>
+      
+      {/* Notifiche Real-Time */}
+      <RealTimeNotifications token="admin_test_token_123" />
+    </div>
   );
 } 

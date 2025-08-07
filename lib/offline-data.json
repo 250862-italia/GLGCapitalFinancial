@@ -3,17 +3,25 @@
     {
       "id": "d528abbd-fa0f-4726-9185-1e3f4519f1ba",
       "email": "prova@prova.com",
-      "password": "password123",
-      "created_at": "2025-08-02T09:44:09.988Z"
+      "first_name": "pippo",
+      "last_name": "Paperino",
+      "role": "user",
+      "is_active": true,
+      "email_verified": true,
+      "last_login": "2025-08-02T09:44:09.988Z",
+      "created_at": "2025-08-02T09:44:09.988Z",
+      "updated_at": "2025-08-02T09:44:09.988Z"
     }
   ],
   "profiles": [
     {
       "id": "d528abbd-fa0f-4726-9185-1e3f4519f1ba",
+      "name": "pippo Paperino",
+      "email": "prova@prova.com",
+      "role": "user",
       "first_name": "pippo",
       "last_name": "Paperino",
       "country": "Italy",
-      "role": "user",
       "kyc_status": "pending",
       "created_at": "2025-08-02T09:44:09.989Z",
       "updated_at": "2025-08-02T09:44:09.989Z"
@@ -26,8 +34,11 @@
       "first_name": "pippo",
       "last_name": "Paperino",
       "email": "prova@prova.com",
-      "client_code": "CLI1754127849989DCPE",
+      "phone": "+39 123 456 7890",
+      "country": "Italy",
+      "city": "Roma",
       "status": "active",
+      "client_code": "CLI1754127849989DCPE",
       "risk_profile": "standard",
       "total_invested": 0,
       "created_at": "2025-08-02T09:44:09.989Z",
