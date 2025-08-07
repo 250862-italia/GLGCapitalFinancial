@@ -1,184 +1,199 @@
-# GLG Capital Group Dashboard
+# 🏦 GLG Capital Financial
 
-A comprehensive financial dashboard and investment management platform for GLG Capital Group LLC.
+Piattaforma finanziaria completa per la gestione di investimenti, clienti e pacchetti di investimento.
 
-## 🚀 Features
+## 🚀 **Caratteristiche Principali**
 
-### Client Features
-- **User Registration & Authentication** - Secure client registration and login
-- **Profile Management** - Complete profile setup with personal information
+### **👥 Gestione Utenti**
+- **Sistema di Autenticazione**: Login/registrazione con Supabase
+- **Profili Utente**: Gestione completa profili con foto
+- **Modalità Offline**: Funziona anche senza connessione database
+- **Admin Panel**: Dashboard completa per amministratori
 
-- **Investment Dashboard** - View and manage investment portfolios
-- **Document Requests** - Request official documentation from GLG
-- **Banking Details** - Manage banking information securely
+### **💰 Gestione Investimenti**
+- **CRUD Completo**: Create, Read, Update, Delete per investimenti
+- **Stati Investimento**: Pending, Approved, Rejected, Completed
+- **Notifiche Real-time**: Sistema di notifiche per aggiornamenti
+- **Dashboard Clienti**: Visualizzazione investimenti personali
 
-### Admin Features
-- **Analytics Dashboard** - Real-time financial metrics and insights
-- **Client Management** - Complete client database management
+### **👨‍💼 Gestione Clienti**
+- **Database Reale**: Integrazione completa con Supabase
+- **Sincronizzazione**: Sync automatico tra database e locale
+- **CRUD Avanzato**: Gestione completa clienti con foto profilo
+- **Codici Cliente**: Generazione automatica codici univoci
 
-- **Investment Management** - Track and manage all investments
-- **Content Management** - Manage news, markets, and partnerships
-- **Team Management** - Admin team and role management
-- **Settings & Configuration** - System configuration and backup
+### **📦 Gestione Pacchetti**
+- **Pacchetti Investimento**: Creazione e gestione pacchetti
+- **Prezzi Dinamici**: Gestione prezzi e commissioni
+- **Categorie**: Organizzazione per tipologie di investimento
+- **Stati Pacchetti**: Active, Inactive, Draft
 
-## 🛠️ Technology Stack
+### **📊 Analytics e Grafici**
+- **Dashboard Admin**: Metriche e performance overview
+- **Grafici Recharts**: Visualizzazioni interattive
+- **Report Analytics**: Analisi dettagliate e statistiche
+- **Real-time Data**: Dati aggiornati in tempo reale
 
-- **Frontend**: Next.js 14, React, TypeScript, Tailwind CSS
-- **Backend**: Next.js API Routes, Supabase
-- **Database**: PostgreSQL (via Supabase)
-- **Authentication**: Custom auth system with role-based access
-- **Storage**: Supabase Storage for documents and files
-- **Email**: SMTP integration for notifications
-- **Deployment**: Vercel-ready
+## 🛠️ **Tecnologie**
 
-## 📋 Prerequisites
+- **Frontend**: Next.js 14, React, TypeScript
+- **Styling**: Tailwind CSS, shadcn/ui
+- **Backend**: Supabase (Database, Auth, Storage)
+- **Charts**: Recharts
+- **Deployment**: Vercel
 
-- Node.js 18+ 
-- npm or yarn
-- Supabase account
-- SMTP email service (Gmail, SendGrid, etc.)
+## 🚀 **Installazione**
 
-## 🔧 Installation
+### **Prerequisiti**
+```bash
+Node.js 18+
+npm o yarn
+```
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/your-org/glg-dashboard.git
-   cd glg-dashboard
-   ```
+### **Setup Locale**
+```bash
+# Clone repository
+git clone https://github.com/your-username/GLGCapitalFinancial.git
+cd GLGCapitalFinancial
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+# Installa dipendenze
+npm install
 
-3. **Set up environment variables**
-   ```bash
-   cp env.example .env.local
-   ```
-   
-   Edit `.env.local` with your configuration:
-   - Supabase URL and keys
-   - SMTP email settings
-   - Application secrets
+# Configura variabili ambiente
+cp .env.example .env.local
+# Modifica .env.local con le tue credenziali Supabase
 
-4. **Set up Supabase**
-   - Create a new Supabase project
-   - Run the database setup scripts in Supabase SQL Editor
-   - Configure storage buckets for document uploads
-   - Set up Row Level Security (RLS) policies
+# Avvia server di sviluppo
+npm run dev
+```
 
-5. **Start development server**
-   ```bash
-   npm run dev
-   ```
+### **Configurazione Supabase**
+1. Crea un progetto su [Supabase](https://supabase.com)
+2. Copia le credenziali nel file `.env.local`
+3. Esegui gli script di setup database
 
-## 🗄️ Database Setup
+## 📋 **Script Utili**
 
-The application requires the following database tables:
+### **Setup Database**
+```bash
+# Popola database con dati di test
+node scripts/populate-database.js
 
-- `users` - User authentication and profiles
-- `clients` - Client information and profiles
+# Verifica salute database
+node scripts/db-health-check.js
 
-- `investments` - Investment tracking
-- `analytics` - Dashboard metrics
-- `informational_requests` - Document requests
-- `team_members` - Admin team management
-- `content` - News and market content
-- `partnerships` - Partnership management
-- `settings` - System configuration
+# Setup admin user
+node scripts/setup-admin-browser.js
+```
 
-Run the provided SQL scripts in your Supabase SQL Editor to create all necessary tables and policies.
+### **Deploy**
+```bash
+# Deploy su Vercel
+fai deploy
 
-## 🔐 Authentication
+# Verifica alias dominio
+npx vercel alias glgcapitalgroup.com
+```
 
-The system uses a custom authentication system with role-based access:
+## 🔐 **Credenziali Test**
 
-- **Clients**: Regular users with access to their dashboard
-- **Admins**: Administrative users with full system access
-- **Superadmins**: Full system control and configuration access
+### **Admin**
+- **Email**: admin@glg.com
+- **Password**: Admin123!
+- **URL**: http://localhost:3000/admin/login
 
-## 📧 Email Configuration
+### **Cliente**
+- **Email**: prova@prova.com
+- **Password**: password123
+- **URL**: http://localhost:3000/login
 
-Configure SMTP settings in `.env.local` for:
-- User registration confirmations
-- Password reset emails
+## 🌐 **URLs**
 
-- Document request confirmations
-- Investment updates
+### **Sviluppo Locale**
+- **Home**: http://localhost:3000
+- **Admin**: http://localhost:3000/admin
+- **Login**: http://localhost:3000/login
+- **Profile**: http://localhost:3000/profile
 
-## 🚀 Deployment
+### **Produzione**
+- **Home**: https://glgcapitalgroup.com
+- **Admin**: https://glgcapitalgroup.com/admin
+- **Login**: https://glgcapitalgroup.com/login
+- **Profile**: https://glgcapitalgroup.com/profile
 
-### Vercel Deployment
+## 📁 **Struttura Progetto**
 
-1. **Connect to Vercel**
-   ```bash
-   npm install -g vercel
-   vercel login
-   ```
+```
+GLGCapitalFinancial/
+├── app/                    # Next.js App Router
+│   ├── admin/             # Admin panel pages
+│   ├── api/               # API routes
+│   ├── dashboard/         # Client dashboard
+│   └── auth/              # Authentication pages
+├── components/            # React components
+│   ├── admin/            # Admin components
+│   ├── ui/               # UI components
+│   └── kyc/              # KYC components
+├── lib/                  # Utilities and configs
+├── scripts/              # Utility scripts
+├── public/               # Static assets
+└── types/                # TypeScript types
+```
 
-2. **Deploy**
-   ```bash
-   vercel --prod
-   ```
+## 🔧 **Configurazione Avanzata**
 
-3. **Set environment variables** in Vercel dashboard
+### **Modalità Offline**
+Il sistema supporta modalità offline completa:
+- Autenticazione offline
+- Dati locali sincronizzati
+- Fallback automatico
 
-### Manual Deployment
+### **Sicurezza**
+- CSRF protection
+- Admin authentication
+- RLS policies Supabase
+- Input validation
 
-1. **Build the application**
-   ```bash
-   npm run build
-   ```
+### **Performance**
+- Image optimization
+- Lazy loading
+- Caching strategies
+- Memory management
 
-2. **Start production server**
-   ```bash
-   npm start
-   ```
+## 📈 **Monitoraggio**
 
-## 🔒 Security Features
+### **Health Checks**
+```bash
+# Verifica salute sistema
+node scripts/healthcheck.js
 
-- **Row Level Security (RLS)** - Database-level security
-- **CSRF Protection** - Cross-site request forgery prevention
-- **Input Validation** - Comprehensive data validation
-- **Rate Limiting** - API request rate limiting
-- **Secure File Uploads** - Document upload security
-- **Encrypted Storage** - Sensitive data encryption
+# Test connessione database
+node scripts/db-health-check.js
+```
 
-## 📊 Monitoring & Analytics
+### **Logs**
+- Console logs per debug
+- Error tracking
+- Performance monitoring
 
-- **Error Tracking** - Comprehensive error logging
-- **Performance Monitoring** - Application performance metrics
-- **User Analytics** - User behavior tracking
-- **Database Monitoring** - Database performance and health
+## 🤝 **Contribuire**
 
-## 🤝 Contributing
+1. Fork il progetto
+2. Crea un branch feature (`git checkout -b feature/AmazingFeature`)
+3. Commit le modifiche (`git commit -m 'Add AmazingFeature'`)
+4. Push al branch (`git push origin feature/AmazingFeature`)
+5. Apri una Pull Request
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+## 📄 **Licenza**
 
-## 📄 License
+Questo progetto è sotto licenza MIT. Vedi il file `LICENSE` per dettagli.
 
-This project is proprietary software for GLG Capital Group LLC.
+## 📞 **Supporto**
 
-## 🆘 Support
+Per supporto tecnico o domande:
+- Email: support@glgcapitalgroup.com
+- Documentazione: [Wiki del progetto](link-wiki)
 
-For support and questions:
-- Email: support@glgcapital.com
-- Documentation: [Internal Wiki]
-- Issues: [GitHub Issues]
+---
 
-## 🔄 Version History
-
-- **v1.0.0** - Initial release with core features
-- **v1.1.0** - Added document management and uploads
-- **v1.2.0** - Enhanced analytics and reporting
-- **v1.3.0** - Complete CRUD operations and admin panel
-
-## ❗️ Troubleshooting CRUD Admin Packages
-
-- Per poter salvare/modificare/eliminare pacchetti da /admin/packages, l'utente deve essere autenticato come admin o superadmin.
-- Se ricevi errori di permessi (es. permission denied, no insert policy, RLS violation), esegui lo script `fix-rls-policies.sql` su Supabase per sbloccare le policy.
-- Consulta la guida `RLS_FIX_GUIDE.md` per i dettagli.
+**GLG Capital Financial** - Piattaforma finanziaria moderna e sicura 🏦✨

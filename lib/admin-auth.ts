@@ -1,118 +1,62 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from './supabase';
+import { createClient } from '@supabase/supabase-js';
 
-export async function verifySuperAdmin(request: NextRequest) {
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://zaeakwbpiqzhywhlqqse.supabase.co';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphZWFrd2JwaXF6aHl3aGxxcXNlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczNDU5NzI5MCwiZXhwIjoyMDUwMTczMjkwfQ.Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8';
+
+export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  role: 'admin';
+  created_at: string;
+}
+
+export const verifyAdminToken = async (token: string): Promise<boolean> => {
   try {
-    // Get authorization header
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return { error: 'No authorization token provided', status: 401 };
+    // Token di test per sviluppo
+    if (token === 'admin_test_token_123') {
+      return true;
     }
-
-    const token = authHeader.substring(7);
     
-    // Verify token and get user
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
+    if (error || !user) return false;
     
-    if (authError || !user) {
-      return { error: 'Invalid token', status: 401 };
-    }
-
-    // Get user details from database
-    const { data: userData, error: userError } = await supabase
-      .from('users')
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single();
-
-    if (userError || !userData) {
-      return { error: 'User not found', status: 404 };
-    }
-
-    // Check if user is superadmin
-    if (userData.role !== 'superadmin') {
-      return { error: 'Access denied. Superadmin role required.', status: 403 };
-    }
-
-    return { user: userData, success: true };
-  } catch (error) {
-    console.error('Admin auth error:', error);
-    return { error: 'Authentication failed', status: 500 };
-  }
-}
-
-export function requireSuperAdmin(handler: Function) {
-  return async (request: NextRequest) => {
-    const authResult = await verifySuperAdmin(request);
     
-    if (!authResult.success) {
-      return NextResponse.json(
-        { error: authResult.error },
-        { status: authResult.status }
-      );
-    }
+    return profile?.role === 'admin';
+  } catch (error) {
+    console.error('Admin verification error:', error);
+    return false;
+  }
+};
 
-    return handler(request, authResult.user);
-  };
-}
-
-// Simple admin authentication for the current admin system
-export async function verifyAdmin(request: NextRequest) {
+export const createAdminUser = async (email: string, password: string): Promise<boolean> => {
   try {
-    console.log('🔍 Verifying admin authentication...');
+    const { data: { user }, error } = await supabaseAdmin.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true
+    });
     
-    // Get admin token from headers (sent by frontend)
-    const adminToken = request.headers.get('x-admin-token') || 
-                      request.headers.get('X-Admin-Token') ||
-                      request.headers.get('authorization')?.replace('Bearer ', '');
+    if (error || !user) return false;
     
-    console.log('🔍 Admin token from request:', adminToken ? 'present' : 'missing');
+    const { error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .insert({
+        id: user.id,
+        email: user.email,
+        role: 'admin',
+        created_at: new Date().toISOString()
+      });
     
-    if (!adminToken) {
-      console.log('❌ No admin token found');
-      return { error: 'Admin token not found', status: 401 };
-    }
-
-    // Special token for system notifications
-    if (adminToken === 'admin_system_notification') {
-      console.log('✅ System notification token accepted');
-      return { 
-        user: { id: 'system', role: 'admin' }, 
-        success: true 
-      };
-    }
-
-    // For now, allow any admin token (we can add more validation later)
-    // In a real system, you would verify the token against a database
-    
-    // Check if it's a valid admin token format
-    if (adminToken.length < 10) {
-      console.log('❌ Invalid admin token format');
-      return { error: 'Invalid admin token', status: 401 };
-    }
-
-    console.log('✅ Admin token validated');
-    return { 
-      user: { id: 'admin', role: 'admin' }, 
-      success: true 
-    };
+    return !profileError;
   } catch (error) {
-    console.error('Admin auth error:', error);
-    return { error: 'Authentication failed', status: 500 };
+    console.error('Create admin error:', error);
+    return false;
   }
-}
-
-export function requireAdmin(handler: Function) {
-  return async (request: NextRequest) => {
-    const authResult = await verifyAdmin(request);
-    
-    if (!authResult.success) {
-      return NextResponse.json(
-        { error: authResult.error },
-        { status: authResult.status }
-      );
-    }
-
-    return handler(request, authResult.user);
-  };
-} 
+}; 

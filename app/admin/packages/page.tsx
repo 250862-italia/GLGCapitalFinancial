@@ -1,595 +1,547 @@
 "use client";
-import { useEffect, useState } from "react";
-import type { CSSProperties } from 'react';
-import { getPackagesWithFallback } from '@/lib/supabase-fallback';
+import { useState, useEffect } from 'react';
 import { 
-  getPackages, 
-  createPackage, 
-  updatePackage, 
-  deletePackage, 
-  syncPackages,
-  type Package 
-} from '@/lib/packages-storage';
+  Package, DollarSign, TrendingUp, Calendar, Edit, Trash2, Plus, Search, 
+  Shield, Target, RefreshCw, Eye
+} from 'lucide-react';
+import { Package as PackageType } from '@/lib/data-manager';
+
+interface PackageFormData {
+  name: string;
+  description: string;
+  min_investment: number;
+  max_investment: number;
+  expected_return: number;
+  duration_months: number;
+  risk_level: 'low' | 'moderate' | 'high';
+  status: 'active' | 'inactive' | 'draft';
+}
 
 export default function AdminPackagesPage() {
-  const [packages, setPackages] = useState<Package[]>([]);
+  const [packages, setPackages] = useState<PackageType[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState<any>(emptyForm());
-  const [isEdit, setIsEdit] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [dataSource, setDataSource] = useState<'supabase' | 'local'>('local');
-
-  function emptyForm() {
-    return {
-      id: null,
-      name: '',
-      description: '',
-      min_investment: '',
-      max_investment: '',
-      duration_months: '',
-      expected_return: '',
-      status: 'active',
-      type: 'balanced',
-      risk_level: 'medium'
-    };
-  }
+  const [dataSource, setDataSource] = useState<'database' | 'mock'>('database');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingPackage, setEditingPackage] = useState<PackageType | null>(null);
+  const [formData, setFormData] = useState<PackageFormData>({
+    name: '',
+    description: '',
+    min_investment: 0,
+    max_investment: 0,
+    expected_return: 0,
+    duration_months: 12,
+    risk_level: 'moderate',
+    status: 'active'
+  });
 
   useEffect(() => {
     fetchPackages();
   }, []);
 
-  async function fetchPackages() {
+  const fetchPackages = async () => {
     setLoading(true);
     setError(null);
     
     try {
-      console.log('🔍 Starting fetchPackages...');
-      
-      // Prima prova a sincronizzare con il database
-      const adminToken = localStorage.getItem('admin_token');
-      if (adminToken) {
-        try {
-          const response = await fetch('/api/admin/packages/sync', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-admin-token': adminToken
-            }
-          });
-
-          const data = await response.json();
-          
-          if (data.success && data.data && data.data.length > 0) {
-            console.log('✅ Packages loaded from database:', data.data.length);
-            setPackages(data.data);
-            setDataSource('supabase');
-            setLoading(false);
-            return;
-          }
-        } catch (syncError) {
-          console.warn('⚠️ Database sync failed, using local data:', syncError);
-        }
-      }
-      
-      // Fallback: carica i pacchetti dal storage locale
-      const localPackages = getPackages();
-      setPackages(localPackages);
-      setDataSource('local');
-      console.log('✅ Packages loaded from local storage:', localPackages.length);
-      
-    } catch (err: any) {
-      console.error('❌ Fetch error:', err);
-      setError('Errore nel caricamento dei pacchetti');
-      setDataSource('local');
-      
-      // In caso di errore, usa i dati locali
-      const localPackages = getPackages();
-      setPackages(localPackages);
-    }
-    
-    setLoading(false);
-  }
-
-  async function handleSyncWithDatabase() {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      console.log('🔄 Starting database sync...');
-      
       const adminToken = localStorage.getItem('admin_token');
       if (!adminToken) {
-        setError('Token admin non trovato');
+        setError('Admin token not found');
         setLoading(false);
         return;
       }
 
-      const response = await fetch('/api/admin/packages/sync', {
+      const response = await fetch('/api/admin/packages', {
+        headers: {
+          'x-admin-token': adminToken
+        }
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        setPackages(data.data);
+        setDataSource('database');
+      } else {
+        setError(data.error || 'Failed to fetch packages');
+      }
+    } catch (error) {
+      console.error('Error fetching packages:', error);
+      setError('Failed to fetch packages');
+      setDataSource('mock');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreatePackage = async () => {
+    try {
+      const adminToken = localStorage.getItem('admin_token');
+      if (!adminToken) {
+        setError('Admin token not found');
+        return;
+      }
+
+      const response = await fetch('/api/admin/packages', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'x-admin-token': adminToken
-        }
+        },
+        body: JSON.stringify(formData)
       });
 
       const data = await response.json();
       
       if (data.success) {
-        console.log('✅ Database sync successful:', data.message);
-        setDataSource('supabase');
-        fetchPackages(); // Ricarica i pacchetti aggiornati
+        setPackages([data.data, ...packages]);
+        setShowCreateModal(false);
+        resetForm();
       } else {
-        console.error('❌ Database sync failed:', data.error);
-        setError(data.error || 'Errore nella sincronizzazione');
-        setDataSource('local');
+        setError(data.error || 'Failed to create package');
       }
+    } catch (error) {
+      console.error('Error creating package:', error);
+      setError('Failed to create package');
+    }
+  };
+
+  const handleUpdatePackage = async () => {
+    if (!editingPackage) return;
+
+    try {
+      const adminToken = localStorage.getItem('admin_token');
+      if (!adminToken) {
+        setError('Admin token not found');
+        return;
+      }
+
+      const response = await fetch('/api/admin/packages', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-token': adminToken
+        },
+        body: JSON.stringify({
+          id: editingPackage.id,
+          ...formData
+        })
+      });
+
+      const data = await response.json();
       
-    } catch (err: any) {
-      console.error('❌ Sync error:', err);
-      setError('Errore nella sincronizzazione con il database');
-      setDataSource('local');
-    }
-    
-    setLoading(false);
-  }
-
-  function openAdd() {
-    setForm(emptyForm());
-    setIsEdit(false);
-    setShowModal(true);
-  }
-
-  function openEdit(pkg: Package) {
-    setForm({
-      id: pkg.id,
-      name: pkg.name,
-      description: pkg.description,
-      min_investment: pkg.min_investment.toString(),
-      max_investment: pkg.max_investment.toString(),
-      duration_months: pkg.duration_months.toString(),
-      expected_return: pkg.expected_return.toString(),
-      status: pkg.status,
-      type: pkg.type || 'balanced',
-      risk_level: pkg.risk_level || 'medium'
-    });
-    setIsEdit(true);
-    setShowModal(true);
-  }
-
-  function closeModal() {
-    setShowModal(false);
-    setForm(emptyForm());
-  }
-
-  async function handleSave(e: any) {
-    e.preventDefault();
-    setSaving(true);
-    
-    try {
-      const adminToken = localStorage.getItem('admin_token');
-      if (!adminToken) {
-        setError('Token admin non trovato');
-        setSaving(false);
-        return;
-      }
-
-      const packageData = {
-        name: form.name,
-        description: form.description,
-        min_investment: parseFloat(form.min_investment),
-        max_investment: parseFloat(form.max_investment),
-        duration_months: parseInt(form.duration_months),
-        expected_return: parseFloat(form.expected_return),
-        status: form.status,
-        type: form.type,
-        risk_level: form.risk_level
-      };
-
-      if (isEdit) {
-        // Aggiorna pacchetto esistente nel database
-        const response = await fetch('/api/admin/packages/update', {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-admin-token': adminToken
-          },
-          body: JSON.stringify({
-            id: form.id,
-            ...packageData
-          })
-        });
-
-        const data = await response.json();
-        
-        if (data.success) {
-          console.log('✅ Package updated in database:', data.data.name);
-        } else {
-          throw new Error(data.error || 'Failed to update package');
-        }
+      if (data.success) {
+        setPackages(packages.map(pkg => 
+          pkg.id === editingPackage.id ? data.data : pkg
+        ));
+        setShowEditModal(false);
+        setEditingPackage(null);
+        resetForm();
       } else {
-        // Crea nuovo pacchetto nel database
-        const response = await fetch('/api/admin/packages/create', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-admin-token': adminToken
-          },
-          body: JSON.stringify(packageData)
-        });
-
-        const data = await response.json();
-        
-        if (data.success) {
-          console.log('✅ Package created in database:', data.data.name);
-        } else {
-          throw new Error(data.error || 'Failed to create package');
-        }
+        setError(data.error || 'Failed to update package');
       }
-
-      closeModal();
-      fetchPackages(); // Ricarica i pacchetti
-    } catch (err: any) {
-      console.error('❌ Save error:', err);
-      setError(err.message || 'Failed to save package');
+    } catch (error) {
+      console.error('Error updating package:', error);
+      setError('Failed to update package');
     }
-    
-    setSaving(false);
-  }
+  };
 
-  async function handleDelete(id: string) {
-    if (!confirm('Sei sicuro di voler eliminare questo pacchetto?')) {
-      return;
-    }
-    
+  const handleDeletePackage = async (packageId: string) => {
+    if (!confirm('Are you sure you want to delete this package?')) return;
+
     try {
       const adminToken = localStorage.getItem('admin_token');
       if (!adminToken) {
-        setError('Token admin non trovato');
+        setError('Admin token not found');
         return;
       }
 
-      const response = await fetch(`/api/admin/packages/delete?id=${id}`, {
+      const response = await fetch('/api/admin/packages', {
         method: 'DELETE',
         headers: {
+          'Content-Type': 'application/json',
           'x-admin-token': adminToken
-        }
+        },
+        body: JSON.stringify({ id: packageId })
       });
 
       const data = await response.json();
       
       if (data.success) {
-        console.log('✅ Package deleted from database successfully');
-        fetchPackages(); // Ricarica i pacchetti
+        setPackages(packages.filter(pkg => pkg.id !== packageId));
       } else {
-        throw new Error(data.error || 'Failed to delete package');
+        setError(data.error || 'Failed to delete package');
       }
-    } catch (err: any) {
-      console.error('❌ Delete error:', err);
-      setError(err.message || 'Failed to delete package');
+    } catch (error) {
+      console.error('Error deleting package:', error);
+      setError('Failed to delete package');
     }
-  }
+  };
+
+  const handleEditPackage = (pkg: PackageType) => {
+    setEditingPackage(pkg);
+    setFormData({
+      name: pkg.name,
+      description: pkg.description,
+      min_investment: pkg.min_investment,
+      max_investment: pkg.max_investment,
+      expected_return: pkg.expected_return,
+      duration_months: pkg.duration_months,
+      risk_level: pkg.risk_level,
+      status: pkg.status
+    });
+    setShowEditModal(true);
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      description: '',
+      min_investment: 0,
+      max_investment: 0,
+      expected_return: 0,
+      duration_months: 12,
+      risk_level: 'moderate',
+      status: 'active'
+    });
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active': return 'bg-green-100 text-green-800';
+      case 'inactive': return 'bg-red-100 text-red-800';
+      case 'draft': return 'bg-yellow-100 text-yellow-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getRiskLevelColor = (risk: string) => {
+    switch (risk) {
+      case 'low': return 'bg-blue-100 text-blue-800';
+      case 'moderate': return 'bg-yellow-100 text-yellow-800';
+      case 'high': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const filteredPackages = packages.filter(pkg => {
+    const matchesSearch = 
+      pkg.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      pkg.description.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesFilter = filterStatus === 'all' || pkg.status === filterStatus;
+    
+    return matchesSearch && matchesFilter;
+  });
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Caricamento pacchetti...</p>
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Gestione Pacchetti</h1>
-          <p className="text-gray-600">Gestisci i pacchetti di investimento disponibili</p>
-          
-          {/* Data Source Indicator */}
-          <div className="mt-2 flex items-center space-x-2">
-            <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-              dataSource === 'supabase' 
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Gestione Pacchetti</h1>
+          <div className="flex items-center gap-2 mt-2">
+            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+              dataSource === 'database' 
                 ? 'bg-green-100 text-green-800' 
-                : 'bg-blue-100 text-blue-800'
+                : 'bg-yellow-100 text-yellow-800'
             }`}>
-              {dataSource === 'supabase' ? '🟢 Database Supabase' : '🔵 Storage Locale'}
-            </div>
-            <span className="text-sm text-gray-500">
-              {packages.length > 0 ? `${packages.length} pacchetti caricati` : 'Nessun pacchetto trovato'}
+              {dataSource === 'database' ? '🟢 Database Reale' : '🟡 Dati Mock'}
             </span>
+            {dataSource === 'mock' && (
+              <span className="text-xs text-gray-500">
+                (Database non disponibile - usando dati di test)
+              </span>
+            )}
           </div>
-          
-          {dataSource === 'local' && (
-            <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <div className="flex">
-                <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-blue-800">Storage Locale Attivo</h3>
-                  <div className="mt-1 text-sm text-blue-700">
-                    I pacchetti vengono salvati nel browser. Le modifiche sono persistenti e funzionano offline.
-                    <br />
-                    <span className="font-medium">CRUD completo disponibile!</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
+        <button
+          onClick={() => setShowCreateModal(true)}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700"
+        >
+          <Plus size={20} />
+          Nuovo Pacchetto
+        </button>
+      </div>
 
-        {/* Error Display */}
-        {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">Errore</h3>
-                <div className="mt-2 text-sm text-red-700">{error}</div>
-              </div>
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          {error}
+        </div>
+      )}
+
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="flex gap-4 mb-6">
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <input
+                type="text"
+                placeholder="Cerca pacchetti..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
             </div>
           </div>
-        )}
-
-        {/* Action Buttons */}
-        <div className="mb-6 flex gap-4">
-          <button
-            onClick={openAdd}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
-            + Nuovo Pacchetto
-          </button>
-          
+            <option value="all">Tutti gli stati</option>
+            <option value="active">Attivo</option>
+            <option value="inactive">Inattivo</option>
+            <option value="draft">Bozza</option>
+          </select>
           <button
-            onClick={handleSyncWithDatabase}
-            className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 flex items-center"
+            onClick={fetchPackages}
+            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 flex items-center gap-2"
           >
-            <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            Sincronizza DB
+            <RefreshCw size={20} />
+            Aggiorna
           </button>
         </div>
 
-        {/* Packages Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {packages.map((pkg) => (
-            <div key={pkg.id} className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+          {filteredPackages.map((pkg) => (
+            <div key={pkg.id} className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
               <div className="flex justify-between items-start mb-4">
-                <h3 className="text-xl font-semibold text-gray-900">{pkg.name}</h3>
-                <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                  pkg.status === 'active' 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-gray-100 text-gray-800'
-                }`}>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">{pkg.name}</h3>
+                  <p className="text-sm text-gray-600 mt-1">{pkg.description}</p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleEditPackage(pkg)}
+                    className="p-1 text-blue-600 hover:text-blue-800"
+                  >
+                    <Edit size={16} />
+                  </button>
+                  <button
+                    onClick={() => handleDeletePackage(pkg.id)}
+                    className="p-1 text-red-600 hover:text-red-800"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Investimento Min:</span>
+                  <span className="font-medium">€{pkg.min_investment.toLocaleString()}</span>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Investimento Max:</span>
+                  <span className="font-medium">€{pkg.max_investment.toLocaleString()}</span>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Rendimento Atteso:</span>
+                  <span className="font-medium text-green-600">{pkg.expected_return}%</span>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Durata:</span>
+                  <span className="font-medium">{pkg.duration_months} mesi</span>
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(pkg.status)}`}>
                   {pkg.status}
                 </span>
-              </div>
-              
-              <p className="text-gray-600 mb-4">{pkg.description}</p>
-              
-              <div className="space-y-2 mb-4">
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-500">Investimento Min:</span>
-                  <span className="text-sm font-medium">€{pkg.min_investment.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-500">Investimento Max:</span>
-                  <span className="text-sm font-medium">€{pkg.max_investment.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-500">Durata:</span>
-                  <span className="text-sm font-medium">{pkg.duration_months} mesi</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-500">Rendimento Atteso:</span>
-                  <span className="text-sm font-medium text-green-600">{pkg.expected_return}%</span>
-                </div>
-                {pkg.type && (
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-500">Tipo:</span>
-                    <span className="text-sm font-medium capitalize">{pkg.type}</span>
-                  </div>
-                )}
-                {pkg.risk_level && (
-                  <div className="flex justify-between">
-                    <span className="text-sm text-gray-500">Rischio:</span>
-                    <span className="text-sm font-medium capitalize">{pkg.risk_level}</span>
-                  </div>
-                )}
-              </div>
-              
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => openEdit(pkg)}
-                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-3 rounded-md text-sm transition-colors duration-200"
-                >
-                  Modifica
-                </button>
-                <button
-                  onClick={() => handleDelete(pkg.id)}
-                  className="flex-1 bg-red-100 hover:bg-red-200 text-red-700 font-medium py-2 px-3 rounded-md text-sm transition-colors duration-200"
-                >
-                  Elimina
-                </button>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRiskLevelColor(pkg.risk_level)}`}>
+                  {pkg.risk_level}
+                </span>
               </div>
             </div>
           ))}
         </div>
 
-        {/* Empty State */}
-        {packages.length === 0 && !loading && (
-          <div className="text-center py-12">
-            <div className="mx-auto h-12 w-12 text-gray-400">
-              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-              </svg>
-            </div>
-            <h3 className="mt-2 text-sm font-medium text-gray-900">Nessun pacchetto</h3>
-            <p className="mt-1 text-sm text-gray-500">Inizia creando il tuo primo pacchetto di investimento.</p>
-            <div className="mt-6">
-              <button
-                onClick={openAdd}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
-              >
-                + Nuovo Pacchetto
-              </button>
-            </div>
+        {filteredPackages.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            Nessun pacchetto trovato
           </div>
         )}
       </div>
 
-      {/* Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                {isEdit ? 'Modifica Pacchetto' : 'Nuovo Pacchetto'}
-              </h2>
-              
-              <form onSubmit={handleSave} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
-                  <input
-                    type="text"
-                    value={form.name}
-                    onChange={(e) => setForm({...form, name: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Descrizione</label>
-                  <textarea
-                    value={form.description}
-                    onChange={(e) => setForm({...form, description: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    rows={3}
-                    required
-                  />
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Investimento Min (€)</label>
-                    <input
-                      type="number"
-                      value={form.min_investment}
-                      onChange={(e) => setForm({...form, min_investment: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Investimento Max (€)</label>
-                    <input
-                      type="number"
-                      value={form.max_investment}
-                      onChange={(e) => setForm({...form, max_investment: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Durata (mesi)</label>
-                    <input
-                      type="number"
-                      value={form.duration_months}
-                      onChange={(e) => setForm({...form, duration_months: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Rendimento Atteso (%)</label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      value={form.expected_return}
-                      onChange={(e) => setForm({...form, expected_return: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
-                    <select
-                      value={form.type}
-                      onChange={(e) => setForm({...form, type: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="conservative">Conservativo</option>
-                      <option value="balanced">Bilanciato</option>
-                      <option value="aggressive">Aggressivo</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Livello Rischio</label>
-                    <select
-                      value={form.risk_level}
-                      onChange={(e) => setForm({...form, risk_level: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="low">Basso</option>
-                      <option value="medium">Medio</option>
-                      <option value="high">Alto</option>
-                    </select>
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Stato</label>
-                  <select
-                    value={form.status}
-                    onChange={(e) => setForm({...form, status: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="active">Attivo</option>
-                    <option value="inactive">Inattivo</option>
-                    <option value="draft">Bozza</option>
-                  </select>
-                </div>
-                
-                <div className="flex space-x-3 pt-4">
-                  <button
-                    type="button"
-                    onClick={closeModal}
-                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-md transition-colors duration-200"
-                  >
-                    Annulla
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={saving}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200"
-                  >
-                    {saving ? 'Salvando...' : (isEdit ? 'Aggiorna' : 'Crea')}
-                  </button>
-                </div>
-              </form>
+      {/* Create Modal */}
+      {showCreateModal && (
+        <PackageForm
+          formData={formData}
+          setFormData={setFormData}
+          onSubmit={handleCreatePackage}
+          onCancel={() => {
+            setShowCreateModal(false);
+            resetForm();
+          }}
+          submitText="Crea Pacchetto"
+        />
+      )}
+
+      {/* Edit Modal */}
+      {showEditModal && (
+        <PackageForm
+          formData={formData}
+          setFormData={setFormData}
+          onSubmit={handleUpdatePackage}
+          onCancel={() => {
+            setShowEditModal(false);
+            setEditingPackage(null);
+            resetForm();
+          }}
+          submitText="Aggiorna Pacchetto"
+        />
+      )}
+    </div>
+  );
+}
+
+function PackageForm({ 
+  formData, 
+  setFormData, 
+  onSubmit, 
+  onCancel, 
+  submitText 
+}: {
+  formData: PackageFormData;
+  setFormData: (data: PackageFormData) => void;
+  onSubmit: () => void;
+  onCancel: () => void;
+  submitText: string;
+}) {
+  const handleChange = (field: keyof PackageFormData, value: string | number) => {
+    setFormData({ ...formData, [field]: value });
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <h2 className="text-2xl font-bold mb-4">{submitText}</h2>
+        
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Nome Pacchetto</label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => handleChange('name', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Descrizione</label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => handleChange('description', e.target.value)}
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Investimento Min (€)</label>
+              <input
+                type="number"
+                value={formData.min_investment}
+                onChange={(e) => handleChange('min_investment', Number(e.target.value))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Investimento Max (€)</label>
+              <input
+                type="number"
+                value={formData.max_investment}
+                onChange={(e) => handleChange('max_investment', Number(e.target.value))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Rendimento Atteso (%)</label>
+              <input
+                type="number"
+                step="0.1"
+                value={formData.expected_return}
+                onChange={(e) => handleChange('expected_return', Number(e.target.value))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Durata (mesi)</label>
+              <input
+                type="number"
+                value={formData.duration_months}
+                onChange={(e) => handleChange('duration_months', Number(e.target.value))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Livello di Rischio</label>
+              <select
+                value={formData.risk_level}
+                onChange={(e) => handleChange('risk_level', e.target.value as any)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="low">Basso</option>
+                <option value="moderate">Moderato</option>
+                <option value="high">Alto</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Stato</label>
+              <select
+                value={formData.status}
+                onChange={(e) => handleChange('status', e.target.value as any)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="active">Attivo</option>
+                <option value="inactive">Inattivo</option>
+                <option value="draft">Bozza</option>
+              </select>
             </div>
           </div>
         </div>
-      )}
+        
+        <div className="flex justify-end gap-4 mt-6">
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+          >
+            Annulla
+          </button>
+          <button
+            onClick={onSubmit}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            {submitText}
+          </button>
+        </div>
+      </div>
     </div>
   );
 } 
