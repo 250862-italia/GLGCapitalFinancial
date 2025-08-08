@@ -93,17 +93,19 @@ export async function DELETE(request: NextRequest) {
       if (!success) {
         throw new Error('Database delete failed');
       }
-      return NextResponse.json({ success: true });
+      return NextResponse.json({ success: true, message: 'Package deleted successfully' });
     } catch (dbError) {
       console.log('Database not available, using mock data');
       const success = deleteMockPackage(id);
       if (!success) {
         return NextResponse.json({ error: 'Package not found' }, { status: 404 });
       }
-      return NextResponse.json({ success: true });
+      return NextResponse.json({ success: true, message: 'Package deleted successfully' });
     }
   } catch (error) {
     console.error('DELETE /api/admin/packages error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-} 
+}
+
+ 

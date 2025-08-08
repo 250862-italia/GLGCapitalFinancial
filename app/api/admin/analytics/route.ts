@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAdminToken } from '@/lib/admin-auth';
-import { getClients, createClient, updateClient, deleteClient } from '@/lib/data-manager';
-import { getMockClients, addMockClient, updateMockClient, deleteMockClient } from '@/lib/mock-data';
+import { getAnalytics, createAnalytics, updateAnalytics, deleteAnalytics } from '@/lib/data-manager';
+import { getMockAnalytics, addMockAnalytics, updateMockAnalytics, deleteMockAnalytics } from '@/lib/mock-data';
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,15 +11,15 @@ export async function GET(request: NextRequest) {
     }
 
     try {
-      const clients = await getClients();
-      return NextResponse.json({ success: true, data: clients });
+      const analytics = await getAnalytics();
+      return NextResponse.json({ success: true, data: analytics });
     } catch (dbError) {
       console.log('Database not available, using mock data');
-      const mockClients = getMockClients();
-      return NextResponse.json({ success: true, data: mockClients });
+      const mockAnalytics = getMockAnalytics();
+      return NextResponse.json({ success: true, data: mockAnalytics });
     }
   } catch (error) {
-    console.error('GET /api/admin/clients error:', error);
+    console.error('GET /api/admin/analytics error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -31,21 +31,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const clientData = await request.json();
+    const analyticsData = await request.json();
     
     try {
-      const newClient = await createClient(clientData);
-      if (!newClient) {
+      const newAnalytics = await createAnalytics(analyticsData);
+      if (!newAnalytics) {
         throw new Error('Database create failed');
       }
-      return NextResponse.json({ success: true, data: newClient });
+      return NextResponse.json({ success: true, data: newAnalytics });
     } catch (dbError) {
       console.log('Database not available, using mock data');
-      const newClient = addMockClient(clientData);
-      return NextResponse.json({ success: true, data: newClient });
+      const newAnalytics = addMockAnalytics(analyticsData);
+      return NextResponse.json({ success: true, data: newAnalytics });
     }
   } catch (error) {
-    console.error('POST /api/admin/clients error:', error);
+    console.error('POST /api/admin/analytics error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -60,21 +60,21 @@ export async function PUT(request: NextRequest) {
     const { id, ...updateData } = await request.json();
     
     try {
-      const updatedClient = await updateClient(id, updateData);
-      if (!updatedClient) {
+      const updatedAnalytics = await updateAnalytics(id, updateData);
+      if (!updatedAnalytics) {
         throw new Error('Database update failed');
       }
-      return NextResponse.json({ success: true, data: updatedClient });
+      return NextResponse.json({ success: true, data: updatedAnalytics });
     } catch (dbError) {
       console.log('Database not available, using mock data');
-      const updatedClient = updateMockClient(id, updateData);
-      if (!updatedClient) {
-        return NextResponse.json({ error: 'Client not found' }, { status: 404 });
+      const updatedAnalytics = updateMockAnalytics(id, updateData);
+      if (!updatedAnalytics) {
+        return NextResponse.json({ error: 'Analytics not found' }, { status: 404 });
       }
-      return NextResponse.json({ success: true, data: updatedClient });
+      return NextResponse.json({ success: true, data: updatedAnalytics });
     }
   } catch (error) {
-    console.error('PUT /api/admin/clients error:', error);
+    console.error('PUT /api/admin/analytics error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -89,23 +89,21 @@ export async function DELETE(request: NextRequest) {
     const { id } = await request.json();
     
     try {
-      const success = await deleteClient(id);
+      const success = await deleteAnalytics(id);
       if (!success) {
         throw new Error('Database delete failed');
       }
-      return NextResponse.json({ success: true, message: 'Client deleted successfully' });
+      return NextResponse.json({ success: true, message: 'Analytics deleted successfully' });
     } catch (dbError) {
       console.log('Database not available, using mock data');
-      const success = deleteMockClient(id);
+      const success = deleteMockAnalytics(id);
       if (!success) {
-        return NextResponse.json({ error: 'Client not found' }, { status: 404 });
+        return NextResponse.json({ error: 'Analytics not found' }, { status: 404 });
       }
-      return NextResponse.json({ success: true, message: 'Client deleted successfully' });
+      return NextResponse.json({ success: true, message: 'Analytics deleted successfully' });
     }
   } catch (error) {
-    console.error('DELETE /api/admin/clients error:', error);
+    console.error('DELETE /api/admin/analytics error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
-
- 
+} 
