@@ -1,0 +1,108 @@
+const { mockClients, getMockClients, addMockClient, updateMockClient, deleteMockClient } = require('../../lib/mock-data');
+
+exports.handler = async (event, context) => {
+  // CORS headers
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-admin-token',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Content-Type': 'application/json'
+  };
+
+  // Handle preflight requests
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers,
+      body: ''
+    };
+  }
+
+  try {
+    // Verifica token admin
+    const adminToken = event.headers['x-admin-token'];
+    if (!adminToken || adminToken !== 'admin_test_token_123') {
+      return {
+        statusCode: 401,
+        headers,
+        body: JSON.stringify({ error: 'Unauthorized - Admin token required' })
+      };
+    }
+
+    switch (event.httpMethod) {
+      case 'GET':
+        // GET - Lista tutti i clients
+        const clients = getMockClients();
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify(clients)
+        };
+
+      case 'POST':
+        // POST - Crea nuovo client
+        const newClient = JSON.parse(event.body);
+        const createdClient = addMockClient(newClient);
+        return {
+          statusCode: 201,
+          headers,
+          body: JSON.stringify(createdClient)
+        };
+
+      case 'PUT':
+        // PUT - Aggiorna client esistente
+        const updateData = JSON.parse(event.body);
+        const updatedClient = updateMockClient(updateData.id, updateData);
+        if (updatedClient) {
+          return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify(updatedClient)
+          };
+        } else {
+          return {
+            statusCode: 404,
+            headers,
+            body: JSON.stringify({ error: 'Client not found' })
+          };
+        }
+
+      case 'DELETE':
+        // DELETE - Elimina client
+        const deleteData = JSON.parse(event.body);
+        const deleted = deleteMockClient(deleteData.id);
+        if (deleted) {
+          return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify({ message: 'Client deleted successfully' })
+          };
+        } else {
+          return {
+            statusCode: 404,
+            headers,
+            body: JSON.stringify({ error: 'Client not found' })
+          };
+        }
+
+      default:
+        return {
+          statusCode: 405,
+          headers,
+          body: JSON.stringify({ error: 'Method not allowed' })
+        };
+    }
+
+  } catch (error) {
+    console.error('Clients API Error:', error);
+    
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({ 
+        error: 'Internal server error',
+        message: error.message 
+      })
+    };
+  }
+}; 

@@ -1,15 +1,36 @@
 [build]
   command = "npm run build"
   publish = ".next"
-  functions = "app/api"
+  functions = "netlify/functions"
 
 [build.environment]
   NODE_VERSION = "18"
   NPM_VERSION = "9"
 
+# Gestione API routes tramite Netlify Functions
 [[redirects]]
-  from = "/api/*"
+  from = "/api/admin/clients"
+  to = "/.netlify/functions/clients"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin/packages"
+  to = "/.netlify/functions/packages"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin/*"
   to = "/.netlify/functions/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/admin/*"
+  to = "/admin"
+  status = 200
+
+[[redirects]]
+  from = "/settings/*"
+  to = "/settings"
   status = 200
 
 [[redirects]]
@@ -20,8 +41,9 @@
 [dev]
   command = "npm run dev"
   port = 3000
-  publish = ".next"
+  publish = "out"
 
+# Headers di sicurezza
 [[headers]]
   for = "/*"
   [headers.values]

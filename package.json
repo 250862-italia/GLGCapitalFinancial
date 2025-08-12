@@ -10,7 +10,9 @@
     "lint": "next lint",
     "type-check": "tsc --noEmit",
     "clean": "rm -rf .next && rm -rf node_modules && npm install",
-    "deploy": "npm run build && vercel --prod"
+    "deploy": "npm run build && vercel --prod",
+    "export": "echo 'Export automatico con Next.js 14'",
+    "deploy:netlify": "npm run build"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.0.4",
