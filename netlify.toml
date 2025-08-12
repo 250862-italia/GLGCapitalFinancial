@@ -18,11 +18,7 @@
   to = "/.netlify/functions/packages"
   status = 200
 
-[[redirects]]
-  from = "/api/admin/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
-
+# Gestione SPA routing per Next.js
 [[redirects]]
   from = "/admin/*"
   to = "/admin"
@@ -41,7 +37,7 @@
 [dev]
   command = "npm run dev"
   port = 3000
-  publish = "out"
+  publish = ".next"
 
 # Headers di sicurezza
 [[headers]]

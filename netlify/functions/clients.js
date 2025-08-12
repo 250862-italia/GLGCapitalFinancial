@@ -1,4 +1,63 @@
-const { mockClients, getMockClients, addMockClient, updateMockClient, deleteMockClient } = require('../../lib/mock-data');
+// Mock data per Netlify Functions (ES modules)
+const mockClients = [
+  {
+    id: '1',
+    first_name: 'Admin',
+    last_name: 'User',
+    email: 'admin@glgcapital.com',
+    phone: '+39 333 0000000',
+    company: 'GLG Capital Group',
+    position: 'Administrator',
+    date_of_birth: '1990-01-01',
+    nationality: 'Italiana',
+    address: 'Via Roma 1',
+    city: 'Milano',
+    country: 'Italia',
+    postal_code: '20100',
+    iban: 'IT60X0542811101000000000001',
+    bic: 'CRPPIT2P',
+    account_holder: 'Admin User',
+    usdt_wallet: '0x0000000000000000000000000000000000000000',
+    status: 'active',
+    risk_profile: 'moderate',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  }
+];
+
+// Funzioni CRUD per clients
+const getMockClients = () => [...mockClients];
+
+const addMockClient = (client) => {
+  const newClient = {
+    ...client,
+    id: Date.now().toString(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+  mockClients.unshift(newClient);
+  return newClient;
+};
+
+const updateMockClient = (id, updates) => {
+  const index = mockClients.findIndex(client => client.id === id);
+  if (index === -1) return null;
+  
+  mockClients[index] = {
+    ...mockClients[index],
+    ...updates,
+    updated_at: new Date().toISOString()
+  };
+  return mockClients[index];
+};
+
+const deleteMockClient = (id) => {
+  const index = mockClients.findIndex(client => client.id === id);
+  if (index === -1) return false;
+  
+  mockClients.splice(index, 1);
+  return true;
+};
 
 exports.handler = async (event, context) => {
   // CORS headers

@@ -1,4 +1,53 @@
-const { mockPackages, getMockPackages, addMockPackage, updateMockPackage, deleteMockPackage } = require('../../lib/mock-data');
+// Mock data per Netlify Functions (ES modules)
+const mockPackages = [
+  {
+    id: '1',
+    name: 'Pacchetto Starter',
+    description: 'Pacchetto iniziale per nuovi investitori',
+    min_investment: 1000,
+    max_investment: 10000,
+    expected_return: 5.0,
+    duration_months: 12,
+    risk_level: 'low',
+    status: 'active',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  }
+];
+
+// Funzioni CRUD per packages
+const getMockPackages = () => [...mockPackages];
+
+const addMockPackage = (pkg) => {
+  const newPackage = {
+    ...pkg,
+    id: Date.now().toString(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+  mockPackages.unshift(newPackage);
+  return newPackage;
+};
+
+const updateMockPackage = (id, updates) => {
+  const index = mockPackages.findIndex(pkg => pkg.id === id);
+  if (index === -1) return null;
+  
+  mockPackages[index] = {
+    ...mockPackages[index],
+    ...updates,
+    updated_at: new Date().toISOString()
+  };
+  return mockPackages[index];
+};
+
+const deleteMockPackage = (id) => {
+  const index = mockPackages.findIndex(pkg => pkg.id === id);
+  if (index === -1) return false;
+  
+  mockPackages.splice(index, 1);
+  return true;
+};
 
 exports.handler = async (event, context) => {
   // CORS headers

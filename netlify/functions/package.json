@@ -1,0 +1,17 @@
+{
+  "name": "glg-capital-netlify-functions",
+  "version": "1.0.0",
+  "description": "Netlify Functions per GLG Capital Financial",
+  "main": "index.js",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["netlify", "functions", "api", "crud"],
+  "author": "GLG Capital Group",
+  "license": "MIT"
+} 
