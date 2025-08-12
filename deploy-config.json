@@ -1,0 +1,25 @@
+{
+  "deployment": {
+    "timestamp": "2025-08-12T12:28:23Z",
+    "version": "1.0.0",
+    "environment": "production",
+    "build_type": "nextjs",
+    "node_version": "v22.16.0",
+    "npm_version": "10.9.2"
+  },
+  "urls": {
+    "local": "http://localhost:3000",
+    "production": "https://your-domain.com"
+  },
+  "directories": {
+    "build": ".next",
+    "static": "out",
+    "public": "public"
+  },
+  "deploy_options": {
+    "vercel": "vercel --prod",
+    "netlify": "netlify deploy --prod",
+    "manual": "npm start",
+    "docker": "docker build -t glg-capital . && docker run -p 3000:3000 glg-capital"
+  }
+}

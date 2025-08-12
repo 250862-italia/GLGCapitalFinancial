@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  glg-capital:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs
