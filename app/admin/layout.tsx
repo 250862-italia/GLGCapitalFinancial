@@ -1,16 +1,22 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAdminAuth } from '@/lib/use-admin-auth';
 
-export default function AdminLayout({
-  children,
-}: {
+interface AdminLayoutProps {
   children: React.ReactNode;
-}) {
+}
+
+export default function AdminLayout({ children }: AdminLayoutProps) {
   const { isAuthenticated, isLoading } = useAdminAuth();
   const router = useRouter();
+  const pathname = usePathname();
+
+  // Se siamo nella pagina di login, non controllare l'autenticazione
+  if (pathname === '/admin/login') {
+    return <>{children}</>;
+  }
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
