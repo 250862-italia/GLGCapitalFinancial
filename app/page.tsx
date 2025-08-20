@@ -63,10 +63,17 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-black/20"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
           <div className="text-center">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6">
-              🚀 Premium Investment Solutions
-            </h1>
-            <h2 className="text-3xl md:text-5xl font-bold mb-8">GLG Capital Group LLC</h2>
+            <div className="mb-8">
+              <div className="inline-flex items-center justify-center w-32 h-32 bg-white/10 backdrop-blur-sm rounded-full border border-white/20 mb-6">
+                <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 rounded-full">
+                  <Building2 className="h-20 w-20 text-white" />
+                </div>
+              </div>
+              <h1 className="text-4xl md:text-6xl font-bold mb-6">
+                GLG Capital Group
+              </h1>
+            </div>
+            <h2 className="text-3xl md:text-5xl font-bold mb-8">Premium Investment Solutions</h2>
             <p className="text-xl md:text-2xl mb-12 max-w-4xl mx-auto leading-relaxed">
               <strong>Empower your vision.</strong> Through our premium share-pledge framework, trailblazing enterprises harness strategic capital to dominate tomorrow's markets—fueling exponential growth, unshakable resilience, and enduring legacy.
             </p>
