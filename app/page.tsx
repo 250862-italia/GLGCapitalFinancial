@@ -42,6 +42,12 @@ export default function HomePage() {
               <Link href="/equity-pledge" className="text-gray-900 hover:text-blue-600 font-medium transition-colors">
                 Equity Pledge
               </Link>
+              <Link href="/client/login" className="text-gray-900 hover:text-blue-600 font-medium transition-colors">
+                Client Login
+              </Link>
+              <Link href="/client/register" className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                Join Now
+              </Link>
               <Link href="/admin/login" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
                 Admin
               </Link>
