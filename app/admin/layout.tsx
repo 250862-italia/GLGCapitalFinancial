@@ -8,7 +8,8 @@ import GLGLogo from '@/components/GLGLogo';
 import {
   LayoutDashboard, Users2, CreditCard, TrendingUp, 
   BarChart3, Settings, LogOut, Menu, X
-} from 'lucide-react';
+} from 'react-icons/ri';
+import { RiDashboardLine, RiUserLine, RiBankCardLine, RiTrendingUpLine, RiBarChartLine, RiSettings3Line, RiLogoutBoxRLine, RiMenuLine, RiCloseLine } from 'react-icons/ri';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -20,17 +21,20 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Se siamo nella pagina di login, non controllare l'autenticazione
-  if (pathname === '/admin/login') {
-    return <>{children}</>;
-  }
+  // Controlla se siamo nella pagina di login
+  const isLoginPage = pathname === '/admin/login';
 
   useEffect(() => {
-    // Solo reindirizza se non stiamo caricando e non siamo autenticati
-    if (!isLoading && !isAuthenticated) {
+    // Solo reindirizza se non stiamo caricando, non siamo autenticati e non siamo nella pagina di login
+    if (!isLoading && !isAuthenticated && !isLoginPage) {
       router.push('/admin/login');
     }
-  }, [isLoading, isAuthenticated, router]);
+  }, [isLoading, isAuthenticated, router, isLoginPage]);
+
+  // Se siamo nella pagina di login, renderizza solo i children
+  if (isLoginPage) {
+    return <>{children}</>;
+  }
 
   // Show loading state while checking authentication
   if (isLoading) {
@@ -50,12 +54,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   }
 
   const navigation = [
-    { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-    { name: 'Clienti', href: '/admin/clients', icon: Users2 },
-    { name: 'Pacchetti', href: '/admin/packages', icon: CreditCard },
-    { name: 'Investimenti', href: '/admin/investments', icon: TrendingUp },
-    { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
-    { name: 'Impostazioni', href: '/admin/settings', icon: Settings },
+    { name: 'Dashboard', href: '/admin', icon: RiDashboardLine },
+    { name: 'Clienti', href: '/admin/clients', icon: RiUserLine },
+    { name: 'Pacchetti', href: '/admin/packages', icon: RiBankCardLine },
+    { name: 'Investimenti', href: '/admin/investments', icon: RiTrendingUpLine },
+    { name: 'Analytics', href: '/admin/analytics', icon: RiBarChartLine },
+    { name: 'Impostazioni', href: '/admin/settings', icon: RiSettings3Line },
   ];
 
   const isActive = (href: string) => pathname === href;
@@ -108,7 +112,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 onClick={logout}
                 className="group flex items-center w-full px-2 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50 hover:text-gray-900 transition-colors"
               >
-                <LogOut className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" />
+                <RiLogoutBoxRLine className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" />
                 Logout
               </button>
             </div>
@@ -126,7 +130,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               className="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
               onClick={() => setSidebarOpen(false)}
             >
-              <X className="h-6 w-6 text-white" />
+              <RiCloseLine className="h-6 w-6 text-white" />
             </button>
           </div>
           
@@ -174,7 +178,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 onClick={logout}
                 className="group flex items-center w-full px-2 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50 hover:text-gray-900 transition-colors"
               >
-                <LogOut className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" />
+                <RiLogoutBoxRLine className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" />
                 Logout
               </button>
             </div>
@@ -191,7 +195,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             className="-ml-0.5 -mt-0.5 h-12 w-12 inline-flex items-center justify-center rounded-md text-gray-500 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
             onClick={() => setSidebarOpen(true)}
           >
-            <Menu className="h-6 w-6" />
+            <RiMenuLine className="h-6 w-6" />
           </button>
         </div>
 
