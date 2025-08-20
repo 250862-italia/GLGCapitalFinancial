@@ -4,11 +4,11 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAdminAuth } from '@/lib/use-admin-auth';
 
-export default function AdminLayout({
-  children,
-}: {
+interface AdminProtectedProps {
   children: React.ReactNode;
-}) {
+}
+
+export default function AdminProtected({ children }: AdminProtectedProps) {
   const { isAuthenticated, isLoading } = useAdminAuth();
   const router = useRouter();
 
@@ -37,4 +37,4 @@ export default function AdminLayout({
 
   // If authenticated, render children
   return <>{children}</>;
-} 
+}

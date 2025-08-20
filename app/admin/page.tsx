@@ -1,377 +1,287 @@
-"use client";
-import { useState, useEffect } from 'react';
-import { 
-  Users, Package, TrendingUp, DollarSign, Activity, 
-  ArrowUpRight, ArrowDownRight, Eye, Plus, Settings,
-  Bell, Search, Filter, Download, Calendar, Clock,
-  BarChart3, PieChart, LineChart, Target, Award,
-  Shield, Zap, Star, Globe, Building, UserCheck
+'use client';
+
+import { useState } from 'react';
+import Link from 'next/link';
+import AdminProtected from '@/components/AdminProtected';
+import { useAdminAuth } from '@/lib/use-admin-auth';
+import {
+  BarChart3, Shield, Building, Menu, X, LogOut,
+  Home, FileText, CreditCard, Users as TeamIcon,
+  Users2, Bell, Search, User, TrendingUp, DollarSign,
+  Target, Award, Zap, Star, Globe, Calendar, Clock
 } from 'lucide-react';
-import { Client, Package as PackageType, Investment } from '@/lib/data-manager';
-
-interface DashboardStats {
-  totalClients: number;
-  totalPackages: number;
-  totalInvestments: number;
-  totalValue: number;
-  activeInvestments: number;
-  pendingInvestments: number;
-  monthlyGrowth: number;
-  conversionRate: number;
-}
-
-interface RecentActivity {
-  id: string;
-  type: 'client' | 'package' | 'investment' | 'payment';
-  action: string;
-  name: string;
-  time: string;
-  status: 'success' | 'warning' | 'error' | 'info';
-  amount?: number;
-}
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState<DashboardStats>({
-    totalClients: 0,
-    totalPackages: 0,
-    totalInvestments: 0,
-    totalValue: 0,
-    activeInvestments: 0,
-    pendingInvestments: 0,
-    monthlyGrowth: 0,
-    conversionRate: 0
-  });
-  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedPeriod, setSelectedPeriod] = useState('7d');
-  const [searchQuery, setSearchQuery] = useState('');
+  const { user, logout } = useAdminAuth();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
+  const navigation = [
+    { name: 'Dashboard', href: '/admin', icon: Home, current: true },
+    { name: 'Clienti', href: '/admin/clients', icon: Users2, current: false },
+    { name: 'Investimenti', href: '/admin/investments', icon: TrendingUp, current: false },
+    { name: 'Pacchetti', href: '/admin/packages', icon: CreditCard, current: false },
+    { name: 'Analytics', href: '/admin/analytics', icon: BarChart3, current: false },
+    { name: 'Team', href: '/admin/team', icon: TeamIcon, current: false },
+    { name: 'Partnership', href: '/admin/partnerships', icon: Users2, current: false },
+    { name: 'Impostazioni', href: '/admin/settings', icon: Shield, current: false },
+  ];
 
-  const fetchDashboardData = async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      const adminToken = localStorage.getItem('admin_token');
-      if (!adminToken) {
-        setError('Admin token not found');
-        setLoading(false);
-        return;
-      }
-
-      // Fetch clients
-      const clientsResponse = await fetch('/api/admin/clients', {
-        headers: { 'x-admin-token': adminToken }
-      });
-      const clientsData = await clientsResponse.json();
-      const clients: Client[] = clientsData.success ? clientsData.data : [];
-
-      // Fetch packages
-      const packagesResponse = await fetch('/api/admin/packages', {
-        headers: { 'x-admin-token': adminToken }
-      });
-      const packagesData = await packagesResponse.json();
-      const packages: PackageType[] = packagesData.success ? packagesData.data : [];
-
-      // Calculate advanced stats
-      const totalValue = packages.reduce((sum, pkg) => sum + pkg.max_investment, 0);
-      const activeInvestments = packages.filter(pkg => pkg.status === 'active').length;
-      const pendingInvestments = packages.filter(pkg => pkg.status === 'draft').length;
-      const monthlyGrowth = 12.5; // Mock data
-      const conversionRate = 68.2; // Mock data
-
-      setStats({
-        totalClients: clients.length,
-        totalPackages: packages.length,
-        totalInvestments: packages.length,
-        totalValue,
-        activeInvestments,
-        pendingInvestments,
-        monthlyGrowth,
-        conversionRate
-      });
-
-      // Generate professional recent activity
-      const activity: RecentActivity[] = [
-        ...clients.slice(0, 3).map(client => ({
-          id: client.id,
-          type: 'client',
-          action: 'Registrazione Completata',
-          name: `${client.first_name} ${client.last_name}`,
-          time: new Date(client.created_at).toLocaleDateString('it-IT'),
-          status: 'success',
-          amount: undefined
-        })),
-        ...packages.slice(0, 3).map(pkg => ({
-          id: pkg.id,
-          type: 'package',
-          action: 'Pacchetto Creato',
-          name: pkg.name,
-          time: new Date(pkg.created_at).toLocaleDateString('it-IT'),
-          status: 'info',
-          amount: pkg.max_investment
-        }))
-      ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
-
-      setRecentActivity(activity.slice(0, 6));
-
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-      setError('Failed to fetch dashboard data');
-    } finally {
-      setLoading(false);
-    }
+  const handleLogout = () => {
+    logout();
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600 text-lg">Caricamento Dashboard...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-red-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="bg-red-100 rounded-full p-4 mx-auto mb-4 w-20 h-20 flex items-center justify-center">
-            <Shield className="h-10 w-10 text-red-600" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Errore di Accesso</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <button 
-            onClick={fetchDashboardData}
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Riprova
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Period Selector */}
-        <div className="mb-6 flex justify-between items-center">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">Dashboard Overview</h2>
-            <p className="text-gray-600">Monitora le performance e l'attività del sistema</p>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <select
-              value={selectedPeriod}
-              onChange={(e) => setSelectedPeriod(e.target.value)}
-              className="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="7d">Ultimi 7 giorni</option>
-              <option value="30d">Ultimi 30 giorni</option>
-              <option value="90d">Ultimi 90 giorni</option>
-              <option value="1y">Ultimo anno</option>
-            </select>
-            
-            <button className="bg-white border border-gray-300 rounded-lg px-4 py-2 hover:bg-gray-50 transition-colors">
-              <Download className="h-4 w-4 text-gray-600" />
-            </button>
-          </div>
-        </div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {/* Total Clients */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Clienti Totali</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalClients}</p>
-                <p className="text-sm text-green-600 flex items-center mt-1">
-                  <ArrowUpRight className="h-4 w-4 mr-1" />
-                  +{stats.monthlyGrowth}% questo mese
-                </p>
+    <AdminProtected>
+      <div className="min-h-screen bg-gray-50">
+        {/* Mobile sidebar */}
+        <div className={`fixed inset-0 z-50 lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`}>
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)}></div>
+          <div className="fixed inset-y-0 left-0 flex w-64 flex-col bg-white">
+            <div className="flex h-16 items-center justify-between px-4">
+              <div className="flex items-center">
+                <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-2 rounded-lg">
+                  <Building className="h-8 w-8 text-white" />
+                </div>
+                <span className="ml-3 text-xl font-bold text-gray-900">Admin</span>
               </div>
-              <div className="bg-blue-100 p-3 rounded-lg">
-                <Users className="h-6 w-6 text-blue-600" />
-              </div>
-            </div>
-          </div>
-
-          {/* Total Packages */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Pacchetti</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalPackages}</p>
-                <p className="text-sm text-blue-600 flex items-center mt-1">
-                  <Package className="h-4 w-4 mr-1" />
-                  {stats.activeInvestments} attivi
-                </p>
-              </div>
-              <div className="bg-green-100 p-3 rounded-lg">
-                <Package className="h-6 w-6 text-green-600" />
-              </div>
-            </div>
-          </div>
-
-          {/* Total Value */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Valore Totale</p>
-                <p className="text-2xl font-bold text-gray-900">€{stats.totalValue.toLocaleString()}</p>
-                <p className="text-sm text-purple-600 flex items-center mt-1">
-                  <TrendingUp className="h-4 w-4 mr-1" />
-                  Crescita costante
-                </p>
-              </div>
-              <div className="bg-purple-100 p-3 rounded-lg">
-                <DollarSign className="h-6 w-6 text-purple-600" />
-              </div>
-            </div>
-          </div>
-
-          {/* Conversion Rate */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Tasso Conversione</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.conversionRate}%</p>
-                <p className="text-sm text-orange-600 flex items-center mt-1">
-                  <Target className="h-4 w-4 mr-1" />
-                  Obiettivo: 75%
-                </p>
-              </div>
-              <div className="bg-orange-100 p-3 rounded-lg">
-                <BarChart3 className="h-6 w-6 text-orange-600" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Charts and Activity Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {/* Chart Placeholder */}
-          <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Performance Investimenti</h3>
-              <div className="flex items-center space-x-2">
-                <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                  <LineChart className="h-4 w-4 text-gray-600" />
-                </button>
-                <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                  <BarChart3 className="h-4 w-4 text-gray-600" />
-                </button>
-                <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                  <PieChart className="h-4 w-4 text-gray-600" />
-                </button>
-              </div>
-            </div>
-            <div className="h-64 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg flex items-center justify-center">
-              <div className="text-center">
-                <BarChart3 className="h-12 w-12 text-blue-400 mx-auto mb-2" />
-                <p className="text-gray-500">Grafico Performance</p>
-                <p className="text-sm text-gray-400">Integrazione con Recharts</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Recent Activity */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Attività Recenti</h3>
-              <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                Vedi tutte
+              <button onClick={() => setSidebarOpen(false)}>
+                <X className="h-6 w-6 text-gray-400" />
               </button>
             </div>
-            <div className="space-y-4">
-              {recentActivity.map((activity) => (
-                <div key={activity.id} className="flex items-start space-x-3">
-                  <div className={`w-2 h-2 rounded-full mt-2 ${
-                    activity.status === 'success' ? 'bg-green-500' :
-                    activity.status === 'warning' ? 'bg-yellow-500' :
-                    activity.status === 'error' ? 'bg-red-500' : 'bg-blue-500'
-                  }`}></div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {activity.action}
-                    </p>
-                    <p className="text-sm text-gray-500 truncate">
-                      {activity.name}
-                    </p>
-                    <div className="flex items-center space-x-2 mt-1">
-                      <Clock className="h-3 w-3 text-gray-400" />
-                      <span className="text-xs text-gray-400">{activity.time}</span>
-                      {activity.amount && (
-                        <span className="text-xs font-medium text-green-600">
-                          €{activity.amount.toLocaleString()}
-                        </span>
-                      )}
+            <nav className="flex-1 space-y-1 px-2 py-4">
+              {navigation.map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+                    item.current
+                      ? 'bg-blue-100 text-blue-900'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
+                >
+                  <item.icon className="mr-3 h-5 w-5" />
+                  {item.name}
+                </Link>
+              ))}
+            </nav>
+            <div className="border-t border-gray-200 p-4">
+              <button
+                onClick={handleLogout}
+                className="flex w-full items-center px-2 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-md"
+              >
+                <LogOut className="mr-3 h-5 w-5" />
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Desktop sidebar */}
+        <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
+          <div className="flex flex-col flex-grow bg-white border-r border-gray-200">
+            <div className="flex h-16 items-center px-4">
+              <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-2 rounded-lg">
+                <Building className="h-8 w-8 text-white" />
+              </div>
+              <span className="ml-3 text-xl font-bold text-gray-900">Admin Panel</span>
+            </div>
+            <nav className="flex-1 space-y-1 px-2 py-4">
+              {navigation.map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md ${
+                    item.current
+                      ? 'bg-blue-100 text-blue-900'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
+                >
+                  <item.icon className="mr-3 h-5 w-5" />
+                  {item.name}
+                </Link>
+              ))}
+            </nav>
+            <div className="border-t border-gray-200 p-4">
+              <button
+                onClick={handleLogout}
+                className="flex w-full items-center px-2 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-md"
+              >
+                <LogOut className="mr-3 h-5 w-5" />
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Main content */}
+        <div className="lg:pl-64">
+          {/* Top bar */}
+          <div className="sticky top-0 z-40 bg-white border-b border-gray-200">
+            <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="lg:hidden p-2 text-gray-400 hover:text-gray-600"
+              >
+                <Menu className="h-6 w-6" />
+              </button>
+              
+              <div className="flex items-center space-x-4">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Cerca..."
+                    className="w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                </div>
+                
+                <button className="p-2 text-gray-400 hover:text-gray-600 relative">
+                  <Bell className="h-6 w-6" />
+                  <span className="absolute top-0 right-0 h-3 w-3 bg-red-500 rounded-full"></span>
+                </button>
+                
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
+                    <User className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="hidden sm:block">
+                    <p className="text-sm font-medium text-gray-900">{user?.name || 'Admin'}</p>
+                    <p className="text-xs text-gray-500">{user?.email || 'admin@glgcapitalgroup.com'}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Page content */}
+          <main className="py-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              {/* Header */}
+              <div className="mb-8">
+                <h1 className="text-3xl font-bold text-gray-900">Dashboard Amministrativa</h1>
+                <p className="text-gray-600">Gestisci il sistema GLG Capital Group</p>
+              </div>
+
+              {/* Stats Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                  <div className="flex items-center">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <Users2 className="h-6 w-6 text-blue-600" />
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-600">Clienti Totali</p>
+                      <p className="text-2xl font-bold text-gray-900">1,247</p>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex items-center text-sm">
+                    <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
+                    <span className="text-green-600">+12%</span>
+                    <span className="text-gray-500 ml-1">rispetto al mese scorso</span>
+                  </div>
+                </div>
+
+                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                  <div className="flex items-center">
+                    <div className="p-2 bg-green-100 rounded-lg">
+                      <DollarSign className="h-6 w-6 text-green-600" />
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-600">Investimenti</p>
+                      <p className="text-2xl font-bold text-gray-900">$2.4M</p>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex items-center text-sm">
+                    <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
+                    <span className="text-green-600">+8%</span>
+                    <span className="text-gray-500 ml-1">rispetto al mese scorso</span>
+                  </div>
+                </div>
+
+                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                  <div className="flex items-center">
+                    <div className="p-2 bg-purple-100 rounded-lg">
+                      <Target className="h-6 w-6 text-purple-600" />
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-600">Pacchetti Attivi</p>
+                      <p className="text-2xl font-bold text-gray-900">89</p>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex items-center text-sm">
+                    <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
+                    <span className="text-green-600">+5%</span>
+                    <span className="text-gray-500 ml-1">rispetto al mese scorso</span>
+                  </div>
+                </div>
+
+                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                  <div className="flex items-center">
+                    <div className="p-2 bg-orange-100 rounded-lg">
+                      <Award className="h-6 w-6 text-orange-600" />
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-600">Performance</p>
+                      <p className="text-2xl font-bold text-gray-900">98.2%</p>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex items-center text-sm">
+                    <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
+                    <span className="text-green-600">+2%</span>
+                    <span className="text-gray-500 ml-1">rispetto al mese scorso</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Recent Activity */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h2 className="text-lg font-medium text-gray-900">Attività Recenti</h2>
+                </div>
+                <div className="p-6">
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-900">Nuovo investimento registrato</p>
+                        <p className="text-xs text-gray-500">Client ID: #12345 - $50,000</p>
+                      </div>
+                      <div className="text-xs text-gray-500">2 min fa</div>
+                    </div>
+                    
+                    <div className="flex items-center space-x-4">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-900">Pacchetto aggiornato</p>
+                        <p className="text-xs text-gray-500">Premium Growth Package - Tassi aggiornati</p>
+                      </div>
+                      <div className="text-xs text-gray-500">15 min fa</div>
+                    </div>
+                    
+                    <div className="flex items-center space-x-4">
+                      <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-900">Nuovo cliente registrato</p>
+                        <p className="text-xs text-gray-500">Mario Rossi - Verifica KYC completata</p>
+                      </div>
+                      <div className="text-xs text-gray-500">1 ora fa</div>
+                    </div>
+                    
+                    <div className="flex items-center space-x-4">
+                      <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-900">Report generato</p>
+                        <p className="text-xs text-gray-500">Report mensile performance - Gennaio 2024</p>
+                      </div>
+                      <div className="text-xs text-gray-500">2 ore fa</div>
                     </div>
                   </div>
                 </div>
-              ))}
+              </div>
             </div>
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Azioni Rapide</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <button className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors group">
-              <div className="bg-blue-100 p-2 rounded-lg group-hover:bg-blue-200 transition-colors">
-                <Plus className="h-5 w-5 text-blue-600" />
-              </div>
-              <div className="text-left">
-                <p className="font-medium text-gray-900">Nuovo Cliente</p>
-                <p className="text-sm text-gray-500">Registra cliente</p>
-              </div>
-            </button>
-
-            <button className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:border-green-300 hover:bg-green-50 transition-colors group">
-              <div className="bg-green-100 p-2 rounded-lg group-hover:bg-green-200 transition-colors">
-                <Package className="h-5 w-5 text-green-600" />
-              </div>
-              <div className="text-left">
-                <p className="font-medium text-gray-900">Nuovo Pacchetto</p>
-                <p className="text-sm text-gray-500">Crea investimento</p>
-              </div>
-            </button>
-
-            <button className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:border-purple-300 hover:bg-purple-50 transition-colors group">
-              <div className="bg-purple-100 p-2 rounded-lg group-hover:bg-purple-200 transition-colors">
-                <TrendingUp className="h-5 w-5 text-purple-600" />
-              </div>
-              <div className="text-left">
-                <p className="font-medium text-gray-900">Analytics</p>
-                <p className="text-sm text-gray-500">Report dettagliati</p>
-              </div>
-            </button>
-
-            <button className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:border-orange-300 hover:bg-orange-50 transition-colors group">
-              <div className="bg-orange-100 p-2 rounded-lg group-hover:bg-orange-200 transition-colors">
-                <Settings className="h-5 w-5 text-orange-600" />
-              </div>
-              <div className="text-left">
-                <p className="font-medium text-gray-900">Impostazioni</p>
-                <p className="text-sm text-gray-500">Configura sistema</p>
-              </div>
-            </button>
-          </div>
+          </main>
         </div>
       </div>
-    </div>
+    </AdminProtected>
   );
 } 

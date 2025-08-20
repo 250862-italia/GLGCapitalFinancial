@@ -46,7 +46,7 @@ export default function EquityPledgePage() {
               <Link href="/equity-pledge" className="text-blue-600 font-medium">
                 Equity Pledge
               </Link>
-              <Link href="/admin" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+              <Link href="/admin/login" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
                 Admin
               </Link>
             </div>

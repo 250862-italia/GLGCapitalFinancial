@@ -43,7 +43,7 @@ export default function HomePage() {
               <Link href="/equity-pledge" className="text-gray-900 hover:text-blue-600 font-medium transition-colors">
                 Equity Pledge
               </Link>
-              <Link href="/admin" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+              <Link href="/admin/login" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
                 Admin
               </Link>
             </div>
@@ -229,7 +229,7 @@ export default function HomePage() {
               <ul className="space-y-2">
                 <li><Link href="/about" className="text-gray-400 hover:text-white transition-colors">About Us</Link></li>
                 <li><Link href="/equity-pledge" className="text-gray-400 hover:text-white transition-colors">Equity Pledge</Link></li>
-                <li><Link href="/admin" className="text-gray-400 hover:text-white transition-colors">Admin Console</Link></li>
+                <li><Link href="/admin/login" className="text-gray-400 hover:text-white transition-colors">Admin Console</Link></li>
               </ul>
             </div>
             <div>
