@@ -6,10 +6,9 @@ import { useAdminAuth } from '@/lib/use-admin-auth';
 import Link from 'next/link';
 import GLGLogo from '@/components/GLGLogo';
 import {
-  LayoutDashboard, Users2, CreditCard, TrendingUp, 
-  BarChart3, Settings, LogOut, Menu, X
+  RiDashboardLine, RiUserLine, RiBankCardLine, RiLineChartLine, 
+  RiBarChartLine, RiSettings3Line, RiLogoutBoxRLine, RiMenuLine, RiCloseLine
 } from 'react-icons/ri';
-import { RiDashboardLine, RiUserLine, RiBankCardLine, RiTrendingUpLine, RiBarChartLine, RiSettings3Line, RiLogoutBoxRLine, RiMenuLine, RiCloseLine } from 'react-icons/ri';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -57,7 +56,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { name: 'Dashboard', href: '/admin', icon: RiDashboardLine },
     { name: 'Clienti', href: '/admin/clients', icon: RiUserLine },
     { name: 'Pacchetti', href: '/admin/packages', icon: RiBankCardLine },
-    { name: 'Investimenti', href: '/admin/investments', icon: RiTrendingUpLine },
+    { name: 'Investimenti', href: '/admin/investments', icon: RiLineChartLine },
     { name: 'Analytics', href: '/admin/analytics', icon: RiBarChartLine },
     { name: 'Impostazioni', href: '/admin/settings', icon: RiSettings3Line },
   ];
