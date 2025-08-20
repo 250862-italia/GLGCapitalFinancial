@@ -1,583 +1,314 @@
 "use client"
-import Image from "next/image"
-import { Award, Shield, Users, Globe, TrendingUp, Building, Target, Heart } from 'lucide-react'
+import Link from 'next/link';
+import { 
+  Building2, 
+  Target, 
+  TrendingUp, 
+  Shield, 
+  Globe, 
+  Award,
+  Users,
+  BarChart3,
+  ArrowRight,
+  CheckCircle
+} from 'lucide-react';
 
 export default function AboutPage() {
-  const values = [
-    {
-      icon: Shield,
-      title: "Integrity & Trust",
-      description: "Building lasting relationships through transparency and ethical practices"
-    },
-    {
-      icon: Target,
-      title: "Excellence",
-      description: "Delivering exceptional service and superior investment performance"
-    },
-    {
-      icon: Users,
-      title: "Client-Centric",
-      description: "Your success is our priority in every decision we make"
-    },
-    {
-      icon: Globe,
-      title: "Global Perspective",
-      description: "Access to worldwide opportunities and diversified strategies"
-    }
-  ]
-
-  const team = [
-    {
-      name: "Executive Leadership",
-      role: "Strategic Vision",
-      description: "Experienced professionals with decades of combined expertise in investment management and financial services"
-    },
-    {
-      name: "Investment Team",
-      role: "Portfolio Management",
-      description: "Specialized analysts and portfolio managers focused on delivering superior returns"
-    },
-    {
-      name: "Client Relations",
-      role: "Personal Service",
-      description: "Dedicated relationship managers providing personalized attention to every client"
-    }
-  ]
-
-  const consultants = [
-    {
-      name: "Michael Anderson",
-      role: "Senior Investment Advisor",
-      image: "/consultant1.jpg",
-      description: "15+ years experience in global markets and portfolio management. Former VP at Goldman Sachs.",
-      photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=face"
-    },
-    {
-      name: "Sarah Johnson",
-      role: "Financial Strategist",
-      image: "/consultant2.jpg", 
-      description: "Expert in wealth preservation and strategic financial planning. MBA from Harvard Business School.",
-      photo: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=200&h=200&fit=crop&crop=face"
-    },
-    {
-      name: "David Chen",
-      role: "Market Analyst",
-      image: "/consultant3.jpg",
-      description: "Specialized in emerging markets and alternative investments. CFA charterholder with 12+ years experience.",
-      photo: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop&crop=face"
-    }
-  ]
-
   return (
-    <main style={{ maxWidth: 1200, margin: '0 auto', padding: '2rem', background: '#fff' }}>
-      
-      {/* HERO SECTION */}
-      <section style={{ textAlign: 'center', marginBottom: '4rem', padding: '3rem 0' }}>
-        <h1 style={{ 
-          color: '#0a2540', 
-          fontSize: '3.5rem', 
-          fontWeight: 900, 
-          marginBottom: '1.5rem',
-          lineHeight: 1.2
-        }}>
-          About GLG Capital Group LLC
-        </h1>
-        <p style={{ 
-          color: '#1a3556', 
-          fontSize: '1.4rem', 
-          lineHeight: 1.6,
-          maxWidth: 800,
-          margin: '0 auto'
-        }}>
-          A leading investment firm dedicated to innovative financial solutions and sustainable growth strategies.
-        </p>
-      </section>
-
-      {/* COMPANY OVERVIEW */}
-      <section style={{ marginBottom: '4rem', padding: '3rem', background: '#f8fafc', borderRadius: 16 }}>
-        <h2 style={{ 
-          color: '#0a2540', 
-          fontSize: '2.5rem', 
-          fontWeight: 800, 
-          marginBottom: '1.5rem',
-          textAlign: 'center'
-        }}>
-          Company Overview
-        </h2>
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
-          gap: '2rem',
-          marginTop: '2rem'
-        }}>
-          <div>
-            <h3 style={{ color: '#0a2540', fontSize: '1.3rem', fontWeight: 700, marginBottom: '1rem' }}>
-              Our Mission
-            </h3>
-            <p style={{ color: '#1a3556', lineHeight: 1.6 }}>
-              To guide our partners toward financial success through a strategic, transparent, and client-focused approach. We are committed to providing tailored financial solutions and sustainable growth strategies for private clients, institutions, and businesses.
-            </p>
-          </div>
-          <div>
-            <h3 style={{ color: '#0a2540', fontSize: '1.3rem', fontWeight: 700, marginBottom: '1rem' }}>
-              Our Vision
-            </h3>
-            <p style={{ color: '#1a3556', lineHeight: 1.6 }}>
-              We believe in the power of innovative ideas, prudent capital management, and long-term partnerships. We strive to be industry leaders by offering solutions that blend advanced market insights with rigorous risk management.
-            </p>
-          </div>
-          <div>
-            <h3 style={{ color: '#0a2540', fontSize: '1.3rem', fontWeight: 700, marginBottom: '1rem' }}>
-              Our Approach
-            </h3>
-            <p style={{ color: '#1a3556', lineHeight: 1.6 }}>
-              We employ a data-driven approach, combining in-depth financial market analysis with our extensive industry expertise. Every investment decision is guided by our dedication to excellence and safeguarding our clients' interests.
+    <div className="min-h-screen bg-white">
+      {/* Hero Section */}
+      <section className="relative bg-gradient-to-br from-blue-900 via-blue-800 to-purple-900 text-white">
+        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
+          <div className="text-center">
+            <h1 className="text-4xl md:text-6xl font-bold mb-6">
+              About GLG Capital Group
+            </h1>
+            <p className="text-xl md:text-2xl mb-8 max-w-4xl mx-auto leading-relaxed">
+              Empowering visionary enterprises through innovative financial solutions and strategic capital deployment.
             </p>
           </div>
         </div>
       </section>
 
-      {/* CORE VALUES */}
-      <section style={{ marginBottom: '4rem' }}>
-        <h2 style={{ 
-          color: '#0a2540', 
-          fontSize: '2.5rem', 
-          fontWeight: 800, 
-          marginBottom: '2rem',
-          textAlign: 'center'
-        }}>
-          Our Core Values
-        </h2>
-        
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
-          gap: '2rem' 
-        }}>
+      {/* Company Overview */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+                Our Mission & Vision
+              </h2>
+              <p className="text-lg text-gray-600 mb-6">
+                At GLG Capital Group LLC, we believe in empowering visionary enterprises to achieve their full potential. 
+                Our mission is to provide innovative financial solutions that drive exponential growth, unshakable resilience, 
+                and enduring legacy for forward-thinking companies.
+              </p>
+              <p className="text-lg text-gray-600 mb-6">
+                Through our premium share-pledge framework, we enable trailblazing enterprises to harness strategic capital 
+                and dominate tomorrow's markets. We're not just financiers—we're partners in your success story.
+              </p>
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <span className="text-gray-700 font-medium">15+ Years Experience</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <span className="text-gray-700 font-medium">500+ Global Clients</span>
+                </div>
+              </div>
+            </div>
+            <div className="relative">
+              <div className="bg-gradient-to-br from-blue-100 to-purple-100 p-8 rounded-2xl">
+                <div className="text-center">
+                  <Building2 className="w-24 h-24 text-blue-600 mx-auto mb-4" />
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">GLG Capital Group LLC</h3>
+                  <p className="text-gray-600">Financial Services Excellence</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Core Values */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Our Core Values
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              The principles that guide every decision and relationship at GLG Capital Group.
+            </p>
+          </div>
           
-          <div style={{ 
-            background: '#fff', 
-            padding: '2rem', 
-            borderRadius: 12, 
-            boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
-            border: '1px solid #e2e8f0',
-            textAlign: 'center'
-          }}>
-            <h3 style={{ 
-              color: '#0a2540', 
-              fontSize: '1.4rem', 
-              fontWeight: 700, 
-              marginBottom: '1rem' 
-            }}>
-              Extensive Experience
-            </h3>
-            <p style={{ 
-              color: '#1a3556', 
-              lineHeight: 1.6
-            }}>
-              Our team comprises seasoned experts with profound knowledge of global financial markets, bringing decades of combined experience to every client relationship.
-            </p>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="text-center p-6 bg-white rounded-xl shadow-lg">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Target className="w-8 h-8 text-blue-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">Innovation</h3>
+              <p className="text-gray-600">
+                Continuously developing cutting-edge financial solutions that meet evolving market needs.
+              </p>
+            </div>
+            
+            <div className="text-center p-6 bg-white rounded-xl shadow-lg">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Shield className="w-8 h-8 text-blue-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">Integrity</h3>
+              <p className="text-gray-600">
+                Maintaining the highest ethical standards in all our business practices and client relationships.
+              </p>
+            </div>
+            
+            <div className="text-center p-6 bg-white rounded-xl shadow-lg">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <TrendingUp className="w-8 h-8 text-blue-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">Excellence</h3>
+              <p className="text-gray-600">
+                Delivering exceptional results through expertise, dedication, and continuous improvement.
+              </p>
+            </div>
+            
+            <div className="text-center p-6 bg-white rounded-xl shadow-lg">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Users className="w-8 h-8 text-blue-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">Partnership</h3>
+              <p className="text-gray-600">
+                Building long-term relationships based on trust, collaboration, and mutual success.
+              </p>
+            </div>
           </div>
-
-          <div style={{ 
-            background: '#fff', 
-            padding: '2rem', 
-            borderRadius: 12, 
-            boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
-            border: '1px solid #e2e8f0',
-            textAlign: 'center'
-          }}>
-            <h3 style={{ 
-              color: '#0a2540', 
-              fontSize: '1.4rem', 
-              fontWeight: 700, 
-              marginBottom: '1rem' 
-            }}>
-              Transparency
-            </h3>
-            <p style={{ 
-              color: '#1a3556', 
-              lineHeight: 1.6
-            }}>
-              We operate with utmost integrity, ensuring our clients always have access to clear and up-to-date information about their investments and our processes.
-            </p>
-          </div>
-
-          <div style={{ 
-            background: '#fff', 
-            padding: '2rem', 
-            borderRadius: 12, 
-            boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
-            border: '1px solid #e2e8f0',
-            textAlign: 'center'
-          }}>
-            <h3 style={{ 
-              color: '#0a2540', 
-              fontSize: '1.4rem', 
-              fontWeight: 700, 
-              marginBottom: '1rem' 
-            }}>
-              Tangible Results
-            </h3>
-            <p style={{ 
-              color: '#1a3556', 
-              lineHeight: 1.6
-            }}>
-              We focus on delivering solutions that create real, measurable value for our clients, with a track record of successful outcomes and satisfied partners.
-            </p>
-          </div>
-
-          <div style={{ 
-            background: '#fff', 
-            padding: '2rem', 
-            borderRadius: 12, 
-            boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
-            border: '1px solid #e2e8f0',
-            textAlign: 'center'
-          }}>
-            <h3 style={{ 
-              color: '#0a2540', 
-              fontSize: '1.4rem', 
-              fontWeight: 700, 
-              marginBottom: '1rem' 
-            }}>
-              Innovation
-            </h3>
-            <p style={{ 
-              color: '#1a3556', 
-              lineHeight: 1.6
-            }}>
-              We remain at the forefront of adopting new technologies and market strategies, continuously evolving to meet the changing needs of our clients.
-            </p>
-          </div>
-
         </div>
       </section>
 
-      {/* SERVICES DETAILED */}
-      <section style={{ marginBottom: '4rem', padding: '3rem', background: '#f8fafc', borderRadius: 16 }}>
-        <h2 style={{ 
-          color: '#0a2540', 
-          fontSize: '2.5rem', 
-          fontWeight: 800, 
-          marginBottom: '2rem',
-          textAlign: 'center'
-        }}>
-          Our Comprehensive Services
-        </h2>
-        
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', 
-          gap: '2rem' 
-        }}>
+      {/* Services Overview */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Comprehensive Financial Solutions
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              From equity pledge systems to corporate financing, we provide the tools you need to succeed.
+            </p>
+          </div>
           
-          <div>
-            <h3 style={{ 
-              color: '#0a2540', 
-              fontSize: '1.4rem', 
-              fontWeight: 700, 
-              marginBottom: '1rem' 
-            }}>
-              Direct Business Structuring & Financing
-            </h3>
-            <ul style={{ 
-              color: '#1a3556', 
-              lineHeight: 1.6,
-              paddingLeft: '1.5rem'
-            }}>
-              <li>Direct business structuring to financing through equity market</li>
-              <li>Business requirements analysis and business target assessment</li>
-              <li>Financial and capital restructuring</li>
-              <li>Due diligence for patronage attribution</li>
-              <li>Creation of business attraction strategies</li>
-            </ul>
+          <div className="grid lg:grid-cols-3 gap-8">
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-8 rounded-2xl">
+              <div className="w-16 h-16 bg-blue-600 rounded-xl flex items-center justify-center mb-6">
+                <Target className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">Equity Pledge System</h3>
+              <p className="text-gray-700 mb-6">
+                Our innovative financing model provides fixed returns secured by company shares, 
+                offering both stability and growth potential for investors and businesses.
+              </p>
+              <ul className="space-y-2 mb-6">
+                <li className="flex items-center space-x-2">
+                  <CheckCircle className="w-4 h-4 text-blue-600" />
+                  <span className="text-gray-700">Fixed returns with share security</span>
+                </li>
+                <li className="flex items-center space-x-2">
+                  <CheckCircle className="w-4 h-4 text-blue-600" />
+                  <span className="text-gray-700">Risk mitigation strategies</span>
+                </li>
+                <li className="flex items-center space-x-2">
+                  <CheckCircle className="w-4 h-4 text-blue-600" />
+                  <span className="text-gray-700">Flexible terms and conditions</span>
+                </li>
+              </ul>
+              <Link 
+                href="/equity-pledge"
+                className="text-blue-600 hover:text-blue-700 font-semibold inline-flex items-center gap-2"
+              >
+                Learn More <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+            
+            <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-8 rounded-2xl">
+              <div className="w-16 h-16 bg-purple-600 rounded-xl flex items-center justify-center mb-6">
+                <BarChart3 className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">Corporate Financing</h3>
+              <p className="text-gray-700 mb-6">
+                Strategic capital solutions tailored for enterprises seeking growth, 
+                expansion, or operational optimization with flexible terms and competitive rates.
+              </p>
+              <ul className="space-y-2 mb-6">
+                <li className="flex items-center space-x-2">
+                  <CheckCircle className="w-4 h-4 text-purple-600" />
+                  <span className="text-gray-700">Growth capital solutions</span>
+                </li>
+                <li className="flex items-center space-x-2">
+                  <CheckCircle className="w-4 h-4 text-purple-600" />
+                  <span className="text-gray-700">Operational funding</span>
+                </li>
+                <li className="flex items-center space-x-2">
+                  <CheckCircle className="w-4 h-4 text-purple-600" />
+                  <span className="text-gray-700">Strategic partnerships</span>
+                </li>
+              </ul>
+              <Link 
+                href="/equity-pledge"
+                className="text-purple-600 hover:text-purple-700 font-semibold inline-flex items-center gap-2"
+              >
+                Learn More <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+            
+            <div className="bg-gradient-to-br from-green-50 to-green-100 p-8 rounded-2xl">
+              <div className="w-16 h-16 bg-green-600 rounded-xl flex items-center justify-center mb-6">
+                <Users className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">Investment Advisory</h3>
+              <p className="text-gray-700 mb-6">
+                Expert guidance from seasoned financial professionals helping you make 
+                informed investment decisions aligned with your long-term financial goals.
+              </p>
+              <ul className="space-y-2 mb-6">
+                <li className="flex items-center space-x-2">
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                  <span className="text-gray-700">Portfolio optimization</span>
+                </li>
+                <li className="flex items-center space-x-2">
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                  <span className="text-gray-700">Risk assessment</span>
+                </li>
+                <li className="flex items-center space-x-2">
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                  <span className="text-gray-700">Market analysis</span>
+                </li>
+              </ul>
+              <Link 
+                href="/equity-pledge"
+                className="text-green-600 hover:text-green-700 font-semibold inline-flex items-center gap-2"
+              >
+                Learn More <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
           </div>
-
-          <div>
-            <h3 style={{ 
-              color: '#0a2540', 
-              fontSize: '1.4rem', 
-              fontWeight: 700, 
-              marginBottom: '1rem' 
-            }}>
-              Valuation & Risk Management
-            </h3>
-            <ul style={{ 
-              color: '#1a3556', 
-              lineHeight: 1.6,
-              paddingLeft: '1.5rem'
-            }}>
-              <li>Asset valuations and transfer appraisals</li>
-              <li>Due Diligence and Business Planner services</li>
-              <li>Drafting and assisting in AP&C (Asset Adjustment and Capitalization)</li>
-              <li>Operational plans and support services</li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 style={{ 
-              color: '#0a2540', 
-              fontSize: '1.4rem', 
-              fontWeight: 700, 
-              marginBottom: '1rem' 
-            }}>
-              Advisory & Asset Restructuring
-            </h3>
-            <ul style={{ 
-              color: '#1a3556', 
-              lineHeight: 1.6,
-              paddingLeft: '1.5rem'
-            }}>
-              <li>Enhancement of Corporate and Intangible Assets</li>
-              <li>REOCO Structures Services</li>
-              <li>Real Estate portfolio management and strategy</li>
-              <li>Comprehensive restructuring solutions</li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 style={{ 
-              color: '#0a2540', 
-              fontSize: '1.4rem', 
-              fontWeight: 700, 
-              marginBottom: '1rem' 
-            }}>
-              Investments Research & Assistance
-            </h3>
-            <ul style={{ 
-              color: '#1a3556', 
-              lineHeight: 1.6,
-              paddingLeft: '1.5rem'
-            }}>
-              <li>Research and assistance for professional investors</li>
-              <li>Purchase and credit management services</li>
-              <li>Private banking investor connections</li>
-              <li>SGR (Società di Gestione del Risparmio) partnerships</li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 style={{ 
-              color: '#0a2540', 
-              fontSize: '1.4rem', 
-              fontWeight: 700, 
-              marginBottom: '1rem' 
-            }}>
-              Auction Real Estate Marketplace
-            </h3>
-            <ul style={{ 
-              color: '#1a3556', 
-              lineHeight: 1.6,
-              paddingLeft: '1.5rem'
-            }}>
-              <li>Marketplace of credit assignment</li>
-              <li>Real estate rights management</li>
-              <li>Auction platform services</li>
-              <li>Property investment opportunities</li>
-            </ul>
-          </div>
-
         </div>
       </section>
 
-      {/* GLOBAL PRESENCE */}
-      <section style={{ marginBottom: '4rem' }}>
-        <h2 style={{ 
-          color: '#0a2540', 
-          fontSize: '2.5rem', 
-          fontWeight: 800, 
-          marginBottom: '2rem',
-          textAlign: 'center'
-        }}>
-          Global Presence & Partnerships
-        </h2>
-        
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', 
-          gap: '2rem' 
-        }}>
-          
-          <div style={{ 
-            background: '#fff', 
-            padding: '2rem', 
-            borderRadius: 12, 
-            boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
-            border: '1px solid #e2e8f0'
-          }}>
-            <h3 style={{ 
-              color: '#0a2540', 
-              fontSize: '1.4rem', 
-              fontWeight: 700, 
-              marginBottom: '1rem' 
-            }}>
-              Headquarters
-            </h3>
-            <p style={{ 
-              color: '#1a3556', 
-              lineHeight: 1.6,
-              marginBottom: '1rem'
-            }}>
-              <strong>GLG Capital Group LLC</strong><br />
-              1309 Coffeen Avenue STE 1200<br />
-              Sheridan, Wyoming 82801<br />
-              United States
-            </p>
-            <p style={{ color: '#1a3556', fontSize: '0.9rem' }}>
-              Phone: +1 307 263 0876<br />
-              Email: corefound@glgcapitalgroupllc.com
-            </p>
+      {/* Global Presence */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+                Global Reach & Expertise
+              </h2>
+              <p className="text-lg text-gray-600 mb-6">
+                As a US-based financial services company, we bring international expertise and a network 
+                spanning multiple continents. Our global perspective enables us to identify opportunities 
+                and navigate complex financial landscapes across diverse markets.
+              </p>
+              <div className="space-y-4">
+                <div className="flex items-center space-x-3">
+                  <Globe className="w-6 h-6 text-blue-600" />
+                  <span className="text-gray-700">Multi-continent network</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Award className="w-6 h-6 text-blue-600" />
+                  <span className="text-gray-700">International expertise</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Shield className="w-6 h-6 text-blue-600" />
+                  <span className="text-gray-700">Regulatory compliance</span>
+                </div>
+              </div>
+            </div>
+            <div className="relative">
+              <div className="bg-gradient-to-br from-blue-100 to-purple-100 p-8 rounded-2xl">
+                <div className="text-center">
+                  <Globe className="w-24 h-24 text-blue-600 mx-auto mb-4" />
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">Global Network</h3>
+                  <p className="text-gray-600">500+ Clients Worldwide</p>
+                  <div className="mt-4 text-sm text-gray-600">
+                    <p>• North America</p>
+                    <p>• Europe</p>
+                    <p>• Asia Pacific</p>
+                    <p>• Emerging Markets</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-
-          <div style={{ 
-            background: '#fff', 
-            padding: '2rem', 
-            borderRadius: 12, 
-            boxShadow: '0 4px 20px rgba(10,37,64,0.08)',
-            border: '1px solid #e2e8f0'
-          }}>
-            <h3 style={{ 
-              color: '#0a2540', 
-              fontSize: '1.4rem', 
-              fontWeight: 700, 
-              marginBottom: '1rem' 
-            }}>
-              Italian Operations
-            </h3>
-            <p style={{ 
-              color: '#1a3556', 
-              lineHeight: 1.6,
-              marginBottom: '1rem'
-            }}>
-              <strong>GLG Capital Group LLC</strong><br />
-              Exclusive Partner for Italy<br />
-              Specialized in strategic development, consultancy, and high-value project management.
-            </p>
-            <p style={{ color: '#1a3556', fontSize: '0.9rem' }}>
-              Website: www.magnificusdominus.com
-            </p>
-          </div>
-
         </div>
       </section>
 
-      {/* SUSTAINABILITY INITIATIVES */}
-      <section style={{ marginBottom: '4rem', padding: '3rem', background: '#f8fafc', borderRadius: 16 }}>
-        <h2 style={{ 
-          color: '#0a2540', 
-          fontSize: '2.5rem', 
-          fontWeight: 800, 
-          marginBottom: '2rem',
-          textAlign: 'center'
-        }}>
-          Sustainability & Innovation Initiatives
-        </h2>
-        
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', 
-          gap: '2rem' 
-        }}>
-          
-          <div>
-            <h3 style={{ 
-              color: '#0a2540', 
-              fontSize: '1.4rem', 
-              fontWeight: 700, 
-              marginBottom: '1rem' 
-            }}>
-              Wash The World Partnership
-            </h3>
-            <p style={{ 
-              color: '#1a3556', 
-              lineHeight: 1.6,
-              marginBottom: '1rem'
-            }}>
-              A pioneering association dedicated to promoting plastic waste reduction by identifying and introducing innovative, sustainable products to the market. Through research, partnerships, and education, we empower individuals and businesses to embrace eco-friendly alternatives.
-            </p>
-            <p style={{ color: '#1a3556', fontSize: '0.9rem' }}>
-              Website: https://www.washtheworld.it
-            </p>
-          </div>
-
-          <div>
-            <h3 style={{ 
-              color: '#0a2540', 
-              fontSize: '1.4rem', 
-              fontWeight: 700, 
-              marginBottom: '1rem' 
-            }}>
-              Pentawash - Sustainable Innovation
-            </h3>
-            <p style={{ 
-              color: '#1a3556', 
-              lineHeight: 1.6,
-              marginBottom: '1rem'
-            }}>
-              The first Wash The World approved product, embodying our mission to reduce plastic waste through innovative and sustainable solutions. Designed to revolutionize laundry care, Pentawash offers an eco-friendly, efficient, and plastic-free alternative.
-            </p>
-            <p style={{ color: '#1a3556', fontSize: '0.9rem' }}>
-              Website: www.pentawash.com
-            </p>
-          </div>
-
-        </div>
-      </section>
-
-      {/* CALL TO ACTION */}
-      <section style={{ 
-        background: '#0a2540', 
-        color: 'white', 
-        padding: '3rem', 
-        borderRadius: 16,
-        textAlign: 'center'
-      }}>
-        <h2 style={{ 
-          fontSize: '2.5rem', 
-          fontWeight: 800, 
-          marginBottom: '1.5rem' 
-        }}>
-          Ready to Partner With Us?
-        </h2>
-        <p style={{ 
-          fontSize: '1.2rem', 
-          lineHeight: 1.7,
-          marginBottom: '2rem',
-          maxWidth: 800,
-          margin: '0 auto 2rem'
-        }}>
-          Whether you are an individual investor, a growing business, or a financial institution, GLG Capital Group LLC is the ideal partner to help you achieve your goals. Contact us today to learn how we can help you build a more secure and prosperous financial future.
-        </p>
-        <div style={{ 
-          background: 'rgba(255,255,255,0.1)', 
-          padding: '2rem', 
-          borderRadius: 12,
-          maxWidth: 600,
-          margin: '0 auto'
-        }}>
-          <h3 style={{ 
-            fontSize: '1.5rem', 
-            fontWeight: 700, 
-            marginBottom: '1rem' 
-          }}>
-            GLG CAPITAL GROUP LLC
-          </h3>
-          <p style={{ fontSize: '1.1rem', lineHeight: 1.6, marginBottom: '0.5rem' }}>
-            1309 Coffeen Avenue STE 1200<br />
-            Sheridan, Wyoming 82801
+      {/* CTA Section */}
+      <section className="py-20 bg-gradient-to-r from-blue-900 to-purple-900 text-white">
+        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl md:text-4xl font-bold mb-6">
+            Ready to Partner with GLG Capital?
+          </h2>
+          <p className="text-xl mb-8 text-blue-100">
+            Join hundreds of successful enterprises who trust us for their financial growth and strategic success.
           </p>
-          <p style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>
-            <a href="mailto:corefound@glgcapitalgroupllc.com" style={{ color: '#60a5fa' }}>
-              corefound@glgcapitalgroupllc.com
-            </a>
-          </p>
-          <p style={{ fontSize: '1.1rem' }}>
-            Phone: +1 307 263 0876
-          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link 
+              href="/equity-pledge"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-colors inline-flex items-center gap-2"
+            >
+              Start Your Journey <ArrowRight className="w-5 h-5" />
+            </Link>
+            <Link 
+              href="/admin"
+              className="bg-transparent border-2 border-white hover:bg-white hover:text-blue-900 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-colors"
+            >
+              Admin Console
+            </Link>
+          </div>
         </div>
       </section>
-
-    </main>
+    </div>
   );
 }
