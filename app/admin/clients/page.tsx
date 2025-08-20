@@ -1,679 +1,479 @@
-"use client";
-import { useState, useEffect } from 'react';
-import { 
-  User, Mail, Phone, Calendar, Eye, Edit, Trash2, Plus, Search, Filter, 
-  Building, MapPin, CreditCard, Shield, Save, X, AlertCircle, RefreshCw
-} from 'lucide-react';
-import { Client } from '@/lib/data-manager';
+'use client';
 
-interface ClientFormData {
-  first_name: string;
-  last_name: string;
+import { useState, useEffect } from 'react';
+import AdminProtected from '@/components/AdminProtected';
+import { useAdminAuth } from '@/lib/use-admin-auth';
+import {
+  Users2, Plus, Edit, Trash2, Search, Filter,
+  ArrowUpDown, Eye, MoreHorizontal, RefreshCw
+} from 'lucide-react';
+
+interface Client {
+  id: string;
+  name: string;
   email: string;
   phone: string;
   company: string;
-  position: string;
-  date_of_birth: string;
-  nationality: string;
-  address: string;
-  city: string;
-  country: string;
-  postal_code: string;
-  iban: string;
-  bic: string;
-  account_holder: string;
-  usdt_wallet: string;
   status: 'active' | 'inactive' | 'pending';
-  risk_profile: 'low' | 'moderate' | 'high';
+  created_at: string;
+  total_investments: number;
 }
 
-export default function AdminClientsPage() {
+export default function ClientsPage() {
+  const { user, logout } = useAdminAuth();
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [dataSource, setDataSource] = useState<'database' | 'mock'>('database');
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [editingClient, setEditingClient] = useState<Client | null>(null);
-  const [formData, setFormData] = useState<ClientFormData>({
-    first_name: '',
-    last_name: '',
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [formData, setFormData] = useState({
+    name: '',
     email: '',
     phone: '',
     company: '',
-    position: '',
-    date_of_birth: '',
-    nationality: '',
-    address: '',
-    city: '',
-    country: '',
-    postal_code: '',
-    iban: '',
-    bic: '',
-    account_holder: '',
-    usdt_wallet: '',
-    status: 'active',
-    risk_profile: 'moderate'
+    status: 'active' as const
   });
 
+  // Carica i clienti
   useEffect(() => {
     fetchClients();
   }, []);
 
   const fetchClients = async () => {
-    setLoading(true);
-    setError(null);
-    
     try {
-      const adminToken = localStorage.getItem('admin_token');
-      if (!adminToken) {
-        setError('Admin token not found');
-        setLoading(false);
-        return;
-      }
-
-      const response = await fetch('/api/admin/clients', {
-        headers: {
-          'x-admin-token': adminToken
-        }
-      });
-
-      const data = await response.json();
-      
-      if (data.success) {
-        setClients(data.data);
-        setDataSource('database');
+      setLoading(true);
+      const response = await fetch('/api/admin/clients');
+      if (response.ok) {
+        const data = await response.json();
+        setClients(data.clients || []);
       } else {
-        setError(data.error || 'Failed to fetch clients');
+        console.error('Errore nel caricamento clienti');
       }
     } catch (error) {
-      console.error('Error fetching clients:', error);
-      setError('Failed to fetch clients');
-      setDataSource('mock');
+      console.error('Errore di connessione:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCreateClient = async () => {
-    try {
-      const adminToken = localStorage.getItem('admin_token');
-      if (!adminToken) {
-        setError('Admin token not found');
-        return;
-      }
+  // Filtra i clienti
+  const filteredClients = clients.filter(client => {
+    const matchesSearch = client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         client.company.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || client.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
+  // Gestisce l'aggiunta di un nuovo cliente
+  const handleAddClient = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
       const response = await fetch('/api/admin/clients', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-token': adminToken
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       });
 
-      const data = await response.json();
-      
-      if (data.success) {
-        setClients([data.data, ...clients]);
-        setShowCreateModal(false);
-        resetForm();
-      } else {
-        setError(data.error || 'Failed to create client');
+      if (response.ok) {
+        await fetchClients();
+        setShowAddModal(false);
+        setFormData({ name: '', email: '', phone: '', company: '', status: 'active' });
       }
     } catch (error) {
-      console.error('Error creating client:', error);
-      setError('Failed to create client');
+      console.error('Errore nell\'aggiunta del cliente:', error);
     }
   };
 
-  const handleUpdateClient = async () => {
-    if (!editingClient) return;
+  // Gestisce l'aggiornamento di un cliente
+  const handleUpdateClient = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedClient) return;
 
     try {
-      const adminToken = localStorage.getItem('admin-token');
-      if (!adminToken) {
-        setError('Admin token not found');
-        return;
-      }
-
-      const response = await fetch('/api/admin/clients', {
+      const response = await fetch(`/api/admin/clients/${selectedClient.id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-token': adminToken
-        },
-        body: JSON.stringify({
-          id: editingClient.id,
-          ...formData
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
       });
 
-      const data = await response.json();
-      
-      if (data.success) {
-        setClients(clients.map(client => 
-          client.id === editingClient.id ? data.data : client
-        ));
+      if (response.ok) {
+        await fetchClients();
         setShowEditModal(false);
-        setEditingClient(null);
-        resetForm();
-      } else {
-        setError(data.error || 'Failed to update client');
+        setSelectedClient(null);
+        setFormData({ name: '', email: '', phone: '', company: '', status: 'active' });
       }
     } catch (error) {
-      console.error('Error updating client:', error);
-      setError('Failed to update client');
+      console.error('Errore nell\'aggiornamento del cliente:', error);
     }
   };
 
-  const handleDeleteClient = async (clientId: string) => {
-    if (!confirm('Are you sure you want to delete this client?')) return;
+  // Gestisce l'eliminazione di un cliente
+  const handleDeleteClient = async () => {
+    if (!selectedClient) return;
 
     try {
-      const adminToken = localStorage.getItem('admin_token');
-      if (!adminToken) {
-        setError('Admin token not found');
-        return;
-      }
-
-      const response = await fetch('/api/admin/clients', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-token': adminToken
-        },
-        body: JSON.stringify({ id: clientId })
+      const response = await fetch(`/api/admin/clients/${selectedClient.id}`, {
+        method: 'DELETE'
       });
 
-      const data = await response.json();
-      
-      if (data.success) {
-        setClients(clients.filter(client => client.id !== clientId));
-      } else {
-        setError(data.error || 'Failed to delete client');
+      if (response.ok) {
+        await fetchClients();
+        setShowDeleteModal(false);
+        setSelectedClient(null);
       }
     } catch (error) {
-      console.error('Error deleting client:', error);
-      setError('Failed to delete client');
+      console.error('Errore nell\'eliminazione del cliente:', error);
     }
   };
 
-  const handleEditClient = (client: Client) => {
-    setEditingClient(client);
+  // Apre il modal di modifica
+  const openEditModal = (client: Client) => {
+    setSelectedClient(client);
     setFormData({
-      first_name: client.first_name,
-      last_name: client.last_name,
+      name: client.name,
       email: client.email,
       phone: client.phone,
       company: client.company,
-      position: client.position,
-      date_of_birth: client.date_of_birth,
-      nationality: client.nationality,
-      address: client.address,
-      city: client.city,
-      country: client.country,
-      postal_code: client.postal_code,
-      iban: client.iban,
-      bic: client.bic,
-      account_holder: client.account_holder,
-      usdt_wallet: client.usdt_wallet,
-      status: client.status,
-      risk_profile: client.risk_profile
+      status: client.status
     });
     setShowEditModal(true);
   };
 
-  const resetForm = () => {
-    setFormData({
-      first_name: '',
-      last_name: '',
-      email: '',
-      phone: '',
-      company: '',
-      position: '',
-      date_of_birth: '',
-      nationality: '',
-      address: '',
-      city: '',
-      country: '',
-      postal_code: '',
-      iban: '',
-      bic: '',
-      account_holder: '',
-      usdt_wallet: '',
-      status: 'active',
-      risk_profile: 'moderate'
-    });
+  // Apre il modal di eliminazione
+  const openDeleteModal = (client: Client) => {
+    setSelectedClient(client);
+    setShowDeleteModal(true);
   };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'bg-green-100 text-green-800';
-      case 'inactive': return 'bg-red-100 text-red-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getRiskProfileColor = (risk: string) => {
-    switch (risk) {
-      case 'low': return 'bg-blue-100 text-blue-800';
-      case 'moderate': return 'bg-yellow-100 text-yellow-800';
-      case 'high': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const filteredClients = clients.filter(client => {
-    const matchesSearch = 
-      client.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.company.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesFilter = filterStatus === 'all' || client.status === filterStatus;
-    
-    return matchesSearch && matchesFilter;
-  });
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Gestione Clienti</h1>
-          <div className="flex items-center gap-2 mt-2">
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-              dataSource === 'database' 
-                ? 'bg-green-100 text-green-800' 
-                : 'bg-yellow-100 text-yellow-800'
-            }`}>
-              {dataSource === 'database' ? '🟢 Database Reale' : '🟡 Dati Mock'}
-            </span>
-            {dataSource === 'mock' && (
-              <span className="text-xs text-gray-500">
-                (Database non disponibile - usando dati di test)
-              </span>
+    <AdminProtected>
+      <div className="py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Gestione Clienti</h1>
+                <p className="text-gray-600">Gestisci i clienti del sistema GLG Capital Group</p>
+              </div>
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium flex items-center space-x-2"
+              >
+                <Plus className="w-5 h-5" />
+                <span>Nuovo Cliente</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Filtri e Ricerca */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Cerca clienti..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="all">Tutti gli stati</option>
+                <option value="active">Attivo</option>
+                <option value="inactive">Inattivo</option>
+                <option value="pending">In attesa</option>
+              </select>
+              <button
+                onClick={fetchClients}
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center justify-center space-x-2"
+              >
+                <RefreshCw className="w-5 h-5" />
+                <span>Aggiorna</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Tabella Clienti */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            {loading ? (
+              <div className="p-8 text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-600">Caricamento clienti...</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Cliente
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Azienda
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Stato
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Investimenti
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Data Creazione
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Azioni
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filteredClients.map((client) => (
+                      <tr key={client.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">{client.name}</div>
+                            <div className="text-sm text-gray-500">{client.email}</div>
+                            <div className="text-sm text-gray-500">{client.phone}</div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {client.company}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                            client.status === 'active' ? 'bg-green-100 text-green-800' :
+                            client.status === 'inactive' ? 'bg-red-100 text-red-800' :
+                            'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {client.status === 'active' ? 'Attivo' :
+                             client.status === 'inactive' ? 'Inattivo' : 'In attesa'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          €{client.total_investments.toLocaleString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {new Date(client.created_at).toLocaleDateString('it-IT')}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <div className="flex items-center justify-end space-x-2">
+                            <button
+                              onClick={() => openEditModal(client)}
+                              className="text-blue-600 hover:text-blue-900 p-1"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => openDeleteModal(client)}
+                              className="text-red-600 hover:text-red-900 p-1"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700"
-        >
-          <Plus size={20} />
-          Nuovo Cliente
-        </button>
-      </div>
 
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {error}
-        </div>
-      )}
-
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex gap-4 mb-6">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-              <input
-                type="text"
-                placeholder="Cerca clienti..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
+        {/* Modal Aggiungi Cliente */}
+        {showAddModal && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+              <div className="mt-3">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Nuovo Cliente</h3>
+                <form onSubmit={handleAddClient} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Nome</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.name}
+                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Email</label>
+                    <input
+                      type="email"
+                      required
+                      value={formData.email}
+                      onChange={(e) => setFormData({...formData, email: e.target.value})}
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Telefono</label>
+                    <input
+                      type="tel"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Azienda</label>
+                    <input
+                      type="text"
+                      value={formData.company}
+                      onChange={(e) => setFormData({...formData, company: e.target.value})}
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Stato</label>
+                    <select
+                      value={formData.status}
+                      onChange={(e) => setFormData({...formData, status: e.target.value as any})}
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="active">Attivo</option>
+                      <option value="inactive">Inattivo</option>
+                      <option value="pending">In attesa</option>
+                    </select>
+                  </div>
+                  <div className="flex space-x-3 pt-4">
+                    <button
+                      type="submit"
+                      className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                    >
+                      Salva
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddModal(false)}
+                      className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
+                    >
+                      Annulla
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
           </div>
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="all">Tutti gli stati</option>
-            <option value="active">Attivo</option>
-            <option value="inactive">Inattivo</option>
-            <option value="pending">In attesa</option>
-          </select>
-          <button
-            onClick={fetchClients}
-            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 flex items-center gap-2"
-          >
-            <RefreshCw size={20} />
-            Aggiorna
-          </button>
-        </div>
+        )}
 
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-200">
-                <th className="text-left py-3 px-4">Nome</th>
-                <th className="text-left py-3 px-4">Email</th>
-                <th className="text-left py-3 px-4">Azienda</th>
-                <th className="text-left py-3 px-4">Stato</th>
-                <th className="text-left py-3 px-4">Rischio</th>
-                <th className="text-left py-3 px-4">Azioni</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredClients.map((client) => (
-                <tr key={client.id} className="border-b border-gray-100 hover:bg-gray-50">
-                  <td className="py-3 px-4">
-                    <div>
-                      <div className="font-medium">{client.first_name} {client.last_name}</div>
-                      <div className="text-sm text-gray-500">{client.phone}</div>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4">{client.email}</td>
-                  <td className="py-3 px-4">{client.company}</td>
-                  <td className="py-3 px-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(client.status)}`}>
-                      {client.status}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRiskProfileColor(client.risk_profile)}`}>
-                      {client.risk_profile}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleEditClient(client)}
-                        className="p-1 text-blue-600 hover:text-blue-800"
-                      >
-                        <Edit size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteClient(client.id)}
-                        className="p-1 text-red-600 hover:text-red-800"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        {/* Modal Modifica Cliente */}
+        {showEditModal && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+              <div className="mt-3">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Modifica Cliente</h3>
+                <form onSubmit={handleUpdateClient} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Nome</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.name}
+                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Email</label>
+                    <input
+                      type="email"
+                      required
+                      value={formData.email}
+                      onChange={(e) => setFormData({...formData, email: e.target.value})}
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Telefono</label>
+                    <input
+                      type="tel"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Azienda</label>
+                    <input
+                      type="text"
+                      value={formData.company}
+                      onChange={(e) => setFormData({...formData, company: e.target.value})}
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Stato</label>
+                    <select
+                      value={formData.status}
+                      onChange={(e) => setFormData({...formData, status: e.target.value as any})}
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="active">Attivo</option>
+                      <option value="inactive">Inattivo</option>
+                      <option value="pending">In attesa</option>
+                    </select>
+                  </div>
+                  <div className="flex space-x-3 pt-4">
+                    <button
+                      type="submit"
+                      className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                    >
+                      Aggiorna
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowEditModal(false)}
+                      className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
+                    >
+                      Annulla
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
 
-        {filteredClients.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            Nessun cliente trovato
+        {/* Modal Elimina Cliente */}
+        {showDeleteModal && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+              <div className="mt-3 text-center">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Conferma Eliminazione</h3>
+                <p className="text-sm text-gray-500 mb-6">
+                  Sei sicuro di voler eliminare il cliente <strong>{selectedClient?.name}</strong>?
+                  Questa azione non può essere annullata.
+                </p>
+                <div className="flex space-x-3">
+                  <button
+                    onClick={handleDeleteClient}
+                    className="flex-1 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
+                  >
+                    Elimina
+                  </button>
+                  <button
+                    onClick={() => setShowDeleteModal(false)}
+                    className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
+                  >
+                    Annulla
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
-
-      {/* Create Modal */}
-      {showCreateModal && (
-        <ClientForm
-          formData={formData}
-          setFormData={setFormData}
-          onSubmit={handleCreateClient}
-          onCancel={() => {
-            setShowCreateModal(false);
-            resetForm();
-          }}
-          submitText="Crea Cliente"
-        />
-      )}
-
-      {/* Edit Modal */}
-      {showEditModal && (
-        <ClientForm
-          formData={formData}
-          setFormData={setFormData}
-          onSubmit={handleUpdateClient}
-          onCancel={() => {
-            setShowEditModal(false);
-            setEditingClient(null);
-            resetForm();
-          }}
-          submitText="Aggiorna Cliente"
-        />
-      )}
-    </div>
-  );
-}
-
-function ClientForm({ 
-  formData, 
-  setFormData, 
-  onSubmit, 
-  onCancel, 
-  submitText 
-}: {
-  formData: ClientFormData;
-  setFormData: (data: ClientFormData) => void;
-  onSubmit: () => void;
-  onCancel: () => void;
-  submitText: string;
-}) {
-  const handleChange = (field: keyof ClientFormData, value: string) => {
-    setFormData({ ...formData, [field]: value });
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <h2 className="text-2xl font-bold mb-4">{submitText}</h2>
-        
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nome</label>
-            <input
-              type="text"
-              value={formData.first_name}
-              onChange={(e) => handleChange('first_name', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Cognome</label>
-            <input
-              type="text"
-              value={formData.last_name}
-              onChange={(e) => handleChange('last_name', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input
-              type="email"
-              value={formData.email}
-              onChange={(e) => handleChange('email', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Telefono</label>
-            <input
-              type="tel"
-              value={formData.phone}
-              onChange={(e) => handleChange('phone', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Azienda</label>
-            <input
-              type="text"
-              value={formData.company}
-              onChange={(e) => handleChange('company', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Posizione</label>
-            <input
-              type="text"
-              value={formData.position}
-              onChange={(e) => handleChange('position', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Data di nascita</label>
-            <input
-              type="date"
-              value={formData.date_of_birth}
-              onChange={(e) => handleChange('date_of_birth', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nazionalità</label>
-            <input
-              type="text"
-              value={formData.nationality}
-              onChange={(e) => handleChange('nationality', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          
-          <div className="col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Indirizzo</label>
-            <input
-              type="text"
-              value={formData.address}
-              onChange={(e) => handleChange('address', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Città</label>
-            <input
-              type="text"
-              value={formData.city}
-              onChange={(e) => handleChange('city', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Paese</label>
-            <input
-              type="text"
-              value={formData.country}
-              onChange={(e) => handleChange('country', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">CAP</label>
-            <input
-              type="text"
-              value={formData.postal_code}
-              onChange={(e) => handleChange('postal_code', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">IBAN</label>
-            <input
-              type="text"
-              value={formData.iban}
-              onChange={(e) => handleChange('iban', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">BIC</label>
-            <input
-              type="text"
-              value={formData.bic}
-              onChange={(e) => handleChange('bic', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Intestatario</label>
-            <input
-              type="text"
-              value={formData.account_holder}
-              onChange={(e) => handleChange('account_holder', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Wallet USDT</label>
-            <input
-              type="text"
-              value={formData.usdt_wallet}
-              onChange={(e) => handleChange('usdt_wallet', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Stato</label>
-            <select
-              value={formData.status}
-              onChange={(e) => handleChange('status', e.target.value as any)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="active">Attivo</option>
-              <option value="inactive">Inattivo</option>
-              <option value="pending">In attesa</option>
-            </select>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Profilo di rischio</label>
-            <select
-              value={formData.risk_profile}
-              onChange={(e) => handleChange('risk_profile', e.target.value as any)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="low">Basso</option>
-              <option value="moderate">Moderato</option>
-              <option value="high">Alto</option>
-            </select>
-          </div>
-        </div>
-        
-        <div className="flex justify-end gap-4 mt-6">
-          <button
-            onClick={onCancel}
-            className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
-          >
-            Annulla
-          </button>
-          <button
-            onClick={onSubmit}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            {submitText}
-          </button>
-        </div>
-      </div>
-    </div>
+    </AdminProtected>
   );
 } 

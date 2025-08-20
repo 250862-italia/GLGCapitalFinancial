@@ -310,3 +310,8 @@ export const deleteMockTeam = (id: string): boolean => {
   mockTeamMembers.splice(index, 1);
   return true;
 };
+
+// Recupera un cliente specifico per ID
+export function getMockClient(id: string): Client | null {
+  return mockClients.find(client => client.id === id) || null;
+}

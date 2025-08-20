@@ -705,3 +705,24 @@ export const deleteTeam = async (id: string): Promise<boolean> => {
     return false;
   }
 }; 
+
+// Recupera un cliente specifico per ID
+export async function getClient(id: string): Promise<Client | null> {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('clients')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error('Errore nel recupero cliente:', error);
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Errore nella connessione al database:', error);
+    return null;
+  }
+} 

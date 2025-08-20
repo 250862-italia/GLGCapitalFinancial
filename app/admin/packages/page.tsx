@@ -1,547 +1,650 @@
-"use client";
-import { useState, useEffect } from 'react';
-import { 
-  Package, DollarSign, TrendingUp, Calendar, Edit, Trash2, Plus, Search, 
-  Shield, Target, RefreshCw, Eye
-} from 'lucide-react';
-import { Package as PackageType } from '@/lib/data-manager';
+'use client';
 
-interface PackageFormData {
+import { useState, useEffect } from 'react';
+import AdminProtected from '@/components/AdminProtected';
+import { useAdminAuth } from '@/lib/use-admin-auth';
+import {
+  CreditCard, Plus, Edit, Trash2, Search, Filter,
+  TrendingUp, DollarSign, Calendar, RefreshCw
+} from 'lucide-react';
+
+interface Package {
+  id: string;
   name: string;
   description: string;
   min_investment: number;
   max_investment: number;
   expected_return: number;
   duration_months: number;
-  risk_level: 'low' | 'moderate' | 'high';
+  risk_level: 'low' | 'medium' | 'high';
   status: 'active' | 'inactive' | 'draft';
+  created_at: string;
+  total_investors: number;
+  total_amount: number;
 }
 
-export default function AdminPackagesPage() {
-  const [packages, setPackages] = useState<PackageType[]>([]);
+export default function PackagesPage() {
+  const { user, logout } = useAdminAuth();
+  const [packages, setPackages] = useState<Package[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [dataSource, setDataSource] = useState<'database' | 'mock'>('database');
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [riskFilter, setRiskFilter] = useState<string>('all');
+  const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [editingPackage, setEditingPackage] = useState<PackageType | null>(null);
-  const [formData, setFormData] = useState<PackageFormData>({
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState<Package | null>(null);
+  const [formData, setFormData] = useState({
     name: '',
     description: '',
-    min_investment: 0,
-    max_investment: 0,
-    expected_return: 0,
-    duration_months: 12,
-    risk_level: 'moderate',
-    status: 'active'
+    min_investment: '',
+    max_investment: '',
+    expected_return: '',
+    duration_months: '',
+    risk_level: 'medium' as const,
+    status: 'active' as const
   });
 
+  // Carica i pacchetti
   useEffect(() => {
     fetchPackages();
   }, []);
 
   const fetchPackages = async () => {
-    setLoading(true);
-    setError(null);
-    
     try {
-      const adminToken = localStorage.getItem('admin_token');
-      if (!adminToken) {
-        setError('Admin token not found');
-        setLoading(false);
-        return;
-      }
-
-      const response = await fetch('/api/admin/packages', {
-        headers: {
-          'x-admin-token': adminToken
-        }
-      });
-
-      const data = await response.json();
-      
-      if (data.success) {
-        setPackages(data.data);
-        setDataSource('database');
+      setLoading(true);
+      const response = await fetch('/api/admin/packages');
+      if (response.ok) {
+        const data = await response.json();
+        setPackages(data.packages || []);
       } else {
-        setError(data.error || 'Failed to fetch packages');
+        console.error('Errore nel caricamento pacchetti');
       }
     } catch (error) {
-      console.error('Error fetching packages:', error);
-      setError('Failed to fetch packages');
-      setDataSource('mock');
+      console.error('Errore di connessione:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCreatePackage = async () => {
-    try {
-      const adminToken = localStorage.getItem('admin_token');
-      if (!adminToken) {
-        setError('Admin token not found');
-        return;
-      }
+  // Filtra i pacchetti
+  const filteredPackages = packages.filter(pkg => {
+    const matchesSearch = pkg.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         pkg.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || pkg.status === statusFilter;
+    const matchesRisk = riskFilter === 'all' || pkg.risk_level === riskFilter;
+    return matchesSearch && matchesStatus && matchesRisk;
+  });
 
+  // Gestisce l'aggiunta di un nuovo pacchetto
+  const handleAddPackage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
       const response = await fetch('/api/admin/packages', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-token': adminToken
-        },
-        body: JSON.stringify(formData)
-      });
-
-      const data = await response.json();
-      
-      if (data.success) {
-        setPackages([data.data, ...packages]);
-        setShowCreateModal(false);
-        resetForm();
-      } else {
-        setError(data.error || 'Failed to create package');
-      }
-    } catch (error) {
-      console.error('Error creating package:', error);
-      setError('Failed to create package');
-    }
-  };
-
-  const handleUpdatePackage = async () => {
-    if (!editingPackage) return;
-
-    try {
-      const adminToken = localStorage.getItem('admin_token');
-      if (!adminToken) {
-        setError('Admin token not found');
-        return;
-      }
-
-      const response = await fetch('/api/admin/packages', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-token': adminToken
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          id: editingPackage.id,
-          ...formData
+          ...formData,
+          min_investment: parseFloat(formData.min_investment),
+          max_investment: parseFloat(formData.max_investment),
+          expected_return: parseFloat(formData.expected_return),
+          duration_months: parseInt(formData.duration_months)
         })
       });
 
-      const data = await response.json();
-      
-      if (data.success) {
-        setPackages(packages.map(pkg => 
-          pkg.id === editingPackage.id ? data.data : pkg
-        ));
-        setShowEditModal(false);
-        setEditingPackage(null);
-        resetForm();
-      } else {
-        setError(data.error || 'Failed to update package');
+      if (response.ok) {
+        await fetchPackages();
+        setShowAddModal(false);
+        setFormData({
+          name: '', description: '', min_investment: '', max_investment: '',
+          expected_return: '', duration_months: '', risk_level: 'medium', status: 'active'
+        });
       }
     } catch (error) {
-      console.error('Error updating package:', error);
-      setError('Failed to update package');
+      console.error('Errore nell\'aggiunta del pacchetto:', error);
     }
   };
 
-  const handleDeletePackage = async (packageId: string) => {
-    if (!confirm('Are you sure you want to delete this package?')) return;
+  // Gestisce l'aggiornamento di un pacchetto
+  const handleUpdatePackage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedPackage) return;
 
     try {
-      const adminToken = localStorage.getItem('admin_token');
-      if (!adminToken) {
-        setError('Admin token not found');
-        return;
-      }
-
-      const response = await fetch('/api/admin/packages', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-token': adminToken
-        },
-        body: JSON.stringify({ id: packageId })
+      const response = await fetch(`/api/admin/packages/${selectedPackage.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...formData,
+          min_investment: parseFloat(formData.min_investment),
+          max_investment: parseFloat(formData.max_investment),
+          expected_return: parseFloat(formData.expected_return),
+          duration_months: parseInt(formData.duration_months)
+        })
       });
 
-      const data = await response.json();
-      
-      if (data.success) {
-        setPackages(packages.filter(pkg => pkg.id !== packageId));
-      } else {
-        setError(data.error || 'Failed to delete package');
+      if (response.ok) {
+        await fetchPackages();
+        setShowEditModal(false);
+        setSelectedPackage(null);
+        setFormData({
+          name: '', description: '', min_investment: '', max_investment: '',
+          expected_return: '', duration_months: '', risk_level: 'medium', status: 'active'
+        });
       }
     } catch (error) {
-      console.error('Error deleting package:', error);
-      setError('Failed to delete package');
+      console.error('Errore nell\'aggiornamento del pacchetto:', error);
     }
   };
 
-  const handleEditPackage = (pkg: PackageType) => {
-    setEditingPackage(pkg);
+  // Gestisce l'eliminazione di un pacchetto
+  const handleDeletePackage = async () => {
+    if (!selectedPackage) return;
+
+    try {
+      const response = await fetch(`/api/admin/packages/${selectedPackage.id}`, {
+        method: 'DELETE'
+      });
+
+      if (response.ok) {
+        await fetchPackages();
+        setShowDeleteModal(false);
+        setSelectedPackage(null);
+      }
+    } catch (error) {
+      console.error('Errore nell\'eliminazione del pacchetto:', error);
+    }
+  };
+
+  // Apre il modal di modifica
+  const openEditModal = (pkg: Package) => {
+    setSelectedPackage(pkg);
     setFormData({
       name: pkg.name,
       description: pkg.description,
-      min_investment: pkg.min_investment,
-      max_investment: pkg.max_investment,
-      expected_return: pkg.expected_return,
-      duration_months: pkg.duration_months,
+      min_investment: pkg.min_investment.toString(),
+      max_investment: pkg.max_investment.toString(),
+      expected_return: pkg.expected_return.toString(),
+      duration_months: pkg.duration_months.toString(),
       risk_level: pkg.risk_level,
       status: pkg.status
     });
     setShowEditModal(true);
   };
 
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      description: '',
-      min_investment: 0,
-      max_investment: 0,
-      expected_return: 0,
-      duration_months: 12,
-      risk_level: 'moderate',
-      status: 'active'
-    });
+  // Apre il modal di eliminazione
+  const openDeleteModal = (pkg: Package) => {
+    setSelectedPackage(pkg);
+    setShowDeleteModal(true);
+  };
+
+  const getRiskLevelColor = (risk: string) => {
+    switch (risk) {
+      case 'low': return 'bg-green-100 text-green-800';
+      case 'medium': return 'bg-yellow-100 text-yellow-800';
+      case 'high': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getRiskLevelText = (risk: string) => {
+    switch (risk) {
+      case 'low': return 'Basso';
+      case 'medium': return 'Medio';
+      case 'high': return 'Alto';
+      default: return risk;
+    }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active': return 'bg-green-100 text-green-800';
       case 'inactive': return 'bg-red-100 text-red-800';
-      case 'draft': return 'bg-yellow-100 text-yellow-800';
+      case 'draft': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const getRiskLevelColor = (risk: string) => {
-    switch (risk) {
-      case 'low': return 'bg-blue-100 text-blue-800';
-      case 'moderate': return 'bg-yellow-100 text-yellow-800';
-      case 'high': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'active': return 'Attivo';
+      case 'inactive': return 'Inattivo';
+      case 'draft': return 'Bozza';
+      default: return status;
     }
   };
 
-  const filteredPackages = packages.filter(pkg => {
-    const matchesSearch = 
-      pkg.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      pkg.description.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesFilter = filterStatus === 'all' || pkg.status === filterStatus;
-    
-    return matchesSearch && matchesFilter;
-  });
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Gestione Pacchetti</h1>
-          <div className="flex items-center gap-2 mt-2">
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-              dataSource === 'database' 
-                ? 'bg-green-100 text-green-800' 
-                : 'bg-yellow-100 text-yellow-800'
-            }`}>
-              {dataSource === 'database' ? '🟢 Database Reale' : '🟡 Dati Mock'}
-            </span>
-            {dataSource === 'mock' && (
-              <span className="text-xs text-gray-500">
-                (Database non disponibile - usando dati di test)
-              </span>
-            )}
-          </div>
-        </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700"
-        >
-          <Plus size={20} />
-          Nuovo Pacchetto
-        </button>
-      </div>
-
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {error}
-        </div>
-      )}
-
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex gap-4 mb-6">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-              <input
-                type="text"
-                placeholder="Cerca pacchetti..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-          </div>
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="all">Tutti gli stati</option>
-            <option value="active">Attivo</option>
-            <option value="inactive">Inattivo</option>
-            <option value="draft">Bozza</option>
-          </select>
-          <button
-            onClick={fetchPackages}
-            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 flex items-center gap-2"
-          >
-            <RefreshCw size={20} />
-            Aggiorna
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredPackages.map((pkg) => (
-            <div key={pkg.id} className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">{pkg.name}</h3>
-                  <p className="text-sm text-gray-600 mt-1">{pkg.description}</p>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleEditPackage(pkg)}
-                    className="p-1 text-blue-600 hover:text-blue-800"
-                  >
-                    <Edit size={16} />
-                  </button>
-                  <button
-                    onClick={() => handleDeletePackage(pkg.id)}
-                    className="p-1 text-red-600 hover:text-red-800"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
+    <AdminProtected>
+      <div className="py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Gestione Pacchetti</h1>
+                <p className="text-gray-600">Gestisci i pacchetti di investimento GLG Capital Group</p>
               </div>
-
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Investimento Min:</span>
-                  <span className="font-medium">€{pkg.min_investment.toLocaleString()}</span>
-                </div>
-                
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Investimento Max:</span>
-                  <span className="font-medium">€{pkg.max_investment.toLocaleString()}</span>
-                </div>
-                
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Rendimento Atteso:</span>
-                  <span className="font-medium text-green-600">{pkg.expected_return}%</span>
-                </div>
-                
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Durata:</span>
-                  <span className="font-medium">{pkg.duration_months} mesi</span>
-                </div>
-              </div>
-
-              <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(pkg.status)}`}>
-                  {pkg.status}
-                </span>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRiskLevelColor(pkg.risk_level)}`}>
-                  {pkg.risk_level}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {filteredPackages.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            Nessun pacchetto trovato
-          </div>
-        )}
-      </div>
-
-      {/* Create Modal */}
-      {showCreateModal && (
-        <PackageForm
-          formData={formData}
-          setFormData={setFormData}
-          onSubmit={handleCreatePackage}
-          onCancel={() => {
-            setShowCreateModal(false);
-            resetForm();
-          }}
-          submitText="Crea Pacchetto"
-        />
-      )}
-
-      {/* Edit Modal */}
-      {showEditModal && (
-        <PackageForm
-          formData={formData}
-          setFormData={setFormData}
-          onSubmit={handleUpdatePackage}
-          onCancel={() => {
-            setShowEditModal(false);
-            setEditingPackage(null);
-            resetForm();
-          }}
-          submitText="Aggiorna Pacchetto"
-        />
-      )}
-    </div>
-  );
-}
-
-function PackageForm({ 
-  formData, 
-  setFormData, 
-  onSubmit, 
-  onCancel, 
-  submitText 
-}: {
-  formData: PackageFormData;
-  setFormData: (data: PackageFormData) => void;
-  onSubmit: () => void;
-  onCancel: () => void;
-  submitText: string;
-}) {
-  const handleChange = (field: keyof PackageFormData, value: string | number) => {
-    setFormData({ ...formData, [field]: value });
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        <h2 className="text-2xl font-bold mb-4">{submitText}</h2>
-        
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nome Pacchetto</label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => handleChange('name', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Descrizione</label>
-            <textarea
-              value={formData.description}
-              onChange={(e) => handleChange('description', e.target.value)}
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Investimento Min (€)</label>
-              <input
-                type="number"
-                value={formData.min_investment}
-                onChange={(e) => handleChange('min_investment', Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Investimento Max (€)</label>
-              <input
-                type="number"
-                value={formData.max_investment}
-                onChange={(e) => handleChange('max_investment', Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Rendimento Atteso (%)</label>
-              <input
-                type="number"
-                step="0.1"
-                value={formData.expected_return}
-                onChange={(e) => handleChange('expected_return', Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Durata (mesi)</label>
-              <input
-                type="number"
-                value={formData.duration_months}
-                onChange={(e) => handleChange('duration_months', Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Livello di Rischio</label>
-              <select
-                value={formData.risk_level}
-                onChange={(e) => handleChange('risk_level', e.target.value as any)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium flex items-center space-x-2"
               >
-                <option value="low">Basso</option>
-                <option value="moderate">Moderato</option>
-                <option value="high">Alto</option>
-              </select>
+                <Plus className="w-5 h-5" />
+                <span>Nuovo Pacchetto</span>
+              </button>
             </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Stato</label>
+          </div>
+
+          {/* Filtri e Ricerca */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Cerca pacchetti..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
               <select
-                value={formData.status}
-                onChange={(e) => handleChange('status', e.target.value as any)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
+                <option value="all">Tutti gli stati</option>
                 <option value="active">Attivo</option>
                 <option value="inactive">Inattivo</option>
                 <option value="draft">Bozza</option>
               </select>
+              <select
+                value={riskFilter}
+                onChange={(e) => setRiskFilter(e.target.value)}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="all">Tutti i rischi</option>
+                <option value="low">Basso</option>
+                <option value="medium">Medio</option>
+                <option value="high">Alto</option>
+              </select>
+              <button
+                onClick={fetchPackages}
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center justify-center space-x-2"
+              >
+                <RefreshCw className="w-5 h-5" />
+                <span>Aggiorna</span>
+              </button>
             </div>
           </div>
+
+          {/* Tabella Pacchetti */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            {loading ? (
+              <div className="p-8 text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-600">Caricamento pacchetti...</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Pacchetto
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Investimento
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Rendimento
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Durata
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Rischio
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Stato
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Statistiche
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Azioni
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filteredPackages.map((pkg) => (
+                      <tr key={pkg.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">{pkg.name}</div>
+                            <div className="text-sm text-gray-500 max-w-xs truncate">{pkg.description}</div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">
+                            <div>Min: €{pkg.min_investment.toLocaleString()}</div>
+                            <div>Max: €{pkg.max_investment.toLocaleString()}</div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-green-600">
+                            {pkg.expected_return}%
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {pkg.duration_months} mesi
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRiskLevelColor(pkg.risk_level)}`}>
+                            {getRiskLevelText(pkg.risk_level)}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(pkg.status)}`}>
+                            {getStatusText(pkg.status)}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <div>{pkg.total_investors} investitori</div>
+                          <div>€{pkg.total_amount.toLocaleString()}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <div className="flex items-center justify-end space-x-2">
+                            <button
+                              onClick={() => openEditModal(pkg)}
+                              className="text-blue-600 hover:text-blue-900 p-1"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => openDeleteModal(pkg)}
+                              className="text-red-600 hover:text-red-900 p-1"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
-        
-        <div className="flex justify-end gap-4 mt-6">
-          <button
-            onClick={onCancel}
-            className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
-          >
-            Annulla
-          </button>
-          <button
-            onClick={onSubmit}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            {submitText}
-          </button>
-        </div>
+
+        {/* Modal Aggiungi Pacchetto */}
+        {showAddModal && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+              <div className="mt-3">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Nuovo Pacchetto</h3>
+                <form onSubmit={handleAddPackage} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Nome</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.name}
+                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Descrizione</label>
+                    <textarea
+                      required
+                      value={formData.description}
+                      onChange={(e) => setFormData({...formData, description: e.target.value})}
+                      rows={3}
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Min Investimento (€)</label>
+                      <input
+                        type="number"
+                        required
+                        value={formData.min_investment}
+                        onChange={(e) => setFormData({...formData, min_investment: e.target.value})}
+                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Max Investimento (€)</label>
+                      <input
+                        type="number"
+                        required
+                        value={formData.max_investment}
+                        onChange={(e) => setFormData({...formData, max_investment: e.target.value})}
+                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Rendimento (%)</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        required
+                        value={formData.expected_return}
+                        onChange={(e) => setFormData({...formData, expected_return: e.target.value})}
+                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Durata (mesi)</label>
+                      <input
+                        type="number"
+                        required
+                        value={formData.duration_months}
+                        onChange={(e) => setFormData({...formData, duration_months: e.target.value})}
+                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Livello Rischio</label>
+                      <select
+                        value={formData.risk_level}
+                        onChange={(e) => setFormData({...formData, risk_level: e.target.value as any})}
+                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="low">Basso</option>
+                        <option value="medium">Medio</option>
+                        <option value="high">Alto</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Stato</label>
+                      <select
+                        value={formData.status}
+                        onChange={(e) => setFormData({...formData, status: e.target.value as any})}
+                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="active">Attivo</option>
+                        <option value="inactive">Inattivo</option>
+                        <option value="draft">Bozza</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="flex space-x-3 pt-4">
+                    <button
+                      type="submit"
+                      className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                    >
+                      Salva
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddModal(false)}
+                      className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
+                    >
+                      Annulla
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal Modifica Pacchetto */}
+        {showEditModal && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+              <div className="mt-3">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Modifica Pacchetto</h3>
+                <form onSubmit={handleUpdatePackage} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Nome</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.name}
+                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Descrizione</label>
+                    <textarea
+                      required
+                      value={formData.description}
+                      onChange={(e) => setFormData({...formData, description: e.target.value})}
+                      rows={3}
+                      className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Min Investimento (€)</label>
+                      <input
+                        type="number"
+                        required
+                        value={formData.min_investment}
+                        onChange={(e) => setFormData({...formData, min_investment: e.target.value})}
+                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Max Investimento (€)</label>
+                      <input
+                        type="number"
+                        required
+                        value={formData.max_investment}
+                        onChange={(e) => setFormData({...formData, max_investment: e.target.value})}
+                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Rendimento (%)</label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        required
+                        value={formData.expected_return}
+                        onChange={(e) => setFormData({...formData, expected_return: e.target.value})}
+                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Durata (mesi)</label>
+                      <input
+                        type="number"
+                        required
+                        value={formData.duration_months}
+                        onChange={(e) => setFormData({...formData, duration_months: e.target.value})}
+                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Livello Rischio</label>
+                      <select
+                        value={formData.risk_level}
+                        onChange={(e) => setFormData({...formData, risk_level: e.target.value as any})}
+                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="low">Basso</option>
+                        <option value="medium">Medio</option>
+                        <option value="high">Alto</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Stato</label>
+                      <select
+                        value={formData.status}
+                        onChange={(e) => setFormData({...formData, status: e.target.value as any})}
+                        className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="active">Attivo</option>
+                        <option value="inactive">Inattivo</option>
+                        <option value="draft">Bozza</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="flex space-x-3 pt-4">
+                    <button
+                      type="submit"
+                      className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                    >
+                      Aggiorna
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowEditModal(false)}
+                      className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
+                    >
+                      Annulla
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal Elimina Pacchetto */}
+        {showDeleteModal && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+              <div className="mt-3 text-center">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Conferma Eliminazione</h3>
+                <p className="text-sm text-gray-500 mb-6">
+                  Sei sicuro di voler eliminare il pacchetto <strong>{selectedPackage?.name}</strong>?
+                  Questa azione non può essere annullata.
+                </p>
+                <div className="flex space-x-3">
+                  <button
+                    onClick={handleDeletePackage}
+                    className="flex-1 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
+                  >
+                    Elimina
+                  </button>
+                  <button
+                    onClick={() => setShowDeleteModal(false)}
+                    className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400"
+                  >
+                    Annulla
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-    </div>
+    </AdminProtected>
   );
 } 

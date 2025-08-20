@@ -1,113 +1,145 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyAdminToken } from '@/lib/admin-auth';
 import { getClients, createClient, updateClient, deleteClient } from '@/lib/data-manager';
-import { getMockClients, addMockClient, updateMockClient, deleteMockClient } from '@/lib/mock-data';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: NextRequest) {
+// GET - Recupera tutti i clienti
+export async function GET() {
   try {
-    const token = request.headers.get('x-admin-token');
-    if (!token || !(await verifyAdminToken(token))) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    try {
-      const clients = await getClients();
-      return NextResponse.json({ success: true, data: clients });
-    } catch (dbError) {
-      console.log('Database not available, using mock data');
-      const mockClients = getMockClients();
-      return NextResponse.json({ success: true, data: mockClients });
-    }
+    const clients = await getClients();
+    
+    return NextResponse.json({
+      success: true,
+      clients: clients,
+      total: clients.length
+    });
   } catch (error) {
-    console.error('GET /api/admin/clients error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('Errore nel recupero clienti:', error);
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: 'Errore nel recupero clienti',
+        clients: [],
+        total: 0
+      },
+      { status: 500 }
+    );
   }
 }
 
+// POST - Crea un nuovo cliente
 export async function POST(request: NextRequest) {
   try {
-    const token = request.headers.get('x-admin-token');
-    if (!token || !(await verifyAdminToken(token))) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const body = await request.json();
+    
+    // Validazione dati
+    if (!body.name || !body.email) {
+      return NextResponse.json(
+        { success: false, error: 'Nome ed email sono campi obbligatori' },
+        { status: 400 }
+      );
     }
 
-    const clientData = await request.json();
-    
-    try {
-      const newClient = await createClient(clientData);
-      if (!newClient) {
-        throw new Error('Database create failed');
-      }
-      return NextResponse.json({ success: true, data: newClient });
-    } catch (dbError) {
-      console.log('Database not available, using mock data');
-      const newClient = addMockClient(clientData);
-      return NextResponse.json({ success: true, data: newClient });
-    }
+    // Crea il nuovo cliente
+    const newClient = await createClient({
+      name: body.name,
+      email: body.email,
+      phone: body.phone || '',
+      company: body.company || '',
+      status: body.status || 'active',
+      created_at: new Date().toISOString(),
+      total_investments: 0
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: 'Cliente creato con successo',
+      client: newClient
+    });
   } catch (error) {
-    console.error('POST /api/admin/clients error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('Errore nella creazione cliente:', error);
+    return NextResponse.json(
+      { success: false, error: 'Errore nella creazione del cliente' },
+      { status: 500 }
+    );
   }
 }
 
+// PUT - Aggiorna un cliente esistente
 export async function PUT(request: NextRequest) {
   try {
-    const token = request.headers.get('x-admin-token');
-    if (!token || !(await verifyAdminToken(token))) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const body = await request.json();
+    
+    if (!body.id) {
+      return NextResponse.json(
+        { success: false, error: 'ID cliente è richiesto' },
+        { status: 400 }
+      );
     }
 
-    const { id, ...updateData } = await request.json();
-    
-    try {
-      const updatedClient = await updateClient(id, updateData);
-      if (!updatedClient) {
-        throw new Error('Database update failed');
-      }
-      return NextResponse.json({ success: true, data: updatedClient });
-    } catch (dbError) {
-      console.log('Database not available, using mock data');
-      const updatedClient = updateMockClient(id, updateData);
-      if (!updatedClient) {
-        return NextResponse.json({ error: 'Client not found' }, { status: 404 });
-      }
-      return NextResponse.json({ success: true, data: updatedClient });
+    // Aggiorna il cliente
+    const updatedClient = await updateClient(body.id, {
+      name: body.name,
+      email: body.email,
+      phone: body.phone || '',
+      company: body.company || '',
+      status: body.status || 'active'
+    });
+
+    if (!updatedClient) {
+      return NextResponse.json(
+        { success: false, error: 'Cliente non trovato' },
+        { status: 404 }
+      );
     }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Cliente aggiornato con successo',
+      client: updatedClient
+    });
   } catch (error) {
-    console.error('PUT /api/admin/clients error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('Errore nell\'aggiornamento cliente:', error);
+    return NextResponse.json(
+      { success: false, error: 'Errore nell\'aggiornamento del cliente' },
+      { status: 500 }
+    );
   }
 }
 
+// DELETE - Elimina un cliente
 export async function DELETE(request: NextRequest) {
   try {
-    const token = request.headers.get('x-admin-token');
-    if (!token || !(await verifyAdminToken(token))) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const body = await request.json();
+    
+    if (!body.id) {
+      return NextResponse.json(
+        { success: false, error: 'ID cliente è richiesto' },
+        { status: 400 }
+      );
     }
 
-    const { id } = await request.json();
-    
-    try {
-      const success = await deleteClient(id);
-      if (!success) {
-        throw new Error('Database delete failed');
-      }
-      return NextResponse.json({ success: true, message: 'Client deleted successfully' });
-    } catch (dbError) {
-      console.log('Database not available, using mock data');
-      const success = deleteMockClient(id);
-      if (!success) {
-        return NextResponse.json({ error: 'Client not found' }, { status: 404 });
-      }
-      return NextResponse.json({ success: true, message: 'Client deleted successfully' });
+    // Elimina il cliente
+    const deleted = await deleteClient(body.id);
+
+    if (!deleted) {
+      return NextResponse.json(
+        { success: false, error: 'Cliente non trovato' },
+        { status: 404 }
+      );
     }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Cliente eliminato con successo'
+    });
   } catch (error) {
-    console.error('DELETE /api/admin/clients error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('Errore nell\'eliminazione cliente:', error);
+    return NextResponse.json(
+      { success: false, error: 'Errore nell\'eliminazione del cliente' },
+      { status: 500 }
+    );
   }
 }
 
