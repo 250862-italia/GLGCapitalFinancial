@@ -45,6 +45,16 @@ const PUBLIC_ROUTES = [
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
+  // Salta il middleware per file statici e API
+  if (
+    pathname.startsWith('/_next/') ||
+    pathname.startsWith('/api/') ||
+    pathname.includes('.') ||
+    pathname.startsWith('/favicon.ico')
+  ) {
+    return NextResponse.next();
+  }
+  
   console.log(`🔒 Middleware processing: ${pathname}`);
   
   // Gestione CORS
@@ -63,27 +73,6 @@ export function middleware(request: NextRequest) {
   // Verifica se è una rotta pubblica
   if (PUBLIC_ROUTES.some(route => pathname.startsWith(route))) {
     console.log(`✅ Public route: ${pathname}`);
-    return response;
-  }
-  
-  // Verifica se è una rotta API
-  if (pathname.startsWith('/api/')) {
-    console.log(`🔧 API route: ${pathname}`);
-    
-    // Proteggi le API admin
-    if (pathname.startsWith('/api/admin/')) {
-      const authHeader = request.headers.get('authorization');
-      const csrfToken = request.headers.get('x-csrf-token');
-      
-      if (!authHeader || !csrfToken) {
-        console.log(`❌ Admin API access denied: ${pathname}`);
-        return NextResponse.json(
-          { error: 'Accesso negato. Autenticazione richiesta.' },
-          { status: 401 }
-        );
-      }
-    }
-    
     return response;
   }
   
@@ -155,7 +144,9 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public folder
+     * - api routes
+     * - files with extensions
      */
-    '/((?!_next/static|_next/image|favicon.ico|public/).*)',
+    '/((?!_next/static|_next/image|favicon.ico|public/|api/).*)',
   ],
 }; 
