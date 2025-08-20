@@ -19,10 +19,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   }
 
   useEffect(() => {
+    // Solo reindirizza se non stiamo caricando e non siamo autenticati
     if (!isLoading && !isAuthenticated) {
       router.push('/admin/login');
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isLoading, isAuthenticated, router]);
 
   // Show loading state while checking authentication
   if (isLoading) {
