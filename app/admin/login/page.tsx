@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import GLGLogo from '@/components/GLGLogo';
 import { 
-  Building2, 
   Eye, 
   EyeOff, 
   Lock, 
@@ -79,7 +79,7 @@ export default function AdminLoginPage() {
         {/* Header */}
         <div className="text-center">
           <div className="mx-auto h-20 w-20 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mb-4">
-            <Building2 className="h-12 w-12 text-white" />
+            <GLGLogo size="md" showText={false} />
           </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-2">
             Admin Access

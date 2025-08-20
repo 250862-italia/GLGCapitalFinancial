@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import AdminProtected from '@/components/AdminProtected';
 import { useAdminAuth } from '@/lib/use-admin-auth';
+import GLGLogo from '@/components/GLGLogo';
 import {
   BarChart3, Shield, Building, Menu, X, LogOut,
   Home, FileText, CreditCard, Users as TeamIcon,
@@ -39,9 +40,7 @@ export default function AdminDashboard() {
           <div className="fixed inset-y-0 left-0 flex w-64 flex-col bg-white">
             <div className="flex h-16 items-center justify-between px-4">
               <div className="flex items-center">
-                <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-2 rounded-lg">
-                  <Building className="h-8 w-8 text-white" />
-                </div>
+                <GLGLogo size="sm" showText={false} />
                 <span className="ml-3 text-xl font-bold text-gray-900">Admin</span>
               </div>
               <button onClick={() => setSidebarOpen(false)}>
@@ -80,9 +79,7 @@ export default function AdminDashboard() {
         <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
           <div className="flex flex-col flex-grow bg-white border-r border-gray-200">
             <div className="flex h-16 items-center px-4">
-              <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-2 rounded-lg">
-                <Building className="h-8 w-8 text-white" />
-              </div>
+              <GLGLogo size="sm" showText={false} />
               <span className="ml-3 text-xl font-bold text-gray-900">Admin Panel</span>
             </div>
             <nav className="flex-1 space-y-1 px-2 py-4">

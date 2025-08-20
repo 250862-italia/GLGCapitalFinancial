@@ -13,6 +13,7 @@ import {
   CheckCircle,
   Menu
 } from 'lucide-react';
+import GLGLogo from '@/components/GLGLogo';
 
 export default function AboutPage() {
   return (
@@ -23,9 +24,7 @@ export default function AboutPage() {
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <div className="flex items-center">
-              <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-2 rounded-lg">
-                <Building2 className="h-8 w-8 text-white" />
-              </div>
+              <GLGLogo size="sm" showText={false} />
               <div className="ml-3">
                 <h1 className="text-xl font-bold text-gray-900">GLG Capital Group</h1>
                 <p className="text-sm text-gray-600">Financial Services</p>
@@ -253,9 +252,7 @@ export default function AboutPage() {
           <div className="grid md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center space-x-3 mb-4">
-                <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-2 rounded-lg">
-                  <Building2 className="w-6 h-6 text-white" />
-                </div>
+                <GLGLogo size="sm" showText={false} />
                 <div>
                   <h3 className="text-lg font-bold">GLG Capital Group LLC</h3>
                   <p className="text-sm text-gray-400">Financial Services</p>
