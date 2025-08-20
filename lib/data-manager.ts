@@ -635,3 +635,73 @@ export const deleteAnalytics = async (id: string): Promise<boolean> => {
     return false;
   }
 }; 
+
+// Team Management
+export const getTeam = async (): Promise<TeamMember[]> => {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('team_members')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching team members:', error);
+    return [];
+  }
+};
+
+export const createTeam = async (teamData: Omit<TeamMember, 'id' | 'created_at' | 'updated_at'>): Promise<TeamMember | null> => {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('team_members')
+      .insert({
+        ...teamData,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error creating team member:', error);
+    return null;
+  }
+};
+
+export const updateTeam = async (id: string, teamData: Partial<TeamMember>): Promise<TeamMember | null> => {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('team_members')
+      .update({
+        ...teamData,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error updating team member:', error);
+    return null;
+  }
+};
+
+export const deleteTeam = async (id: string): Promise<boolean> => {
+  try {
+    const { error } = await supabaseAdmin
+      .from('team_members')
+      .delete()
+      .eq('id', id);
+    
+    return !error;
+  } catch (error) {
+    console.error('Error deleting team member:', error);
+    return false;
+  }
+}; 

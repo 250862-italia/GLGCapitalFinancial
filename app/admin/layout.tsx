@@ -6,7 +6,7 @@ import {
   Users, Package, TrendingUp, DollarSign, Settings, 
   BarChart3, Shield, Building, Menu, X, LogOut,
   Home, FileText, CreditCard, Users as TeamIcon,
-  Handshake, Bell, Search, User
+  Users2, Bell, Search, User
 } from 'lucide-react';
 
 const navigation = [
@@ -17,7 +17,7 @@ const navigation = [
   { name: 'Pagamenti', href: '/admin/payments', icon: CreditCard, current: false },
   { name: 'Analytics', href: '/admin/analytics', icon: BarChart3, current: false },
   { name: 'Team', href: '/admin/team', icon: TeamIcon, current: false },
-  { name: 'Partnership', href: '/admin/partnerships', icon: Handshake, current: false },
+  { name: 'Partnership', href: '/admin/partnerships', icon: Users2, current: false },
   { name: 'Impostazioni', href: '/admin/settings', icon: Settings, current: false },
 ];
 

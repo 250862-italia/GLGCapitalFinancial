@@ -276,3 +276,37 @@ export const deleteMockAnalytics = (id: string): boolean => {
   mockAnalytics.splice(index, 1);
   return true;
 };
+
+// Team Management Mock Functions
+export const getMockTeam = (): TeamMember[] => [...mockTeamMembers];
+
+export const addMockTeam = (teamMember: Omit<TeamMember, 'id' | 'created_at' | 'updated_at'>): TeamMember => {
+  const newTeamMember: TeamMember = {
+    ...teamMember,
+    id: Date.now().toString(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+  mockTeamMembers.unshift(newTeamMember);
+  return newTeamMember;
+};
+
+export const updateMockTeam = (id: string, updates: Partial<TeamMember>): TeamMember | null => {
+  const index = mockTeamMembers.findIndex(member => member.id === id);
+  if (index === -1) return null;
+  
+  mockTeamMembers[index] = {
+    ...mockTeamMembers[index],
+    ...updates,
+    updated_at: new Date().toISOString()
+  };
+  return mockTeamMembers[index];
+};
+
+export const deleteMockTeam = (id: string): boolean => {
+  const index = mockTeamMembers.findIndex(member => member.id === id);
+  if (index === -1) return false;
+  
+  mockTeamMembers.splice(index, 1);
+  return true;
+};

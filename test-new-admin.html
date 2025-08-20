@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Nuovo Admin Template - GLG Capital Financial</title>
+    <style>
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 40px;
+        }
+        .test-section {
+            margin: 30px 0;
+            padding: 25px;
+            border: 2px solid #e5e7eb;
+            border-radius: 15px;
+            background: #fafafa;
+        }
+        .test-section h3 {
+            margin: 0 0 20px 0;
+            color: #1f2937;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        .success { border-color: #10b981; background: #f0fdf4; }
+        .info { border-color: #3b82f6; background: #eff6ff; }
+        .warning { border-color: #f59e0b; background: #fffbeb; }
+        .error { border-color: #ef4444; background: #fef2f2; }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            margin: 8px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+        .btn-outline {
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+        .btn-outline:hover {
+            background: #667eea;
+            color: white;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .feature-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .feature-card h4 {
+            margin: 0 0 15px 0;
+            color: #1f2937;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        .feature-card p {
+            margin: 0;
+            color: #6b7280;
+            line-height: 1.6;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-online { background: #10b981; }
+        .status-offline { background: #ef4444; }
+        .status-loading { background: #f59e0b; }
+        
+        .results {
+            margin: 20px 0;
+        }
+        .result-item {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+        .result-success {
+            background: #f0fdf4;
+            border-left-color: #10b981;
+            color: #065f46;
+        }
+        .result-error {
+            background: #fef2f2;
+            border-left-color: #ef4444;
+            color: #991b1b;
+        }
+        .result-info {
+            background: #eff6ff;
+            border-left-color: #3b82f6;
+            color: #1e40af;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Nuovo Template Admin</h1>
+            <p>GLG Capital Financial - Dashboard Professionale</p>
+        </div>
+        
+        <div class="content">
+            <div class="test-section info">
+                <h3>🎯 Caratteristiche del Nuovo Template</h3>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h4>🎨 Design Moderno</h4>
+                        <p>Interfaccia professionale con gradienti, ombre e animazioni fluide. Design enterprise-grade per applicazioni finanziarie.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>📱 Layout Responsive</h4>
+                        <p>Sidebar collassabile, header sticky e design adattivo per tutti i dispositivi. Navigazione ottimizzata per mobile e desktop.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>🔍 Funzionalità Avanzate</h4>
+                        <p>Barra di ricerca globale, notifiche in tempo reale, selettore periodi e azioni rapide per una gestione efficiente.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>📊 Dashboard Intelligente</h4>
+                        <p>Metriche avanzate, grafici interattivi, attività recenti e statistiche in tempo reale per il monitoraggio completo.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="test-section success">
+                <h3>🧪 Test del Sistema</h3>
+                <p>Verifica che il nuovo template admin si carichi correttamente e funzioni senza errori.</p>
+                
+                <div class="results" id="testResults"></div>
+                
+                <div style="text-align: center; margin: 20px 0;">
+                    <button class="btn btn-primary" onclick="runAllTests()">🚀 Esegui Tutti i Test</button>
+                    <button class="btn btn-outline" onclick="clearResults()">🗑️ Pulisci Risultati</button>
+                </div>
+            </div>
+
+            <div class="test-section warning">
+                <h3>🔑 Accesso Admin</h3>
+                <p><strong>Per testare il nuovo template admin:</strong></p>
+                <ol style="line-height: 2;">
+                    <li>Vai su <a href="http://localhost:3000/admin" target="_blank" style="color: #667eea; font-weight: 600;">http://localhost:3000/admin</a></li>
+                    <li>Apri la console del browser (F12)</li>
+                    <li>Esegui: <code style="background: #f3f4f6; padding: 4px 8px; border-radius: 4px; font-family: monospace;">localStorage.setItem("admin_token", "admin_test_token_123")</code></li>
+                    <li>Ricarica la pagina</li>
+                </ol>
+                
+                <div style="margin-top: 20px;">
+                    <a href="http://localhost:3000/admin" target="_blank" class="btn btn-success">🎯 Vai all'Admin Panel</a>
+                    <a href="http://localhost:3000" target="_blank" class="btn btn-outline">🏠 Homepage</a>
+                </div>
+            </div>
+
+            <div class="test-section info">
+                <h3>📋 Checklist Funzionalità</h3>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h4>✅ Completato</h4>
+                        <ul style="margin: 0; padding-left: 20px; color: #6b7280;">
+                            <li>Sidebar di navigazione</li>
+                            <li>Header moderno con search</li>
+                            <li>Dashboard con metriche</li>
+                            <li>Layout responsive</li>
+                            <li>Design professionale</li>
+                        </ul>
+                    </div>
+                    <div class="feature-card">
+                        <h4>🔄 In Sviluppo</h4>
+                        <ul style="margin: 0; padding-left: 20px; color: #6b7280;">
+                            <li>Grafici interattivi</li>
+                            <li>Notifiche real-time</li>
+                            <li>Gestione utenti</li>
+                            <li>Report avanzati</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function addResult(message, type = 'info') {
+            const results = document.getElementById('testResults');
+            const div = document.createElement('div');
+            div.className = `result-item result-${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}:</strong> ${message}`;
+            results.appendChild(div);
+        }
+
+        async function testHomepage() {
+            try {
+                const response = await fetch('http://localhost:3000/');
+                if (response.ok) {
+                    addResult('✅ Homepage accessibile e funzionante', 'success');
+                    return true;
+                } else {
+                    addResult('❌ Homepage non accessibile', 'error');
+                    return false;
+                }
+            } catch (error) {
+                addResult(`❌ Errore homepage: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        async function testAdminPanel() {
+            try {
+                const response = await fetch('http://localhost:3000/admin/');
+                if (response.ok) {
+                    const html = await response.text();
+                    if (html.includes('Admin Dashboard') || html.includes('Dashboard Overview')) {
+                        addResult('✅ Admin Panel accessibile e funzionante', 'success');
+                        return true;
+                    } else {
+                        addResult('⚠️ Admin Panel accessibile ma contenuto non corretto', 'warning');
+                        return false;
+                    }
+                } else {
+                    addResult('❌ Admin Panel non accessibile', 'error');
+                    return false;
+                }
+            } catch (error) {
+                addResult(`❌ Errore admin panel: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        async function testCSSLoading() {
+            try {
+                const response = await fetch('http://localhost:3000/_next/static/css/app/layout.css');
+                if (response.ok) {
+                    const css = await response.text();
+                    if (css.includes('@tailwind base')) {
+                        addResult('✅ CSS caricato correttamente (Tailwind presente)', 'success');
+                        return true;
+                    } else {
+                        addResult('⚠️ CSS caricato ma Tailwind non trovato', 'warning');
+                        return false;
+                    }
+                } else {
+                    addResult('❌ CSS non caricabile', 'error');
+                    return false;
+                }
+            } catch (error) {
+                addResult(`❌ Errore caricamento CSS: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        async function testAPIRoutes() {
+            try {
+                const response = await fetch('http://localhost:3000/api/admin/clients');
+                if (response.status === 401) {
+                    addResult('✅ API routes funzionanti (richiede autenticazione)', 'success');
+                    return true;
+                } else if (response.ok) {
+                    addResult('✅ API routes accessibili', 'success');
+                    return true;
+                } else {
+                    addResult(`⚠️ API routes rispondono con status: ${response.status}`, 'warning');
+                    return false;
+                }
+            } catch (error) {
+                addResult(`❌ Errore API routes: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        async function runAllTests() {
+            addResult('🚀 Avvio test completi...', 'info');
+            
+            const results = await Promise.all([
+                testHomepage(),
+                testAdminPanel(),
+                testCSSLoading(),
+                testAPIRoutes()
+            ]);
+            
+            const successCount = results.filter(Boolean).length;
+            const totalCount = results.length;
+            
+            if (successCount === totalCount) {
+                addResult(`🎉 Tutti i test sono passati! (${successCount}/${totalCount})`, 'success');
+            } else {
+                addResult(`⚠️ ${totalCount - successCount} test falliti su ${totalCount} totali`, 'warning');
+            }
+            
+            addResult('📊 Test completati!', 'info');
+        }
+
+        function clearResults() {
+            document.getElementById('testResults').innerHTML = '';
+        }
+
+        // Test automatico all'avvio
+        window.onload = function() {
+            addResult('🎯 Pagina di test caricata. Clicca "Esegui Tutti i Test" per verificare il sistema.', 'info');
+        };
+    </script>
+</body>
+</html>
