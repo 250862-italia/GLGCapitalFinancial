@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Admin CSS - GLG Capital Financial</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; color: #155724; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; color: #0c5460; }
+        button { padding: 10px 20px; margin: 5px; border: none; border-radius: 4px; cursor: pointer; }
+        .btn-primary { background-color: #007bff; color: white; }
+        .btn-success { background-color: #28a745; color: white; }
+        .btn-danger { background-color: #dc3545; color: white; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Admin Panel CSS - GLG Capital Financial</h1>
+    
+    <div class="test-section info">
+        <h3>📋 Istruzioni Test</h3>
+        <p>Questa pagina ti aiuta a testare se l'admin panel si carica correttamente con CSS.</p>
+    </div>
+
+    <div class="test-section">
+        <h3>🔗 Test Collegamenti</h3>
+        <button class="btn-primary" onclick="testHomepage()">Test Homepage</button>
+        <button class="btn-primary" onclick="testAdminPanel()">Test Admin Panel</button>
+        <button class="btn-success" onclick="testCSSLoading()">Test Caricamento CSS</button>
+    </div>
+
+    <div class="test-section">
+        <h3>📊 Risultati Test</h3>
+        <div id="results"></div>
+    </div>
+
+    <div class="test-section info">
+        <h3>🔑 Accesso Admin</h3>
+        <p>Per accedere come admin:</p>
+        <ol>
+            <li>Vai su <a href="http://localhost:3000/admin" target="_blank">http://localhost:3000/admin</a></li>
+            <li>Apri la console del browser (F12)</li>
+            <li>Esegui: <code>localStorage.setItem("admin_token", "admin_test_token_123")</code></li>
+            <li>Ricarica la pagina</li>
+        </ol>
+    </div>
+
+    <script>
+        function addResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `test-section ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}:</strong> ${message}`;
+            results.appendChild(div);
+        }
+
+        async function testHomepage() {
+            try {
+                const response = await fetch('http://localhost:3000/');
+                if (response.ok) {
+                    addResult('✅ Homepage accessibile', 'success');
+                } else {
+                    addResult('❌ Homepage non accessibile', 'error');
+                }
+            } catch (error) {
+                addResult(`❌ Errore homepage: ${error.message}`, 'error');
+            }
+        }
+
+        async function testAdminPanel() {
+            try {
+                const response = await fetch('http://localhost:3000/admin/');
+                if (response.ok) {
+                    const html = await response.text();
+                    if (html.includes('Admin Dashboard')) {
+                        addResult('✅ Admin Panel accessibile e funzionante', 'success');
+                    } else {
+                        addResult('⚠️ Admin Panel accessibile ma contenuto non corretto', 'error');
+                    }
+                } else {
+                    addResult('❌ Admin Panel non accessibile', 'error');
+                }
+            } catch (error) {
+                addResult(`❌ Errore admin panel: ${error.message}`, 'error');
+            }
+        }
+
+        async function testCSSLoading() {
+            try {
+                const response = await fetch('http://localhost:3000/_next/static/css/app/layout.css');
+                if (response.ok) {
+                    const css = await response.text();
+                    if (css.includes('@tailwind base')) {
+                        addResult('✅ CSS caricato correttamente (Tailwind presente)', 'success');
+                    } else {
+                        addResult('⚠️ CSS caricato ma Tailwind non trovato', 'error');
+                    }
+                } else {
+                    addResult('❌ CSS non caricabile', 'error');
+                }
+            } catch (error) {
+                addResult(`❌ Errore caricamento CSS: ${error.message}`, 'error');
+            }
+        }
+
+        // Test automatico all'avvio
+        window.onload = function() {
+            addResult('🚀 Avvio test automatico...', 'info');
+            setTimeout(() => {
+                testHomepage();
+                setTimeout(() => {
+                    testAdminPanel();
+                    setTimeout(() => {
+                        testCSSLoading();
+                        addResult('🎯 Test completati!', 'success');
+                    }, 1000);
+                }, 1000);
+            }, 1000);
+        };
+    </script>
+</body>
+</html>

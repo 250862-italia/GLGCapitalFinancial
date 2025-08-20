@@ -3,6 +3,9 @@ import { verifyAdminToken } from '@/lib/admin-auth';
 import { getInvestments, createInvestment, updateInvestment, deleteInvestment } from '@/lib/data-manager';
 import { getMockInvestments, addMockInvestment, updateMockInvestment, deleteMockInvestment } from '@/lib/mock-data';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const token = request.headers.get('x-admin-token');
