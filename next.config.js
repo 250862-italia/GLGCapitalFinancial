@@ -3,13 +3,11 @@ const nextConfig = {
   experimental: {
     esmExternals: true,
   },
-  // Configurazione per export statico
-  output: 'export',
-  trailingSlash: true,
+  // Configurazione per sviluppo e produzione con API routes
   images: {
     unoptimized: true
   },
-  // Disabilita server-side features per export statico
+  // Configurazioni di sviluppo
   typescript: {
     ignoreBuildErrors: true,
   },
