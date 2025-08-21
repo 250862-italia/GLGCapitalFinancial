@@ -1,280 +1,372 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Bell, CheckCircle, Clock, AlertCircle, FileText, TrendingUp, XCircle } from 'lucide-react';
+import AdminProtected from '@/components/AdminProtected';
+import { useAdminAuth } from '@/lib/use-admin-auth';
+import { useAdminNotifications } from '@/lib/use-admin-notifications';
+import {
+  Bell, Check, Trash2, RefreshCw, Plus, Package, TrendingUp, User, Building
+} from 'lucide-react';
 
-interface Notification {
-  id: string;
-  type: 'investment' | 'document' | 'support' | 'system';
-  title: string;
-  message: string;
-  client_name?: string;
-  client_email?: string;
-  amount?: number;
-  package_name?: string;
-  status: 'unread' | 'read';
-  created_at: string;
-  priority: 'low' | 'medium' | 'high';
-}
+export default function AdminNotificationsPage() {
+  const { user, logout } = useAdminAuth();
+  const { 
+    notifications, 
+    unreadCount, 
+    loading, 
+    fetchNotifications, 
+    markAsRead, 
+    markAllAsRead, 
+    deleteNotification 
+  } = useAdminNotifications();
 
-export default function AdminNotifications() {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
-  const [typeFilter, setTypeFilter] = useState<'all' | 'investment' | 'document' | 'support' | 'system'>('all');
-
-  useEffect(() => {
-    fetchNotifications();
-    // Aggiorna le notifiche ogni 30 secondi
-    const interval = setInterval(fetchNotifications, 30000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const fetchNotifications = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`/api/admin/notifications?status=${filter}&type=${typeFilter}`);
-      
-      if (response.ok) {
-        const result = await response.json();
-        setNotifications(result.data.notifications);
-        setError(null);
-      } else {
-        setError('Errore nel caricamento delle notifiche');
-      }
-    } catch (error) {
-      console.error('Errore nel fetch delle notifiche:', error);
-      setError('Errore di connessione');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const markAsRead = async (id: string) => {
-    try {
-      const response = await fetch('/api/admin/notifications', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ id, status: 'read' })
-      });
-
-      if (response.ok) {
-        // Aggiorna lo stato locale
-        setNotifications(prev => 
-          prev.map(n => n.id === id ? { ...n, status: 'read' } : n)
-        );
-      }
-    } catch (error) {
-      console.error('Errore nell\'aggiornamento della notifica:', error);
-    }
-  };
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newNotification, setNewNotification] = useState({
+    type: 'package_update',
+    title: '',
+    message: '',
+    data: {}
+  });
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case 'investment':
-        return <TrendingUp className="h-5 w-5 text-blue-600" />;
-      case 'document':
-        return <FileText className="h-5 w-5 text-green-600" />;
-      case 'support':
-        return <AlertCircle className="h-5 w-5 text-orange-600" />;
-      case 'system':
-        return <Bell className="h-5 w-5 text-purple-600" />;
+      case 'package_update':
+      case 'package_create':
+      case 'package_delete':
+        return <Package className="h-5 w-5" />;
+      case 'investment_request':
+        return <TrendingUp className="h-5 w-5" />;
+      case 'client_update':
+        return <User className="h-5 w-5" />;
       default:
-        return <Bell className="h-5 w-5 text-gray-600" />;
+        return <Bell className="h-5 w-5" />;
     }
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high':
-        return 'border-l-red-500 bg-red-50';
-      case 'medium':
-        return 'border-l-yellow-500 bg-yellow-50';
-      case 'low':
-        return 'border-l-green-500 bg-green-50';
+  const getTypeColor = (type: string) => {
+    switch (type) {
+      case 'package_update':
+      case 'package_create':
+      case 'package_delete':
+        return 'bg-blue-100 text-blue-800';
+      case 'investment_request':
+        return 'bg-green-100 text-green-800';
+      case 'client_update':
+        return 'bg-purple-100 text-purple-800';
       default:
-        return 'border-l-gray-500 bg-gray-50';
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    if (status === 'unread') {
-      return <Clock className="h-4 w-4 text-blue-600" />;
+  const getTypeLabel = (type: string) => {
+    switch (type) {
+      case 'package_update':
+        return 'Aggiornamento Pacchetto';
+      case 'package_create':
+        return 'Nuovo Pacchetto';
+      case 'package_delete':
+        return 'Eliminazione Pacchetto';
+      case 'investment_request':
+        return 'Richiesta Investimento';
+      case 'client_update':
+        return 'Aggiornamento Cliente';
+      default:
+        return type;
     }
-    return <CheckCircle className="h-4 w-4 text-green-600" />;
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+  const handleCreateNotification = async (e: React.FormEvent) => {
+    e.preventDefault();
     
-    if (diffInHours < 1) {
-      return 'Ora';
-    } else if (diffInHours < 24) {
-      return `${diffInHours}h fa`;
-    } else {
-      return date.toLocaleDateString('it-IT');
+    try {
+      const token = localStorage.getItem('adminToken');
+      if (!token) return;
+
+      const response = await fetch('/api/admin/notifications', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(newNotification)
+      });
+
+      if (response.ok) {
+        setShowCreateModal(false);
+        setNewNotification({ type: 'package_update', title: '', message: '', data: {} });
+        fetchNotifications();
+      }
+    } catch (error) {
+      console.error('Errore nella creazione notifica:', error);
     }
   };
 
-  if (loading) {
+  if (loading && notifications.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600 text-lg">Caricamento notifiche...</p>
-          </div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 text-lg">Caricamento notifiche...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Notifiche</h1>
-              <p className="text-gray-600">Gestisci le notifiche del sistema</p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="text-right">
-                <div className="text-2xl font-bold text-blue-600">
-                  {notifications.filter(n => n.status === 'unread').length}
-                </div>
-                <div className="text-sm text-gray-500">Non lette</div>
+    <AdminProtected>
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">🔔 Notifiche Admin</h1>
+                <p className="text-gray-600 mt-2">Gestisci le notifiche del sistema</p>
               </div>
-              <Bell className="h-8 w-8 text-blue-600" />
+              
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <Bell className="h-6 w-6 text-blue-600" />
+                  <span className="text-sm text-gray-600">
+                    {unreadCount} non lette
+                  </span>
+                </div>
+                
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>Nuova Notifica</span>
+                </button>
+                
+                <button
+                  onClick={markAllAsRead}
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
+                >
+                  <Check className="h-4 w-4" />
+                  <span>Segna Tutte</span>
+                </button>
+                
+                <button
+                  onClick={fetchNotifications}
+                  className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  <span>Aggiorna</span>
+                </button>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Filtri */}
-        <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-          <div className="flex flex-wrap gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-              <select
-                value={filter}
-                onChange={(e) => setFilter(e.target.value as any)}
-                className="border border-gray-300 rounded-md px-3 py-2 text-sm"
-              >
-                <option value="all">Tutte</option>
-                <option value="unread">Non lette</option>
-                <option value="read">Lette</option>
-              </select>
+          {/* Statistiche */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex items-center">
+                <div className="p-3 bg-blue-100 rounded-full">
+                  <Bell className="h-6 w-6 text-blue-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Totali</p>
+                  <p className="text-2xl font-bold text-gray-900">{notifications.length}</p>
+                </div>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
-              <select
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value as any)}
-                className="border border-gray-300 rounded-md px-3 py-2 text-sm"
-              >
-                <option value="all">Tutti</option>
-                <option value="investment">Investimenti</option>
-                <option value="document">Documenti</option>
-                <option value="support">Supporto</option>
-                <option value="system">Sistema</option>
-              </select>
+            
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex items-center">
+                <div className="p-3 bg-red-100 rounded-full">
+                  <Bell className="h-6 w-6 text-red-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Non Lette</p>
+                  <p className="text-2xl font-bold text-gray-900">{unreadCount}</p>
+                </div>
+              </div>
             </div>
-            <button
-              onClick={fetchNotifications}
-              className="mt-6 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium"
-            >
-              Aggiorna
-            </button>
+            
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex items-center">
+                <div className="p-3 bg-green-100 rounded-full">
+                  <Check className="h-6 w-6 text-green-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Lette</p>
+                  <p className="text-2xl font-bold text-gray-900">{notifications.length - unreadCount}</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex items-center">
+                <div className="p-3 bg-purple-100 rounded-full">
+                  <Package className="h-6 w-6 text-purple-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Pacchetti</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {notifications.filter(n => n.type.includes('package')).length}
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
 
-        {/* Lista Notifiche */}
-        <div className="space-y-4">
-          {notifications.length === 0 ? (
-            <div className="bg-white rounded-lg shadow-sm p-8 text-center">
-              <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Nessuna notifica</h3>
-              <p className="text-gray-500">Non ci sono notifiche da visualizzare</p>
+          {/* Lista Notifiche */}
+          <div className="bg-white rounded-lg shadow">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-lg font-medium text-gray-900">Tutte le Notifiche</h2>
             </div>
-          ) : (
-            notifications.map((notification) => (
-              <div
-                key={notification.id}
-                className={`bg-white rounded-lg shadow-sm p-4 border-l-4 ${getPriorityColor(notification.priority)} ${
-                  notification.status === 'unread' ? 'ring-2 ring-blue-200' : ''
-                }`}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start space-x-3 flex-1">
-                    <div className="mt-1">
-                      {getTypeIcon(notification.type)}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <h3 className="font-medium text-gray-900">{notification.title}</h3>
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          {notification.type}
-                        </span>
-                        {notification.status === 'unread' && (
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                            Nuova
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-gray-600 mb-2">{notification.message}</p>
-                      
-                      {/* Dettagli aggiuntivi */}
-                      {notification.client_name && (
-                        <div className="text-sm text-gray-500 space-y-1">
-                          <div><strong>Cliente:</strong> {notification.client_name}</div>
-                          {notification.client_email && <div><strong>Email:</strong> {notification.client_email}</div>}
-                          {notification.amount && <div><strong>Importo:</strong> €{notification.amount.toLocaleString()}</div>}
-                          {notification.package_name && <div><strong>Pacchetto:</strong> {notification.package_name}</div>}
+            
+            <div className="divide-y divide-gray-200">
+              {notifications.length === 0 ? (
+                <div className="px-6 py-12 text-center">
+                  <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500">Nessuna notifica disponibile</p>
+                </div>
+              ) : (
+                notifications.map((notification) => (
+                  <div 
+                    key={notification.id} 
+                    className={`px-6 py-4 hover:bg-gray-50 transition-colors ${
+                      !notification.read ? 'bg-blue-50' : ''
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start space-x-4">
+                        <div className={`p-2 rounded-full ${getTypeColor(notification.type)}`}>
+                          {getTypeIcon(notification.type)}
                         </div>
-                      )}
+                        
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2 mb-2">
+                            <h3 className="text-sm font-medium text-gray-900">
+                              {notification.title}
+                            </h3>
+                            <span className={`px-2 py-1 text-xs rounded-full ${getTypeColor(notification.type)}`}>
+                              {getTypeLabel(notification.type)}
+                            </span>
+                            {!notification.read && (
+                              <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
+                            )}
+                          </div>
+                          
+                          <p className="text-sm text-gray-600 mb-2">
+                            {notification.message}
+                          </p>
+                          
+                          <div className="flex items-center space-x-4 text-xs text-gray-500">
+                            <span>
+                              📅 {new Date(notification.timestamp).toLocaleString('it-IT')}
+                            </span>
+                            {notification.data && Object.keys(notification.data).length > 0 && (
+                              <span className="text-blue-600">
+                                📊 Dati disponibili
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
                       
-                      <div className="flex items-center space-x-4 mt-3 text-sm text-gray-500">
-                        <span className="flex items-center space-x-1">
-                          {getStatusIcon(notification.status)}
-                          <span>{notification.status === 'unread' ? 'Non letta' : 'Letta'}</span>
-                        </span>
-                        <span>{formatDate(notification.created_at)}</span>
+                      <div className="flex items-center space-x-2">
+                        {!notification.read && (
+                          <button
+                            onClick={() => markAsRead(notification.id)}
+                            className="text-green-600 hover:text-green-700 p-1 rounded"
+                            title="Segna come letta"
+                          >
+                            <Check className="h-4 w-4" />
+                          </button>
+                        )}
+                        
+                        <button
+                          onClick={() => deleteNotification(notification.id)}
+                          className="text-red-600 hover:text-red-700 p-1 rounded"
+                          title="Elimina notifica"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
                       </div>
                     </div>
                   </div>
-                  
-                  <div className="flex items-center space-x-2 ml-4">
-                    {notification.status === 'unread' && (
-                      <button
-                        onClick={() => markAsRead(notification.id)}
-                        className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                      >
-                        Segna come letta
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
+                ))
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* Error Display */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mt-6">
-            <div className="flex items-center">
-              <XCircle className="h-5 w-5 text-red-600 mr-2" />
-              <span className="text-red-800">{error}</span>
+        {/* Modal Nuova Notifica */}
+        {showCreateModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Nuova Notifica</h3>
+              
+              <form onSubmit={handleCreateNotification} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Tipo
+                  </label>
+                  <select
+                    value={newNotification.type}
+                    onChange={(e) => setNewNotification(prev => ({ ...prev, type: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  >
+                    <option value="package_update">Aggiornamento Pacchetto</option>
+                    <option value="package_create">Nuovo Pacchetto</option>
+                    <option value="package_delete">Eliminazione Pacchetto</option>
+                    <option value="investment_request">Richiesta Investimento</option>
+                    <option value="client_update">Aggiornamento Cliente</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Titolo
+                  </label>
+                  <input
+                    type="text"
+                    value={newNotification.title}
+                    onChange={(e) => setNewNotification(prev => ({ ...prev, title: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                    placeholder="Inserisci il titolo"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Messaggio
+                  </label>
+                  <textarea
+                    value={newNotification.message}
+                    onChange={(e) => setNewNotification(prev => ({ ...prev, message: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                    rows={3}
+                    placeholder="Inserisci il messaggio"
+                    required
+                  />
+                </div>
+                
+                <div className="flex space-x-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateModal(false)}
+                    className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg"
+                  >
+                    Annulla
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+                  >
+                    Crea
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}
       </div>
-    </div>
+    </AdminProtected>
   );
 }
