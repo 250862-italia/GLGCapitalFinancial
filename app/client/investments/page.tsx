@@ -54,11 +54,15 @@ export default function ClientInvestmentsPage() {
   const fetchPackages = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/admin/packages');
+      const response = await fetch('/api/client/packages');
       
       if (response.ok) {
         const data = await response.json();
-        setPackages(data.packages || []);
+        if (data.success) {
+          setPackages(data.packages || []);
+        } else {
+          setError(data.message || 'Errore nel caricamento dei pacchetti');
+        }
       } else {
         setError('Errore nel caricamento dei pacchetti');
       }

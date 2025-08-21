@@ -68,11 +68,20 @@ export default function InvestmentDetailPage() {
   const fetchPackageDetails = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/admin/packages/${packageId}`);
+      const response = await fetch(`/api/client/packages`);
       
       if (response.ok) {
         const data = await response.json();
-        setPackageData(data.package);
+        if (data.success) {
+          const packageItem = data.packages.find((pkg: InvestmentPackage) => pkg.id === packageId);
+          if (packageItem) {
+            setPackageData(packageItem);
+          } else {
+            setError('Pacchetto non trovato');
+          }
+        } else {
+          setError(data.message || 'Pacchetto non trovato');
+        }
       } else {
         setError('Pacchetto non trovato');
       }
