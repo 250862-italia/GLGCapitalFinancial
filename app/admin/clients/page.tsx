@@ -65,15 +65,20 @@ export default function ClientsPage() {
   const fetchClients = async () => {
     try {
       setLoading(true);
+      console.log('🔄 Fetching clients from admin API...');
       const response = await fetch('/api/admin/clients');
+      console.log('📡 Admin API response status:', response.status);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('📊 Admin API data received:', data);
+        console.log('👥 Clients count:', data.clients?.length || 0);
         setClients(data.clients || []);
       } else {
-        console.error('Errore nel caricamento clienti');
+        console.error('❌ Errore nel caricamento clienti:', response.status);
       }
     } catch (error) {
-      console.error('Errore di connessione:', error);
+      console.error('❌ Errore di connessione:', error);
     } finally {
       setLoading(false);
     }
@@ -234,21 +239,39 @@ export default function ClientsPage() {
                   <h1 className="text-2xl font-bold text-gray-900">Gestione Clienti</h1>
                   <p className="text-gray-600">Gestisci i clienti del sistema GLG Capital Group</p>
                   <p className="text-sm text-blue-600 mt-1">🔄 Sincronizzazione in tempo reale attiva</p>
+                  <p className="text-sm text-green-600 mt-1">📊 Clienti totali: {clients.length}</p>
                 </div>
               </div>
-              <button
-                onClick={fetchClients}
-                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Aggiorna
-              </button>
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={fetchClients}
+                  className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Aggiorna ({clients.length})
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Main Content */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Status Message */}
+          {!loading && clients.length > 0 && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+              <div className="flex items-center">
+                <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+                <div>
+                  <h4 className="text-sm font-medium text-green-900">Dati Clienti Caricati</h4>
+                  <p className="text-sm text-green-700">
+                    Caricati {clients.length} clienti dal sistema. Ultimo aggiornamento: {new Date().toLocaleTimeString('it-IT')}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Filters and Search */}
           <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
             <div className="flex flex-col sm:flex-row gap-4">
