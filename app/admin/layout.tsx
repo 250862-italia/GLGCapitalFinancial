@@ -7,7 +7,8 @@ import Link from 'next/link';
 import GLGLogo from '@/components/GLGLogo';
 import {
   RiDashboardLine, RiUserLine, RiBankCardLine, RiLineChartLine, 
-  RiBarChartLine, RiSettings3Line, RiLogoutBoxRLine, RiMenuLine, RiCloseLine
+  RiBarChartLine, RiSettings3Line, RiLogoutBoxRLine, RiMenuLine, RiCloseLine,
+  RiFileTextLine
 } from 'react-icons/ri';
 
 interface AdminLayoutProps {
@@ -57,6 +58,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { name: 'Clienti', href: '/admin/clients', icon: RiUserLine },
     { name: 'Pacchetti', href: '/admin/packages', icon: RiBankCardLine },
     { name: 'Investimenti', href: '/admin/investments', icon: RiLineChartLine },
+    { name: 'Documenti', href: '/admin/documents', icon: RiFileTextLine },
     { name: 'Analytics', href: '/admin/analytics', icon: RiBarChartLine },
     { name: 'Impostazioni', href: '/admin/settings', icon: RiSettings3Line },
   ];

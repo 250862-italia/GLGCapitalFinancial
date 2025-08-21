@@ -293,6 +293,15 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                 </button>
+                <button className="w-full text-left p-3 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors">
+                  <div className="flex items-center">
+                    <div className="h-5 w-5 text-orange-600 mr-3">📁</div>
+                    <div>
+                      <div className="font-medium text-orange-900">Gestisci Documenti</div>
+                      <div className="text-sm text-orange-700">Verifica e approva documenti clienti</div>
+                    </div>
+                  </div>
+                </button>
               </div>
             </div>
           </div>
