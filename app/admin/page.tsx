@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import AdminProtected from '@/components/AdminProtected';
 import { useAdminAuth } from '@/lib/use-admin-auth';
 import {
@@ -20,6 +21,7 @@ interface DashboardStats {
 
 export default function AdminDashboard() {
   const { user, logout } = useAdminAuth();
+  const router = useRouter();
   
   console.log('👤 Admin Dashboard - User auth state:', { user, isAuthenticated: !!user });
   
@@ -38,6 +40,28 @@ export default function AdminDashboard() {
   useEffect(() => {
     fetchDashboardStats();
   }, []);
+
+  // Funzioni per le azioni rapide
+  const handleQuickAction = (action: string) => {
+    console.log('🚀 Azione rapida eseguita:', action);
+    
+    switch (action) {
+      case 'clients':
+        router.push('/admin/clients');
+        break;
+      case 'packages':
+        router.push('/admin/packages');
+        break;
+      case 'investments':
+        router.push('/admin/investments');
+        break;
+      case 'documents':
+        router.push('/admin/documents');
+        break;
+      default:
+        console.warn('Azione rapida non riconosciuta:', action);
+    }
+  };
 
   const fetchDashboardStats = async () => {
     try {
@@ -279,7 +303,10 @@ export default function AdminDashboard() {
             <div className="bg-white shadow rounded-lg p-6">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Azioni Rapide</h3>
               <div className="space-y-3">
-                <button className="w-full text-left p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+                <button 
+                  onClick={() => handleQuickAction('clients')}
+                  className="w-full text-left p-3 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors cursor-pointer"
+                >
                   <div className="flex items-center">
                     <Users className="h-5 w-5 text-blue-600 mr-3" />
                     <div>
@@ -288,7 +315,10 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                 </button>
-                <button className="w-full text-left p-3 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
+                <button 
+                  onClick={() => handleQuickAction('packages')}
+                  className="w-full text-left p-3 bg-green-50 rounded-lg hover:bg-green-100 transition-colors cursor-pointer"
+                >
                   <div className="flex items-center">
                     <Package className="h-5 w-5 text-green-600 mr-3" />
                     <div>
@@ -297,7 +327,10 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                 </button>
-                <button className="w-full text-left p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
+                <button 
+                  onClick={() => handleQuickAction('investments')}
+                  className="w-full text-left p-3 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors cursor-pointer"
+                >
                   <div className="flex items-center">
                     <TrendingUp className="h-5 w-5 text-purple-600 mr-3" />
                     <div>
@@ -306,7 +339,10 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                 </button>
-                <button className="w-full text-left p-3 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors">
+                <button 
+                  onClick={() => handleQuickAction('documents')}
+                  className="w-full text-left p-3 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors cursor-pointer"
+                >
                   <div className="flex items-center">
                     <div className="h-5 w-5 text-orange-600 mr-3">📁</div>
                     <div>
