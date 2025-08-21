@@ -161,7 +161,7 @@ export default function ClientDashboardPage() {
 
         {/* Action Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Link href="/equity-pledge" className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
+          <Link href="/client/investments" className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Nuovo Investimento</h3>
