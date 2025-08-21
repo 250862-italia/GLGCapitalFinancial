@@ -231,6 +231,29 @@ let TEMP_PACKAGES: Package[] = [
   }
 ];
 
+// Dati temporanei per investimenti quando il database non è disponibile
+let TEMP_INVESTMENTS: Investment[] = [
+  {
+    id: '1',
+    client_id: 'temp-client-1',
+    package_id: '2',
+    amount: 5000,
+    status: 'pending',
+    start_date: new Date().toISOString(),
+    end_date: new Date(Date.now() + 24 * 30 * 24 * 60 * 60 * 1000).toISOString(), // +24 mesi
+    expected_return: 8.5,
+    actual_return: 0,
+    total_returns: 0,
+    daily_returns: 0,
+    monthly_returns: 0,
+    fees_paid: 0,
+    payment_method: 'bank_transfer',
+    notes: 'Investimento di test - Mario Rossi',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  }
+];
+
 // Dati temporanei per i clienti
 let TEMP_CLIENTS: Client[] = [
   {
@@ -369,6 +392,40 @@ function deleteTempClient(id: string): boolean {
   if (index === -1) return false;
   
   TEMP_CLIENTS.splice(index, 1);
+  return true;
+}
+
+// Funzioni per gestire i dati temporanei degli investimenti
+function addTempInvestment(investmentData: Omit<Investment, 'id' | 'created_at' | 'updated_at'>): Investment {
+  const newInvestment: Investment = {
+    ...investmentData,
+    id: Date.now().toString(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+  
+  TEMP_INVESTMENTS.unshift(newInvestment);
+  return newInvestment;
+}
+
+function updateTempInvestment(id: string, updates: Partial<Investment>): Investment | null {
+  const index = TEMP_INVESTMENTS.findIndex(inv => inv.id === id);
+  if (index === -1) return null;
+  
+  TEMP_INVESTMENTS[index] = {
+    ...TEMP_INVESTMENTS[index],
+    ...updates,
+    updated_at: new Date().toISOString()
+  };
+  
+  return TEMP_INVESTMENTS[index];
+}
+
+function deleteTempInvestment(id: string): boolean {
+  const index = TEMP_INVESTMENTS.findIndex(inv => inv.id === id);
+  if (index === -1) return false;
+  
+  TEMP_INVESTMENTS.splice(index, 1);
   return true;
 }
 
@@ -712,8 +769,8 @@ export async function getInvestments(): Promise<Investment[]> {
   try {
     const isConnected = await checkDatabaseConnection();
     if (!isConnected) {
-      console.log('Database non disponibile, usando array vuoto per investimenti');
-      return [];
+      console.log('Database non disponibile, usando dati temporanei per investimenti');
+      return TEMP_INVESTMENTS;
     }
 
     const { data, error } = await supabaseAdmin
@@ -726,10 +783,12 @@ export async function getInvestments(): Promise<Investment[]> {
       throw error;
     }
 
-    return data || [];
+    return data || TEMP_INVESTMENTS;
   } catch (error) {
     console.error('Database error in getInvestments:', error);
-    return [];
+    // Fallback ai dati temporanei
+    console.log('Fallback ai dati temporanei per investimenti');
+    return TEMP_INVESTMENTS;
   }
 }
 
@@ -737,8 +796,8 @@ export async function getInvestment(id: string): Promise<Investment | null> {
   try {
     const isConnected = await checkDatabaseConnection();
     if (!isConnected) {
-      console.log('Database non disponibile, impossibile recuperare investimento specifico');
-      return null;
+      console.log('Database non disponibile, cercando nei dati temporanei');
+      return TEMP_INVESTMENTS.find(inv => inv.id === id) || null;
     }
 
     const { data, error } = await supabaseAdmin
@@ -755,89 +814,112 @@ export async function getInvestment(id: string): Promise<Investment | null> {
     return data;
   } catch (error) {
     console.error('Database error in getInvestment:', error);
-    return null;
+    // Fallback ai dati temporanei
+    console.log('Fallback ai dati temporanei per investimento specifico');
+    return TEMP_INVESTMENTS.find(inv => inv.id === id) || null;
   }
 }
 
 export async function createInvestment(investmentData: Omit<Investment, 'id' | 'created_at' | 'updated_at'>): Promise<Investment> {
   try {
     const isConnected = await checkDatabaseConnection();
-    if (!isConnected) {
-      throw new Error('Database non disponibile - impossibile creare investimento');
+    if (isConnected) {
+      // Se il database è disponibile, prova a creare lì
+      const { data, error } = await supabaseAdmin
+        .from('investments')
+        .insert([{
+          ...investmentData,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating investment in database:', error);
+        throw error;
+      }
+
+      return data;
+    } else {
+      // Se il database non è disponibile, crea nei dati temporanei
+      console.log('Database non disponibile, creando nei dati temporanei');
+      const newInvestment = addTempInvestment(investmentData);
+      return newInvestment;
     }
-
-    const { data, error } = await supabaseAdmin
-      .from('investments')
-      .insert([{
-        ...investmentData,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }])
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error creating investment:', error);
-      throw error;
-    }
-
-    return data;
   } catch (error) {
     console.error('Database error in createInvestment:', error);
-    throw new Error('Impossibile creare l\'investimento nel database');
+    // Fallback ai dati temporanei
+    console.log('Fallback ai dati temporanei per creazione investimento');
+    const newInvestment = addTempInvestment(investmentData);
+    return newInvestment;
   }
 }
 
 export async function updateInvestment(id: string, updates: Partial<Investment>): Promise<Investment | null> {
   try {
     const isConnected = await checkDatabaseConnection();
-    if (!isConnected) {
-      throw new Error('Database non disponibile - impossibile aggiornare investimento');
+    if (isConnected) {
+      // Se il database è disponibile, prova ad aggiornare lì
+      const { data, error } = await supabaseAdmin
+        .from('investments')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating investment in database:', error);
+        return null;
+      }
+
+      return data;
+    } else {
+      // Se il database non è disponibile, aggiorna nei dati temporanei
+      console.log('Database non disponibile, aggiornando nei dati temporanei');
+      const updatedInvestment = updateTempInvestment(id, updates);
+      return updatedInvestment;
     }
-
-    const { data, error } = await supabaseAdmin
-      .from('investments')
-      .update({
-        ...updates,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error updating investment:', error);
-      return null;
-    }
-
-    return data;
   } catch (error) {
     console.error('Database error in updateInvestment:', error);
-    return null;
+    // Fallback ai dati temporanei
+    console.log('Fallback ai dati temporanei per aggiornamento investimento');
+    const updatedInvestment = updateTempInvestment(id, updates);
+    return updatedInvestment;
   }
 }
 
 export async function deleteInvestment(id: string): Promise<boolean> {
   try {
     const isConnected = await checkDatabaseConnection();
-    if (!isConnected) {
-      throw new Error('Database non disponibile - impossibile eliminare investimento');
+    if (isConnected) {
+      // Se il database è disponibile, prova ad eliminare lì
+      const { error } = await supabaseAdmin
+        .from('investments')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error deleting investment from database:', error);
+        return false;
+      }
+
+      return true;
+    } else {
+      // Se il database non è disponibile, elimina dai dati temporanei
+      console.log('Database non disponibile, eliminando dai dati temporanei');
+      const success = deleteTempInvestment(id);
+      return success;
     }
-
-    const { error } = await supabaseAdmin
-      .from('investments')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      console.error('Error deleting investment:', error);
-      return false;
-    }
-
-    return true;
   } catch (error) {
     console.error('Database error in deleteInvestment:', error);
-    return false;
+    // Fallback ai dati temporanei
+    console.log('Fallback ai dati temporanei per eliminazione investimento');
+    const success = deleteTempInvestment(id);
+    return success;
   }
 }
 
