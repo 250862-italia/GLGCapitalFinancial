@@ -207,6 +207,7 @@ export default function InvestmentsPage() {
 
   // Apre il modal di modifica
   const openEditModal = (investment: Investment) => {
+    console.log('🔧 Apertura modal modifica per investimento:', investment);
     setSelectedInvestment(investment);
     setFormData({
       client_id: investment.client_id,
@@ -222,6 +223,7 @@ export default function InvestmentsPage() {
 
   // Apre il modal di eliminazione
   const openDeleteModal = (investment: Investment) => {
+    console.log('🗑️ Apertura modal eliminazione per investimento:', investment);
     setSelectedInvestment(investment);
     setShowDeleteModal(true);
   };

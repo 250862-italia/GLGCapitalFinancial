@@ -432,6 +432,8 @@ function deleteTempInvestment(id: string): boolean {
 // Funzione per verificare la connessione al database
 async function checkDatabaseConnection(): Promise<boolean> {
   try {
+    console.log('🔍 Database connection check - testing investments table...');
+    
     // Testa la connessione alla tabella investments
     const { data, error } = await supabaseAdmin
       .from('investments')
@@ -440,10 +442,17 @@ async function checkDatabaseConnection(): Promise<boolean> {
     
     if (error) {
       console.log('🔍 Database connection check - investments table error:', error);
+      console.log('🔍 Error details:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
       return false;
     }
     
     console.log('✅ Database connection check - investments table accessible');
+    console.log('✅ Data returned:', data);
     return true;
   } catch (error) {
     console.error('❌ Database connection check failed:', error);
