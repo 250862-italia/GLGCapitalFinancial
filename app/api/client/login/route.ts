@@ -8,14 +8,23 @@ export const dynamic = 'force-dynamic';
 const JWT_SECRET = 'glg-capital-client-secret-2024';
 
 // TODO: In produzione, verificare le credenziali nel database
-// Per ora simuliamo un utente di test
-const TEST_USER = {
-  email: 'test@example.com',
-  password: 'password123',
-  id: '1',
-  firstName: 'Test',
-  lastName: 'User'
-};
+// Per ora simuliamo alcuni utenti di test
+const TEST_USERS = [
+  {
+    email: 'test@example.com',
+    password: 'password123',
+    id: '1',
+    firstName: 'Test',
+    lastName: 'User'
+  },
+  {
+    email: 'mario.rossi@example.com',
+    password: 'password123',
+    id: '1755762845994',
+    firstName: 'Mario',
+    lastName: 'Rossi'
+  }
+];
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,13 +40,15 @@ export async function POST(request: NextRequest) {
     }
 
     // TODO: In produzione, verificare le credenziali nel database
-    // Per ora accettiamo solo l'utente di test
-    if (email === TEST_USER.email && password === TEST_USER.password) {
+    // Per ora accettiamo solo gli utenti di test
+    const user = TEST_USERS.find(u => u.email === email && u.password === password);
+    
+    if (user) {
       // Generate JWT token
       const token = sign(
         { 
-          userId: TEST_USER.id,
-          email: TEST_USER.email,
+          userId: user.id,
+          email: user.email,
           role: 'client',
           timestamp: Date.now()
         },
@@ -51,10 +62,10 @@ export async function POST(request: NextRequest) {
         message: 'Login effettuato con successo',
         token,
         user: {
-          id: TEST_USER.id,
-          email: TEST_USER.email,
-          firstName: TEST_USER.firstName,
-          lastName: TEST_USER.lastName,
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
           role: 'client'
         }
       });
