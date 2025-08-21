@@ -97,15 +97,58 @@ export default function InvestmentDetailPage() {
   };
 
   const handleSubmitInvestment = async () => {
-    // Simula l'invio dell'investimento
-    setInvestmentComplete(true);
-    
-    // In produzione, qui invieresti i dati al server
-    console.log('Investimento inviato:', {
-      packageId,
-      packageData,
-      formData
-    });
+    try {
+      // Recupera i dati del cliente dal localStorage
+      const clientUser = localStorage.getItem('clientUser');
+      if (!clientUser) {
+        alert('Utente non autenticato. Effettua il login.');
+        return;
+      }
+
+      const user = JSON.parse(clientUser);
+      
+      // Prepara i dati dell'investimento
+      const investmentData = {
+        client_id: user.id || 'temp-id',
+        package_id: packageId,
+        amount: formData.amount,
+        client_email: formData.email,
+        client_name: `${formData.firstName} ${formData.lastName}`,
+        notes: `Investimento in ${packageData?.name} - Cliente: ${formData.firstName} ${formData.lastName}`,
+        payment_method: 'bank_transfer',
+        expected_return: packageData?.expectedReturn || 0,
+        duration_months: packageData?.duration || 12
+      };
+
+      // Invia l'investimento all'API
+      const response = await fetch('/api/client/investments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(investmentData)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ Richiesta di investimento inviata con successo:', result);
+        
+        // Mostra la conferma
+        setInvestmentComplete(true);
+        
+        // Notifica l'admin (log per debugging)
+        console.log('🔔 Notifica per admin: Nuova richiesta di investimento da', investmentData.client_name);
+        
+      } else {
+        const errorData = await response.json();
+        console.error('❌ Errore nell\'invio della richiesta di investimento:', errorData);
+        alert('Errore nell\'invio della richiesta di investimento: ' + (errorData.message || 'Errore sconosciuto'));
+      }
+      
+    } catch (error) {
+      console.error('❌ Errore durante l\'invio della richiesta di investimento:', error);
+      alert('Errore di connessione. Riprova più tardi.');
+    }
   };
 
   if (loading && !packageData) {
@@ -148,15 +191,15 @@ export default function InvestmentDetailPage() {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full text-center">
           <div className="text-green-600 text-6xl mb-4">🎉</div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Investimento Confermato!</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Richiesta di Investimento Inviata!</h1>
           <p className="text-gray-600 mb-6">
-            Il tuo investimento nel pacchetto <strong>{packageData.name}</strong> è stato registrato con successo.
+            La tua richiesta di investimento nel pacchetto <strong>{packageData.name}</strong> è stata inviata con successo all'amministrazione.
           </p>
           <div className="bg-blue-50 rounded-lg p-4 mb-6">
             <p className="text-sm text-blue-800">
-              <strong>Importo:</strong> €{parseFloat(formData.amount).toLocaleString()}<br/>
-              <strong>Rendimento atteso:</strong> {packageData.expectedReturn}% annuo<br/>
-              <strong>Durata:</strong> {packageData.duration} mesi
+                              <strong>Importo richiesto:</strong> €{parseFloat(formData.amount).toLocaleString()}<br/>
+                <strong>Rendimento atteso:</strong> {packageData.expectedReturn}% annuo<br/>
+                <strong>Durata:</strong> {packageData.duration} mesi
             </p>
           </div>
           <button 
@@ -405,12 +448,12 @@ export default function InvestmentDetailPage() {
                 Avanti
               </button>
             ) : (
-              <button
-                onClick={handleSubmitInvestment}
-                className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
-              >
-                Conferma Investimento
-              </button>
+                          <button
+              onClick={handleSubmitInvestment}
+              className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+            >
+              Invia Richiesta di Investimento
+            </button>
             )}
           </div>
         </div>
