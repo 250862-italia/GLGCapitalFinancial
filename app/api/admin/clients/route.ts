@@ -34,22 +34,33 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     
     // Validazione dati
-    if (!body.name || !body.email) {
+    if (!body.first_name || !body.last_name || !body.email) {
       return NextResponse.json(
-        { success: false, error: 'Nome ed email sono campi obbligatori' },
+        { success: false, error: 'Nome, cognome ed email sono campi obbligatori' },
         { status: 400 }
       );
     }
 
     // Crea il nuovo cliente
     const newClient = await createClient({
-      name: body.name,
+      first_name: body.first_name,
+      last_name: body.last_name,
       email: body.email,
       phone: body.phone || '',
       company: body.company || '',
+      position: body.position || '',
+      address: body.address || '',
+      city: body.city || '',
+      country: body.country || '',
+      postal_code: body.postal_code || '',
+      risk_profile: body.risk_profile || 'moderate',
       status: body.status || 'active',
-      created_at: new Date().toISOString(),
-      total_investments: 0
+      date_of_birth: body.date_of_birth || '',
+      nationality: body.nationality || '',
+      iban: body.iban || '',
+      bic: body.bic || '',
+      account_holder: body.account_holder || '',
+      usdt_wallet: body.usdt_wallet || ''
     });
 
     return NextResponse.json({
@@ -80,11 +91,24 @@ export async function PUT(request: NextRequest) {
 
     // Aggiorna il cliente
     const updatedClient = await updateClient(body.id, {
-      name: body.name,
+      first_name: body.first_name,
+      last_name: body.last_name,
       email: body.email,
       phone: body.phone || '',
       company: body.company || '',
-      status: body.status || 'active'
+      position: body.position || '',
+      address: body.address || '',
+      city: body.city || '',
+      country: body.country || '',
+      postal_code: body.postal_code || '',
+      risk_profile: body.risk_profile || 'moderate',
+      status: body.status || 'active',
+      date_of_birth: body.date_of_birth || '',
+      nationality: body.nationality || '',
+      iban: body.iban || '',
+      bic: body.bic || '',
+      account_holder: body.account_holder || '',
+      usdt_wallet: body.usdt_wallet || ''
     });
 
     if (!updatedClient) {
@@ -111,19 +135,19 @@ export async function PUT(request: NextRequest) {
 // DELETE - Elimina un cliente
 export async function DELETE(request: NextRequest) {
   try {
-    const body = await request.json();
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
     
-    if (!body.id) {
+    if (!id) {
       return NextResponse.json(
         { success: false, error: 'ID cliente è richiesto' },
         { status: 400 }
       );
     }
 
-    // Elimina il cliente
-    const deleted = await deleteClient(body.id);
-
-    if (!deleted) {
+    const success = await deleteClient(id);
+    
+    if (!success) {
       return NextResponse.json(
         { success: false, error: 'Cliente non trovato' },
         { status: 404 }

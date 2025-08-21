@@ -217,20 +217,32 @@ let TEMP_PACKAGES: Package[] = [
   }
 ];
 
-// Funzione per verificare la connessione al database
-async function checkDatabaseConnection(): Promise<boolean> {
-  try {
-    const { data, error } = await supabaseAdmin
-      .from('packages')
-      .select('count')
-      .limit(1);
-    
-    return !error;
-  } catch (error) {
-    console.error('Database connection check failed:', error);
-    return false;
+// Dati temporanei per i clienti
+let TEMP_CLIENTS: Client[] = [
+  {
+    id: '1',
+    first_name: 'Mario',
+    last_name: 'Rossi',
+    email: 'mario.rossi@example.com',
+    phone: '+39 123 456 7890',
+    company: 'Azienda Rossi Srl',
+    position: 'Amministratore Delegato',
+    date_of_birth: '1980-05-15',
+    nationality: 'Italiana',
+    address: 'Via Roma 123',
+    city: 'Milano',
+    country: 'Italia',
+    postal_code: '20100',
+    iban: 'IT60X0542811101000000123456',
+    bic: 'UNCRIT2AXXX',
+    account_holder: 'Mario Rossi',
+    usdt_wallet: 'TQn9Y2khDD95J42FQtQTdwVVRqjqjqjqjq',
+    status: 'active',
+    risk_profile: 'moderate',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
   }
-}
+];
 
 // Funzioni per gestire i dati temporanei
 function addTempPackage(pkg: Omit<Package, 'id' | 'created_at' | 'updated_at'>): Package {
@@ -266,6 +278,55 @@ function deleteTempPackage(id: string): boolean {
   return true;
 }
 
+// Funzioni per gestire i dati temporanei dei clienti
+function addTempClient(clientData: Omit<Client, 'id' | 'created_at' | 'updated_at'>): Client {
+  const newClient: Client = {
+    ...clientData,
+    id: Date.now().toString(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+  
+  TEMP_CLIENTS.unshift(newClient);
+  return newClient;
+}
+
+function updateTempClient(id: string, updates: Partial<Client>): Client | null {
+  const index = TEMP_CLIENTS.findIndex(client => client.id === id);
+  if (index === -1) return null;
+  
+  TEMP_CLIENTS[index] = {
+    ...TEMP_CLIENTS[index],
+    ...updates,
+    updated_at: new Date().toISOString()
+  };
+  
+  return TEMP_CLIENTS[index];
+}
+
+function deleteTempClient(id: string): boolean {
+  const index = TEMP_CLIENTS.findIndex(client => client.id === id);
+  if (index === -1) return false;
+  
+  TEMP_CLIENTS.splice(index, 1);
+  return true;
+}
+
+// Funzione per verificare la connessione al database
+async function checkDatabaseConnection(): Promise<boolean> {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('packages')
+      .select('count')
+      .limit(1);
+    
+    return !error;
+  } catch (error) {
+    console.error('Database connection check failed:', error);
+    return false;
+  }
+}
+
 // ===== CLIENT CRUD OPERATIONS =====
 
 export async function getClients(): Promise<Client[]> {
@@ -274,7 +335,7 @@ export async function getClients(): Promise<Client[]> {
     const isConnected = await checkDatabaseConnection();
     if (!isConnected) {
       console.log('Database non disponibile, usando dati temporanei per clienti');
-      return [];
+      return TEMP_CLIENTS;
     }
 
     const { data, error } = await supabaseAdmin
@@ -284,14 +345,15 @@ export async function getClients(): Promise<Client[]> {
 
     if (error) {
       console.error('Error fetching clients:', error);
-      throw error;
+      console.log('Ritorno dati temporanei per clienti');
+      return TEMP_CLIENTS;
     }
 
-    return data || [];
+    return data || TEMP_CLIENTS;
   } catch (error) {
     console.error('Database error in getClients:', error);
-    console.log('Ritorno array vuoto per clienti');
-    return [];
+    console.log('Ritorno dati temporanei per clienti');
+    return TEMP_CLIENTS;
   }
 }
 
@@ -299,8 +361,9 @@ export async function getClient(id: string): Promise<Client | null> {
   try {
     const isConnected = await checkDatabaseConnection();
     if (!isConnected) {
-      console.log('Database non disponibile, impossibile recuperare cliente specifico');
-      return null;
+      console.log('Database non disponibile, cercando nei dati temporanei');
+      // Cerca per ID o email nei dati temporanei
+      return TEMP_CLIENTS.find(client => client.id === id || client.email === id) || null;
     }
 
     const { data, error } = await supabaseAdmin
@@ -317,89 +380,110 @@ export async function getClient(id: string): Promise<Client | null> {
     return data;
   } catch (error) {
     console.error('Database error in getClient:', error);
-    return null;
+    return TEMP_CLIENTS.find(client => client.id === id || client.email === id) || null;
   }
 }
 
 export async function createClient(clientData: Omit<Client, 'id' | 'created_at' | 'updated_at'>): Promise<Client> {
   try {
     const isConnected = await checkDatabaseConnection();
-    if (!isConnected) {
-      throw new Error('Database non disponibile - impossibile creare cliente');
+    if (isConnected) {
+      // Se il database è disponibile, prova a salvare lì
+      const { data, error } = await supabaseAdmin
+        .from('clients')
+        .insert([{
+          ...clientData,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating client in database:', error);
+        throw error;
+      }
+
+      return data;
+    } else {
+      // Se il database non è disponibile, salva nei dati temporanei
+      console.log('Database non disponibile, salvando nei dati temporanei');
+      const newClient = addTempClient(clientData);
+      return newClient;
     }
-
-    const { data, error } = await supabaseAdmin
-      .from('clients')
-      .insert([{
-        ...clientData,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }])
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error creating client:', error);
-      throw error;
-    }
-
-    return data;
   } catch (error) {
     console.error('Database error in createClient:', error);
-    throw new Error('Impossibile creare il cliente nel database');
+    // Fallback ai dati temporanei
+    console.log('Fallback ai dati temporanei per creazione cliente');
+    const newClient = addTempClient(clientData);
+    return newClient;
   }
 }
 
 export async function updateClient(id: string, updates: Partial<Client>): Promise<Client | null> {
   try {
     const isConnected = await checkDatabaseConnection();
-    if (!isConnected) {
-      throw new Error('Database non disponibile - impossibile aggiornare cliente');
+    if (isConnected) {
+      // Se il database è disponibile, prova ad aggiornare lì
+      const { data, error } = await supabaseAdmin
+        .from('clients')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating client in database:', error);
+        return null;
+      }
+
+      return data;
+    } else {
+      // Se il database non è disponibile, aggiorna nei dati temporanei
+      console.log('Database non disponibile, aggiornando nei dati temporanei');
+      const updatedClient = updateTempClient(id, updates);
+      return updatedClient;
     }
-
-    const { data, error } = await supabaseAdmin
-      .from('clients')
-      .update({
-        ...updates,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error updating client:', error);
-      return null;
-    }
-
-    return data;
   } catch (error) {
     console.error('Database error in updateClient:', error);
-    return null;
+    // Fallback ai dati temporanei
+    console.log('Fallback ai dati temporanei per aggiornamento cliente');
+    const updatedClient = updateTempClient(id, updates);
+    return updatedClient;
   }
 }
 
 export async function deleteClient(id: string): Promise<boolean> {
   try {
     const isConnected = await checkDatabaseConnection();
-    if (!isConnected) {
-      throw new Error('Database non disponibile - impossibile eliminare cliente');
+    if (isConnected) {
+      // Se il database è disponibile, prova ad eliminare lì
+      const { error } = await supabaseAdmin
+        .from('clients')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error deleting client from database:', error);
+        return false;
+      }
+
+      return true;
+    } else {
+      // Se il database non è disponibile, elimina dai dati temporanei
+      console.log('Database non disponibile, eliminando dai dati temporanei');
+      const success = deleteTempClient(id);
+      return success;
     }
-
-    const { error } = await supabaseAdmin
-      .from('clients')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      console.error('Error deleting client:', error);
-      return false;
-    }
-
-    return true;
   } catch (error) {
     console.error('Database error in deleteClient:', error);
-    return false;
+    // Fallback ai dati temporanei
+    console.log('Fallback ai dati temporanei per eliminazione cliente');
+    const success = deleteTempClient(id);
+    return success;
   }
 }
 
