@@ -1,85 +1,29 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
+import { ArrowLeft, Mail, Phone, MessageCircle, Clock, CheckCircle, AlertCircle, Info } from 'lucide-react';
 
 export default function ClientSupport() {
-  const [formData, setFormData] = useState({
-    subject: '',
-    message: '',
-    priority: 'medium',
-    category: 'general'
-  });
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
-    
-    // TODO: Implementare invio ticket reale
-    // Per ora simula l'invio
-    setTimeout(() => {
-      setSubmitted(true);
-      setSubmitting(false);
-    }, 2000);
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  if (submitted) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="max-w-md mx-auto text-center">
-          <div className="bg-white rounded-lg shadow-lg p-8">
-            <div className="text-6xl mb-4">✅</div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Ticket Inviato!</h1>
-            <p className="text-gray-600 mb-6">
-              Il tuo ticket di supporto è stato inviato con successo. 
-              Il nostro team ti risponderà entro 24 ore.
-            </p>
-            <div className="space-y-3">
-              <Link 
-                href="/client/support"
-                onClick={() => setSubmitted(false)}
-                className="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                Invia Nuovo Ticket
-              </Link>
-              <Link 
-                href="/client/dashboard"
-                className="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                Torna alla Dashboard
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-6xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">🆘 Supporto Clienti</h1>
-              <p className="text-gray-600 mt-1">Contatta il nostro team di supporto per assistenza</p>
+            <div className="flex items-center space-x-4">
+              <Link 
+                href="/client/dashboard"
+                className="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                <ArrowLeft className="h-5 w-5 mr-2" />
+                Torna alla Dashboard
+              </Link>
+              <div className="h-px w-8 bg-gray-300"></div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">🆘 Supporto Clienti</h1>
+                <p className="text-gray-600 mt-1">Contatta il nostro team di supporto per assistenza</p>
+              </div>
             </div>
-            <Link 
-              href="/client/dashboard"
-              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              ← Torna alla Dashboard
-            </Link>
           </div>
         </div>
       </div>
@@ -91,7 +35,7 @@ export default function ClientSupport() {
             <div className="bg-white rounded-lg shadow-sm border p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-6">📝 Invia Ticket di Supporto</h2>
               
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form className="space-y-6">
                 <div>
                   <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
                     Categoria *
@@ -99,17 +43,32 @@ export default function ClientSupport() {
                   <select
                     id="category"
                     name="category"
-                    required
-                    value={formData.category}
-                    onChange={handleInputChange}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    defaultValue="general"
                   >
                     <option value="general">Generale</option>
                     <option value="technical">Problemi Tecnici</option>
                     <option value="investment">Investimenti</option>
+                    <option value="documents">Documenti</option>
                     <option value="billing">Fatturazione</option>
                     <option value="security">Sicurezza</option>
-                    <option value="other">Altro</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label htmlFor="priority" className="block text-sm font-medium text-gray-700 mb-2">
+                    Priorità *
+                  </label>
+                  <select
+                    id="priority"
+                    name="priority"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    defaultValue="medium"
+                  >
+                    <option value="low">Bassa</option>
+                    <option value="medium">Media</option>
+                    <option value="high">Alta</option>
+                    <option value="urgent">Urgente</option>
                   </select>
                 </div>
 
@@ -121,94 +80,93 @@ export default function ClientSupport() {
                     type="text"
                     id="subject"
                     name="subject"
-                    required
-                    value={formData.subject}
-                    onChange={handleInputChange}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                     placeholder="Descrivi brevemente il problema"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    defaultValue="Richiesta di supporto"
                   />
-                </div>
-
-                <div>
-                  <label htmlFor="priority" className="block text-sm font-medium text-gray-700 mb-2">
-                    Priorità *
-                  </label>
-                  <select
-                    id="priority"
-                    name="priority"
-                    required
-                    value={formData.priority}
-                    onChange={handleInputChange}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  >
-                    <option value="low">Bassa</option>
-                    <option value="medium">Media</option>
-                    <option value="high">Alta</option>
-                    <option value="urgent">Urgente</option>
-                  </select>
                 </div>
 
                 <div>
                   <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
-                    Messaggio Dettagliato *
+                    Messaggio *
                   </label>
                   <textarea
                     id="message"
                     name="message"
-                    required
                     rows={6}
-                    value={formData.message}
-                    onChange={handleInputChange}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    placeholder="Descrivi in dettaglio il problema o la richiesta..."
-                  />
+                    placeholder="Descrivi in dettaglio il tuo problema o richiesta..."
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    defaultValue="Buongiorno, ho bisogno di assistenza con..."
+                  ></textarea>
                 </div>
 
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between pt-4">
                   <p className="text-sm text-gray-500">
                     * Campi obbligatori
                   </p>
                   <button
                     type="submit"
-                    disabled={submitting}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                   >
-                    {submitting ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        Invio in corso...
-                      </>
-                    ) : (
-                      'Invia Ticket'
-                    )}
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    Invia Ticket
                   </button>
                 </div>
               </form>
             </div>
+
+            {/* FAQ Section */}
+            <div className="bg-white rounded-lg shadow-sm border p-6 mt-8">
+              <h2 className="text-lg font-semibold text-gray-900 mb-6">❓ Domande Frequenti</h2>
+              <div className="space-y-4">
+                <div className="border border-gray-200 rounded-lg p-4">
+                  <h3 className="font-medium text-gray-900 mb-2">Come posso modificare il mio profilo di rischio?</h3>
+                  <p className="text-gray-600 text-sm">Contatta il nostro team di supporto per richiedere una modifica del profilo di rischio. Ti guideremo attraverso il processo.</p>
+                </div>
+                
+                <div className="border border-gray-200 rounded-lg p-4">
+                  <h3 className="font-medium text-gray-900 mb-2">Quanto tempo impiega l'approvazione dei documenti?</h3>
+                  <p className="text-gray-600 text-sm">I documenti vengono revisionati entro 24-48 ore lavorative. Riceverai una notifica via email una volta completata la revisione.</p>
+                </div>
+                
+                <div className="border border-gray-200 rounded-lg p-4">
+                  <h3 className="font-medium text-gray-900 mb-2">Posso prelevare i miei investimenti in qualsiasi momento?</h3>
+                  <p className="text-gray-600 text-sm">La possibilità di prelievo dipende dal tipo di investimento. Alcuni hanno periodi di lock-in, altri permettono prelievi parziali.</p>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Sidebar Informazioni */}
+          {/* Sidebar */}
           <div className="space-y-6">
             {/* Contatti Diretti */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">📞 Contatti Diretti</h3>
               <div className="space-y-4">
                 <div className="flex items-center space-x-3">
-                  <div className="text-2xl">📧</div>
+                  <div className="p-2 bg-blue-100 rounded-full">
+                    <Mail className="h-4 w-4 text-blue-600" />
+                  </div>
                   <div>
                     <p className="text-sm font-medium text-gray-900">Email</p>
-                    <p className="text-sm text-blue-600">support@glgcapital.com</p>
+                    <p className="text-sm text-gray-600">support@glgcapital.com</p>
                   </div>
                 </div>
+                
                 <div className="flex items-center space-x-3">
-                  <div className="text-2xl">📱</div>
+                  <div className="p-2 bg-green-100 rounded-full">
+                    <Phone className="h-4 w-4 text-green-600" />
+                  </div>
                   <div>
                     <p className="text-sm font-medium text-gray-900">Telefono</p>
-                    <p className="text-sm text-blue-600">+39 02 1234 5678</p>
+                    <p className="text-sm text-gray-600">+39 02 1234 5678</p>
                   </div>
                 </div>
+                
                 <div className="flex items-center space-x-3">
-                  <div className="text-2xl">🕒</div>
+                  <div className="p-2 bg-purple-100 rounded-full">
+                    <Clock className="h-4 w-4 text-purple-600" />
+                  </div>
                   <div>
                     <p className="text-sm font-medium text-gray-900">Orari</p>
                     <p className="text-sm text-gray-600">Lun-Ven: 9:00-18:00</p>
@@ -217,62 +175,82 @@ export default function ClientSupport() {
               </div>
             </div>
 
-            {/* FAQ Rapide */}
+            {/* Ticket Status */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">❓ FAQ Rapide</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">📊 I Miei Ticket</h3>
               <div className="space-y-3">
-                <details className="group">
-                  <summary className="flex justify-between items-center font-medium cursor-pointer list-none">
-                    <span className="text-sm text-gray-700">Come modificare il profilo?</span>
-                    <span className="transition group-open:rotate-180">▼</span>
-                  </summary>
-                  <p className="text-sm text-gray-600 mt-2">
-                    Vai su Profilo nella dashboard e clicca su "Modifica". Salva le modifiche per aggiornare i dati.
-                  </p>
-                </details>
-                <details className="group">
-                  <summary className="flex justify-between items-center font-medium cursor-pointer list-none">
-                    <span className="text-sm text-gray-700">Come investire?</span>
-                    <span className="transition group-open:rotate-180">▼</span>
-                  </summary>
-                  <p className="text-sm text-gray-600 mt-2">
-                    Seleziona "Nuovo Investimento" nella dashboard e scegli il pacchetto che preferisci.
-                  </p>
-                </details>
-                <details className="group">
-                  <summary className="flex justify-between items-center font-medium cursor-pointer list-none">
-                    <span className="text-sm text-gray-700">Tempi di elaborazione</span>
-                    <span className="transition group-open:rotate-180">▼</span>
-                  </summary>
-                  <p className="text-sm text-gray-600 mt-2">
-                    Gli investimenti vengono elaborati entro 24-48 ore dal ricevimento del pagamento.
-                  </p>
-                </details>
+                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <span className="text-sm text-gray-900">Ticket #1234</span>
+                  </div>
+                  <span className="text-xs text-green-600">Risolto</span>
+                </div>
+                
+                <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <Clock className="h-4 w-4 text-yellow-600" />
+                    <span className="text-sm text-gray-900">Ticket #1235</span>
+                  </div>
+                  <span className="text-xs text-yellow-600">In Lavorazione</span>
+                </div>
+                
+                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <Info className="h-4 w-4 text-blue-600" />
+                    <span className="text-sm text-gray-900">Ticket #1236</span>
+                  </div>
+                  <span className="text-xs text-blue-600">In Attesa</span>
+                </div>
               </div>
             </div>
 
-            {/* Status Sistema */}
+            {/* Quick Actions */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">🟢 Status Sistema</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">⚡ Azioni Rapide</h3>
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Dashboard</span>
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    Operativo
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Investimenti</span>
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    Operativo
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Pagamenti</span>
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    Operativo
-                  </span>
-                </div>
+                <Link 
+                  href="/client/documents"
+                  className="block w-full text-left p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex items-center">
+                    <div className="h-5 w-5 text-blue-600 mr-3">📁</div>
+                    <div>
+                      <div className="font-medium text-gray-900">Carica Documenti</div>
+                      <div className="text-sm text-gray-700">Aggiorna i tuoi documenti</div>
+                    </div>
+                  </div>
+                </Link>
+                
+                <Link 
+                  href="/client/profile"
+                  className="block w-full text-left p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <div className="flex items-center">
+                    <div className="h-5 w-5 text-green-600 mr-3">👤</div>
+                    <div>
+                      <div className="font-medium text-gray-900">Modifica Profilo</div>
+                      <div className="text-sm text-gray-700">Aggiorna le tue informazioni</div>
+                    </div>
+                  </div>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Info Section */}
+        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <Info className="h-5 w-5 text-blue-400" />
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-blue-800">Informazioni sul Supporto</h3>
+              <div className="mt-2 text-sm text-blue-700">
+                <p>• I ticket vengono gestiti in ordine di priorità</p>
+                <p>• Per emergenze, chiama direttamente il numero di supporto</p>
+                <p>• Mantieni sempre aggiornate le tue informazioni di contatto</p>
               </div>
             </div>
           </div>

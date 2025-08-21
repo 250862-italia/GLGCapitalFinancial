@@ -1,523 +1,282 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { User, Mail, Phone, Building, MapPin, Shield, Save, Edit, LogOut } from 'lucide-react';
-
-interface ClientUser {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  phone?: string;
-  company?: string;
-  position?: string;
-  address?: string;
-  city?: string;
-  country?: string;
-  postalCode?: string;
-  riskProfile?: string;
-  status?: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
+import Link from 'next/link';
+import { User, Mail, Phone, Building, MapPin, Shield, Save, Edit, LogOut, ArrowLeft } from 'lucide-react';
 
 export default function ClientProfilePage() {
-  const router = useRouter();
-  const [user, setUser] = useState<ClientUser | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState(false);
-  const [formData, setFormData] = useState<Partial<ClientUser>>({});
-  const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-
-  useEffect(() => {
-    // Verifica se l'utente è loggato
-    const token = localStorage.getItem('clientToken');
-    const userData = localStorage.getItem('clientUser');
-    
-    if (!token || !userData) {
-      router.push('/client/login');
-      return;
-    }
-
-    try {
-      const parsedUser = JSON.parse(userData);
-      setUser(parsedUser);
-      setFormData(parsedUser);
-      
-      // Carica i dati aggiornati dal server
-      loadProfileFromServer(parsedUser.email);
-    } catch (error) {
-      console.error('Error parsing user data:', error);
-      router.push('/client/login');
-    } finally {
-      setLoading(false);
-    }
-  }, [router]);
-
-  const loadProfileFromServer = async (email: string) => {
-    try {
-      const response = await fetch(`/api/client/profile?email=${encodeURIComponent(email)}`);
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && data.client) {
-          const serverUser = data.client;
-          setUser(serverUser);
-          setFormData(serverUser);
-          
-          // Aggiorna localStorage con i dati del server
-          localStorage.setItem('clientUser', JSON.stringify(serverUser));
-        }
-      }
-    } catch (error) {
-      console.error('Error loading profile from server:', error);
-    }
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleSave = async () => {
-    if (!user) return;
-
-    setSaving(true);
-    setMessage(null);
-
-    try {
-      // Salva i dati tramite API per sincronizzarli con il sistema admin
-      const response = await fetch('/api/client/profile', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          clientId: user.id,
-          profileData: formData
-        })
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          // Aggiorna i dati locali con quelli del server
-          const updatedUser = data.client;
-          setUser(updatedUser);
-          localStorage.setItem('clientUser', JSON.stringify(updatedUser));
-          
-          setMessage({ type: 'success', text: 'Profilo aggiornato e sincronizzato con successo!' });
-          setEditing(false);
-        } else {
-          setMessage({ type: 'error', text: data.message || 'Errore nel salvataggio del profilo' });
-        }
-      } else {
-        const errorData = await response.json();
-        setMessage({ type: 'error', text: errorData.message || 'Errore di comunicazione con il server' });
-      }
-    } catch (error) {
-      console.error('Error saving profile:', error);
-      setMessage({ type: 'error', text: 'Errore di connessione al server' });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('clientToken');
-    localStorage.removeItem('clientUser');
-    router.push('/client/login');
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Caricamento profilo...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-red-600 text-6xl mb-4">⚠️</div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Utente non autenticato</h1>
-          <p className="text-gray-600 mb-6">Effettua il login per accedere al profilo</p>
-          <button
-            onClick={() => router.push('/client/login')}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
-          >
-            Vai al Login
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8">
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-4xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Profilo Cliente</h1>
-              <p className="text-gray-600">Gestisci le tue informazioni personali e impostazioni</p>
-              <p className="text-sm text-blue-600 mt-1">🔄 Sincronizzato in tempo reale con il sistema admin</p>
-            </div>
             <div className="flex items-center space-x-4">
-              <button
-                onClick={() => router.push('/client/dashboard')}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              <Link 
+                href="/client/dashboard"
+                className="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors"
               >
-                Dashboard
-              </button>
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </button>
+                <ArrowLeft className="h-5 w-5 mr-2" />
+                Torna alla Dashboard
+              </Link>
+              <div className="h-px w-8 bg-gray-300"></div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">👤 Profilo Personale</h1>
+                <p className="text-gray-600 mt-1">Gestisci le tue informazioni personali</p>
+              </div>
+            </div>
+            <Link 
+              href="/client/login"
+              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto px-6 py-8">
+        {/* Profile Overview */}
+        <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
+          <div className="flex items-center space-x-6">
+            <div className="h-20 w-20 bg-blue-100 rounded-full flex items-center justify-center">
+              <User className="h-10 w-10 text-blue-600" />
+            </div>
+            <div className="flex-1">
+              <h2 className="text-2xl font-bold text-gray-900">Mario Rossi</h2>
+              <p className="text-gray-600">Cliente Premium</p>
+              <div className="flex items-center mt-2">
+                <Shield className="h-4 w-4 text-green-600 mr-2" />
+                <span className="text-sm text-green-600">Profilo verificato</span>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-gray-500">Membro dal</p>
+              <p className="font-medium">Gennaio 2024</p>
             </div>
           </div>
         </div>
 
-        {/* Messaggi */}
-        {message && (
-          <div className={`mb-6 p-4 rounded-lg ${
-            message.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
-          }`}>
-            {message.text}
+        {/* Profile Form */}
+        <div className="bg-white rounded-lg shadow-sm border">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900">Informazioni Personali</h3>
+            <p className="text-sm text-gray-600 mt-1">Aggiorna i tuoi dati personali e aziendali</p>
           </div>
-        )}
-
-        {/* Profilo */}
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-          {/* Header Profilo */}
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-8 text-white">
-            <div className="flex items-center">
-              <div className="w-20 h-20 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                <User className="h-10 w-10" />
-              </div>
-              <div className="ml-6">
-                <h2 className="text-2xl font-bold">{user.firstName} {user.lastName}</h2>
-                <p className="text-blue-100">{user.email}</p>
-                <p className="text-blue-100 text-sm">
-                  Cliente dal {user.createdAt ? new Date(user.createdAt).toLocaleDateString('it-IT') : 'N/A'}
-                </p>
-                <p className="text-blue-100 text-sm">
-                  Ultimo aggiornamento: {user.updatedAt ? new Date(user.updatedAt).toLocaleDateString('it-IT') : 'N/A'}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Contenuto Profilo */}
-          <div className="p-6">
-            {editing ? (
-              /* Form di Modifica */
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Nome *</label>
-                    <input
-                      type="text"
-                      name="firstName"
-                      value={formData.firstName || ''}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Cognome *</label>
-                    <input
-                      type="text"
-                      name="lastName"
-                      value={formData.lastName || ''}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email || ''}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Telefono</label>
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={formData.phone || ''}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Azienda</label>
-                    <input
-                      type="text"
-                      name="company"
-                      value={formData.company || ''}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Posizione</label>
-                    <input
-                      type="text"
-                      name="position"
-                      value={formData.position || ''}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-                </div>
-
+          
+          <div className="p-6 space-y-6">
+            {/* Personal Information */}
+            <div>
+              <h4 className="text-md font-medium text-gray-900 mb-4 flex items-center">
+                <User className="h-5 w-5 mr-2 text-blue-600" />
+                Dati Personali
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Indirizzo</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Nome *
+                  </label>
                   <input
                     type="text"
-                    name="address"
-                    value={formData.address || ''}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    value="Mario"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    readOnly
                   />
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Città</label>
-                    <input
-                      type="text"
-                      name="city"
-                      value={formData.city || ''}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">CAP</label>
-                    <input
-                      type="text"
-                      name="postalCode"
-                      value={formData.postalCode || ''}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Paese</label>
-                    <input
-                      type="text"
-                      name="country"
-                      value={formData.country || ''}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
-                </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Profilo di Rischio</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Cognome *
+                  </label>
+                  <input
+                    type="text"
+                    value="Rossi"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    readOnly
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Email *
+                  </label>
+                  <input
+                    type="email"
+                    value="mario.rossi@example.com"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    readOnly
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Telefono
+                  </label>
+                  <input
+                    type="tel"
+                    value="+39 123 456 7890"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    readOnly
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Company Information */}
+            <div>
+              <h4 className="text-md font-medium text-gray-900 mb-4 flex items-center">
+                <Building className="h-5 w-5 mr-2 text-green-600" />
+                Informazioni Aziendali
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Azienda
+                  </label>
+                  <input
+                    type="text"
+                    value="Tech Solutions Srl"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    readOnly
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Posizione
+                  </label>
+                  <input
+                    type="text"
+                    value="Amministratore Delegato"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    readOnly
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Address Information */}
+            <div>
+              <h4 className="text-md font-medium text-gray-900 mb-4 flex items-center">
+                <MapPin className="h-5 w-5 mr-2 text-orange-600" />
+                Indirizzo
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Indirizzo
+                  </label>
+                  <input
+                    type="text"
+                    value="Via Roma 123"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    readOnly
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Città
+                  </label>
+                  <input
+                    type="text"
+                    value="Milano"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    readOnly
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Paese
+                  </label>
+                  <input
+                    type="text"
+                    value="Italia"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    readOnly
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    CAP
+                  </label>
+                  <input
+                    type="text"
+                    value="20100"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    readOnly
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Investment Preferences */}
+            <div>
+              <h4 className="text-md font-medium text-gray-900 mb-4 flex items-center">
+                <Shield className="h-5 w-5 mr-2 text-purple-600" />
+                Preferenze di Investimento
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Profilo di Rischio
+                  </label>
                   <select
-                    name="riskProfile"
-                    value={formData.riskProfile || 'moderate'}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    value="moderate"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    disabled
                   >
-                    <option value="low">Basso</option>
+                    <option value="conservative">Conservativo</option>
                     <option value="moderate">Moderato</option>
-                    <option value="high">Alto</option>
+                    <option value="aggressive">Aggressivo</option>
                   </select>
                 </div>
-
-                {/* Azioni */}
-                <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
-                  <button
-                    onClick={() => {
-                      setEditing(false);
-                      setFormData(user);
-                      setMessage(null);
-                    }}
-                    className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Orizzonte Temporale
+                  </label>
+                  <select
+                    value="medium"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    disabled
                   >
-                    Annulla
-                  </button>
-                  <button
-                    onClick={handleSave}
-                    disabled={saving}
-                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center disabled:opacity-50"
-                  >
-                    {saving ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        Salvataggio...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="h-4 w-4 mr-2" />
-                        Salva e Sincronizza
-                      </>
-                    )}
-                  </button>
+                    <option value="short">Breve termine (1-3 anni)</option>
+                    <option value="medium">Medio termine (3-7 anni)</option>
+                    <option value="long">Lungo termine (7+ anni)</option>
+                  </select>
                 </div>
               </div>
-            ) : (
-              /* Visualizzazione Profilo */
-              <div className="space-y-6">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                    <span className="text-sm text-green-600 font-medium">Sincronizzato con il sistema admin</span>
-                  </div>
-                  <button
-                    onClick={() => setEditing(true)}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
-                  >
-                    <Edit className="h-4 w-4 mr-2" />
-                    Modifica Profilo
-                  </button>
-                </div>
+            </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                      <User className="h-5 w-5 mr-2 text-blue-600" />
-                      Informazioni Personali
-                    </h3>
-                    
-                    <div className="space-y-3">
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">Nome</label>
-                        <p className="text-gray-900">{user.firstName}</p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">Cognome</label>
-                        <p className="text-gray-900">{user.lastName}</p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">Email</label>
-                        <p className="text-gray-900 flex items-center">
-                          <Mail className="h-4 w-4 mr-2 text-gray-400" />
-                          {user.email}
-                        </p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">Telefono</label>
-                        <p className="text-gray-900 flex items-center">
-                          <Phone className="h-4 w-4 mr-2 text-gray-400" />
-                          {user.phone || 'Non specificato'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                      <Building className="h-5 w-5 mr-2 text-blue-600" />
-                      Informazioni Aziendali
-                    </h3>
-                    
-                    <div className="space-y-3">
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">Azienda</label>
-                        <p className="text-gray-900">{user.company || 'Non specificato'}</p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-500">Posizione</label>
-                        <p className="text-gray-900">{user.position || 'Non specificato'}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                    <MapPin className="h-5 w-5 mr-2 text-blue-600" />
-                    Indirizzo
-                  </h3>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Indirizzo</label>
-                      <p className="text-gray-900">{user.address || 'Non specificato'}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">Città</label>
-                      <p className="text-gray-900">{user.city || 'Non specificato'}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">CAP</label>
-                      <p className="text-gray-900">{user.postalCode || 'Non specificato'}</p>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Paese</label>
-                    <p className="text-gray-900">{user.country || 'Non specificato'}</p>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                    <Shield className="h-5 w-5 mr-2 text-blue-600" />
-                    Preferenze di Investimento
-                  </h3>
-                  
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Profilo di Rischio</label>
-                    <div className="mt-2">
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                        user.riskProfile === 'low' ? 'bg-green-100 text-green-800' :
-                        user.riskProfile === 'moderate' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-red-100 text-red-800'
-                      }`}>
-                        {user.riskProfile === 'low' ? 'Basso' :
-                         user.riskProfile === 'moderate' ? 'Moderato' : 'Alto'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Stato Sincronizzazione */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="flex items-center">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-                    <div>
-                      <h4 className="text-sm font-medium text-blue-900">Sincronizzazione in Tempo Reale</h4>
-                      <p className="text-sm text-blue-700">
-                        Le modifiche al tuo profilo vengono sincronizzate immediatamente con il sistema di gestione clienti dell'admin.
-                        Gli amministratori possono vedere in tempo reale tutte le informazioni aggiornate.
-                      </p>
-                    </div>
-                  </div>
-                </div>
+            {/* Action Buttons */}
+            <div className="flex items-center justify-between pt-6 border-t border-gray-200">
+              <div className="text-sm text-gray-600">
+                <p>Ultimo aggiornamento: 15 Gennaio 2024</p>
+                <p>Profilo sincronizzato con il sistema amministrativo</p>
               </div>
-            )}
+              <div className="flex space-x-3">
+                <button className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                  <Edit className="h-4 w-4 mr-2" />
+                  Modifica Profilo
+                </button>
+                <button className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                  <Save className="h-4 w-4 mr-2" />
+                  Salva Modifiche
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Security Notice */}
+        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <Shield className="h-5 w-5 text-blue-400" />
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-blue-800">Sicurezza del Profilo</h3>
+              <div className="mt-2 text-sm text-blue-700">
+                <p>• I tuoi dati sono protetti e crittografati</p>
+                <p>• Le modifiche vengono sincronizzate in tempo reale con il sistema amministrativo</p>
+                <p>• Contatta il supporto per modificare informazioni sensibili</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
