@@ -46,10 +46,10 @@ export default function ClientLoginPage() {
         
         console.log('Token client salvato in localStorage');
         
-        // TODO: Redirect to client dashboard (da implementare)
-        // setTimeout(() => {
-        //   router.push('/client/dashboard');
-        // }, 1500);
+        // Redirect to client dashboard
+        setTimeout(() => {
+          router.push('/client/dashboard');
+        }, 1500);
         
       } else {
         const errorData = await response.json();
