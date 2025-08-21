@@ -1,9 +1,140 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Mail, Phone, MessageCircle, Clock, CheckCircle, AlertCircle, Info } from 'lucide-react';
 
+interface SupportTicket {
+  id: string;
+  category: string;
+  priority: string;
+  subject: string;
+  message: string;
+  status: 'open' | 'in_progress' | 'resolved' | 'closed';
+  created_at: string;
+  response?: string;
+}
+
 export default function ClientSupport() {
+  const [tickets, setTickets] = useState<SupportTicket[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    category: 'general',
+    priority: 'medium',
+    subject: 'Richiesta di supporto',
+    message: 'Buongiorno, ho bisogno di assistenza con...'
+  });
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchTickets();
+  }, []);
+
+  const fetchTickets = async () => {
+    try {
+      // Recupera i dati del cliente dal localStorage
+      const clientUser = localStorage.getItem('clientUser');
+      if (!clientUser) return;
+
+      const user = JSON.parse(clientUser);
+      
+      // Recupera i ticket di supporto del cliente
+      const response = await fetch(`/api/client/support?clientEmail=${user.email}`);
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          setTickets(result.data.tickets);
+        }
+      }
+    } catch (error) {
+      console.error('Errore nel fetch dei ticket:', error);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Recupera i dati del cliente dal localStorage
+      const clientUser = localStorage.getItem('clientUser');
+      if (!clientUser) {
+        setError('Utente non autenticato');
+        setLoading(false);
+        return;
+      }
+
+      const user = JSON.parse(clientUser);
+      
+      // Invia il ticket di supporto
+      const response = await fetch('/api/client/support', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...formData,
+          client_email: user.email,
+          client_name: user.name || `${user.firstName} ${user.lastName}` || 'Cliente'
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          setSubmitSuccess(true);
+          setFormData({
+            category: 'general',
+            priority: 'medium',
+            subject: 'Richiesta di supporto',
+            message: 'Buongiorno, ho bisogno di assistenza con...'
+          });
+          // Ricarica i ticket
+          fetchTickets();
+        } else {
+          setError(result.message || 'Errore nell\'invio del ticket');
+        }
+      } else {
+        setError('Errore nell\'invio del ticket');
+      }
+    } catch (error) {
+      console.error('Errore durante l\'invio:', error);
+      setError('Errore di connessione');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  if (submitSuccess) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
+          <div className="text-green-600 text-6xl mb-4">✅</div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Ticket Inviato!</h1>
+          <p className="text-gray-600 mb-6">
+            Il tuo ticket di supporto è stato inviato con successo. Il nostro team ti risponderà entro 24 ore.
+          </p>
+          <button 
+            onClick={() => setSubmitSuccess(false)}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+          >
+            Invia Nuovo Ticket
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -35,7 +166,7 @@ export default function ClientSupport() {
             <div className="bg-white rounded-lg shadow-sm border p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-6">📝 Invia Ticket di Supporto</h2>
               
-              <form className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
                   <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
                     Categoria *
@@ -43,8 +174,10 @@ export default function ClientSupport() {
                   <select
                     id="category"
                     name="category"
+                    value={formData.category}
+                    onChange={handleInputChange}
                     className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    defaultValue="general"
+                    required
                   >
                     <option value="general">Generale</option>
                     <option value="technical">Problemi Tecnici</option>
@@ -62,8 +195,10 @@ export default function ClientSupport() {
                   <select
                     id="priority"
                     name="priority"
+                    value={formData.priority}
+                    onChange={handleInputChange}
                     className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    defaultValue="medium"
+                    required
                   >
                     <option value="low">Bassa</option>
                     <option value="medium">Media</option>
@@ -80,9 +215,11 @@ export default function ClientSupport() {
                     type="text"
                     id="subject"
                     name="subject"
+                    value={formData.subject}
+                    onChange={handleInputChange}
                     placeholder="Descrivi brevemente il problema"
                     className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    defaultValue="Richiesta di supporto"
+                    required
                   />
                 </div>
 
@@ -93,12 +230,35 @@ export default function ClientSupport() {
                   <textarea
                     id="message"
                     name="message"
+                    value={formData.message}
+                    onChange={handleInputChange}
                     rows={6}
                     placeholder="Descrivi in dettaglio il tuo problema o richiesta..."
                     className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    defaultValue="Buongiorno, ho bisogno di assistenza con..."
+                    required
                   ></textarea>
                 </div>
+
+                {error && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <div className="flex items-center">
+                      <AlertCircle className="h-5 w-5 text-red-600 mr-2" />
+                      <span className="text-red-800">{error}</span>
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className={`w-full px-6 py-3 rounded-lg font-medium transition-colors ${
+                    loading
+                      ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                      : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  }`}
+                >
+                  {loading ? 'Invio in corso...' : 'Invia Ticket di Supporto'}
+                </button>
 
                 <div className="flex items-center justify-between pt-4">
                   <p className="text-sm text-gray-500">

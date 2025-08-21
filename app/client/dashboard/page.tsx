@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import GLGLogo from '@/components/GLGLogo';
 import { 
@@ -15,7 +16,125 @@ import {
   Settings
 } from 'lucide-react';
 
+interface DashboardStats {
+  totalPortfolio: number;
+  monthlyReturn: number;
+  activeInvestments: number;
+  growingInvestments: number;
+  riskLevel: string;
+  riskDescription: string;
+  totalInvestments: number;
+  totalReturns: number;
+}
+
 export default function ClientDashboardPage() {
+  const [stats, setStats] = useState<DashboardStats>({
+    totalPortfolio: 0,
+    monthlyReturn: 0,
+    activeInvestments: 0,
+    growingInvestments: 0,
+    riskLevel: 'Moderato',
+    riskDescription: 'Bilanciato',
+    totalInvestments: 0,
+    totalReturns: 0
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchDashboardStats();
+  }, []);
+
+  const fetchDashboardStats = async () => {
+    try {
+      setLoading(true);
+      
+      // Recupera i dati del cliente dal localStorage
+      const clientUser = localStorage.getItem('clientUser');
+      if (!clientUser) {
+        setError('Utente non autenticato');
+        setLoading(false);
+        return;
+      }
+
+      const user = JSON.parse(clientUser);
+      
+      // Recupera gli investimenti del cliente
+      const investmentsResponse = await fetch(`/api/client/investments?clientEmail=${user.email}`);
+      if (investmentsResponse.ok) {
+        const investmentsData = await investmentsResponse.json();
+        const investments = investmentsData.data.investments || [];
+        
+        // Calcola le statistiche
+        const totalPortfolio = investments.reduce((sum: number, inv: any) => sum + (inv.amount || 0), 0);
+        const activeInvestments = investments.filter((inv: any) => inv.status === 'active' || inv.status === 'pending').length;
+        const growingInvestments = investments.filter((inv: any) => inv.status === 'active').length;
+        
+        // Calcola il rendimento mensile (simulato per ora)
+        const monthlyReturn = totalPortfolio > 0 ? 8.5 : 0; // 8.5% mensile simulato
+        
+        // Determina il livello di rischio basato sugli investimenti
+        let riskLevel = 'Basso';
+        let riskDescription = 'Conservativo';
+        
+        if (totalPortfolio > 50000) {
+          riskLevel = 'Alto';
+          riskDescription = 'Aggressivo';
+        } else if (totalPortfolio > 20000) {
+          riskLevel = 'Moderato';
+          riskDescription = 'Bilanciato';
+        }
+        
+        setStats({
+          totalPortfolio,
+          monthlyReturn,
+          activeInvestments,
+          growingInvestments,
+          riskLevel,
+          riskDescription,
+          totalInvestments: investments.length,
+          totalReturns: totalPortfolio * (monthlyReturn / 100)
+        });
+      } else {
+        setError('Errore nel caricamento degli investimenti');
+      }
+    } catch (error) {
+      console.error('Errore nel fetch delle statistiche:', error);
+      setError('Errore di connessione');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 text-lg">Caricamento dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-600 text-6xl mb-4">⚠️</div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Errore nel caricamento</h1>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <button 
+            onClick={fetchDashboardStats}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+          >
+            Riprova
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Header */}
@@ -29,15 +148,22 @@ export default function ClientDashboardPage() {
                 <p className="text-sm text-gray-600">Client Dashboard</p>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
-              <Link
-                href="/client/login"
-                className="flex items-center text-gray-600 hover:text-red-600 transition-colors"
-              >
-                <LogOut className="h-5 w-5 mr-2" />
-                Logout
-              </Link>
-            </div>
+                                    <div className="flex items-center space-x-4">
+                          <Link
+                            href="/client/settings"
+                            className="flex items-center text-gray-600 hover:text-blue-600 transition-colors"
+                          >
+                            <Settings className="h-5 w-5 mr-2" />
+                            Impostazioni
+                          </Link>
+                          <Link
+                            href="/client/login"
+                            className="flex items-center text-gray-600 hover:text-red-600 transition-colors"
+                          >
+                            <LogOut className="h-5 w-5 mr-2" />
+                            Logout
+                          </Link>
+                        </div>
           </div>
         </div>
       </nav>
@@ -66,8 +192,12 @@ export default function ClientDashboardPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-500">Portafoglio Totale</p>
-                <p className="text-2xl font-bold text-gray-900">€25,000</p>
-                <p className="text-sm text-green-600">+12.5% questo mese</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  €{stats.totalPortfolio.toLocaleString()}
+                </p>
+                <p className="text-sm text-green-600">
+                  +{stats.monthlyReturn.toFixed(1)}% questo mese
+                </p>
               </div>
             </div>
           </div>
@@ -79,8 +209,8 @@ export default function ClientDashboardPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-500">Investimenti Attivi</p>
-                <p className="text-2xl font-bold text-gray-900">3</p>
-                <p className="text-sm text-blue-600">2 in crescita</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.activeInvestments}</p>
+                <p className="text-sm text-blue-600">{stats.growingInvestments} in crescita</p>
               </div>
             </div>
           </div>
@@ -92,9 +222,40 @@ export default function ClientDashboardPage() {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-500">Rischio Medio</p>
-                <p className="text-2xl font-bold text-gray-900">Moderato</p>
-                <p className="text-sm text-purple-600">Bilanciato</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.riskLevel}</p>
+                <p className="text-sm text-purple-600">{stats.riskDescription}</p>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Additional Stats */}
+        <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Statistiche Dettagliate</h3>
+            <button
+              onClick={fetchDashboardStats}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            >
+              Aggiorna Dati
+            </button>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-600">{stats.totalInvestments}</div>
+              <div className="text-sm text-gray-600">Totale Investimenti</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-600">€{stats.totalReturns.toFixed(0)}</div>
+              <div className="text-sm text-gray-600">Rendimenti Totali</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-purple-600">{stats.activeInvestments}</div>
+              <div className="text-sm text-gray-600">Investimenti Attivi</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-orange-600">{stats.growingInvestments}</div>
+              <div className="text-sm text-gray-600">In Crescita</div>
             </div>
           </div>
         </div>

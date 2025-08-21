@@ -1,51 +1,99 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Upload, FileText, Image, File, CheckCircle, XCircle, Clock, ArrowLeft, Download, Eye } from 'lucide-react';
 
+interface ClientDocument {
+  id: string;
+  name: string;
+  type: 'pdf' | 'doc' | 'image' | 'other';
+  size: string;
+  uploadedAt: string;
+  status: 'pending' | 'approved' | 'rejected';
+  notes?: string;
+}
+
 export default function ClientDocuments() {
-  const documents = [
-    {
-      id: '1',
-      name: 'Documento_Identita.pdf',
-      type: 'pdf' as const,
-      size: '2.5 MB',
-      uploadedAt: '15 Gennaio 2024',
-      status: 'approved' as const
-    },
-    {
-      id: '2',
-      name: 'Certificato_Residenza.pdf',
-      type: 'pdf' as const,
-      size: '1.8 MB',
-      uploadedAt: '14 Gennaio 2024',
-      status: 'pending' as const
-    },
-    {
-      id: '3',
-      name: 'Busta_Paga_Gennaio.pdf',
-      type: 'pdf' as const,
-      size: '3.2 MB',
-      uploadedAt: '13 Gennaio 2024',
-      status: 'approved' as const
-    },
-    {
-      id: '4',
-      name: 'Foto_Tessera.jpg',
-      type: 'image' as const,
-      size: '450 KB',
-      uploadedAt: '12 Gennaio 2024',
-      status: 'rejected' as const
-    },
-    {
-      id: '5',
-      name: 'Contratto_Investimento.pdf',
-      type: 'pdf' as const,
-      size: '5.1 MB',
-      uploadedAt: '10 Gennaio 2024',
-      status: 'approved' as const
+  const [documents, setDocuments] = useState<ClientDocument[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [stats, setStats] = useState({
+    total: 0,
+    note: ''
+  });
+
+  useEffect(() => {
+    fetchDocuments();
+  }, []);
+
+  const fetchDocuments = async () => {
+    try {
+      setLoading(true);
+      
+      // Recupera i dati del cliente dal localStorage
+      const clientUser = localStorage.getItem('clientUser');
+      if (!clientUser) {
+        setError('Utente non autenticato');
+        setLoading(false);
+        return;
+      }
+
+      const user = JSON.parse(clientUser);
+      
+      // Recupera i documenti del cliente
+      const response = await fetch(`/api/client/documents?clientEmail=${user.email}`);
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          setDocuments(result.data.documents);
+          setStats({
+            total: result.data.total,
+            note: result.data.note || ''
+          });
+          setError(null);
+        } else {
+          setError(result.message || 'Errore nel caricamento dei documenti');
+        }
+      } else {
+        setError('Errore nel caricamento dei documenti');
+      }
+    } catch (error) {
+      console.error('Errore nel fetch dei documenti:', error);
+      setError('Errore di connessione');
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 text-lg">Caricamento documenti...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-600 text-6xl mb-4">⚠️</div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Errore nel caricamento</h1>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <button 
+            onClick={fetchDocuments}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+          >
+            Riprova
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
