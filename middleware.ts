@@ -40,7 +40,8 @@ const PUBLIC_ROUTES = [
   '/landing',
   '/equity-pledge',
   '/informational-request',
-  '/admin/login'  // Aggiunto per permettere accesso al login admin
+  '/admin/login',  // Aggiunto per permettere accesso al login admin
+  '/admin/test'    // Aggiunto per pagina di test admin
 ];
 
 export function middleware(request: NextRequest) {
