@@ -1,10 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPackages, createPackage, updatePackage, deletePackage } from '@/lib/data-manager';
-import { 
-  getAllSessionPackages, 
-  addSessionPackage, 
-  getSessionPackagesCount 
-} from '@/lib/session-data';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -37,15 +32,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    let packages;
-    try {
-      // Prova prima a recuperare dal database
-      packages = await getPackages();
-    } catch (dbError) {
-      console.log('Database non disponibile, uso dati mock:', dbError);
-      // Se il database non è disponibile, usa i dati della sessione
-      packages = getAllSessionPackages();
-    }
+    // Recupera i pacchetti dal database reale
+    const packages = await getPackages();
     
     return NextResponse.json({
       success: true,
@@ -53,13 +41,15 @@ export async function GET(request: NextRequest) {
       total: packages.length
     });
   } catch (error) {
-    console.error('Errore nel recupero pacchetti:', error);
-    // Fallback ai dati mock in caso di errore
-    return NextResponse.json({
-      success: true,
-      packages: getAllSessionPackages(),
-      total: getSessionPackagesCount()
-    });
+    console.error('Errore nel recupero pacchetti dal database:', error);
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: 'Errore di connessione al database',
+        message: 'Impossibile recuperare i pacchetti dal database'
+      },
+      { status: 500 }
+    );
   }
 }
 
@@ -84,8 +74,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Crea sempre un pacchetto mock per ora
-    const newPackage = addSessionPackage({
+    // Crea il pacchetto nel database reale
+    const newPackage = await createPackage({
       name: body.name,
       description: body.description,
       min_investment: body.min_investment,
@@ -98,17 +88,20 @@ export async function POST(request: NextRequest) {
       total_amount: 0
     });
 
-    console.log('Pacchetto creato con successo:', newPackage);
-
     return NextResponse.json({
       success: true,
-      message: 'Pacchetto creato con successo',
+      message: 'Pacchetto creato con successo nel database',
       package: newPackage
-    });
+    }, { status: 201 });
+
   } catch (error) {
-    console.error('Errore nella creazione pacchetto:', error);
+    console.error('Errore nella creazione del pacchetto nel database:', error);
     return NextResponse.json(
-      { success: false, error: 'Errore nella creazione del pacchetto' },
+      { 
+        success: false, 
+        error: 'Errore di connessione al database',
+        message: 'Impossibile creare il pacchetto nel database'
+      },
       { status: 500 }
     );
   }

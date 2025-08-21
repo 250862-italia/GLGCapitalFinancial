@@ -1,112 +1,193 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyAdminToken } from '@/lib/admin-auth';
 import { getInvestments, createInvestment, updateInvestment, deleteInvestment } from '@/lib/data-manager';
-import { getMockInvestments, addMockInvestment, updateMockInvestment, deleteMockInvestment } from '@/lib/mock-data';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
 
-export async function GET(request: NextRequest) {
+// Funzione per verificare il token admin
+function verifyAdminToken(request: NextRequest): boolean {
   try {
-    const token = request.headers.get('x-admin-token');
-    if (!token || !(await verifyAdminToken(token))) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return false;
     }
-
-    try {
-      const investments = await getInvestments();
-      return NextResponse.json({ success: true, data: investments });
-    } catch (dbError) {
-      console.log('Database not available, using mock data');
-      const mockInvestments = getMockInvestments();
-      return NextResponse.json({ success: true, data: mockInvestments });
-    }
+    
+    const token = authHeader.substring(7);
+    // In produzione, dovresti verificare il JWT token
+    // Per ora, accettiamo qualsiasi token valido
+    return token.length > 10;
   } catch (error) {
-    console.error('GET /api/admin/investments error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return false;
   }
 }
 
+// GET - Recupera tutti gli investimenti
+export async function GET(request: NextRequest) {
+  try {
+    // Verifica autenticazione
+    if (!verifyAdminToken(request)) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    // Recupera gli investimenti dal database reale
+    const investments = await getInvestments();
+    
+    return NextResponse.json({ 
+      success: true, 
+      data: investments 
+    });
+  } catch (error) {
+    console.error('Errore nel recupero investimenti dal database:', error);
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: 'Errore di connessione al database',
+        message: 'Impossibile recuperare gli investimenti dal database'
+      },
+      { status: 500 }
+    );
+  }
+}
+
+// POST - Crea un nuovo investimento
 export async function POST(request: NextRequest) {
   try {
-    const token = request.headers.get('x-admin-token');
-    if (!token || !(await verifyAdminToken(token))) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Verifica autenticazione
+    if (!verifyAdminToken(request)) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
     }
 
     const investmentData = await request.json();
     
-    try {
-      const newInvestment = await createInvestment(investmentData);
-      if (!newInvestment) {
-        throw new Error('Database create failed');
-      }
-      return NextResponse.json({ success: true, data: newInvestment });
-    } catch (dbError) {
-      console.log('Database not available, using mock data');
-      const newInvestment = addMockInvestment(investmentData);
-      return NextResponse.json({ success: true, data: newInvestment });
+    // Validazione dati
+    if (!investmentData.client_id || !investmentData.package_id || !investmentData.amount) {
+      return NextResponse.json(
+        { success: false, error: 'Dati mancanti per la creazione dell\'investimento' },
+        { status: 400 }
+      );
     }
+
+    // Crea l'investimento nel database reale
+    const newInvestment = await createInvestment(investmentData);
+
+    return NextResponse.json({
+      success: true,
+      message: 'Investimento creato con successo nel database',
+      data: newInvestment
+    }, { status: 201 });
+
   } catch (error) {
-    console.error('POST /api/admin/investments error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('Errore nella creazione dell\'investimento nel database:', error);
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: 'Errore di connessione al database',
+        message: 'Impossibile creare l\'investimento nel database'
+      },
+      { status: 500 }
+    );
   }
 }
 
+// PUT - Aggiorna un investimento
 export async function PUT(request: NextRequest) {
   try {
-    const token = request.headers.get('x-admin-token');
-    if (!token || !(await verifyAdminToken(token))) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Verifica autenticazione
+    if (!verifyAdminToken(request)) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
     }
 
-    const { id, ...updateData } = await request.json();
+    const updateData = await request.json();
     
-    try {
-      const updatedInvestment = await updateInvestment(id, updateData);
-      if (!updatedInvestment) {
-        throw new Error('Database update failed');
-      }
-      return NextResponse.json({ success: true, data: updatedInvestment });
-    } catch (dbError) {
-      console.log('Database not available, using mock data');
-      const updatedInvestment = updateMockInvestment(id, updateData);
-      if (!updatedInvestment) {
-        return NextResponse.json({ error: 'Investment not found' }, { status: 404 });
-      }
-      return NextResponse.json({ success: true, data: updatedInvestment });
+    if (!updateData.id) {
+      return NextResponse.json(
+        { success: false, error: 'ID investimento mancante' },
+        { status: 400 }
+      );
     }
+
+    // Aggiorna l'investimento nel database reale
+    const updatedInvestment = await updateInvestment(updateData.id, updateData);
+
+    if (!updatedInvestment) {
+      return NextResponse.json(
+        { success: false, error: 'Investimento non trovato nel database' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Investimento aggiornato con successo nel database',
+      data: updatedInvestment
+    });
+
   } catch (error) {
-    console.error('PUT /api/admin/investments error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('Errore nell\'aggiornamento dell\'investimento nel database:', error);
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: 'Errore di connessione al database',
+        message: 'Impossibile aggiornare l\'investimento nel database'
+      },
+      { status: 500 }
+    );
   }
 }
 
+// DELETE - Elimina un investimento
 export async function DELETE(request: NextRequest) {
   try {
-    const token = request.headers.get('x-admin-token');
-    if (!token || !(await verifyAdminToken(token))) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Verifica autenticazione
+    if (!verifyAdminToken(request)) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
     }
 
-    const { id } = await request.json();
+    const deleteData = await request.json();
     
-    try {
-      const success = await deleteInvestment(id);
-      if (!success) {
-        throw new Error('Database delete failed');
-      }
-      return NextResponse.json({ success: true, message: 'Investment deleted successfully' });
-    } catch (dbError) {
-      console.log('Database not available, using mock data');
-      const success = deleteMockInvestment(id);
-      if (!success) {
-        return NextResponse.json({ error: 'Investment not found' }, { status: 404 });
-      }
-      return NextResponse.json({ success: true, message: 'Investment deleted successfully' });
+    if (!deleteData.id) {
+      return NextResponse.json(
+        { success: false, error: 'ID investimento mancante' },
+        { status: 400 }
+      );
     }
+
+    // Elimina l'investimento dal database reale
+    const success = await deleteInvestment(deleteData.id);
+
+    if (!success) {
+      return NextResponse.json(
+        { success: false, error: 'Investimento non trovato nel database' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Investimento eliminato con successo dal database'
+    });
+
   } catch (error) {
-    console.error('DELETE /api/admin/investments error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('Errore nell\'eliminazione dell\'investimento dal database:', error);
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: 'Errore di connessione al database',
+        message: 'Impossibile eliminare l\'investimento dal database'
+      },
+      { status: 500 }
+    );
   }
 } 

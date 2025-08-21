@@ -4,369 +4,336 @@ import { useState, useEffect } from 'react';
 import AdminProtected from '@/components/AdminProtected';
 import { useAdminAuth } from '@/lib/use-admin-auth';
 import {
-  BarChart3, TrendingUp, DollarSign, Users2, 
-  CreditCard, Calendar, Download, RefreshCw
+  TrendingUp, Users, DollarSign, BarChart3, Calendar,
+  ArrowUpRight, ArrowDownRight, Activity, Target
 } from 'lucide-react';
 
 interface AnalyticsData {
-  totalRevenue: number;
-  monthlyGrowth: number;
-  totalClients: number;
-  activeInvestments: number;
-  averageReturn: number;
-  topPackages: Array<{
-    name: string;
-    revenue: number;
-    investors: number;
-  }>;
-  monthlyData: Array<{
-    month: string;
-    revenue: number;
-    clients: number;
-  }>;
+  id: string;
+  date: string;
+  total_investments: number;
+  total_amount: number;
+  total_returns: number;
+  active_clients: number;
+  new_clients: number;
+  top_performing_package: string;
+  conversion_rate: number;
+  created_at: string;
+  updated_at: string;
 }
 
 export default function AnalyticsPage() {
-  const { user } = useAdminAuth();
-  const [analyticsData, setAnalyticsData] = useState<AnalyticsData>({
-    totalRevenue: 0,
-    monthlyGrowth: 0,
-    totalClients: 0,
-    activeInvestments: 0,
-    averageReturn: 0,
-    topPackages: [],
-    monthlyData: []
-  });
+  const { user, logout } = useAdminAuth();
+  const [analytics, setAnalytics] = useState<AnalyticsData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedPeriod, setSelectedPeriod] = useState('30d');
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchAnalyticsData();
-  }, [selectedPeriod]);
+    fetchAnalytics();
+  }, []);
 
-  const fetchAnalyticsData = async () => {
+  const fetchAnalytics = async () => {
     try {
       setLoading(true);
+      const token = localStorage.getItem('adminToken');
       
-      // Carica dati da diverse API
-      const [clientsRes, packagesRes, investmentsRes] = await Promise.all([
-        fetch('/api/admin/clients'),
-        fetch('/api/admin/packages'),
-        fetch('/api/admin/investments')
-      ]);
-
-      let totalRevenue = 0;
-      let totalClients = 0;
-      let activeInvestments = 0;
-      let totalReturn = 0;
-      let investmentCount = 0;
-
-      if (clientsRes.ok) {
-        const clientsData = await clientsRes.json();
-        totalClients = clientsData.clients?.length || 0;
+      if (!token) {
+        console.error('Token di autenticazione mancante');
+        setError('Token di autenticazione mancante');
+        return;
       }
 
-      if (packagesRes.ok) {
-        const packagesData = await packagesRes.json();
-        // Mock data per i pacchetti top
-        const topPackages = packagesData.packages?.slice(0, 5).map((pkg: any) => ({
-          name: pkg.name,
-          revenue: Math.floor(Math.random() * 1000000) + 100000,
-          investors: Math.floor(Math.random() * 50) + 10
-        })) || [];
-        setAnalyticsData(prev => ({ ...prev, topPackages }));
-      }
-
-      if (investmentsRes.ok) {
-        const investmentsData = await investmentsRes.json();
-        if (investmentsData.investments) {
-          totalRevenue = investmentsData.investments.reduce((sum: number, inv: any) => {
-            if (inv.status === 'active' || inv.status === 'completed') {
-              return sum + (inv.amount || 0);
-            }
-            return sum;
-          }, 0);
-          
-          activeInvestments = investmentsData.investments.filter((inv: any) => 
-            inv.status === 'active'
-          ).length;
-
-          // Calcola return medio
-          const activeInvs = investmentsData.investments.filter((inv: any) => 
-            inv.status === 'active' && inv.actual_return
-          );
-          if (activeInvs.length > 0) {
-            totalReturn = activeInvs.reduce((sum: number, inv: any) => 
-              sum + (inv.actual_return || 0), 0
-            );
-            investmentCount = activeInvs.length;
-          }
+      const response = await fetch('/api/admin/analytics', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
-      }
-
-      // Mock data per i grafici mensili
-      const months = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu'];
-      const monthlyData = months.map((month, index) => ({
-        month,
-        revenue: Math.floor(Math.random() * 500000) + 100000,
-        clients: Math.floor(Math.random() * 50) + 10
-      }));
-
-      setAnalyticsData({
-        totalRevenue,
-        monthlyGrowth: 12.5,
-        totalClients,
-        activeInvestments,
-        averageReturn: investmentCount > 0 ? totalReturn / investmentCount : 0,
-        topPackages: analyticsData.topPackages,
-        monthlyData
       });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setAnalytics(data.data || []);
+          setError(null);
+        } else {
+          setError(data.message || 'Errore nel caricamento delle analytics');
+        }
+      } else {
+        const errorData = await response.json();
+        setError(errorData.message || 'Errore nel caricamento delle analytics');
+      }
     } catch (error) {
-      console.error('Errore nel caricamento analytics:', error);
+      console.error('Errore di connessione:', error);
+      setError('Errore di connessione al database');
     } finally {
       setLoading(false);
     }
   };
 
-  const StatCard = ({ title, value, icon: Icon, change, changeType, subtitle }: {
-    title: string;
-    value: string | number;
-    icon: any;
-    change?: number;
-    changeType?: 'positive' | 'negative';
-    subtitle?: string;
-  }) => (
-    <div className="bg-white overflow-hidden shadow rounded-lg">
-      <div className="p-5">
-        <div className="flex items-center">
-          <div className="flex-shrink-0">
-            <Icon className="h-6 w-6 text-gray-400" />
-          </div>
-          <div className="ml-5 w-0 flex-1">
-            <dl>
-              <dt className="text-sm font-medium text-gray-500 truncate">{title}</dt>
-              <dd className="text-lg font-medium text-gray-900">{value}</dd>
-              {subtitle && <dd className="text-sm text-gray-500">{subtitle}</dd>}
-            </dl>
-          </div>
-        </div>
-      </div>
-      {change !== undefined && (
-        <div className="bg-gray-50 px-5 py-3">
-          <div className="text-sm">
-            <div className="flex items-center">
-              <TrendingUp className={`h-4 w-4 ${
-                changeType === 'positive' ? 'text-green-400' : 'text-red-400'
-              }`} />
-              <span className={`ml-2 text-sm font-medium ${
-                changeType === 'positive' ? 'text-green-600' : 'text-red-600'
-              }`}>
-                {change}%
-              </span>
-              <span className="ml-2 text-sm text-gray-500">rispetto al mese scorso</span>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+  // Calcola le metriche aggregate
+  const getAggregateMetrics = () => {
+    if (analytics.length === 0) return null;
 
-  const ChartCard = ({ title, children }: { title: string; children: React.ReactNode }) => (
-    <div className="bg-white shadow rounded-lg p-6">
-      <h3 className="text-lg font-medium text-gray-900 mb-4">{title}</h3>
-      {children}
-    </div>
-  );
+    const latest = analytics[0];
+    const previous = analytics[1];
+
+    return {
+      totalInvestments: latest.total_investments,
+      totalAmount: latest.total_amount,
+      totalReturns: latest.total_returns,
+      activeClients: latest.active_clients,
+      newClients: latest.new_clients,
+      conversionRate: latest.conversion_rate,
+      topPackage: latest.top_performing_package,
+      // Calcola le variazioni percentuali
+      investmentsChange: previous ? 
+        ((latest.total_investments - previous.total_investments) / previous.total_investments * 100).toFixed(1) : 0,
+      amountChange: previous ? 
+        ((latest.total_amount - previous.total_amount) / previous.total_amount * 100).toFixed(1) : 0,
+      returnsChange: previous ? 
+        ((latest.total_returns - previous.total_returns) / previous.total_returns * 100).toFixed(1) : 0,
+      clientsChange: previous ? 
+        ((latest.active_clients - previous.active_clients) / previous.active_clients * 100).toFixed(1) : 0
+    };
+  };
+
+  const metrics = getAggregateMetrics();
 
   if (loading) {
     return (
-      <div className="py-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <AdminProtected>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
             <p className="text-gray-600">Caricamento analytics...</p>
           </div>
         </div>
-      </div>
+      </AdminProtected>
+    );
+  }
+
+  if (error) {
+    return (
+      <AdminProtected>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-red-600 text-6xl mb-4">⚠️</div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">Errore nel caricamento</h1>
+            <p className="text-gray-600 mb-6">{error}</p>
+            <button 
+              onClick={fetchAnalytics}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+            >
+              Riprova
+            </button>
+          </div>
+        </div>
+      </AdminProtected>
     );
   }
 
   return (
     <AdminProtected>
-      <div className="py-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header */}
           <div className="mb-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
-                <p className="text-gray-600">Analisi e report del sistema GLG Capital Group</p>
-              </div>
-              <div className="flex items-center space-x-4">
-                <select
-                  value={selectedPeriod}
-                  onChange={(e) => setSelectedPeriod(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="7d">Ultimi 7 giorni</option>
-                  <option value="30d">Ultimi 30 giorni</option>
-                  <option value="90d">Ultimi 90 giorni</option>
-                  <option value="1y">Ultimo anno</option>
-                </select>
-                <button
-                  onClick={fetchAnalyticsData}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center space-x-2"
-                >
-                  <RefreshCw className="w-5 h-5" />
-                  <span>Aggiorna</span>
-                </button>
-                <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2">
-                  <Download className="w-5 h-5" />
-                  <span>Esporta</span>
-                </button>
-              </div>
+            <h1 className="text-3xl font-bold text-gray-900">Dashboard Analytics</h1>
+            <p className="text-gray-600">Monitora le performance e le metriche del business</p>
+          </div>
+
+          {analytics.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-gray-400 text-6xl mb-4">📊</div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Nessuna analytics disponibile</h3>
+              <p className="text-gray-600">Le analytics verranno generate automaticamente dal database</p>
             </div>
-          </div>
-
-          {/* Statistiche principali */}
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-            <StatCard
-              title="Revenue Totale"
-              value={`€${analyticsData.totalRevenue.toLocaleString()}`}
-              icon={DollarSign}
-              change={analyticsData.monthlyGrowth}
-              changeType="positive"
-            />
-            <StatCard
-              title="Clienti Totali"
-              value={analyticsData.totalClients}
-              icon={Users2}
-              change={8.2}
-              changeType="positive"
-            />
-            <StatCard
-              title="Investimenti Attivi"
-              value={analyticsData.activeInvestments}
-              icon={CreditCard}
-              change={15.3}
-              changeType="positive"
-            />
-            <StatCard
-              title="Return Medio"
-              value={`${analyticsData.averageReturn.toFixed(2)}%`}
-              icon={TrendingUp}
-              change={5.7}
-              changeType="positive"
-            />
-          </div>
-
-          {/* Grafici e report */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-            {/* Grafico Revenue Mensile */}
-            <ChartCard title="Revenue Mensile">
-              <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
-                <div className="text-center text-gray-500">
-                  <BarChart3 className="h-12 w-12 mx-auto mb-2 text-gray-400" />
-                  <p>Grafico revenue in sviluppo</p>
-                  <div className="mt-4 space-y-2">
-                    {analyticsData.monthlyData.map((data, index) => (
-                      <div key={index} className="flex justify-between text-sm">
-                        <span>{data.month}</span>
-                        <span>€{data.revenue.toLocaleString()}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </ChartCard>
-
-            {/* Grafico Crescita Clienti */}
-            <ChartCard title="Crescita Clienti">
-              <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
-                <div className="text-center text-gray-500">
-                  <TrendingUp className="h-12 w-12 mx-auto mb-2 text-gray-400" />
-                  <p>Grafico clienti in sviluppo</p>
-                  <div className="mt-4 space-y-2">
-                    {analyticsData.monthlyData.map((data, index) => (
-                      <div key={index} className="flex justify-between text-sm">
-                        <span>{data.month}</span>
-                        <span>{data.clients} clienti</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </ChartCard>
-          </div>
-
-          {/* Top Pacchetti e Performance */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Top Pacchetti per Revenue */}
-            <ChartCard title="Top Pacchetti per Revenue">
-              <div className="space-y-4">
-                {analyticsData.topPackages.map((pkg, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <span className="text-lg font-bold text-gray-400">#{index + 1}</span>
-                      <div>
-                        <div className="font-medium text-gray-900">{pkg.name}</div>
-                        <div className="text-sm text-gray-500">{pkg.investors} investitori</div>
-                      </div>
+          ) : (
+            <>
+              {/* Metriche Principali */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div className="bg-white rounded-lg shadow p-6">
+                  <div className="flex items-center">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <TrendingUp className="h-6 w-6 text-blue-600" />
                     </div>
-                    <div className="text-right">
-                      <div className="font-medium text-gray-900">€{pkg.revenue.toLocaleString()}</div>
-                      <div className="text-sm text-gray-500">revenue</div>
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-600">Investimenti Totali</p>
+                      <p className="text-2xl font-bold text-gray-900">{metrics?.totalInvestments}</p>
                     </div>
                   </div>
-                ))}
-              </div>
-            </ChartCard>
+                  {metrics?.investmentsChange !== 0 && (
+                    <div className="mt-2 flex items-center text-sm">
+                      {parseFloat(metrics?.investmentsChange || '0') > 0 ? (
+                        <ArrowUpRight className="h-4 w-4 text-green-500 mr-1" />
+                      ) : (
+                        <ArrowDownRight className="h-4 w-4 text-red-500 mr-1" />
+                      )}
+                      <span className={parseFloat(metrics?.investmentsChange || '0') > 0 ? 'text-green-600' : 'text-red-600'}>
+                        {Math.abs(parseFloat(metrics?.investmentsChange || '0'))}%
+                      </span>
+                    </div>
+                  )}
+                </div>
 
-            {/* Metriche Performance */}
-            <ChartCard title="Metriche Performance">
-              <div className="space-y-4">
-                <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
-                  <span className="text-sm font-medium text-blue-900">Tasso di Conversione</span>
-                  <span className="text-lg font-bold text-blue-900">68%</span>
+                <div className="bg-white rounded-lg shadow p-6">
+                  <div className="flex items-center">
+                    <div className="p-2 bg-green-100 rounded-lg">
+                      <DollarSign className="h-6 w-6 text-green-600" />
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-600">Volume Totale</p>
+                      <p className="text-2xl font-bold text-gray-900">€{metrics?.totalAmount?.toLocaleString()}</p>
+                    </div>
+                  </div>
+                  {metrics?.amountChange !== 0 && (
+                    <div className="mt-2 flex items-center text-sm">
+                      {parseFloat(metrics?.amountChange || '0') > 0 ? (
+                        <ArrowUpRight className="h-4 w-4 text-green-500 mr-1" />
+                      ) : (
+                        <ArrowDownRight className="h-4 w-4 text-red-500 mr-1" />
+                      )}
+                      <span className={parseFloat(metrics?.amountChange || '0') > 0 ? 'text-green-600' : 'text-red-600'}>
+                        {Math.abs(parseFloat(metrics?.amountChange || '0'))}%
+                      </span>
+                    </div>
+                  )}
                 </div>
-                <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
-                  <span className="text-sm font-medium text-green-900">Soddisfazione Clienti</span>
-                  <span className="text-lg font-bold text-green-900">4.8/5</span>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
-                  <span className="text-sm font-medium text-purple-900">Retention Rate</span>
-                  <span className="text-lg font-bold text-purple-900">92%</span>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
-                  <span className="text-sm font-medium text-orange-900">Tempo Medio Investimento</span>
-                  <span className="text-lg font-bold text-orange-900">18 mesi</span>
-                </div>
-              </div>
-            </ChartCard>
-          </div>
 
-          {/* Report Dettagliati */}
-          <div className="mt-8">
-            <ChartCard title="Report Dettagliati">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <Calendar className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-                  <h4 className="font-medium text-gray-900">Report Mensile</h4>
-                  <p className="text-sm text-gray-500">Genera report mensile completo</p>
+                <div className="bg-white rounded-lg shadow p-6">
+                  <div className="flex items-center">
+                    <div className="p-2 bg-purple-100 rounded-lg">
+                      <Target className="h-6 w-6 text-purple-600" />
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-600">Rendimenti Totali</p>
+                      <p className="text-2xl font-bold text-gray-900">€{metrics?.totalReturns?.toLocaleString()}</p>
+                    </div>
+                  </div>
+                  {metrics?.returnsChange !== 0 && (
+                    <div className="mt-2 flex items-center text-sm">
+                      {parseFloat(metrics?.returnsChange || '0') > 0 ? (
+                        <ArrowUpRight className="h-4 w-4 text-green-500 mr-1" />
+                      ) : (
+                        <ArrowDownRight className="h-4 w-4 text-red-500 mr-1" />
+                      )}
+                      <span className={parseFloat(metrics?.returnsChange || '0') > 0 ? 'text-green-600' : 'text-red-600'}>
+                        {Math.abs(parseFloat(metrics?.returnsChange || '0'))}%
+                      </span>
+                    </div>
+                  )}
                 </div>
-                <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <Users2 className="h-8 w-8 text-green-600 mx-auto mb-2" />
-                  <h4 className="font-medium text-gray-900">Analisi Clienti</h4>
-                  <p className="text-sm text-gray-500">Analisi comportamento clienti</p>
-                </div>
-                <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <TrendingUp className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-                  <h4 className="font-medium text-gray-900">Performance Investimenti</h4>
-                  <p className="text-sm text-gray-500">Analisi performance dettagliata</p>
+
+                <div className="bg-white rounded-lg shadow p-6">
+                  <div className="flex items-center">
+                    <div className="p-2 bg-orange-100 rounded-lg">
+                      <Users className="h-6 w-6 text-orange-600" />
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-600">Clienti Attivi</p>
+                      <p className="text-2xl font-bold text-gray-900">{metrics?.activeClients}</p>
+                    </div>
+                  </div>
+                  {metrics?.clientsChange !== 0 && (
+                    <div className="mt-2 flex items-center text-sm">
+                      {parseFloat(metrics?.clientsChange || '0') > 0 ? (
+                        <ArrowUpRight className="h-4 w-4 text-green-500 mr-1" />
+                      ) : (
+                        <ArrowDownRight className="h-4 w-4 text-red-500 mr-1" />
+                      )}
+                      <span className={parseFloat(metrics?.clientsChange || '0') > 0 ? 'text-green-600' : 'text-red-600'}>
+                        {Math.abs(parseFloat(metrics?.clientsChange || '0'))}%
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
-            </ChartCard>
-          </div>
+
+              {/* Metriche Secondarie */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <div className="bg-white rounded-lg shadow p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Performance Pacchetti</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Pacchetto Top</span>
+                      <span className="font-medium text-gray-900">{metrics?.topPackage || 'N/A'}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Tasso Conversione</span>
+                      <span className="font-medium text-gray-900">{metrics?.conversionRate?.toFixed(2)}%</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Nuovi Clienti</span>
+                      <span className="font-medium text-gray-900">{metrics?.newClients}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-lg shadow p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Ultimo Aggiornamento</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Data</span>
+                      <span className="font-medium text-gray-900">
+                        {new Date(analytics[0]?.updated_at).toLocaleDateString('it-IT')}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Ora</span>
+                      <span className="font-medium text-gray-900">
+                        {new Date(analytics[0]?.updated_at).toLocaleTimeString('it-IT')}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tabella Analytics */}
+              <div className="bg-white rounded-lg shadow">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900">Storico Analytics</h3>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Investimenti</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Volume</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rendimenti</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Clienti</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Conversione</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {analytics.map((item) => (
+                        <tr key={item.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {new Date(item.date).toLocaleDateString('it-IT')}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {item.total_investments}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            €{item.total_amount.toLocaleString()}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            €{item.total_returns.toLocaleString()}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {item.active_clients}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {item.conversion_rate.toFixed(2)}%
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </AdminProtected>

@@ -1,10 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPackage, updatePackage, deletePackage } from '@/lib/data-manager';
-import { 
-  findSessionPackage, 
-  updateSessionPackage, 
-  deleteSessionPackage 
-} from '@/lib/session-data';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -40,19 +35,12 @@ export async function GET(
       );
     }
 
-    let pkg;
-    try {
-      // Prova prima a recuperare dal database
-      pkg = await getPackage(params.id);
-    } catch (dbError) {
-      console.log('Database non disponibile, uso dati mock:', dbError);
-      // Se il database non è disponibile, usa i dati della sessione
-      pkg = findSessionPackage(params.id);
-    }
+    // Recupera il pacchetto dal database reale
+    const pkg = await getPackage(params.id);
     
     if (!pkg) {
       return NextResponse.json(
-        { success: false, error: 'Pacchetto non trovato' },
+        { success: false, error: 'Pacchetto non trovato nel database' },
         { status: 404 }
       );
     }
@@ -62,9 +50,13 @@ export async function GET(
       package: pkg
     });
   } catch (error) {
-    console.error('Errore nel recupero pacchetto:', error);
+    console.error('Errore nel recupero pacchetto dal database:', error);
     return NextResponse.json(
-      { success: false, error: 'Errore nel recupero del pacchetto' },
+      { 
+        success: false, 
+        error: 'Errore di connessione al database',
+        message: 'Impossibile recuperare il pacchetto dal database'
+      },
       { status: 500 }
     );
   }
@@ -94,48 +86,39 @@ export async function PUT(
       );
     }
 
-    let updatedPackage;
-    try {
-      // Prova prima ad aggiornare nel database
-      updatedPackage = await updatePackage(params.id, {
-        name: body.name,
-        description: body.description,
-        min_investment: body.min_investment,
-        max_investment: body.max_investment || null,
-        expected_return: body.expected_return,
-        risk_level: body.risk_level || 'moderate',
-        duration_months: body.duration_months || 12
-      });
-    } catch (dbError) {
-      console.log('Database non disponibile, aggiorno dati mock:', dbError);
-      // Se il database non è disponibile, aggiorna i dati della sessione
-      updatedPackage = updateSessionPackage(params.id, {
-        name: body.name,
-        description: body.description,
-        min_investment: body.min_investment,
-        max_investment: body.max_investment || null,
-        expected_return: body.expected_return,
-        risk_level: body.risk_level || 'moderate',
-        duration_months: body.duration_months || 12
-      });
-    }
+    // Aggiorna il pacchetto nel database reale
+    const updatedPackage = await updatePackage(params.id, {
+      name: body.name,
+      description: body.description,
+      min_investment: body.min_investment,
+      max_investment: body.max_investment || null,
+      expected_return: body.expected_return,
+      risk_level: body.risk_level || 'moderate',
+      duration_months: body.duration_months || 12,
+      status: body.status || 'active'
+    });
 
     if (!updatedPackage) {
       return NextResponse.json(
-        { success: false, error: 'Pacchetto non trovato' },
+        { success: false, error: 'Pacchetto non trovato nel database' },
         { status: 404 }
       );
     }
 
     return NextResponse.json({
       success: true,
-      message: 'Pacchetto aggiornato con successo',
+      message: 'Pacchetto aggiornato con successo nel database',
       package: updatedPackage
     });
+
   } catch (error) {
-    console.error('Errore nell\'aggiornamento pacchetto:', error);
+    console.error('Errore nell\'aggiornamento del pacchetto nel database:', error);
     return NextResponse.json(
-      { success: false, error: 'Errore nell\'aggiornamento del pacchetto' },
+      { 
+        success: false, 
+        error: 'Errore di connessione al database',
+        message: 'Impossibile aggiornare il pacchetto nel database'
+      },
       { status: 500 }
     );
   }
@@ -155,31 +138,29 @@ export async function DELETE(
       );
     }
 
-    let deleted;
-    try {
-      // Prova prima ad eliminare dal database
-      deleted = await deletePackage(params.id);
-    } catch (dbError) {
-      console.log('Database non disponibile, elimino dati mock:', dbError);
-      // Se il database non è disponibile, elimina i dati della sessione
-      deleted = deleteSessionPackage(params.id);
-    }
+    // Elimina il pacchetto dal database reale
+    const success = await deletePackage(params.id);
 
-    if (!deleted) {
+    if (!success) {
       return NextResponse.json(
-        { success: false, error: 'Pacchetto non trovato' },
+        { success: false, error: 'Pacchetto non trovato nel database' },
         { status: 404 }
       );
     }
 
     return NextResponse.json({
       success: true,
-      message: 'Pacchetto eliminato con successo'
+      message: 'Pacchetto eliminato con successo dal database'
     });
+
   } catch (error) {
-    console.error('Errore nell\'eliminazione pacchetto:', error);
+    console.error('Errore nell\'eliminazione del pacchetto dal database:', error);
     return NextResponse.json(
-      { success: false, error: 'Errore nell\'eliminazione del pacchetto' },
+      { 
+        success: false, 
+        error: 'Errore di connessione al database',
+        message: 'Impossibile eliminare il pacchetto dal database'
+      },
       { status: 500 }
     );
   }

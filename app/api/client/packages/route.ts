@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAllSessionPackages } from '@/lib/session-data';
+import { getPackages } from '@/lib/data-manager';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    // Utilizza gli stessi dati della sessione admin
-    const packages = getAllSessionPackages();
+    // Recupera i pacchetti dal database reale
+    const packages = await getPackages();
     
     // Filtra solo i pacchetti attivi
     const activePackages = packages.filter(pkg => pkg.status === 'active');
@@ -38,16 +38,16 @@ export async function GET(request: NextRequest) {
       success: true,
       packages: mappedPackages,
       total: mappedPackages.length,
-      message: 'Pacchetti caricati con successo'
+      message: 'Pacchetti caricati con successo dal database'
     });
     
   } catch (error) {
-    console.error('Error fetching client packages:', error);
+    console.error('Error fetching client packages from database:', error);
     return NextResponse.json(
       { 
         success: false,
-        error: 'Errore interno del server',
-        message: 'Impossibile caricare i pacchetti'
+        error: 'Errore di connessione al database',
+        message: 'Impossibile caricare i pacchetti dal database'
       },
       { status: 500 }
     );
