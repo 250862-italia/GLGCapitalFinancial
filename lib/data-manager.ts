@@ -124,7 +124,7 @@ export interface Analytics {
 }
 
 // Dati temporanei per quando il database non è disponibile
-const TEMP_PACKAGES: Package[] = [
+let TEMP_PACKAGES: Package[] = [
   {
     id: '1',
     name: 'Pacchetto Starter',
@@ -230,6 +230,40 @@ async function checkDatabaseConnection(): Promise<boolean> {
     console.error('Database connection check failed:', error);
     return false;
   }
+}
+
+// Funzioni per gestire i dati temporanei
+function addTempPackage(pkg: Omit<Package, 'id' | 'created_at' | 'updated_at'>): Package {
+  const newPackage: Package = {
+    ...pkg,
+    id: Date.now().toString(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+  
+  TEMP_PACKAGES.unshift(newPackage);
+  return newPackage;
+}
+
+function updateTempPackage(id: string, updates: Partial<Package>): Package | null {
+  const index = TEMP_PACKAGES.findIndex(pkg => pkg.id === id);
+  if (index === -1) return null;
+  
+  TEMP_PACKAGES[index] = {
+    ...TEMP_PACKAGES[index],
+    ...updates,
+    updated_at: new Date().toISOString()
+  };
+  
+  return TEMP_PACKAGES[index];
+}
+
+function deleteTempPackage(id: string): boolean {
+  const index = TEMP_PACKAGES.findIndex(pkg => pkg.id === id);
+  if (index === -1) return false;
+  
+  TEMP_PACKAGES.splice(index, 1);
+  return true;
 }
 
 // ===== CLIENT CRUD OPERATIONS =====
@@ -428,82 +462,103 @@ export async function getPackage(id: string): Promise<Package | null> {
 export async function createPackage(packageData: Omit<Package, 'id' | 'created_at' | 'updated_at'>): Promise<Package> {
   try {
     const isConnected = await checkDatabaseConnection();
-    if (!isConnected) {
-      throw new Error('Database non disponibile - impossibile creare pacchetto');
+    if (isConnected) {
+      // Se il database è disponibile, prova a salvare lì
+      const { data, error } = await supabaseAdmin
+        .from('packages')
+        .insert([{
+          ...packageData,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating package in database:', error);
+        throw error;
+      }
+
+      return data;
+    } else {
+      // Se il database non è disponibile, salva nei dati temporanei
+      console.log('Database non disponibile, salvando nei dati temporanei');
+      const newPackage = addTempPackage(packageData);
+      return newPackage;
     }
-
-    const { data, error } = await supabaseAdmin
-      .from('packages')
-      .insert([{
-        ...packageData,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }])
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error creating package:', error);
-      throw error;
-    }
-
-    return data;
   } catch (error) {
     console.error('Database error in createPackage:', error);
-    throw new Error('Impossibile creare il pacchetto nel database');
+    // Fallback ai dati temporanei
+    console.log('Fallback ai dati temporanei per creazione pacchetto');
+    const newPackage = addTempPackage(packageData);
+    return newPackage;
   }
 }
 
 export async function updatePackage(id: string, updates: Partial<Package>): Promise<Package | null> {
   try {
     const isConnected = await checkDatabaseConnection();
-    if (!isConnected) {
-      throw new Error('Database non disponibile - impossibile aggiornare pacchetto');
+    if (isConnected) {
+      // Se il database è disponibile, prova ad aggiornare lì
+      const { data, error } = await supabaseAdmin
+        .from('packages')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating package in database:', error);
+        return null;
+      }
+
+      return data;
+    } else {
+      // Se il database non è disponibile, aggiorna nei dati temporanei
+      console.log('Database non disponibile, aggiornando nei dati temporanei');
+      const updatedPackage = updateTempPackage(id, updates);
+      return updatedPackage;
     }
-
-    const { data, error } = await supabaseAdmin
-      .from('packages')
-      .update({
-        ...updates,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error updating package:', error);
-      return null;
-    }
-
-    return data;
   } catch (error) {
     console.error('Database error in updatePackage:', error);
-    return null;
+    // Fallback ai dati temporanei
+    console.log('Fallback ai dati temporanei per aggiornamento pacchetto');
+    const updatedPackage = updateTempPackage(id, updates);
+    return updatedPackage;
   }
 }
 
 export async function deletePackage(id: string): Promise<boolean> {
   try {
     const isConnected = await checkDatabaseConnection();
-    if (!isConnected) {
-      throw new Error('Database non disponibile - impossibile eliminare pacchetto');
+    if (isConnected) {
+      // Se il database è disponibile, prova ad eliminare lì
+      const { error } = await supabaseAdmin
+        .from('packages')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error deleting package from database:', error);
+        return false;
+      }
+
+      return true;
+    } else {
+      // Se il database non è disponibile, elimina dai dati temporanei
+      console.log('Database non disponibile, eliminando dai dati temporanei');
+      const success = deleteTempPackage(id);
+      return success;
     }
-
-    const { error } = await supabaseAdmin
-      .from('packages')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      console.error('Error deleting package:', error);
-      return false;
-    }
-
-    return true;
   } catch (error) {
     console.error('Database error in deletePackage:', error);
-    return false;
+    // Fallback ai dati temporanei
+    console.log('Fallback ai dati temporanei per eliminazione pacchetto');
+    const success = deleteTempPackage(id);
+    return success;
   }
 }
 
@@ -924,7 +979,6 @@ export async function getPartnerships(): Promise<Partnership[]> {
 
     const { data, error } = await supabaseAdmin
       .from('partnerships')
-      .select('*')
       .select('*')
       .order('created_at', { ascending: false });
 
