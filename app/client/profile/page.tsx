@@ -17,6 +17,9 @@ interface ClientUser {
   country?: string;
   postalCode?: string;
   riskProfile?: string;
+  status?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export default function ClientProfilePage() {
@@ -42,6 +45,9 @@ export default function ClientProfilePage() {
       const parsedUser = JSON.parse(userData);
       setUser(parsedUser);
       setFormData(parsedUser);
+      
+      // Carica i dati aggiornati dal server
+      loadProfileFromServer(parsedUser.email);
     } catch (error) {
       console.error('Error parsing user data:', error);
       router.push('/client/login');
@@ -49,6 +55,25 @@ export default function ClientProfilePage() {
       setLoading(false);
     }
   }, [router]);
+
+  const loadProfileFromServer = async (email: string) => {
+    try {
+      const response = await fetch(`/api/client/profile?email=${encodeURIComponent(email)}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.client) {
+          const serverUser = data.client;
+          setUser(serverUser);
+          setFormData(serverUser);
+          
+          // Aggiorna localStorage con i dati del server
+          localStorage.setItem('clientUser', JSON.stringify(serverUser));
+        }
+      }
+    } catch (error) {
+      console.error('Error loading profile from server:', error);
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -65,18 +90,38 @@ export default function ClientProfilePage() {
     setMessage(null);
 
     try {
-      // Simula il salvataggio (in produzione, invieresti i dati al server)
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Aggiorna i dati locali
-      const updatedUser = { ...user, ...formData };
-      setUser(updatedUser);
-      localStorage.setItem('clientUser', JSON.stringify(updatedUser));
-      
-      setMessage({ type: 'success', text: 'Profilo aggiornato con successo!' });
-      setEditing(false);
+      // Salva i dati tramite API per sincronizzarli con il sistema admin
+      const response = await fetch('/api/client/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          clientId: user.id,
+          profileData: formData
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          // Aggiorna i dati locali con quelli del server
+          const updatedUser = data.client;
+          setUser(updatedUser);
+          localStorage.setItem('clientUser', JSON.stringify(updatedUser));
+          
+          setMessage({ type: 'success', text: 'Profilo aggiornato e sincronizzato con successo!' });
+          setEditing(false);
+        } else {
+          setMessage({ type: 'error', text: data.message || 'Errore nel salvataggio del profilo' });
+        }
+      } else {
+        const errorData = await response.json();
+        setMessage({ type: 'error', text: errorData.message || 'Errore di comunicazione con il server' });
+      }
     } catch (error) {
-      setMessage({ type: 'error', text: 'Errore nel salvataggio del profilo' });
+      console.error('Error saving profile:', error);
+      setMessage({ type: 'error', text: 'Errore di connessione al server' });
     } finally {
       setSaving(false);
     }
@@ -126,6 +171,7 @@ export default function ClientProfilePage() {
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Profilo Cliente</h1>
               <p className="text-gray-600">Gestisci le tue informazioni personali e impostazioni</p>
+              <p className="text-sm text-blue-600 mt-1">🔄 Sincronizzato in tempo reale con il sistema admin</p>
             </div>
             <div className="flex items-center space-x-4">
               <button
@@ -165,7 +211,12 @@ export default function ClientProfilePage() {
               <div className="ml-6">
                 <h2 className="text-2xl font-bold">{user.firstName} {user.lastName}</h2>
                 <p className="text-blue-100">{user.email}</p>
-                <p className="text-blue-100 text-sm">Cliente dal {new Date().toISOString().split('T')[0]}</p>
+                <p className="text-blue-100 text-sm">
+                  Cliente dal {user.createdAt ? new Date(user.createdAt).toLocaleDateString('it-IT') : 'N/A'}
+                </p>
+                <p className="text-blue-100 text-sm">
+                  Ultimo aggiornamento: {user.updatedAt ? new Date(user.updatedAt).toLocaleDateString('it-IT') : 'N/A'}
+                </p>
               </div>
             </div>
           </div>
@@ -177,22 +228,24 @@ export default function ClientProfilePage() {
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Nome</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Nome *</label>
                     <input
                       type="text"
                       name="firstName"
                       value={formData.firstName || ''}
                       onChange={handleInputChange}
+                      required
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Cognome</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Cognome *</label>
                     <input
                       type="text"
                       name="lastName"
                       value={formData.lastName || ''}
                       onChange={handleInputChange}
+                      required
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
@@ -200,12 +253,13 @@ export default function ClientProfilePage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
                     <input
                       type="email"
                       name="email"
                       value={formData.email || ''}
                       onChange={handleInputChange}
+                      required
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
@@ -327,7 +381,7 @@ export default function ClientProfilePage() {
                     ) : (
                       <>
                         <Save className="h-4 w-4 mr-2" />
-                        Salva Modifiche
+                        Salva e Sincronizza
                       </>
                     )}
                   </button>
@@ -336,7 +390,11 @@ export default function ClientProfilePage() {
             ) : (
               /* Visualizzazione Profilo */
               <div className="space-y-6">
-                <div className="flex justify-end">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                    <span className="text-sm text-green-600 font-medium">Sincronizzato con il sistema admin</span>
+                  </div>
                   <button
                     onClick={() => setEditing(true)}
                     className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
@@ -441,6 +499,20 @@ export default function ClientProfilePage() {
                         {user.riskProfile === 'low' ? 'Basso' :
                          user.riskProfile === 'moderate' ? 'Moderato' : 'Alto'}
                       </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Stato Sincronizzazione */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-center">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
+                    <div>
+                      <h4 className="text-sm font-medium text-blue-900">Sincronizzazione in Tempo Reale</h4>
+                      <p className="text-sm text-blue-700">
+                        Le modifiche al tuo profilo vengono sincronizzate immediatamente con il sistema di gestione clienti dell'admin.
+                        Gli amministratori possono vedere in tempo reale tutte le informazioni aggiornate.
+                      </p>
                     </div>
                   </div>
                 </div>
