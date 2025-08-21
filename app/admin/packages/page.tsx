@@ -53,12 +53,25 @@ export default function PackagesPage() {
   const fetchPackages = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/admin/packages');
+      const token = localStorage.getItem('adminToken');
+      
+      if (!token) {
+        console.error('Token di autenticazione mancante');
+        return;
+      }
+
+      const response = await fetch('/api/admin/packages', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
       if (response.ok) {
         const data = await response.json();
         setPackages(data.packages || []);
       } else {
-        console.error('Errore nel caricamento pacchetti');
+        console.error('Errore nel caricamento pacchetti:', response.status);
       }
     } catch (error) {
       console.error('Errore di connessione:', error);
@@ -80,9 +93,19 @@ export default function PackagesPage() {
   const handleAddPackage = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      const token = localStorage.getItem('adminToken');
+      
+      if (!token) {
+        console.error('Token di autenticazione mancante');
+        return;
+      }
+
       const response = await fetch('/api/admin/packages', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           ...formData,
           min_investment: parseFloat(formData.min_investment),
@@ -99,9 +122,12 @@ export default function PackagesPage() {
           name: '', description: '', min_investment: '', max_investment: '',
           expected_return: '', duration_months: '', risk_level: 'medium', status: 'active'
         });
+      } else {
+        const errorData = await response.json();
+        console.error('Errore nella creazione pacchetto:', errorData);
       }
     } catch (error) {
-      console.error('Errore nell\'aggiunta del pacchetto:', error);
+      console.error('Errore di connessione:', error);
     }
   };
 
@@ -111,9 +137,19 @@ export default function PackagesPage() {
     if (!selectedPackage) return;
 
     try {
+      const token = localStorage.getItem('adminToken');
+      
+      if (!token) {
+        console.error('Token di autenticazione mancante');
+        return;
+      }
+
       const response = await fetch(`/api/admin/packages/${selectedPackage.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           ...formData,
           min_investment: parseFloat(formData.min_investment),
@@ -131,6 +167,9 @@ export default function PackagesPage() {
           name: '', description: '', min_investment: '', max_investment: '',
           expected_return: '', duration_months: '', risk_level: 'medium', status: 'active'
         });
+      } else {
+        const errorData = await response.json();
+        console.error('Errore nell\'aggiornamento del pacchetto:', errorData);
       }
     } catch (error) {
       console.error('Errore nell\'aggiornamento del pacchetto:', error);
@@ -142,14 +181,29 @@ export default function PackagesPage() {
     if (!selectedPackage) return;
 
     try {
+      const token = localStorage.getItem('adminToken');
+      
+      if (!token) {
+        console.error('Token di autenticazione mancante');
+        return;
+      }
+
       const response = await fetch(`/api/admin/packages/${selectedPackage.id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ id: selectedPackage.id })
       });
 
       if (response.ok) {
         await fetchPackages();
         setShowDeleteModal(false);
         setSelectedPackage(null);
+      } else {
+        const errorData = await response.json();
+        console.error('Errore nell\'eliminazione del pacchetto:', errorData);
       }
     } catch (error) {
       console.error('Errore nell\'eliminazione del pacchetto:', error);

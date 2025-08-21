@@ -1,6 +1,31 @@
 
 import { Client, Package, Investment, Payment, TeamMember, Partnership, Analytics } from './data-manager';
 
+// Array mock persistenti (non vengono resettati ad ogni richiesta)
+let mockPackages: Package[] = [
+  {
+    id: '1',
+    name: 'Pacchetto Starter',
+    description: 'Pacchetto iniziale per nuovi investitori',
+    min_investment: 1000,
+    max_investment: 10000,
+    expected_return: 5.0,
+    duration_months: 12,
+    risk_level: 'low',
+    status: 'active',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    total_investors: 0,
+    total_amount: 0
+  }
+];
+
+let mockInvestments: Investment[] = [];
+let mockPayments: Payment[] = [];
+let mockTeamMembers: TeamMember[] = [];
+let mockPartnerships: Partnership[] = [];
+let mockAnalytics: Analytics[] = [];
+
 // Dati mock vergini - solo struttura base
 export const mockClients: Client[] = [
   {
@@ -27,28 +52,6 @@ export const mockClients: Client[] = [
     updated_at: new Date().toISOString()
   }
 ];
-
-export const mockPackages: Package[] = [
-  {
-    id: '1',
-    name: 'Pacchetto Starter',
-    description: 'Pacchetto iniziale per nuovi investitori',
-    min_investment: 1000,
-    max_investment: 10000,
-    expected_return: 5.0,
-    duration_months: 12,
-    risk_level: 'low',
-    status: 'active',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  }
-];
-
-export const mockInvestments: Investment[] = [];
-export const mockPayments: Payment[] = [];
-export const mockTeamMembers: TeamMember[] = [];
-export const mockPartnerships: Partnership[] = [];
-export const mockAnalytics: Analytics[] = [];
 
 // Funzioni CRUD base per tutti i mock data
 export const getMockClients = (): Client[] => [...mockClients];
@@ -91,13 +94,23 @@ export const deleteMockClient = (id: string): boolean => {
 };
 
 export const addMockPackage = (pkg: Omit<Package, 'id' | 'created_at' | 'updated_at'>): Package => {
+  console.log('addMockPackage chiamata con:', pkg);
+  console.log('mockPackages prima:', mockPackages);
+  
   const newPackage: Package = {
     ...pkg,
     id: Date.now().toString(),
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   };
+  
+  console.log('newPackage creato:', newPackage);
+  
   mockPackages.unshift(newPackage);
+  
+  console.log('mockPackages dopo:', mockPackages);
+  console.log('mockPackages.length:', mockPackages.length);
+  
   return newPackage;
 };
 
@@ -314,4 +327,9 @@ export const deleteMockTeam = (id: string): boolean => {
 // Recupera un cliente specifico per ID
 export function getMockClient(id: string): Client | null {
   return mockClients.find(client => client.id === id) || null;
+}
+
+// Recupera un pacchetto specifico per ID
+export function getMockPackage(id: string): Package | null {
+  return mockPackages.find(pkg => pkg.id === id) || null;
 }

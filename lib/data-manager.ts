@@ -29,13 +29,15 @@ export interface Package {
   name: string;
   description: string;
   min_investment: number;
-  max_investment: number;
+  max_investment: number | null;
   expected_return: number;
   duration_months: number;
   risk_level: 'low' | 'moderate' | 'high';
   status: 'active' | 'inactive' | 'draft';
   created_at: string;
   updated_at: string;
+  total_investors: number;
+  total_amount: number;
 }
 
 export interface Investment {
@@ -717,6 +719,27 @@ export async function getClient(id: string): Promise<Client | null> {
 
     if (error) {
       console.error('Errore nel recupero cliente:', error);
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Errore nella connessione al database:', error);
+    return null;
+  }
+} 
+
+// Recupera un pacchetto specifico per ID
+export async function getPackage(id: string): Promise<Package | null> {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('packages')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error('Errore nel recupero pacchetto:', error);
       return null;
     }
 

@@ -4,44 +4,28 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import GLGLogo from '@/components/GLGLogo';
-import { 
-  Eye, 
-  EyeOff, 
-  Lock, 
-  User,
-  AlertCircle,
-  CheckCircle
-} from 'lucide-react';
 
 export default function AdminLoginPage() {
   const [credentials, setCredentials] = useState({
     username: '',
     password: ''
   });
-  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const router = useRouter();
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setCredentials(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    // Clear error when user starts typing
-    if (error) setError('');
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Form submitted with:', credentials);
+    
     setIsLoading(true);
     setError('');
     setSuccess('');
 
     try {
-      // Simulate API call for authentication
+      console.log('Making API call to /api/admin/auth/login');
+      
       const response = await fetch('/api/admin/auth/login', {
         method: 'POST',
         headers: {
@@ -50,23 +34,33 @@ export default function AdminLoginPage() {
         body: JSON.stringify(credentials),
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
+
       if (response.ok) {
         const data = await response.json();
+        console.log('Login successful:', data);
+        
         setSuccess('Login effettuato con successo! Reindirizzamento...');
         
         // Store admin token
         localStorage.setItem('adminToken', data.token);
         localStorage.setItem('adminUser', JSON.stringify(data.user));
         
+        console.log('Token stored in localStorage');
+        
         // Redirect to admin dashboard
         setTimeout(() => {
+          console.log('Redirecting to /admin');
           router.push('/admin');
         }, 1500);
       } else {
         const errorData = await response.json();
+        console.log('Login failed:', errorData);
         setError(errorData.message || 'Credenziali non valide');
       }
     } catch (err) {
+      console.error('Login error:', err);
       setError('Errore di connessione. Riprova più tardi.');
     } finally {
       setIsLoading(false);
@@ -97,22 +91,18 @@ export default function AdminLoginPage() {
               <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
                 Username
               </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="username"
-                  name="username"
-                  type="text"
-                  required
-                  value={credentials.username}
-                  onChange={handleInputChange}
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                  placeholder="Inserisci il tuo username"
-                  disabled={isLoading}
-                />
-              </div>
+              <input
+                id="username"
+                name="username"
+                type="text"
+                autoComplete="username"
+                required
+                value={credentials.username}
+                onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}
+                className="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="admin"
+                disabled={isLoading}
+              />
             </div>
 
             {/* Password Field */}
@@ -120,48 +110,30 @@ export default function AdminLoginPage() {
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                 Password
               </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  value={credentials.password}
-                  onChange={handleInputChange}
-                  className="block w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                  placeholder="Inserisci la tua password"
-                  disabled={isLoading}
-                />
-                <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  onClick={() => setShowPassword(!showPassword)}
-                  disabled={isLoading}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                  ) : (
-                    <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                  )}
-                </button>
-              </div>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                value={credentials.password}
+                onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
+                className="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="glgcapital2024"
+                disabled={isLoading}
+              />
             </div>
 
             {/* Error Message */}
             {error && (
-              <div className="flex items-center space-x-2 text-red-600 bg-red-50 p-3 rounded-lg">
-                <AlertCircle className="h-5 w-5" />
+              <div className="text-red-600 bg-red-50 p-3 rounded-lg">
                 <span className="text-sm font-medium">{error}</span>
               </div>
             )}
 
             {/* Success Message */}
             {success && (
-              <div className="flex items-center space-x-2 text-green-600 bg-green-50 p-3 rounded-lg">
-                <CheckCircle className="h-5 w-5" />
+              <div className="text-green-600 bg-green-50 p-3 rounded-lg">
                 <span className="text-sm font-medium">{success}</span>
               </div>
             )}
@@ -170,7 +142,7 @@ export default function AdminLoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <div className="flex items-center space-x-2">
@@ -182,6 +154,13 @@ export default function AdminLoginPage() {
               )}
             </button>
           </form>
+
+          {/* Debug Info */}
+          <div className="mt-4 p-3 bg-gray-50 rounded-lg text-xs text-gray-600">
+            <p><strong>Debug:</strong> Username: {credentials.username}</p>
+            <p><strong>Debug:</strong> Password: {credentials.password ? '***' : 'vuota'}</p>
+            <p><strong>Debug:</strong> Loading: {isLoading ? 'true' : 'false'}</p>
+          </div>
 
           {/* Additional Links */}
           <div className="mt-6 text-center">
