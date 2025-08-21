@@ -67,11 +67,26 @@ export default function ClientsPage() {
   const fetchClients = async () => {
     try {
       console.log('🔄 Fetching clients from admin API...');
+      console.log('🌐 URL:', '/api/admin/clients');
+      console.log('🔍 Browser location:', window.location.href);
       setLoading(true);
       setError(null);
       
-      const response = await fetch('/api/admin/clients');
+      // Prova prima con fetch semplice
+      console.log('📡 Attempting fetch...');
+      const response = await fetch('/api/admin/clients', {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Cache-Control': 'no-cache'
+        },
+        mode: 'cors',
+        credentials: 'same-origin'
+      });
+      
       console.log('📡 Admin API response status:', response.status);
+      console.log('📡 Admin API response headers:', response.headers);
+      console.log('📡 Admin API response ok:', response.ok);
       
       if (response.ok) {
         const data = await response.json();
@@ -81,6 +96,7 @@ export default function ClientsPage() {
         // Controllo di sicurezza sui dati
         if (data.clients && Array.isArray(data.clients)) {
           setClients(data.clients);
+          console.log('✅ Clients set successfully:', data.clients.length);
         } else {
           console.warn('⚠️ API returned invalid clients data:', data);
           setClients([]);
@@ -93,7 +109,19 @@ export default function ClientsPage() {
       }
     } catch (error) {
       console.error('❌ Errore di connessione:', error);
-      setError(`Errore di connessione: ${error.message}`);
+      console.error('❌ Error type:', typeof error);
+      console.error('❌ Error name:', error.name);
+      console.error('❌ Error message:', error.message);
+      console.error('❌ Error stack:', error.stack);
+      
+      // Prova a capire il tipo di errore
+      if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+        setError('Errore di rete: Impossibile raggiungere l\'API. Verifica la connessione al server.');
+      } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        setError('Errore del browser: Funzione fetch non disponibile.');
+      } else {
+        setError(`Errore di connessione: ${error.message}`);
+      }
       setClients([]);
     } finally {
       setLoading(false);
@@ -271,6 +299,29 @@ export default function ClientsPage() {
                 >
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Aggiorna ({clients.length})
+                </button>
+                
+                <button
+                  onClick={async () => {
+                    console.log('🧪 Testing API connectivity...');
+                    try {
+                      const testResponse = await fetch('/api/admin/clients');
+                      console.log('🧪 Test response status:', testResponse.status);
+                      if (testResponse.ok) {
+                        const testData = await testResponse.json();
+                        console.log('🧪 Test data received:', testData);
+                        alert(`✅ API funziona! Ricevuti ${testData.clients?.length || 0} clienti`);
+                      } else {
+                        alert(`❌ API error: ${testResponse.status}`);
+                      }
+                    } catch (testError) {
+                      console.error('🧪 Test error:', testError);
+                      alert(`❌ Test failed: ${testError.message}`);
+                    }
+                  }}
+                  className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  🧪 Test API
                 </button>
               </div>
             </div>
