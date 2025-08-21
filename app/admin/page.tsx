@@ -20,6 +20,9 @@ interface DashboardStats {
 
 export default function AdminDashboard() {
   const { user, logout } = useAdminAuth();
+  
+  console.log('👤 Admin Dashboard - User auth state:', { user, isAuthenticated: !!user });
+  
   const [stats, setStats] = useState<DashboardStats>({
     totalClients: 0,
     totalPackages: 0,
@@ -41,6 +44,8 @@ export default function AdminDashboard() {
       setLoading(true);
       const token = localStorage.getItem('adminToken');
       
+      console.log('🔍 Admin Dashboard - Fetching stats with token:', token ? `${token.substring(0, 20)}...` : 'null');
+      
       if (!token) {
         console.error('Token di autenticazione mancante');
         setError('Token di autenticazione mancante');
@@ -48,6 +53,8 @@ export default function AdminDashboard() {
       }
 
       // Carica dati da diverse API
+      console.log('🚀 Admin Dashboard - Making API calls...');
+      
       const [clientsRes, packagesRes, investmentsRes] = await Promise.all([
         fetch('/api/admin/clients', {
           headers: { 'Authorization': `Bearer ${token}` }
@@ -59,6 +66,12 @@ export default function AdminDashboard() {
           headers: { 'Authorization': `Bearer ${token}` }
         })
       ]);
+      
+      console.log('📊 Admin Dashboard - API responses:', {
+        clients: clientsRes.status,
+        packages: packagesRes.status,
+        investments: investmentsRes.status
+      });
 
       let totalClients = 0;
       let totalPackages = 0;
