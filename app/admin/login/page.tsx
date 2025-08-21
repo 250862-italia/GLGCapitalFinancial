@@ -47,7 +47,12 @@ export default function AdminLoginPage() {
         localStorage.setItem('adminToken', data.token);
         localStorage.setItem('adminUser', JSON.stringify(data.user));
         
-        console.log('Token stored in localStorage');
+        console.log('Token stored in localStorage:', {
+          token: data.token,
+          user: data.user,
+          adminToken: localStorage.getItem('adminToken'),
+          adminUser: localStorage.getItem('adminUser')
+        });
         
         // Redirect to admin dashboard
         setTimeout(() => {

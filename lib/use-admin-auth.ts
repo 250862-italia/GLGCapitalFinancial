@@ -37,13 +37,21 @@ export function useAdminAuth(): UseAdminAuthReturn {
       const token = localStorage.getItem('adminToken');
       const userData = localStorage.getItem('adminUser');
 
+      console.log('🔐 Admin Auth Check:', {
+        token: token ? `${token.substring(0, 20)}...` : 'null',
+        userData: userData ? 'present' : 'null',
+        localStorageKeys: Object.keys(localStorage).filter(key => key.includes('admin'))
+      });
+
       if (token && userData) {
         // In a real app, you'd verify the JWT token here
         const user = JSON.parse(userData);
+        console.log('✅ Admin authenticated:', user);
         setUser(user);
         setIsAuthenticated(true);
         return true;
       } else {
+        console.log('❌ Admin not authenticated - missing token or user data');
         setUser(null);
         setIsAuthenticated(false);
         return false;

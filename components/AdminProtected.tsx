@@ -13,7 +13,10 @@ export default function AdminProtected({ children }: AdminProtectedProps) {
   const router = useRouter();
 
   useEffect(() => {
+    console.log('🛡️ AdminProtected Status:', { isAuthenticated, isLoading });
+    
     if (!isLoading && !isAuthenticated) {
+      console.log('🚫 Admin not authenticated, redirecting to login');
       router.push('/admin/login');
     }
   }, [isAuthenticated, isLoading, router]);
