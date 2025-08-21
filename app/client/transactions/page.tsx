@@ -18,7 +18,7 @@ interface Transaction {
 
 export default function ClientTransactions() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [loading, setLoading] => useState(true);
+  const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
