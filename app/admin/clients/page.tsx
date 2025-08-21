@@ -31,6 +31,7 @@ export default function ClientsPage() {
   const { user, logout } = useAdminAuth();
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -55,6 +56,7 @@ export default function ClientsPage() {
 
   // Carica i clienti
   useEffect(() => {
+    console.log('🚀 ClientsPage mounted, calling fetchClients...');
     fetchClients();
     
     // Aggiorna i clienti ogni 30 secondi per sincronizzazione in tempo reale
@@ -64,30 +66,35 @@ export default function ClientsPage() {
 
   const fetchClients = async () => {
     try {
-      setLoading(true);
       console.log('🔄 Fetching clients from admin API...');
-      console.log('🌐 URL:', '/api/admin/clients');
+      setLoading(true);
+      setError(null);
       
-      // Prova prima senza headers complessi
       const response = await fetch('/api/admin/clients');
       console.log('📡 Admin API response status:', response.status);
-      console.log('📡 Admin API response headers:', response.headers);
       
       if (response.ok) {
         const data = await response.json();
         console.log('📊 Admin API data received:', data);
         console.log('👥 Clients count:', data.clients?.length || 0);
-        setClients(data.clients || []);
+        
+        // Controllo di sicurezza sui dati
+        if (data.clients && Array.isArray(data.clients)) {
+          setClients(data.clients);
+        } else {
+          console.warn('⚠️ API returned invalid clients data:', data);
+          setClients([]);
+        }
       } else {
-        console.error('❌ Errore nel caricamento clienti:', response.status);
         const errorText = await response.text();
-        console.error('❌ Error details:', errorText);
+        console.error('❌ Errore nel caricamento clienti:', response.status, errorText);
+        setError(`Errore ${response.status}: ${errorText}`);
+        setClients([]);
       }
     } catch (error) {
       console.error('❌ Errore di connessione:', error);
-      console.error('❌ Error type:', typeof error);
-      console.error('❌ Error message:', error.message);
-      console.error('❌ Error stack:', error.stack);
+      setError(`Errore di connessione: ${error.message}`);
+      setClients([]);
     } finally {
       setLoading(false);
     }
@@ -273,7 +280,19 @@ export default function ClientsPage() {
         {/* Main Content */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Status Message */}
-          {!loading && clients.length > 0 && (
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+              <div className="flex items-center">
+                <div className="w-2 h-2 bg-red-500 rounded-full mr-3"></div>
+                <div>
+                  <h4 className="text-sm font-medium text-red-900">Errore nel Caricamento</h4>
+                  <p className="text-sm text-red-700">{error}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!loading && !error && clients.length > 0 && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
               <div className="flex items-center">
                 <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
@@ -281,6 +300,20 @@ export default function ClientsPage() {
                   <h4 className="text-sm font-medium text-green-900">Dati Clienti Caricati</h4>
                   <p className="text-sm text-green-700">
                     Caricati {clients.length} clienti dal sistema. Ultimo aggiornamento: {new Date().toLocaleTimeString('it-IT')}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!loading && !error && clients.length === 0 && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+              <div className="flex items-center">
+                <div className="w-2 h-2 bg-yellow-500 rounded-full mr-3"></div>
+                <div>
+                  <h4 className="text-sm font-medium text-yellow-900">Nessun Cliente Trovato</h4>
+                  <p className="text-sm text-yellow-700">
+                    Non sono stati trovati clienti nel sistema. Verifica la connessione al database.
                   </p>
                 </div>
               </div>
@@ -456,7 +489,7 @@ export default function ClientsPage() {
 
             {!loading && filteredClients.length === 0 && (
               <div className="p-8 text-center">
-                <Users2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                Users2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <p className="text-gray-600">Nessun cliente trovato</p>
               </div>
             )}
