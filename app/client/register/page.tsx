@@ -47,16 +47,35 @@ export default function ClientRegisterPage() {
     }
 
     try {
-      // TODO: Implementare registrazione cliente
       console.log('Registrazione cliente:', formData);
       
-      // Simula delay di registrazione
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      setSuccess(true);
+      const response = await fetch('/api/client/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          phone: formData.phone,
+          company: formData.company,
+          password: formData.password
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Registrazione riuscita:', data);
+        setSuccess(true);
+      } else {
+        const errorData = await response.json();
+        setError(errorData.message || 'Errore durante la registrazione');
+      }
       
     } catch (error) {
-      setError('Errore durante la registrazione. Riprova.');
+      console.error('Errore registrazione:', error);
+      setError('Errore di connessione. Riprova.');
     } finally {
       setLoading(false);
     }

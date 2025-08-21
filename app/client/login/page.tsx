@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import GLGLogo from '@/components/GLGLogo';
 import { Eye, EyeOff, Lock, Mail, ArrowLeft } from 'lucide-react';
@@ -13,24 +14,51 @@ export default function ClientLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setSuccess('');
 
     try {
-      // TODO: Implementare autenticazione cliente
       console.log('Login cliente:', formData);
       
-      // Simula delay di autenticazione
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Redirect alla dashboard cliente (da implementare)
-      // router.push('/client/dashboard');
+      const response = await fetch('/api/client/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Login riuscito:', data);
+        
+        setSuccess('Login effettuato con successo! Reindirizzamento...');
+        
+        // Store client token
+        localStorage.setItem('clientToken', data.token);
+        localStorage.setItem('clientUser', JSON.stringify(data.user));
+        
+        console.log('Token client salvato in localStorage');
+        
+        // TODO: Redirect to client dashboard (da implementare)
+        // setTimeout(() => {
+        //   router.push('/client/dashboard');
+        // }, 1500);
+        
+      } else {
+        const errorData = await response.json();
+        setError(errorData.message || 'Credenziali non valide');
+      }
       
     } catch (error) {
-      setError('Errore durante il login. Riprova.');
+      console.error('Errore login:', error);
+      setError('Errore di connessione. Riprova.');
     } finally {
       setLoading(false);
     }
@@ -53,6 +81,11 @@ export default function ClientLoginPage() {
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
               {error}
+            </div>
+          )}
+          {success && (
+            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
+              {success}
             </div>
           )}
 
