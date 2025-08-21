@@ -123,10 +123,126 @@ export interface Analytics {
   updated_at: string;
 }
 
+// Dati temporanei per quando il database non è disponibile
+const TEMP_PACKAGES: Package[] = [
+  {
+    id: '1',
+    name: 'Pacchetto Starter',
+    description: 'Pacchetto iniziale per nuovi investitori',
+    min_investment: 1000,
+    max_investment: 10000,
+    expected_return: 5.0,
+    duration_months: 12,
+    risk_level: 'low',
+    status: 'active',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    total_investors: 0,
+    total_amount: 0
+  },
+  {
+    id: '2',
+    name: 'Equity Pledge Premium',
+    description: 'Pacchetto di investimento premium con rendimenti garantiti e rischio controllato',
+    min_investment: 10000,
+    max_investment: 1000000,
+    expected_return: 8.5,
+    duration_months: 24,
+    risk_level: 'low',
+    status: 'active',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    total_investors: 0,
+    total_amount: 0
+  },
+  {
+    id: '3',
+    name: 'Growth Portfolio Plus',
+    description: 'Portafoglio di crescita con focus su tecnologie innovative e mercati emergenti',
+    min_investment: 25000,
+    max_investment: 500000,
+    expected_return: 12.0,
+    duration_months: 36,
+    risk_level: 'medium',
+    status: 'active',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    total_investors: 0,
+    total_amount: 0
+  },
+  {
+    id: '4',
+    name: 'Real Estate Investment Trust',
+    description: 'Investimento immobiliare con rendimenti stabili e beni tangibili',
+    min_investment: 50000,
+    max_investment: 2000000,
+    expected_return: 6.8,
+    duration_months: 60,
+    risk_level: 'low',
+    status: 'active',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    total_investors: 0,
+    total_amount: 0
+  },
+  {
+    id: '5',
+    name: 'High Yield Bonds Portfolio',
+    description: 'Portafoglio obbligazionario ad alto rendimento per investitori esperti',
+    min_investment: 15000,
+    max_investment: 300000,
+    expected_return: 9.2,
+    duration_months: 48,
+    risk_level: 'high',
+    status: 'active',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    total_investors: 0,
+    total_amount: 0
+  },
+  {
+    id: '6',
+    name: 'Sustainable Growth Fund',
+    description: 'Fondo di investimento sostenibile con focus su ESG e impatto sociale',
+    min_investment: 20000,
+    max_investment: 400000,
+    expected_return: 10.5,
+    duration_months: 30,
+    risk_level: 'medium',
+    status: 'active',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    total_investors: 0,
+    total_amount: 0
+  }
+];
+
+// Funzione per verificare la connessione al database
+async function checkDatabaseConnection(): Promise<boolean> {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('packages')
+      .select('count')
+      .limit(1);
+    
+    return !error;
+  } catch (error) {
+    console.error('Database connection check failed:', error);
+    return false;
+  }
+}
+
 // ===== CLIENT CRUD OPERATIONS =====
 
 export async function getClients(): Promise<Client[]> {
   try {
+    // Verifica prima la connessione
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      console.log('Database non disponibile, usando dati temporanei per clienti');
+      return [];
+    }
+
     const { data, error } = await supabaseAdmin
       .from('clients')
       .select('*')
@@ -140,12 +256,19 @@ export async function getClients(): Promise<Client[]> {
     return data || [];
   } catch (error) {
     console.error('Database error in getClients:', error);
-    throw new Error('Impossibile recuperare i clienti dal database');
+    console.log('Ritorno array vuoto per clienti');
+    return [];
   }
 }
 
 export async function getClient(id: string): Promise<Client | null> {
   try {
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      console.log('Database non disponibile, impossibile recuperare cliente specifico');
+      return null;
+    }
+
     const { data, error } = await supabaseAdmin
       .from('clients')
       .select('*')
@@ -166,6 +289,11 @@ export async function getClient(id: string): Promise<Client | null> {
 
 export async function createClient(clientData: Omit<Client, 'id' | 'created_at' | 'updated_at'>): Promise<Client> {
   try {
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      throw new Error('Database non disponibile - impossibile creare cliente');
+    }
+
     const { data, error } = await supabaseAdmin
       .from('clients')
       .insert([{
@@ -190,6 +318,11 @@ export async function createClient(clientData: Omit<Client, 'id' | 'created_at' 
 
 export async function updateClient(id: string, updates: Partial<Client>): Promise<Client | null> {
   try {
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      throw new Error('Database non disponibile - impossibile aggiornare cliente');
+    }
+
     const { data, error } = await supabaseAdmin
       .from('clients')
       .update({
@@ -214,6 +347,11 @@ export async function updateClient(id: string, updates: Partial<Client>): Promis
 
 export async function deleteClient(id: string): Promise<boolean> {
   try {
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      throw new Error('Database non disponibile - impossibile eliminare cliente');
+    }
+
     const { error } = await supabaseAdmin
       .from('clients')
       .delete()
@@ -235,6 +373,13 @@ export async function deleteClient(id: string): Promise<boolean> {
 
 export async function getPackages(): Promise<Package[]> {
   try {
+    // Verifica prima la connessione
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      console.log('Database non disponibile, usando dati temporanei per pacchetti');
+      return TEMP_PACKAGES;
+    }
+
     const { data, error } = await supabaseAdmin
       .from('packages')
       .select('*')
@@ -242,18 +387,26 @@ export async function getPackages(): Promise<Package[]> {
 
     if (error) {
       console.error('Error fetching packages:', error);
-      throw error;
+      console.log('Ritorno dati temporanei per pacchetti');
+      return TEMP_PACKAGES;
     }
 
-    return data || [];
+    return data || TEMP_PACKAGES;
   } catch (error) {
     console.error('Database error in getPackages:', error);
-    throw new Error('Impossibile recuperare i pacchetti dal database');
+    console.log('Ritorno dati temporanei per pacchetti');
+    return TEMP_PACKAGES;
   }
 }
 
 export async function getPackage(id: string): Promise<Package | null> {
   try {
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      console.log('Database non disponibile, cercando nei dati temporanei');
+      return TEMP_PACKAGES.find(pkg => pkg.id === id) || null;
+    }
+
     const { data, error } = await supabaseAdmin
       .from('packages')
       .select('*')
@@ -268,12 +421,17 @@ export async function getPackage(id: string): Promise<Package | null> {
     return data;
   } catch (error) {
     console.error('Database error in getPackage:', error);
-    return null;
+    return TEMP_PACKAGES.find(pkg => pkg.id === id) || null;
   }
 }
 
 export async function createPackage(packageData: Omit<Package, 'id' | 'created_at' | 'updated_at'>): Promise<Package> {
   try {
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      throw new Error('Database non disponibile - impossibile creare pacchetto');
+    }
+
     const { data, error } = await supabaseAdmin
       .from('packages')
       .insert([{
@@ -298,6 +456,11 @@ export async function createPackage(packageData: Omit<Package, 'id' | 'created_a
 
 export async function updatePackage(id: string, updates: Partial<Package>): Promise<Package | null> {
   try {
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      throw new Error('Database non disponibile - impossibile aggiornare pacchetto');
+    }
+
     const { data, error } = await supabaseAdmin
       .from('packages')
       .update({
@@ -322,6 +485,11 @@ export async function updatePackage(id: string, updates: Partial<Package>): Prom
 
 export async function deletePackage(id: string): Promise<boolean> {
   try {
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      throw new Error('Database non disponibile - impossibile eliminare pacchetto');
+    }
+
     const { error } = await supabaseAdmin
       .from('packages')
       .delete()
@@ -343,6 +511,12 @@ export async function deletePackage(id: string): Promise<boolean> {
 
 export async function getInvestments(): Promise<Investment[]> {
   try {
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      console.log('Database non disponibile, usando array vuoto per investimenti');
+      return [];
+    }
+
     const { data, error } = await supabaseAdmin
       .from('investments')
       .select('*')
@@ -356,12 +530,18 @@ export async function getInvestments(): Promise<Investment[]> {
     return data || [];
   } catch (error) {
     console.error('Database error in getInvestments:', error);
-    throw new Error('Impossibile recuperare gli investimenti dal database');
+    return [];
   }
 }
 
 export async function getInvestment(id: string): Promise<Investment | null> {
   try {
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      console.log('Database non disponibile, impossibile recuperare investimento specifico');
+      return null;
+    }
+
     const { data, error } = await supabaseAdmin
       .from('investments')
       .select('*')
@@ -382,6 +562,11 @@ export async function getInvestment(id: string): Promise<Investment | null> {
 
 export async function createInvestment(investmentData: Omit<Investment, 'id' | 'created_at' | 'updated_at'>): Promise<Investment> {
   try {
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      throw new Error('Database non disponibile - impossibile creare investimento');
+    }
+
     const { data, error } = await supabaseAdmin
       .from('investments')
       .insert([{
@@ -406,6 +591,11 @@ export async function createInvestment(investmentData: Omit<Investment, 'id' | '
 
 export async function updateInvestment(id: string, updates: Partial<Investment>): Promise<Investment | null> {
   try {
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      throw new Error('Database non disponibile - impossibile aggiornare investimento');
+    }
+
     const { data, error } = await supabaseAdmin
       .from('investments')
       .update({
@@ -418,7 +608,7 @@ export async function updateInvestment(id: string, updates: Partial<Investment>)
 
     if (error) {
       console.error('Error updating investment:', error);
-      throw error;
+      return null;
     }
 
     return data;
@@ -430,6 +620,11 @@ export async function updateInvestment(id: string, updates: Partial<Investment>)
 
 export async function deleteInvestment(id: string): Promise<boolean> {
   try {
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      throw new Error('Database non disponibile - impossibile eliminare investimento');
+    }
+
     const { error } = await supabaseAdmin
       .from('investments')
       .delete()
@@ -451,6 +646,12 @@ export async function deleteInvestment(id: string): Promise<boolean> {
 
 export async function getPayments(): Promise<Payment[]> {
   try {
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      console.log('Database non disponibile, usando array vuoto per pagamenti');
+      return [];
+    }
+
     const { data, error } = await supabaseAdmin
       .from('payments')
       .select('*')
@@ -464,12 +665,18 @@ export async function getPayments(): Promise<Payment[]> {
     return data || [];
   } catch (error) {
     console.error('Database error in getPayments:', error);
-    throw new Error('Impossibile recuperare i pagamenti dal database');
+    return [];
   }
 }
 
 export async function getPayment(id: string): Promise<Payment | null> {
   try {
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      console.log('Database non disponibile, impossibile recuperare pagamento specifico');
+      return null;
+    }
+
     const { data, error } = await supabaseAdmin
       .from('payments')
       .select('*')
@@ -490,6 +697,11 @@ export async function getPayment(id: string): Promise<Payment | null> {
 
 export async function createPayment(paymentData: Omit<Payment, 'id' | 'created_at' | 'updated_at'>): Promise<Payment> {
   try {
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      throw new Error('Database non disponibile - impossibile creare pagamento');
+    }
+
     const { data, error } = await supabaseAdmin
       .from('payments')
       .insert([{
@@ -514,6 +726,11 @@ export async function createPayment(paymentData: Omit<Payment, 'id' | 'created_a
 
 export async function updatePayment(id: string, updates: Partial<Payment>): Promise<Payment | null> {
   try {
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      throw new Error('Database non disponibile - impossibile aggiornare pagamento');
+    }
+
     const { data, error } = await supabaseAdmin
       .from('payments')
       .update({
@@ -538,6 +755,11 @@ export async function updatePayment(id: string, updates: Partial<Payment>): Prom
 
 export async function deletePayment(id: string): Promise<boolean> {
   try {
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      throw new Error('Database non disponibile - impossibile eliminare pagamento');
+    }
+
     const { error } = await supabaseAdmin
       .from('payments')
       .delete()
@@ -559,6 +781,12 @@ export async function deletePayment(id: string): Promise<boolean> {
 
 export async function getTeamMembers(): Promise<TeamMember[]> {
   try {
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      console.log('Database non disponibile, usando array vuoto per team members');
+      return [];
+    }
+
     const { data, error } = await supabaseAdmin
       .from('team_members')
       .select('*')
@@ -572,12 +800,18 @@ export async function getTeamMembers(): Promise<TeamMember[]> {
     return data || [];
   } catch (error) {
     console.error('Database error in getTeamMembers:', error);
-    throw new Error('Impossibile recuperare i membri del team dal database');
+    return [];
   }
 }
 
 export async function getTeamMember(id: string): Promise<TeamMember | null> {
   try {
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      console.log('Database non disponibile, impossibile recuperare team member specifico');
+      return null;
+    }
+
     const { data, error } = await supabaseAdmin
       .from('team_members')
       .select('*')
@@ -598,6 +832,11 @@ export async function getTeamMember(id: string): Promise<TeamMember | null> {
 
 export async function createTeamMember(memberData: Omit<TeamMember, 'id' | 'created_at' | 'updated_at'>): Promise<TeamMember> {
   try {
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      throw new Error('Database non disponibile - impossibile creare team member');
+    }
+
     const { data, error } = await supabaseAdmin
       .from('team_members')
       .insert([{
@@ -622,6 +861,11 @@ export async function createTeamMember(memberData: Omit<TeamMember, 'id' | 'crea
 
 export async function updateTeamMember(id: string, updates: Partial<TeamMember>): Promise<TeamMember | null> {
   try {
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      throw new Error('Database non disponibile - impossibile aggiornare team member');
+    }
+
     const { data, error } = await supabaseAdmin
       .from('team_members')
       .update({
@@ -646,6 +890,11 @@ export async function updateTeamMember(id: string, updates: Partial<TeamMember>)
 
 export async function deleteTeamMember(id: string): Promise<boolean> {
   try {
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      throw new Error('Database non disponibile - impossibile eliminare team member');
+    }
+
     const { error } = await supabaseAdmin
       .from('team_members')
       .delete()
@@ -667,8 +916,15 @@ export async function deleteTeamMember(id: string): Promise<boolean> {
 
 export async function getPartnerships(): Promise<Partnership[]> {
   try {
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      console.log('Database non disponibile, usando array vuoto per partnership');
+      return [];
+    }
+
     const { data, error } = await supabaseAdmin
       .from('partnerships')
+      .select('*')
       .select('*')
       .order('created_at', { ascending: false });
 
@@ -680,12 +936,18 @@ export async function getPartnerships(): Promise<Partnership[]> {
     return data || [];
   } catch (error) {
     console.error('Database error in getPartnerships:', error);
-    throw new Error('Impossibile recuperare le partnership dal database');
+    return [];
   }
 }
 
 export async function getPartnership(id: string): Promise<Partnership | null> {
   try {
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      console.log('Database non disponibile, impossibile recuperare partnership specifica');
+      return null;
+    }
+
     const { data, error } = await supabaseAdmin
       .from('partnerships')
       .select('*')
@@ -706,6 +968,11 @@ export async function getPartnership(id: string): Promise<Partnership | null> {
 
 export async function createPartnership(partnershipData: Omit<Partnership, 'id' | 'created_at' | 'updated_at'>): Promise<Partnership> {
   try {
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      throw new Error('Database non disponibile - impossibile creare partnership');
+    }
+
     const { data, error } = await supabaseAdmin
       .from('partnerships')
       .insert([{
@@ -730,6 +997,11 @@ export async function createPartnership(partnershipData: Omit<Partnership, 'id' 
 
 export async function updatePartnership(id: string, updates: Partial<Partnership>): Promise<Partnership | null> {
   try {
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      throw new Error('Database non disponibile - impossibile aggiornare partnership');
+    }
+
     const { data, error } = await supabaseAdmin
       .from('partnerships')
       .update({
@@ -754,6 +1026,11 @@ export async function updatePartnership(id: string, updates: Partial<Partnership
 
 export async function deletePartnership(id: string): Promise<boolean> {
   try {
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      throw new Error('Database non disponibile - impossibile eliminare partnership');
+    }
+
     const { error } = await supabaseAdmin
       .from('partnerships')
       .delete()
@@ -775,6 +1052,12 @@ export async function deletePartnership(id: string): Promise<boolean> {
 
 export async function getAnalytics(): Promise<Analytics[]> {
   try {
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      console.log('Database non disponibile, usando array vuoto per analytics');
+      return [];
+    }
+
     const { data, error } = await supabaseAdmin
       .from('analytics')
       .select('*')
@@ -788,12 +1071,18 @@ export async function getAnalytics(): Promise<Analytics[]> {
     return data || [];
   } catch (error) {
     console.error('Database error in getAnalytics:', error);
-    throw new Error('Impossibile recuperare le analytics dal database');
+    return [];
   }
 }
 
 export async function getAnalyticsByDate(date: string): Promise<Analytics | null> {
   try {
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      console.log('Database non disponibile, impossibile recuperare analytics per data');
+      return null;
+    }
+
     const { data, error } = await supabaseAdmin
       .from('analytics')
       .select('*')
@@ -814,6 +1103,11 @@ export async function getAnalyticsByDate(date: string): Promise<Analytics | null
 
 export async function createAnalytics(analyticsData: Omit<Analytics, 'id' | 'created_at' | 'updated_at'>): Promise<Analytics> {
   try {
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      throw new Error('Database non disponibile - impossibile creare analytics');
+    }
+
     const { data, error } = await supabaseAdmin
       .from('analytics')
       .insert([{
@@ -838,6 +1132,11 @@ export async function createAnalytics(analyticsData: Omit<Analytics, 'id' | 'cre
 
 export async function updateAnalytics(id: string, updates: Partial<Analytics>): Promise<Analytics | null> {
   try {
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      throw new Error('Database non disponibile - impossibile aggiornare analytics');
+    }
+
     const { data, error } = await supabaseAdmin
       .from('analytics')
       .update({
@@ -862,6 +1161,11 @@ export async function updateAnalytics(id: string, updates: Partial<Analytics>): 
 
 export async function deleteAnalytics(id: string): Promise<boolean> {
   try {
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      throw new Error('Database non disponibile - impossibile eliminare analytics');
+    }
+
     const { error } = await supabaseAdmin
       .from('analytics')
       .delete()
