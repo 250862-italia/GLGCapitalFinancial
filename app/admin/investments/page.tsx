@@ -56,24 +56,39 @@ export default function InvestmentsPage() {
       setLoading(true);
       
       // Carica investimenti
-      const investmentsResponse = await fetch('/api/admin/investments');
+      const investmentsResponse = await fetch('/api/admin/investments', { 
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       if (investmentsResponse.ok) {
         const data = await investmentsResponse.json();
-        setInvestments(data.investments || []);
+        console.log('📊 Investimenti ricevuti:', data);
+        setInvestments(data.data || []); // Cambiato da data.investments a data.data
+      } else {
+        console.error('Errore nel caricamento investimenti:', investmentsResponse.status);
       }
 
       // Carica clienti
-      const clientsResponse = await fetch('/api/admin/clients');
+      const clientsResponse = await fetch('/api/admin/clients', { 
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       if (clientsResponse.ok) {
         const data = await clientsResponse.json();
+        console.log('👥 Clienti ricevuti:', data);
         setClients(data.clients || []);
+      } else {
+        console.error('Errore nel caricamento clienti:', clientsResponse.status);
       }
 
       // Carica pacchetti
-      const packagesResponse = await fetch('/api/admin/packages');
+      const packagesResponse = await fetch('/api/admin/packages', { 
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
       if (packagesResponse.ok) {
         const data = await packagesResponse.json();
+        console.log('📦 Pacchetti ricevuti:', data);
         setPackages(data.packages || []);
+      } else {
+        console.error('Errore nel caricamento pacchetti:', packagesResponse.status);
       }
     } catch (error) {
       console.error('Errore nel caricamento dati:', error);
@@ -82,8 +97,22 @@ export default function InvestmentsPage() {
     }
   };
 
+  // Arricchisce i dati degli investimenti con nomi di clienti e pacchetti
+  const enrichedInvestments = investments.map(investment => {
+    const client = clients.find(c => c.id === investment.client_id);
+    const package_ = packages.find(p => p.id === investment.package_id);
+    
+    return {
+      ...investment,
+      client_name: client ? `${client.first_name} ${client.last_name}` : `Cliente ${investment.client_id}`,
+      package_name: package_ ? package_.name : `Pacchetto ${investment.package_id}`,
+      client_email: client ? client.email : '',
+      package_description: package_ ? package_.description : ''
+    };
+  });
+
   // Filtra gli investimenti
-  const filteredInvestments = investments.filter(investment => {
+  const filteredInvestments = enrichedInvestments.filter(investment => {
     const matchesSearch = 
       investment.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       investment.package_name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -97,7 +126,10 @@ export default function InvestmentsPage() {
     try {
       const response = await fetch('/api/admin/investments', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+        },
         body: JSON.stringify({
           ...formData,
           amount: parseFloat(formData.amount),
@@ -126,7 +158,10 @@ export default function InvestmentsPage() {
     try {
       const response = await fetch(`/api/admin/investments/${selectedInvestment.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+        },
         body: JSON.stringify({
           ...formData,
           amount: parseFloat(formData.amount),
@@ -154,7 +189,10 @@ export default function InvestmentsPage() {
 
     try {
       const response = await fetch(`/api/admin/investments/${selectedInvestment.id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: { 
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+        }
       });
 
       if (response.ok) {

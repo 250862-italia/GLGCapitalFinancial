@@ -27,8 +27,11 @@ export function useAdminAuth(): UseAdminAuthReturn {
 
   // Check authentication status on mount
   useEffect(() => {
-    checkAuth();
+    console.log('🔄 useAdminAuth - Component mounted, checking auth...');
+    const authResult = checkAuth();
+    console.log('🔄 useAdminAuth - Auth check result:', authResult);
     setIsLoading(false);
+    console.log('🔄 useAdminAuth - Loading set to false');
   }, []);
 
   // Check if user is authenticated
