@@ -173,19 +173,60 @@ export default function ClientsPage() {
     if (!selectedClient) return;
 
     try {
+      console.log('📝 Aggiornamento cliente:', { id: selectedClient.id, formData });
+      
+      const token = localStorage.getItem('adminToken');
+      if (!token) {
+        console.error('❌ Token admin mancante');
+        setError('Token di autenticazione mancante');
+        return;
+      }
+
       const response = await fetch(`/api/admin/clients/${selectedClient.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify(formData)
       });
 
+      console.log('📡 Response status:', response.status);
+
       if (response.ok) {
+        const result = await response.json();
+        console.log('✅ Cliente aggiornato con successo:', result);
+        
+        // Ricarica i clienti
         await fetchClients();
+        
+        // Chiude il modal
         setShowEditModal(false);
         setSelectedClient(null);
+        
+        // Reset del form
+        setFormData({
+          first_name: '',
+          last_name: '',
+          email: '',
+          phone: '',
+          company: '',
+          position: '',
+          address: '',
+          city: '',
+          country: '',
+          postal_code: '',
+          risk_profile: 'moderate',
+          status: 'active'
+        });
+      } else {
+        const errorData = await response.json();
+        console.error('❌ Errore aggiornamento cliente:', errorData);
+        setError(errorData.error || 'Errore nell\'aggiornamento del cliente');
       }
     } catch (error) {
-      console.error('Errore nell\'aggiornamento del cliente:', error);
+      console.error('❌ Errore nell\'aggiornamento del cliente:', error);
+      setError('Errore di connessione durante l\'aggiornamento');
     }
   };
 
@@ -194,17 +235,42 @@ export default function ClientsPage() {
     if (!selectedClient) return;
 
     try {
+      console.log('🗑️ Eliminazione cliente:', { id: selectedClient.id });
+      
+      const token = localStorage.getItem('adminToken');
+      if (!token) {
+        console.error('❌ Token admin mancante');
+        setError('Token di autenticazione mancante');
+        return;
+      }
+
       const response = await fetch(`/api/admin/clients/${selectedClient.id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: { 
+          'Authorization': `Bearer ${token}`
+        }
       });
 
+      console.log('📡 Response status:', response.status);
+
       if (response.ok) {
+        const result = await response.json();
+        console.log('✅ Cliente eliminato con successo:', result);
+        
+        // Ricarica i clienti
         await fetchClients();
+        
+        // Chiude il modal
         setShowDeleteModal(false);
         setSelectedClient(null);
+      } else {
+        const errorData = await response.json();
+        console.error('❌ Errore eliminazione cliente:', errorData);
+        setError(errorData.error || 'Errore nell\'eliminazione del cliente');
       }
     } catch (error) {
-      console.error('Errore nell\'eliminazione del cliente:', error);
+      console.error('❌ Errore nell\'eliminazione del cliente:', error);
+      setError('Errore di connessione durante l\'eliminazione');
     }
   };
 
