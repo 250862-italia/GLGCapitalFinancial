@@ -1,76 +1,67 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
-interface Notification {
-  id: string;
-  type: 'investment' | 'document' | 'support' | 'system';
-  title: string;
-  message: string;
-  client_name?: string;
-  client_email?: string;
-  amount?: number;
-  package_name?: string;
-  status: 'unread' | 'read';
-  created_at: string;
-  priority: 'low' | 'medium' | 'high';
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
+// Configurazione Supabase
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+// Funzione per verificare il token admin
+function verifyAdminToken(request: NextRequest): boolean {
+  try {
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return false;
+    }
+    
+    const token = authHeader.substring(7);
+    // In produzione, dovresti verificare il JWT token
+    return token.length > 10;
+  } catch (error) {
+    return false;
+  }
 }
 
-// Simula un database di notifiche (in produzione sarebbe un database reale)
-let notifications: Notification[] = [
-  {
-    id: '1',
-    type: 'investment',
-    title: 'Nuova Richiesta di Investimento',
-    message: 'Mario Rossi ha richiesto di investire €5,000 nel Pacchetto Premium',
-    client_name: 'Mario Rossi',
-    client_email: 'mario.rossi@example.com',
-    amount: 5000,
-    package_name: 'Pacchetto Premium',
-    status: 'unread',
-    created_at: new Date().toISOString(),
-    priority: 'high'
-  }
-];
-
-// GET - Recupera tutte le notifiche
+// GET - Recupera tutte le notifiche admin
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const status = searchParams.get('status'); // 'all', 'unread', 'read'
-    const type = searchParams.get('type'); // 'all', 'investment', 'document', etc.
-    
-    let filteredNotifications = [...notifications];
-    
-    // Filtra per status
-    if (status && status !== 'all') {
-      filteredNotifications = filteredNotifications.filter(n => n.status === status);
+    // Verifica autenticazione
+    if (!verifyAdminToken(request)) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
     }
-    
-    // Filtra per tipo
-    if (type && type !== 'all') {
-      filteredNotifications = filteredNotifications.filter(n => n.type === type);
+
+    // Recupera le notifiche dal database
+    const { data: notifications, error } = await supabase
+      .from('admin_notifications')
+      .select('*')
+      .order('timestamp', { ascending: false })
+      .limit(100);
+
+    if (error) {
+      console.error('❌ Errore nel recupero notifiche:', error);
+      return NextResponse.json(
+        { success: false, error: 'Errore nel recupero delle notifiche' },
+        { status: 500 }
+      );
     }
-    
-    // Ordina per data (più recenti prima)
-    filteredNotifications.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    
+
     return NextResponse.json({
       success: true,
-      message: 'Notifiche recuperate con successo',
-      data: {
-        notifications: filteredNotifications,
-        total: filteredNotifications.length,
-        unread: notifications.filter(n => n.status === 'unread').length
-      }
+      notifications: notifications || [],
+      total: notifications?.length || 0
     });
 
   } catch (error) {
-    console.error('Errore nel recupero delle notifiche:', error);
+    console.error('❌ Errore generale notifiche:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Errore interno del server',
-        message: 'Impossibile recuperare le notifiche'
-      },
+      { success: false, error: 'Errore interno del server' },
       { status: 500 }
     );
   }
@@ -79,111 +70,57 @@ export async function GET(request: NextRequest) {
 // POST - Crea una nuova notifica
 export async function POST(request: NextRequest) {
   try {
-    const notificationData = await request.json();
-    
-    // Validazione dei dati richiesti
-    if (!notificationData.type || !notificationData.title || !notificationData.message) {
+    // Verifica autenticazione
+    if (!verifyAdminToken(request)) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Tipo, titolo e messaggio sono richiesti' 
-        },
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const body = await request.json();
+    
+    // Validazione dati
+    if (!body.type || !body.title || !body.message) {
+      return NextResponse.json(
+        { success: false, error: 'Dati mancanti per la notifica' },
         { status: 400 }
       );
     }
 
-    // Crea la nuova notifica
-    const newNotification: Notification = {
-      id: Date.now().toString(),
-      type: notificationData.type,
-      title: notificationData.title,
-      message: notificationData.message,
-      client_name: notificationData.client_name,
-      client_email: notificationData.client_email,
-      amount: notificationData.amount,
-      package_name: notificationData.package_name,
-      status: 'unread',
-      created_at: new Date().toISOString(),
-      priority: notificationData.priority || 'medium'
-    };
+    // Crea la notifica nel database
+    const { data: notification, error } = await supabase
+      .from('admin_notifications')
+      .insert([{
+        type: body.type,
+        title: body.title,
+        message: body.message,
+        timestamp: new Date().toISOString(),
+        read: false,
+        data: body.data || null
+      }])
+      .select()
+      .single();
 
-    // Aggiungi la notifica all'array
-    notifications.unshift(newNotification);
-    
-    // Log per debugging
-    console.log('🔔 Nuova notifica di richiesta di investimento creata:', {
-      id: newNotification.id,
-      type: newNotification.type,
-      title: newNotification.title,
-      client: newNotification.client_name,
-      timestamp: newNotification.created_at
-    });
+    if (error) {
+      console.error('❌ Errore nella creazione notifica:', error);
+      return NextResponse.json(
+        { success: false, error: 'Errore nella creazione della notifica' },
+        { status: 500 }
+      );
+    }
 
+    console.log('✅ Notifica creata con successo:', notification);
     return NextResponse.json({
       success: true,
       message: 'Notifica creata con successo',
-      data: newNotification
-    }, { status: 201 });
-
-  } catch (error) {
-    console.error('Errore nella creazione della notifica:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Errore interno del server',
-        message: 'Impossibile creare la notifica'
-      },
-      { status: 500 }
-    );
-  }
-}
-
-// PUT - Marca una notifica come letta
-export async function PUT(request: NextRequest) {
-  try {
-    const { id, status } = await request.json();
-    
-    if (!id) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'ID notifica richiesto' 
-        },
-        { status: 400 }
-      );
-    }
-
-    // Trova e aggiorna la notifica
-    const notificationIndex = notifications.findIndex(n => n.id === id);
-    if (notificationIndex === -1) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Notifica non trovata' 
-        },
-        { status: 404 }
-      );
-    }
-
-    // Aggiorna lo status
-    if (status) {
-      notifications[notificationIndex].status = status;
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: 'Notifica aggiornata con successo',
-      data: notifications[notificationIndex]
+      notification
     });
 
   } catch (error) {
-    console.error('Errore nell\'aggiornamento della notifica:', error);
+    console.error('❌ Errore generale creazione notifica:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Errore interno del server',
-        message: 'Impossibile aggiornare la notifica'
-      },
+      { success: false, error: 'Errore interno del server' },
       { status: 500 }
     );
   }

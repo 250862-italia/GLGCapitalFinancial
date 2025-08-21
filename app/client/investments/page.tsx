@@ -2,11 +2,21 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Plus, Search, Filter, TrendingUp, DollarSign, Calendar, Clock } from 'lucide-react';
+import { Plus, Search, Filter, TrendingUp, DollarSign, Calendar, Clock, RefreshCw } from 'lucide-react';
 import { usePackagesUpdates } from '@/lib/use-packages-updates';
 
 export default function ClientInvestmentsPage() {
-  const { packages, loading, error, lastUpdate, refreshPackages } = usePackagesUpdates();
+  const { 
+    packages, 
+    loading, 
+    error, 
+    lastUpdate, 
+    refreshPackages, 
+    retryFetch, 
+    retryCount, 
+    isOnline,
+    hasError 
+  } = usePackagesUpdates();
   const [searchTerm, setSearchTerm] = useState('');
   const [riskFilter, setRiskFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -49,19 +59,49 @@ export default function ClientInvestmentsPage() {
     );
   }
 
-  if (error) {
+  if (hasError) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-center">
+        <div className="text-center max-w-md mx-auto px-4">
           <div className="text-red-600 text-6xl mb-4">⚠️</div>
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Errore nel caricamento</h1>
-          <p className="text-gray-600 mb-6">{error}</p>
-          <button 
-            onClick={refreshPackages}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
-          >
-            Riprova
-          </button>
+          
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <p className="text-red-800 text-sm mb-2">
+              <strong>Problema:</strong> {error}
+            </p>
+            {!isOnline && (
+              <p className="text-red-700 text-xs">
+                🔴 Nessuna connessione internet disponibile
+              </p>
+            )}
+            {retryCount > 0 && (
+              <p className="text-red-700 text-xs">
+                🔄 Tentativi: {retryCount}/3
+              </p>
+            )}
+          </div>
+          
+          <div className="space-y-3">
+            <button 
+              onClick={retryFetch}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+            >
+              🔄 Riprova
+            </button>
+            
+            <button 
+              onClick={refreshPackages}
+              className="w-full bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm transition-colors"
+            >
+              📡 Ricarica
+            </button>
+          </div>
+          
+          <div className="mt-4 text-xs text-gray-500">
+            <p>Ultimo tentativo: {lastUpdate.toLocaleTimeString('it-IT')}</p>
+            <p>Stato connessione: {isOnline ? '🟢 Online' : '🔴 Offline'}</p>
+          </div>
         </div>
       </div>
     );
@@ -75,16 +115,36 @@ export default function ClientInvestmentsPage() {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Pacchetti di Investimento</h1>
           <p className="text-gray-600">Scegli il pacchetto che meglio si adatta ai tuoi obiettivi finanziari</p>
           
-          {/* Ultimo aggiornamento */}
-          <div className="flex items-center mt-4 text-sm text-gray-500">
-            <Clock className="h-4 w-4 mr-2" />
-            <span>Ultimo aggiornamento: {lastUpdate.toLocaleTimeString('it-IT')}</span>
-            <button 
-              onClick={refreshPackages}
-              className="ml-4 text-blue-600 hover:text-blue-700 text-sm underline"
-            >
-              Aggiorna ora
-            </button>
+          {/* Stato sincronizzazione */}
+          <div className="flex items-center justify-between mt-4">
+            <div className="flex items-center text-sm text-gray-500">
+              <Clock className="h-4 w-4 mr-2" />
+              <span>Ultimo aggiornamento: {lastUpdate.toLocaleTimeString('it-IT')}</span>
+              
+              {/* Indicatore stato */}
+              <div className="ml-4 flex items-center space-x-2">
+                <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                <span className={isOnline ? 'text-green-600' : 'text-red-600'}>
+                  {isOnline ? 'Sincronizzato' : 'Disconnesso'}
+                </span>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              {retryCount > 0 && (
+                <span className="text-orange-600 text-xs bg-orange-100 px-2 py-1 rounded">
+                  🔄 Tentativo {retryCount}/3
+                </span>
+              )}
+              
+              <button 
+                onClick={refreshPackages}
+                className="text-blue-600 hover:text-blue-700 text-sm underline flex items-center"
+              >
+                <RefreshCw className={`h-4 w-4 mr-1 ${loading ? 'animate-spin' : ''}`} />
+                Aggiorna ora
+              </button>
+            </div>
           </div>
         </div>
 

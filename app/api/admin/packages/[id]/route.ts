@@ -105,6 +105,38 @@ export async function PUT(
       );
     }
 
+    // Crea una notifica per informare i clienti dell'aggiornamento
+    try {
+      const notificationResponse = await fetch(`${request.nextUrl.origin}/api/admin/notifications`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': request.headers.get('authorization') || ''
+        },
+        body: JSON.stringify({
+          type: 'package_update',
+          title: 'Pacchetto Aggiornato',
+          message: `Il pacchetto "${body.name}" è stato aggiornato dall'amministratore`,
+          data: {
+            package_id: params.id,
+            package_name: body.name,
+            changes: {
+              expected_return: body.expected_return,
+              risk_level: body.risk_level,
+              duration_months: body.duration_months,
+              status: body.status
+            }
+          }
+        })
+      });
+
+      if (notificationResponse.ok) {
+        console.log('✅ Notifica creata per aggiornamento pacchetto');
+      }
+    } catch (error) {
+      console.log('⚠️ Errore nella creazione notifica (non critico):', error);
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Pacchetto aggiornato con successo nel database',
