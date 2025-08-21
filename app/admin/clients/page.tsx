@@ -66,8 +66,12 @@ export default function ClientsPage() {
     try {
       setLoading(true);
       console.log('🔄 Fetching clients from admin API...');
+      console.log('🌐 URL:', '/api/admin/clients');
+      
+      // Prova prima senza headers complessi
       const response = await fetch('/api/admin/clients');
       console.log('📡 Admin API response status:', response.status);
+      console.log('📡 Admin API response headers:', response.headers);
       
       if (response.ok) {
         const data = await response.json();
@@ -76,9 +80,14 @@ export default function ClientsPage() {
         setClients(data.clients || []);
       } else {
         console.error('❌ Errore nel caricamento clienti:', response.status);
+        const errorText = await response.text();
+        console.error('❌ Error details:', errorText);
       }
     } catch (error) {
       console.error('❌ Errore di connessione:', error);
+      console.error('❌ Error type:', typeof error);
+      console.error('❌ Error message:', error.message);
+      console.error('❌ Error stack:', error.stack);
     } finally {
       setLoading(false);
     }
