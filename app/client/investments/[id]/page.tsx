@@ -2,20 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import Link from 'next/link';
-import GLGLogo from '@/components/GLGLogo';
-import { 
-  ArrowLeft, 
-  TrendingUp, 
-  DollarSign, 
-  Calendar,
-  Shield,
-  Star,
-  CheckCircle,
-  AlertCircle,
-  CreditCard,
-  FileText
-} from 'lucide-react';
+import { ArrowLeft, TrendingUp, DollarSign, Calendar, Shield, CheckCircle, Clock } from 'lucide-react';
+import { usePackagesUpdates } from '@/lib/use-packages-updates';
 
 interface InvestmentPackage {
   id: string;
@@ -32,27 +20,22 @@ interface InvestmentPackage {
 }
 
 export default function InvestmentDetailPage() {
+  const router = useRouter();
+  const params = useParams();
+  const packageId = params.id as string;
+  
+  const { packages, loading, error, lastUpdate, refreshPackages } = usePackagesUpdates();
   const [packageData, setPackageData] = useState<InvestmentPackage | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [investmentAmount, setInvestmentAmount] = useState('');
-  const [step, setStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
+    amount: '',
     firstName: '',
     lastName: '',
     email: '',
     phone: '',
-    address: '',
-    city: '',
-    postalCode: '',
-    country: '',
-    acceptTerms: false,
-    acceptRisk: false
+    acceptTerms: false
   });
-  
-  const router = useRouter();
-  const params = useParams();
-  const packageId = params.id as string;
+  const [investmentComplete, setInvestmentComplete] = useState(false);
 
   useEffect(() => {
     // Check if user is logged in
@@ -62,36 +45,14 @@ export default function InvestmentDetailPage() {
       return;
     }
 
-    fetchPackageDetails();
-  }, [packageId, router]);
-
-  const fetchPackageDetails = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`/api/client/packages`);
-      
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          const packageItem = data.packages.find((pkg: InvestmentPackage) => pkg.id === packageId);
-          if (packageItem) {
-            setPackageData(packageItem);
-          } else {
-            setError('Pacchetto non trovato');
-          }
-        } else {
-          setError(data.message || 'Pacchetto non trovato');
-        }
-      } else {
-        setError('Pacchetto non trovato');
+    // Find package from the packages list
+    if (packages.length > 0) {
+      const packageItem = packages.find(pkg => pkg.id === packageId);
+      if (packageItem) {
+        setPackageData(packageItem);
       }
-    } catch (error) {
-      console.error('Error fetching package:', error);
-      setError('Errore di connessione');
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [packageId, router, packages]);
 
   const getRiskColor = (risk: string) => {
     switch (risk) {
@@ -107,49 +68,53 @@ export default function InvestmentDetailPage() {
       case 'low': return 'Basso';
       case 'medium': return 'Medio';
       case 'high': return 'Alto';
-      default: return 'Sconosciuto';
+      default: return risk;
     }
   };
 
-  const handleAmountChange = (value: string) => {
-    const numValue = parseFloat(value);
-    if (packageData && numValue >= packageData.minAmount && numValue <= packageData.maxAmount) {
-      setInvestmentAmount(value);
-    } else {
-      setInvestmentAmount(value);
-    }
-  };
-
-  const getExpectedReturn = () => {
-    if (!investmentAmount || !packageData) return 0;
-    const amount = parseFloat(investmentAmount);
-    return (amount * packageData.expectedReturn / 100).toFixed(2);
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
   };
 
   const handleNextStep = () => {
-    if (step === 1 && investmentAmount && parseFloat(investmentAmount) >= (packageData?.minAmount || 0)) {
-      setStep(2);
-    } else if (step === 2 && formData.acceptTerms && formData.acceptRisk) {
-      setStep(3);
+    if (currentStep === 1 && !formData.amount) return;
+    if (currentStep === 2 && (!formData.firstName || !formData.lastName || !formData.email)) return;
+    if (currentStep === 3 && !formData.acceptTerms) return;
+    
+    if (currentStep < 4) {
+      setCurrentStep(currentStep + 1);
     }
   };
 
-  const handleSubmit = async () => {
-    // TODO: Implement actual investment submission
-    console.log('Submitting investment:', {
-      packageId,
-      amount: investmentAmount,
-      formData
-    });
-    
-    // For now, just show success
-    setStep(4);
+  const handlePrevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
   };
 
-  if (loading) {
+  const handleSubmitInvestment = async () => {
+    // Simula l'invio dell'investimento
+    setInvestmentComplete(true);
+    
+    // In produzione, qui invieresti i dati al server
+    console.log('Investimento inviato:', {
+      packageId,
+      packageData,
+      formData
+    });
+  };
+
+  if (loading && !packageData) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 text-lg">Caricamento pacchetto...</p>
+        </div>
       </div>
     );
   }
@@ -158,16 +123,48 @@ export default function InvestmentDetailPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
-          <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Errore</h2>
-          <p className="text-gray-600 mb-4">{error || 'Pacchetto non trovato'}</p>
-          <Link
-            href="/client/investments"
-            className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium"
+          <div className="text-red-600 text-6xl mb-4">⚠️</div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Pacchetto non trovato</h1>
+          <p className="text-gray-600 mb-6">{error || 'Il pacchetto richiesto non esiste'}</p>
+          <button 
+            onClick={refreshPackages}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors mr-4"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Torna ai Pacchetti
-          </Link>
+            Riprova
+          </button>
+          <button 
+            onClick={() => router.push('/client/investments')}
+            className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+          >
+            Torna ai pacchetti
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (investmentComplete) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full text-center">
+          <div className="text-green-600 text-6xl mb-4">🎉</div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Investimento Confermato!</h1>
+          <p className="text-gray-600 mb-6">
+            Il tuo investimento nel pacchetto <strong>{packageData.name}</strong> è stato registrato con successo.
+          </p>
+          <div className="bg-blue-50 rounded-lg p-4 mb-6">
+            <p className="text-sm text-blue-800">
+              <strong>Importo:</strong> €{parseFloat(formData.amount).toLocaleString()}<br/>
+              <strong>Rendimento atteso:</strong> {packageData.expectedReturn}% annuo<br/>
+              <strong>Durata:</strong> {packageData.duration} mesi
+            </p>
+          </div>
+          <button 
+            onClick={() => router.push('/client/dashboard')}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+          >
+            Torna alla Dashboard
+          </button>
         </div>
       </div>
     );
@@ -175,352 +172,285 @@ export default function InvestmentDetailPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Header */}
-      <nav className="bg-white shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <GLGLogo size="sm" showText={false} />
-              <div className="ml-3">
-                <h1 className="text-xl font-bold text-gray-900">GLG Capital Group</h1>
-                <p className="text-sm text-gray-600">Processo di Investimento</p>
-              </div>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <button 
+            onClick={() => router.push('/client/investments')}
+            className="flex items-center text-blue-600 hover:text-blue-700 mb-4"
+          >
+            <ArrowLeft className="h-5 w-5 mr-2" />
+            Torna ai pacchetti
+          </button>
+          
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">{packageData.name}</h1>
+              <p className="text-gray-600 text-lg">{packageData.description}</p>
             </div>
-            <div className="flex items-center space-x-4">
-              <Link
-                href="/client/investments"
-                className="flex items-center text-gray-600 hover:text-blue-600 transition-colors"
-              >
-                <ArrowLeft className="h-5 w-5 mr-2" />
-                Pacchetti
-              </Link>
-            </div>
+            <span className={`px-3 py-1 rounded-full text-sm font-medium ${getRiskColor(packageData.riskLevel)}`}>
+              Rischio {getRiskLabel(packageData.riskLevel)}
+            </span>
+          </div>
+
+          {/* Ultimo aggiornamento */}
+          <div className="flex items-center mt-4 text-sm text-gray-500">
+            <Clock className="h-4 w-4 mr-2" />
+            <span>Ultimo aggiornamento: {lastUpdate.toLocaleTimeString('it-IT')}</span>
           </div>
         </div>
-      </nav>
 
-      {/* Progress Steps */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            {[1, 2, 3, 4].map((stepNumber) => (
-              <div key={stepNumber} className="flex items-center">
+        {/* Progress Steps */}
+        <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
+          <div className="flex items-center justify-between mb-6">
+            {[1, 2, 3, 4].map((step) => (
+              <div key={step} className="flex items-center">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                  step >= stepNumber 
+                  step <= currentStep 
                     ? 'bg-blue-600 text-white' 
                     : 'bg-gray-200 text-gray-600'
                 }`}>
-                  {stepNumber}
+                  {step < currentStep ? '✓' : step}
                 </div>
-                {stepNumber < 4 && (
+                {step < 4 && (
                   <div className={`w-16 h-1 mx-2 ${
-                    step > stepNumber ? 'bg-blue-600' : 'bg-gray-200'
-                  }`} />
+                    step < currentStep ? 'bg-blue-600' : 'bg-gray-200'
+                  }`}></div>
                 )}
               </div>
             ))}
           </div>
-          <div className="flex justify-between mt-2 text-sm text-gray-600">
-            <span>Importo</span>
-            <span>Dettagli</span>
-            <span>Conferma</span>
-            <span>Completato</span>
+          
+          <div className="text-center mb-6">
+            <h2 className="text-xl font-semibold text-gray-900">
+              {currentStep === 1 && 'Importo Investimento'}
+              {currentStep === 2 && 'Dati Personali'}
+              {currentStep === 3 && 'Conferma Termini'}
+              {currentStep === 4 && 'Riepilogo Finale'}
+            </h2>
           </div>
-        </div>
 
-        {/* Step 1: Investment Amount */}
-        {step === 1 && (
-          <div className="bg-white rounded-lg shadow-lg p-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-6">Scegli l'Importo di Investimento</h2>
-            
-            {/* Package Summary */}
-            <div className="bg-gray-50 rounded-lg p-6 mb-8">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900">{packageData.name}</h3>
-                  <p className="text-gray-600">{packageData.description}</p>
-                </div>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getRiskColor(packageData.riskLevel)}`}>
-                  {getRiskLabel(packageData.riskLevel)}
-                </span>
+          {/* Step Content */}
+          {currentStep === 1 && (
+            <div className="space-y-6">
+              <div className="text-center">
+                <div className="text-4xl font-bold text-blue-600 mb-2">{packageData.expectedReturn}%</div>
+                <p className="text-gray-600">Rendimento annuo atteso</p>
               </div>
               
-              <div className="grid grid-cols-3 gap-4 text-center">
-                <div>
-                  <div className="text-2xl font-bold text-blue-600">{packageData.expectedReturn}%</div>
-                  <div className="text-sm text-gray-500">Rendimento Atteso</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-green-600">{packageData.duration} mesi</div>
-                  <div className="text-sm text-gray-500">Durata</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-purple-600">{packageData.category}</div>
-                  <div className="text-sm text-gray-500">Categoria</div>
-                </div>
+              <div className="max-w-md mx-auto">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Importo da investire (€)
+                </label>
+                <input
+                  type="number"
+                  name="amount"
+                  value={formData.amount}
+                  onChange={handleInputChange}
+                  min={packageData.minAmount}
+                  max={packageData.maxAmount}
+                  step="100"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-2xl font-bold"
+                  placeholder="0"
+                />
+                <p className="text-sm text-gray-500 mt-2">
+                  Min: €{packageData.minAmount.toLocaleString()} - Max: €{packageData.maxAmount.toLocaleString()}
+                </p>
               </div>
             </div>
+          )}
 
-            {/* Amount Input */}
-            <div className="mb-8">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Importo di Investimento (€)
-              </label>
-              <input
-                type="number"
-                value={investmentAmount}
-                onChange={(e) => handleAmountChange(e.target.value)}
-                min={packageData.minAmount}
-                max={packageData.maxAmount}
-                step="100"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-2xl font-bold"
-                placeholder={`Min: €${packageData.minAmount.toLocaleString()} - Max: €${packageData.maxAmount.toLocaleString()}`}
-              />
-              
-              {investmentAmount && (
-                <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-                  <div className="grid grid-cols-2 gap-4 text-center">
-                    <div>
-                      <div className="text-lg font-medium text-gray-700">Rendimento Atteso</div>
-                      <div className="text-2xl font-bold text-blue-600">€{getExpectedReturn()}</div>
-                    </div>
-                    <div>
-                      <div className="text-lg font-medium text-gray-700">Durata</div>
-                      <div className="text-2xl font-bold text-green-600">{packageData.duration} mesi</div>
-                    </div>
-                  </div>
+          {currentStep === 2 && (
+            <div className="max-w-md mx-auto space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Nome</label>
+                  <input
+                    type="text"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  />
                 </div>
-              )}
-            </div>
-
-            <button
-              onClick={handleNextStep}
-              disabled={!investmentAmount || parseFloat(investmentAmount) < packageData.minAmount}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg font-medium text-lg transition-colors"
-            >
-              Continua
-            </button>
-          </div>
-        )}
-
-        {/* Step 2: Personal Details */}
-        {step === 2 && (
-          <div className="bg-white rounded-lg shadow-lg p-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-6">I Tuoi Dettagli</h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Nome *</label>
-                <input
-                  type="text"
-                  value={formData.firstName}
-                  onChange={(e) => setFormData({...formData, firstName: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
-                />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Cognome</label>
+                  <input
+                    type="text"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  />
+                </div>
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Cognome *</label>
-                <input
-                  type="text"
-                  value={formData.lastName}
-                  onChange={(e) => setFormData({...formData, lastName: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
                 <input
                   type="email"
+                  name="email"
                   value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Telefono</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Telefono (opzionale)</label>
                 <input
                   type="tel"
+                  name="phone"
                   value={formData.phone}
-                  onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-              
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Indirizzo</label>
-                <input
-                  type="text"
-                  value={formData.address}
-                  onChange={(e) => setFormData({...formData, address: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Città</label>
-                <input
-                  type="text"
-                  value={formData.city}
-                  onChange={(e) => setFormData({...formData, city: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">CAP</label>
-                <input
-                  type="text"
-                  value={formData.postalCode}
-                  onChange={(e) => setFormData({...formData, postalCode: e.target.value})}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
             </div>
+          )}
 
-            <div className="space-y-4 mb-8">
+          {currentStep === 3 && (
+            <div className="max-w-md mx-auto space-y-4">
+              <div className="bg-blue-50 rounded-lg p-4">
+                <h3 className="font-medium text-blue-900 mb-2">Riepilogo Investimento</h3>
+                <div className="space-y-2 text-sm text-blue-800">
+                  <p><strong>Pacchetto:</strong> {packageData.name}</p>
+                  <p><strong>Importo:</strong> €{parseFloat(formData.amount || '0').toLocaleString()}</p>
+                  <p><strong>Rendimento atteso:</strong> {packageData.expectedReturn}% annuo</p>
+                  <p><strong>Durata:</strong> {packageData.duration} mesi</p>
+                </div>
+              </div>
+              
               <div className="flex items-start">
                 <input
                   type="checkbox"
-                  id="acceptTerms"
+                  name="acceptTerms"
                   checked={formData.acceptTerms}
-                  onChange={(e) => setFormData({...formData, acceptTerms: e.target.checked})}
+                  onChange={handleInputChange}
                   className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  required
                 />
-                <label htmlFor="acceptTerms" className="ml-2 text-sm text-gray-700">
-                  Accetto i <Link href="/terms" className="text-blue-600 hover:underline">termini e condizioni</Link> e la <Link href="/privacy" className="text-blue-600 hover:underline">privacy policy</Link> *
-                </label>
-              </div>
-              
-              <div className="flex items-start">
-                <input
-                  type="checkbox"
-                  id="acceptRisk"
-                  checked={formData.acceptRisk}
-                  onChange={(e) => setFormData({...formData, acceptRisk: e.target.checked})}
-                  className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <label htmlFor="acceptRisk" className="ml-2 text-sm text-gray-700">
-                  Comprendo i rischi associati a questo investimento e accetto di procedere *
+                <label className="ml-2 text-sm text-gray-700">
+                  Accetto i <a href="#" className="text-blue-600 hover:underline">termini e condizioni</a> e la 
+                  <a href="#" className="text-blue-600 hover:underline"> politica sulla privacy</a>
                 </label>
               </div>
             </div>
+          )}
 
-            <div className="flex space-x-4">
-              <button
-                onClick={() => setStep(1)}
-                className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                Indietro
-              </button>
+          {currentStep === 4 && (
+            <div className="max-w-md mx-auto space-y-4">
+              <div className="bg-green-50 rounded-lg p-4 text-center">
+                <CheckCircle className="h-12 w-12 text-green-600 mx-auto mb-2" />
+                <h3 className="font-medium text-green-900 mb-2">Tutto Pronto!</h3>
+                <p className="text-sm text-green-800">
+                  Verifica i dettagli del tuo investimento prima di confermare
+                </p>
+              </div>
+              
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="font-medium text-gray-900 mb-3">Dettagli Investimento</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Pacchetto:</span>
+                    <span className="font-medium">{packageData.name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Importo:</span>
+                    <span className="font-medium">€{parseFloat(formData.amount || '0').toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Rendimento atteso:</span>
+                    <span className="font-medium">{packageData.expectedReturn}% annuo</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Durata:</span>
+                    <span className="font-medium">{packageData.duration} mesi</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Nome:</span>
+                    <span className="font-medium">{formData.firstName} {formData.lastName}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Email:</span>
+                    <span className="font-medium">{formData.email}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Navigation Buttons */}
+          <div className="flex justify-between mt-8">
+            <button
+              onClick={handlePrevStep}
+              disabled={currentStep === 1}
+              className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                currentStep === 1
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-gray-600 text-white hover:bg-gray-700'
+              }`}
+            >
+              Indietro
+            </button>
+            
+            {currentStep < 4 ? (
               <button
                 onClick={handleNextStep}
-                disabled={!formData.acceptTerms || !formData.acceptRisk}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
               >
-                Continua
+                Avanti
               </button>
-            </div>
-          </div>
-        )}
-
-        {/* Step 3: Confirmation */}
-        {step === 3 && (
-          <div className="bg-white rounded-lg shadow-lg p-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-6">Conferma il Tuo Investimento</h2>
-            
-            <div className="bg-gray-50 rounded-lg p-6 mb-8">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Riepilogo Investimento</h3>
-              
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                  <span className="text-gray-600">Pacchetto:</span>
-                  <span className="font-medium ml-2">{packageData.name}</span>
-                </div>
-                <div>
-                  <span className="text-gray-600">Importo:</span>
-                  <span className="font-medium ml-2">€{parseFloat(investmentAmount).toLocaleString()}</span>
-                </div>
-                <div>
-                  <span className="text-gray-600">Rendimento Atteso:</span>
-                  <span className="font-medium ml-2">€{getExpectedReturn()}</span>
-                </div>
-                <div>
-                  <span className="text-gray-600">Durata:</span>
-                  <span className="font-medium ml-2">{packageData.duration} mesi</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-blue-50 rounded-lg p-6 mb-8">
-              <h4 className="font-medium text-blue-900 mb-2">Informazioni Personali</h4>
-              <p className="text-blue-800">
-                {formData.firstName} {formData.lastName}<br />
-                {formData.email}<br />
-                {formData.phone && `${formData.phone}<br />`}
-                {formData.address && `${formData.address}<br />`}
-                {formData.city && formData.postalCode && `${formData.city}, ${formData.postalCode}`}
-              </p>
-            </div>
-
-            <div className="flex space-x-4">
+            ) : (
               <button
-                onClick={() => setStep(2)}
-                className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                Indietro
-              </button>
-              <button
-                onClick={handleSubmit}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                onClick={handleSubmitInvestment}
+                className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
               >
                 Conferma Investimento
               </button>
-            </div>
+            )}
           </div>
-        )}
+        </div>
 
-        {/* Step 4: Success */}
-        {step === 4 && (
-          <div className="bg-white rounded-lg shadow-lg p-8 text-center">
-            <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-6" />
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Investimento Confermato!</h2>
-            <p className="text-xl text-gray-600 mb-8">
-              Il tuo investimento è stato registrato con successo. Riceverai una email di conferma con tutti i dettagli.
-            </p>
+        {/* Package Details */}
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          <h3 className="text-xl font-semibold text-gray-900 mb-4">Dettagli del Pacchetto</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="text-center">
+              <TrendingUp className="h-8 w-8 text-green-600 mx-auto mb-2" />
+              <div className="text-2xl font-bold text-green-600">{packageData.expectedReturn}%</div>
+              <p className="text-sm text-gray-600">Rendimento annuo</p>
+            </div>
             
-            <div className="bg-green-50 rounded-lg p-6 mb-8 text-left">
-              <h3 className="font-medium text-green-900 mb-2">Dettagli Investimento</h3>
-              <p className="text-green-800">
-                <strong>Pacchetto:</strong> {packageData.name}<br />
-                <strong>Importo:</strong> €{parseFloat(investmentAmount).toLocaleString()}<br />
-                <strong>Rendimento Atteso:</strong> €{getExpectedReturn()}<br />
-                <strong>Durata:</strong> {packageData.duration} mesi
-              </p>
+            <div className="text-center">
+              <Calendar className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+              <div className="text-2xl font-bold text-blue-600">{packageData.duration}</div>
+              <p className="text-sm text-gray-600">Mesi</p>
             </div>
-
-            <div className="space-y-4">
-              <Link
-                href="/client/dashboard"
-                className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-medium transition-colors"
-              >
-                Torna alla Dashboard
-              </Link>
-              <br />
-              <Link
-                href="/client/investments"
-                className="inline-block text-blue-600 hover:text-blue-700 font-medium"
-              >
-                Vedi Altri Pacchetti
-              </Link>
+            
+            <div className="text-center">
+              <Shield className="h-8 w-8 text-purple-600 mx-auto mb-2" />
+              <div className="text-lg font-bold text-purple-600">{getRiskLabel(packageData.riskLevel)}</div>
+              <p className="text-sm text-gray-600">Livello di rischio</p>
             </div>
           </div>
-        )}
+          
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <h4 className="font-medium text-gray-900 mb-3">Caratteristiche</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {packageData.features.map((feature, index) => (
+                <div key={index} className="flex items-center text-sm text-gray-600">
+                  <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                  {feature}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
