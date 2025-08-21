@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getClient, updateClient, createClient } from '../../../lib/data-manager';
+import { getClient, updateClient, createClient } from '../../../../lib/data-manager';
 
 // GET - Recupera il profilo del cliente
 export async function GET(request: NextRequest) {
