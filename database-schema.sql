@@ -145,6 +145,21 @@ CREATE TABLE IF NOT EXISTS activity_logs (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Tabella per i documenti dei clienti
+CREATE TABLE IF NOT EXISTS documents (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    file_type VARCHAR(50) NOT NULL,
+    file_size BIGINT NOT NULL,
+    file_path VARCHAR(500) NOT NULL,
+    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+    notes TEXT,
+    uploaded_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Indici per migliorare le performance
 CREATE INDEX IF NOT EXISTS idx_clients_email ON clients(email);
 CREATE INDEX IF NOT EXISTS idx_clients_status ON clients(status);
@@ -158,6 +173,9 @@ CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status);
 CREATE INDEX IF NOT EXISTS idx_team_members_email ON team_members(email);
 CREATE INDEX IF NOT EXISTS idx_activity_logs_user_id ON activity_logs(user_id);
 CREATE INDEX IF NOT EXISTS idx_activity_logs_created_at ON activity_logs(created_at);
+CREATE INDEX IF NOT EXISTS idx_documents_client_id ON documents(client_id);
+CREATE INDEX IF NOT EXISTS idx_documents_status ON documents(status);
+CREATE INDEX IF NOT EXISTS idx_documents_uploaded_at ON documents(uploaded_at);
 
 -- Trigger per aggiornare updated_at
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -177,6 +195,10 @@ CREATE TRIGGER update_team_members_updated_at BEFORE UPDATE ON team_members FOR 
 CREATE TRIGGER update_partnerships_updated_at BEFORE UPDATE ON partnerships FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_analytics_updated_at BEFORE UPDATE ON analytics FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_admin_users_updated_at BEFORE UPDATE ON admin_users FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_documents_updated_at 
+    BEFORE UPDATE ON documents 
+    FOR EACH ROW 
+    EXECUTE FUNCTION update_updated_at_column();
 
 -- Inserisci dati di esempio
 INSERT INTO packages (name, description, min_investment, max_investment, expected_return, duration_months, risk_level, status) VALUES
@@ -200,6 +222,7 @@ ALTER TABLE partnerships ENABLE ROW LEVEL SECURITY;
 ALTER TABLE analytics ENABLE ROW LEVEL SECURITY;
 ALTER TABLE admin_users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE activity_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE documents ENABLE ROW LEVEL SECURITY;
 
 -- Politiche RLS per admin (tutti i permessi)
 CREATE POLICY "Admin full access" ON clients FOR ALL USING (true);
@@ -211,6 +234,7 @@ CREATE POLICY "Admin full access" ON partnerships FOR ALL USING (true);
 CREATE POLICY "Admin full access" ON analytics FOR ALL USING (true);
 CREATE POLICY "Admin full access" ON admin_users FOR ALL USING (true);
 CREATE POLICY "Admin full access" ON activity_logs FOR ALL USING (true);
+CREATE POLICY "Admin full access" ON documents FOR ALL USING (true);
 
 -- Politiche RLS per clienti (accesso limitato ai propri dati)
 CREATE POLICY "Clients can view own data" ON clients FOR SELECT USING (auth.uid()::text = id::text);
@@ -227,3 +251,4 @@ COMMENT ON TABLE partnerships IS 'Partnership e collaborazioni';
 COMMENT ON TABLE analytics IS 'Metriche e analisi del sistema';
 COMMENT ON TABLE admin_users IS 'Utenti amministratori del sistema';
 COMMENT ON TABLE activity_logs IS 'Log delle attività degli utenti';
+COMMENT ON TABLE documents IS 'Documenti associati ai clienti';

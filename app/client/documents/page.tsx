@@ -18,37 +18,112 @@ export default function ClientDocuments() {
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    // Simula caricamento documenti
-    setTimeout(() => {
-      setDocuments([
-        {
-          id: '1',
-          name: 'Documento_Identità.pdf',
-          type: 'pdf',
-          size: '2.3 MB',
-          uploadedAt: '2024-01-15',
-          status: 'approved'
-        },
-        {
-          id: '2',
-          name: 'Certificato_Reddito.pdf',
-          type: 'pdf',
-          size: '1.8 MB',
-          uploadedAt: '2024-01-10',
-          status: 'pending'
-        },
-        {
-          id: '3',
-          name: 'Contratto_Investimento.doc',
-          type: 'doc',
-          size: '456 KB',
-          uploadedAt: '2024-01-08',
-          status: 'approved'
-        }
-      ]);
-      setLoading(false);
-    }, 1000);
+    fetchClientDocuments();
   }, []);
+
+  const fetchClientDocuments = async () => {
+    try {
+      setLoading(true);
+      
+      // Recupera i dati del cliente dal localStorage
+      const clientUser = localStorage.getItem('clientUser');
+      if (!clientUser) {
+        console.error('Utente cliente non autenticato');
+        setLoading(false);
+        return;
+      }
+
+      const user = JSON.parse(clientUser);
+      
+      // Chiama l'API per recuperare i documenti del cliente
+      const response = await fetch(`/api/client/documents?clientEmail=${encodeURIComponent(user.email)}`);
+      
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          // Mappa i dati dal database al formato dell'interfaccia
+          const mappedDocuments = result.data.documents.map((doc: any) => ({
+            id: doc.id,
+            name: doc.name,
+            type: doc.file_type,
+            size: formatFileSize(doc.file_size),
+            uploadedAt: new Date(doc.uploaded_at).toLocaleDateString('it-IT'),
+            status: doc.status
+          }));
+          setDocuments(mappedDocuments);
+        } else {
+          console.error('Errore API:', result.message);
+        }
+      } else {
+        console.error('Errore HTTP:', response.status);
+      }
+    } catch (error) {
+      console.error('Errore nel caricamento documenti:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const handleFileUpload = async () => {
+    try {
+      setUploading(true);
+      
+      // Recupera i dati del cliente dal localStorage
+      const clientUser = localStorage.getItem('clientUser');
+      if (!clientUser) {
+        alert('Utente cliente non autenticato');
+        setUploading(false);
+        return;
+      }
+
+      const user = JSON.parse(clientUser);
+      
+      // TODO: Implementare selezione file reale e upload
+      // Per ora simuliamo un upload
+      const mockDocument = {
+        client_id: user.id || 'temp-id',
+        name: 'Documento_Test.pdf',
+        file_type: 'pdf',
+        file_size: 1024 * 1024, // 1MB
+        file_path: '/uploads/test-document.pdf',
+        notes: 'Documento di test caricato'
+      };
+
+      const response = await fetch('/api/client/documents', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(mockDocument)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          alert('Documento caricato con successo!');
+          // Ricarica i documenti
+          fetchClientDocuments();
+        } else {
+          alert('Errore nel caricamento: ' + result.message);
+        }
+      } else {
+        alert('Errore HTTP nel caricamento');
+      }
+    } catch (error) {
+      console.error('Errore nell\'upload:', error);
+      alert('Errore nel caricamento del documento');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -125,7 +200,7 @@ export default function ClientDocuments() {
             </p>
             <button 
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              onClick={() => setUploading(true)}
+              onClick={handleFileUpload}
             >
               {uploading ? 'Caricamento...' : 'Seleziona File'}
             </button>

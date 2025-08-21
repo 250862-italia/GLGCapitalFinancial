@@ -23,61 +23,51 @@ export default function AdminDocuments() {
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    // Simula caricamento documenti
-    setTimeout(() => {
-      setDocuments([
-        {
-          id: '1',
-          clientId: '1',
-          clientName: 'Mario Rossi',
-          clientEmail: 'mario.rossi@example.com',
-          name: 'Documento_Identità.pdf',
-          type: 'pdf',
-          size: '2.3 MB',
-          uploadedAt: '2024-01-15',
-          status: 'approved',
-          notes: 'Documento valido, identità verificata'
-        },
-        {
-          id: '2',
-          clientId: '1',
-          clientName: 'Mario Rossi',
-          clientEmail: 'mario.rossi@example.com',
-          name: 'Certificato_Reddito.pdf',
-          type: 'pdf',
-          size: '1.8 MB',
-          uploadedAt: '2024-01-10',
-          status: 'pending',
-          notes: 'In attesa di verifica reddito'
-        },
-        {
-          id: '3',
-          clientId: '2',
-          clientName: 'Giulia Bianchi',
-          clientEmail: 'giulia.bianchi@example.com',
-          name: 'Contratto_Investimento.doc',
-          type: 'doc',
-          size: '456 KB',
-          uploadedAt: '2024-01-08',
-          status: 'approved',
-          notes: 'Contratto firmato e verificato'
-        },
-        {
-          id: '4',
-          clientId: '3',
-          clientName: 'Marco Verdi',
-          clientEmail: 'marco.verdi@example.com',
-          name: 'Passaporto.jpg',
-          type: 'image',
-          size: '1.2 MB',
-          uploadedAt: '2024-01-12',
-          status: 'rejected',
-          notes: 'Immagine non chiara, richiedere nuovo upload'
-        }
-      ]);
-      setLoading(false);
-    }, 1000);
+    fetchDocuments();
   }, []);
+
+  const fetchDocuments = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/admin/documents');
+      
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          // Mappa i dati dal database al formato dell'interfaccia
+          const mappedDocuments = result.data.documents.map((doc: any) => ({
+            id: doc.id,
+            clientId: doc.client_id,
+            clientName: doc.clients ? `${doc.clients.first_name} ${doc.clients.last_name}` : 'Cliente Sconosciuto',
+            clientEmail: doc.clients ? doc.clients.email : 'Email Sconosciuta',
+            name: doc.name,
+            type: doc.file_type,
+            size: formatFileSize(doc.file_size),
+            uploadedAt: new Date(doc.uploaded_at).toLocaleDateString('it-IT'),
+            status: doc.status,
+            notes: doc.notes || ''
+          }));
+          setDocuments(mappedDocuments);
+        } else {
+          console.error('Errore API:', result.message);
+        }
+      } else {
+        console.error('Errore HTTP:', response.status);
+      }
+    } catch (error) {
+      console.error('Errore nel caricamento documenti:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -114,10 +104,34 @@ export default function AdminDocuments() {
     return matchesStatus && matchesSearch;
   });
 
-  const updateDocumentStatus = (docId: string, newStatus: string) => {
-    setDocuments(prev => prev.map(doc => 
-      doc.id === docId ? { ...doc, status: newStatus as any } : doc
-    ));
+  const updateDocumentStatus = async (docId: string, newStatus: string) => {
+    try {
+      const response = await fetch(`/api/admin/documents/${docId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          // Aggiorna lo stato locale
+          setDocuments(prev => prev.map(doc => 
+            doc.id === docId ? { ...doc, status: newStatus as any } : doc
+          ));
+          // Ricarica i documenti per sincronizzazione
+          fetchDocuments();
+        } else {
+          console.error('Errore nell\'aggiornamento:', result.message);
+        }
+      } else {
+        console.error('Errore HTTP nell\'aggiornamento:', response.status);
+      }
+    } catch (error) {
+      console.error('Errore nell\'aggiornamento status:', error);
+    }
   };
 
   if (loading) {

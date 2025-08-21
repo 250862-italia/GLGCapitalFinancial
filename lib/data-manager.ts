@@ -93,6 +93,20 @@ export interface TeamMember {
   updated_at: string;
 }
 
+export interface Document {
+  id: string;
+  client_id: string;
+  name: string;
+  file_type: string;
+  file_size: number;
+  file_path: string;
+  status: 'pending' | 'approved' | 'rejected';
+  notes?: string;
+  uploaded_at: string;
+  updated_at: string;
+  created_at: string;
+}
+
 export interface Partnership {
   id: string;
   name: string;
@@ -1363,6 +1377,183 @@ export async function deleteAnalytics(id: string): Promise<boolean> {
     return true;
   } catch (error) {
     console.error('Database error in deleteAnalytics:', error);
+    return false;
+  }
+}
+
+// ===== FUNZIONI CRUD PER DOCUMENTI =====
+
+export async function getDocuments(): Promise<Document[]> {
+  try {
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      console.log('Database non disponibile, usando dati temporanei per documenti');
+      return [];
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('documents')
+      .select(`
+        *,
+        clients!inner(
+          id,
+          first_name,
+          last_name,
+          email
+        )
+      `)
+      .order('uploaded_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching documents:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Database error in getDocuments:', error);
+    return [];
+  }
+}
+
+export async function getDocumentsByClient(clientId: string): Promise<Document[]> {
+  try {
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      console.log('Database non disponibile, impossibile recuperare documenti cliente');
+      return [];
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('documents')
+      .select('*')
+      .eq('client_id', clientId)
+      .order('uploaded_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching client documents:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Database error in getDocumentsByClient:', error);
+    return [];
+  }
+}
+
+export async function getDocument(id: string): Promise<Document | null> {
+  try {
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      console.log('Database non disponibile, impossibile recuperare documento specifico');
+      return null;
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('documents')
+      .select(`
+        *,
+        clients!inner(
+          id,
+          first_name,
+          last_name,
+          email
+        )
+      `)
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching document:', error);
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Database error in getDocument:', error);
+    return null;
+  }
+}
+
+export async function createDocument(documentData: Omit<Document, 'id' | 'created_at' | 'updated_at'>): Promise<Document> {
+  try {
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      throw new Error('Database non disponibile - impossibile creare documento');
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('documents')
+      .insert([{
+        ...documentData,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating document:', error);
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Database error in createDocument:', error);
+    throw new Error('Impossibile creare il documento nel database');
+  }
+}
+
+export async function updateDocument(id: string, updates: Partial<Document>): Promise<Document | null> {
+  try {
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      throw new Error('Database non disponibile - impossibile aggiornare documento');
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from('documents')
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating document:', error);
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Database error in updateDocument:', error);
+    return null;
+  }
+}
+
+export async function deleteDocument(id: string): Promise<boolean> {
+  try {
+    const isConnected = await checkDatabaseConnection();
+    if (!isConnected) {
+      throw new Error('Database non disponibile - impossibile eliminare documento');
+    }
+
+    const { error } = await supabaseAdmin
+      .from('documents')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting document:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Database error in deleteDocument:', error);
     return false;
   }
 } 
