@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAdminToken } from '@/lib/admin-auth';
-import { getTeam, createTeam, updateTeam, deleteTeam } from '@/lib/data-manager';
+import { getTeamMembers, createTeamMember, updateTeamMember, deleteTeamMember } from '@/lib/data-manager';
 import { getMockTeam, addMockTeam, updateMockTeam, deleteMockTeam } from '@/lib/mock-data';
 
 // Force dynamic rendering
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     }
 
     try {
-      const teamMembers = await getTeam();
+      const teamMembers = await getTeamMembers();
       return NextResponse.json({ success: true, data: teamMembers });
     } catch (dbError) {
       console.log('Database not available, using mock data');
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     const teamMemberData = await request.json();
     
     try {
-      const newTeamMember = await createTeam(teamMemberData);
+      const newTeamMember = await createTeamMember(teamMemberData);
       if (!newTeamMember) {
         throw new Error('Database create failed');
       }
@@ -63,7 +63,7 @@ export async function PUT(request: NextRequest) {
     const { id, ...updateData } = await request.json();
     
     try {
-      const updatedTeamMember = await updateTeam(id, updateData);
+      const updatedTeamMember = await updateTeamMember(id, updateData);
       if (!updatedTeamMember) {
         throw new Error('Database update failed');
       }
@@ -92,7 +92,7 @@ export async function DELETE(request: NextRequest) {
     const { id } = await request.json();
     
     try {
-      const success = await deleteTeam(id);
+      const success = await deleteTeamMember(id);
       if (!success) {
         throw new Error('Database delete failed');
       }
