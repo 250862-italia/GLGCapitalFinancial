@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 
 interface AdminNotification {
   id: string;
-  type: 'package_update' | 'package_create' | 'package_delete' | 'investment_request' | 'client_update';
+  type: 'package_update' | 'package_create' | 'package_delete' | 'investment_request' | 'client_update' | 'client_login' | 'client_register';
   title: string;
   message: string;
   timestamp: Date;
@@ -104,39 +104,33 @@ export function useAdminNotifications() {
     }
   }, []);
 
-  // Elimina notifica
-  const deleteNotification = useCallback(async (notificationId: string) => {
-    try {
-      const token = localStorage.getItem('adminToken');
-      
-      if (!token) return;
+  // Aggiunge una nuova notifica
+  const addNotification = useCallback((notification: Omit<AdminNotification, 'id' | 'timestamp' | 'read'>) => {
+    const newNotification: AdminNotification = {
+      ...notification,
+      id: Date.now().toString(),
+      timestamp: new Date(),
+      read: false
+    };
 
-      const response = await fetch(`/api/admin/notifications/${notificationId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+    setNotifications(prev => [newNotification, ...prev]);
+    setUnreadCount(prev => prev + 1);
+  }, []);
 
-      if (response.ok) {
-        const notification = notifications.find(n => n.id === notificationId);
-        if (notification && !notification.read) {
-          setUnreadCount(prev => Math.max(0, prev - 1));
-        }
-        
-        setNotifications(prev => prev.filter(n => n.id !== notificationId));
-      }
-    } catch (error) {
-      console.error('❌ Errore nell\'eliminazione notifica:', error);
-    }
-  }, [notifications]);
+  // Rimuove una notifica
+  const removeNotification = useCallback((notificationId: string) => {
+    setNotifications(prev => prev.filter(n => n.id !== notificationId));
+    setUnreadCount(prev => Math.max(0, prev - 1));
+  }, []);
 
-  // Carica notifiche all'avvio e ogni 30 secondi
+  // Carica le notifiche all'avvio
   useEffect(() => {
     fetchNotifications();
-    
-    const interval = setInterval(fetchNotifications, 30000);
-    
+  }, [fetchNotifications]);
+
+  // Polling per aggiornamenti ogni 10 secondi
+  useEffect(() => {
+    const interval = setInterval(fetchNotifications, 10000);
     return () => clearInterval(interval);
   }, [fetchNotifications]);
 
@@ -147,6 +141,7 @@ export function useAdminNotifications() {
     fetchNotifications,
     markAsRead,
     markAllAsRead,
-    deleteNotification
+    addNotification,
+    removeNotification
   };
 }
